@@ -1,0 +1,19 @@
+# Original copyrighted exam scans — do NOT publish (127MB, redistribution risk)
+source/
+
+# Backups & working files
+*.BACKUP-*
+images.BACKUP-*/
+tools/incoming/backup-*/
+tools/incoming/done/
+tools/incoming/*.md
+!tools/incoming/_INVENTORY.md
+
+# Python / OS cruft
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+
+# Local agent config
+.claude/
