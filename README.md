@@ -5,10 +5,8 @@ A single, chapter-sorted bank of Thai chemistry past-exam questions (สอว�
 with figures preserved. No answer keys (these papers ship none).
 
 ## View it
-- **`index.html`** — landing page.
-- **`question-bank-viewer.html`** — interactive: search, filter by chapter/exam/year/difficulty,
-  present mode, random pick.
-- **`question-bank-offline.html`** — static, JS-free, figures embedded (opens in iPad Files / OneDrive preview).
+- **`index.html`** — the web app: search, filter by **subject** (เคมี / ชีววิทยา / เคมีประยุกต์),
+  chapter/topic, exam, year, and difficulty; present mode; random pick. Figures render inline.
 - **`question-bank.md`** — the canonical source of every question.
 
 ## Structure

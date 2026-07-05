@@ -6,7 +6,7 @@ import re, json, markdown, os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "question-bank.md")
-OUT = os.path.join(ROOT, "question-bank-viewer.html")
+OUT = os.path.join(ROOT, "index.html")  # the viewer IS the site root (live web app)
 
 CHAPTERS = {
  "01":"ความปลอดภัยและทักษะปฏิบัติการ","02":"แบบจำลองอะตอมและการจัดเรียงอิเล็กตรอน",
@@ -108,15 +108,28 @@ for q in questions:
     if q["subject"] not in ("bio","applied"): present[q["ch"]] = present.get(q["ch"],0)+1
 biocount = sum(1 for q in questions if q["subject"]=="bio")
 appcount = sum(1 for q in questions if q["subject"]=="applied")
+chemcount = sum(1 for q in questions if q["subject"] not in ("bio","applied"))
+biocounts = {}
+for q in questions:
+    if q["subject"]=="bio":
+        top = q["bio"].split(".")[0] if q["bio"] else "?"
+        biocounts[top] = biocounts.get(top,0)+1
+appcounts = {}
+for q in questions:
+    if q["subject"]=="applied":
+        appcounts[q["app"]] = appcounts.get(q["app"],0)+1
 examcount = {}
 for q in questions: examcount[q["exam"]] = examcount.get(q["exam"],0)+1
 
 data = {
  "questions": questions, "chapters": CHAPTERS,
+ "bioChapters": BIO_CHAPTERS, "appTopics": APP_TOPICS,
  "exams": {k:{"label":v[0],"color":v[1]} for k,v in EXAMS.items()},
  "years": sorted({q["year"] for q in questions if q["year"]}),
  "types": sorted({q["type"] for q in questions if q["type"]}),
- "counts": present, "examcount": examcount, "biocount": biocount, "appcount": appcount,
+ "counts": present, "examcount": examcount,
+ "chemcount": chemcount, "biocount": biocount, "appcount": appcount,
+ "biocounts": biocounts, "appcounts": appcounts,
 }
 
 HTML = r"""<!doctype html><html lang="th"><head><meta charset="utf-8">
@@ -223,6 +236,7 @@ table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line
    <input id="q" placeholder="🔍 ค้นหาข้อความ / สูตร / Q-id...">
  </div>
  <div class="bar2">
+   <select id="fsubj"></select>
    <select id="fch"></select>
    <select id="fexam"></select>
    <select id="fyear"></select>
@@ -262,10 +276,27 @@ let view = localStorage.getItem("cqb_view") || "cards";
 let filtered = [];
 
 function opt(sel,val,label){const o=document.createElement("option");o.value=val;o.textContent=label;sel.appendChild(o);}
-opt($("#fch"),"","📚 ทุกบท");
-for(const[n,name]of Object.entries(DATA.chapters)){const c=DATA.counts[n]||0;if(c)opt($("#fch"),n,`${parseInt(n)}. ${name} (${c})`);}
-if(DATA.biocount)opt($("#fch"),"bio",`🧬 ชีววิทยา (${DATA.biocount})`);
-if(DATA.appcount)opt($("#fch"),"applied",`⚗️ เคมีประยุกต์ (${DATA.appcount})`);
+// subject selector (เคมี / ชีววิทยา / เคมีประยุกต์) — drives the topic dropdown below
+opt($("#fsubj"),"",`🧪 ทุกวิชา (${DATA.questions.length})`);
+if(DATA.chemcount)opt($("#fsubj"),"chem",`⚗️ เคมี (${DATA.chemcount})`);
+if(DATA.biocount)opt($("#fsubj"),"bio",`🧬 ชีววิทยา (${DATA.biocount})`);
+if(DATA.appcount)opt($("#fsubj"),"applied",`🧫 เคมีประยุกต์ (${DATA.appcount})`);
+
+function populateChapters(subj){
+  const sel=$("#fch"); sel.innerHTML="";
+  if(subj==="bio"){
+    opt(sel,"","📚 ทุกหัวข้อ");
+    for(const[n,name]of Object.entries(DATA.bioChapters)){const c=DATA.biocounts[n]||0;if(c)opt(sel,n,`${n}. ${name} (${c})`);}
+  }else if(subj==="applied"){
+    opt(sel,"","📚 ทุกหัวข้อ");
+    for(const[k,name]of Object.entries(DATA.appTopics)){const c=DATA.appcounts[k]||0;if(c)opt(sel,k,`${name} (${c})`);}
+    for(const k of Object.keys(DATA.appcounts)){if(!DATA.appTopics[k])opt(sel,k,`${k} (${DATA.appcounts[k]})`);}
+  }else{ // chem, or "ทุกวิชา"
+    opt(sel,"","📚 ทุกบท");
+    for(const[n,name]of Object.entries(DATA.chapters)){const c=DATA.counts[n]||0;if(c)opt(sel,n,`${parseInt(n)}. ${name} (${c})`);}
+  }
+}
+populateChapters("");
 opt($("#fexam"),"","🏷 ทุกสนามสอบ");
 for(const[k,c]of Object.entries(DATA.examcount||{})){const e=DATA.exams[k]||{label:k};opt($("#fexam"),k,`${e.label} (${c})`);}
 opt($("#fyear"),"","📅 ทุกปี");DATA.years.forEach(y=>opt($("#fyear"),y,"ปี "+y));
@@ -283,11 +314,26 @@ function footHtml(q){return `📄 ${q.source} &nbsp;·&nbsp; เฉลย: ${q.a
 function figHtml(q){return q.figure?`<img class="fig" src="${q.figure}" alt="${q.id} figure" loading="lazy">`:"";}
 
 function apply(){
-  const t=$("#q").value.trim().toLowerCase(),ch=$("#fch").value,ex=$("#fexam").value,
-        yr=$("#fyear").value,df=$("#fdiff").value,tp=$("#ftype").value;
-  filtered=DATA.questions.filter(x=>
-    (!ch||(ch==="bio"?x.subject==="bio":ch==="applied"?x.subject==="applied":x.ch===ch))&&(!ex||x.exam===ex)&&(!yr||x.year===yr)&&(!df||x.diff===df)&&(!tp||x.type===tp)&&
-    (!t||x.search.includes(t)||x.id.toLowerCase().includes(t)));
+  const t=$("#q").value.trim().toLowerCase(),subj=$("#fsubj").value,ch=$("#fch").value,
+        ex=$("#fexam").value,yr=$("#fyear").value,df=$("#fdiff").value,tp=$("#ftype").value;
+  filtered=DATA.questions.filter(x=>{
+    // subject: chem = neither bio nor applied
+    if(subj==="chem" && (x.subject==="bio"||x.subject==="applied")) return false;
+    if(subj==="bio" && x.subject!=="bio") return false;
+    if(subj==="applied" && x.subject!=="applied") return false;
+    // topic within the chosen subject
+    if(ch){
+      if(subj==="bio"){ if((x.bio.split(".")[0]||"?")!==ch) return false; }
+      else if(subj==="applied"){ if(x.app!==ch) return false; }
+      else if(x.ch!==ch) return false;
+    }
+    if(ex && x.exam!==ex) return false;
+    if(yr && x.year!==yr) return false;
+    if(df && x.diff!==df) return false;
+    if(tp && x.type!==tp) return false;
+    if(t && !(x.search.includes(t)||x.id.toLowerCase().includes(t))) return false;
+    return true;
+  });
   $("#count").textContent=`${filtered.length} / ${DATA.questions.length} ข้อ`;
   render();
 }
@@ -371,6 +417,8 @@ $("#layout").querySelectorAll("button").forEach(b=>{
 });
 ["input","change"].forEach(ev=>{$("#q").addEventListener(ev,apply);
   ["#fch","#fexam","#fyear","#fdiff","#ftype"].forEach(s=>$(s).addEventListener(ev,apply));});
+// subject change → rebuild the topic dropdown for that subject, then re-filter
+$("#fsubj").addEventListener("change",()=>{populateChapters($("#fsubj").value);apply();});
 $("#random").onclick=()=>{if(filtered.length)openModal(Math.floor(Math.random()*filtered.length));};
 $("#root").addEventListener("click",e=>{
   const p=e.target.closest(".present-btn");if(p){openModal(+p.dataset.i);return;}
