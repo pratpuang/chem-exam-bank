@@ -77,6 +77,39 @@ main{max-width:1040px;margin:16px auto;padding:0 14px}
 #soltab{display:none;background:#fef3c7;border-bottom:1px solid #fcd34d;color:#92400e;
   padding:3px 14px;font-size:.72rem;text-align:center;cursor:pointer}
 #soltab:hover{background:#fde68a}
+/* ---------- in-browser review (marks live in localStorage, exported as JSON) ---------- */
+.revbar{margin-top:11px;padding-top:9px;border-top:1px dashed #bbf7d0;display:flex;gap:7px;
+  flex-wrap:wrap;align-items:center;font-size:.78rem;color:var(--mut)}
+.solwrap.flag .revbar{border-top-color:#fcd34d}
+.revbtn{border:1px solid var(--line);background:#fff;color:#475569;padding:5px 12px;
+  border-radius:8px;cursor:pointer;font-size:.78rem;font-weight:600}
+.revbtn:hover{border-color:#94a3b8}
+.revbtn.ok.on{background:#059669;border-color:#059669;color:#fff}
+.revbtn.bad.on{background:#dc2626;border-color:#dc2626;color:#fff}
+.revnote{flex:1 1 100%;margin-top:6px;border:1px solid var(--line);border-radius:8px;
+  padding:7px 10px;font-size:.82rem;min-height:52px;resize:vertical;display:none;font-family:inherit}
+.revnote.show{display:block}
+.revmark{font-size:.9rem;margin-left:5px}
+.solbtn.done{border-color:#059669;background:#ecfdf5}
+.solbtn.wrong{border-color:#dc2626;color:#dc2626;background:#fef2f2}
+#exportbtn{border:1px solid #7c3aed;color:#7c3aed;background:#fff;padding:6px 12px;
+  border-radius:9px;cursor:pointer;font-size:.8rem;font-weight:600}
+#exportbtn:hover{background:#7c3aed;color:#fff}
+#exportbtn.none{opacity:.45}
+.expwrap{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:60;display:none;
+  align-items:center;justify-content:center;padding:18px}
+.expwrap.show{display:flex}
+.expbox{background:#fff;border-radius:16px;padding:18px;max-width:620px;width:100%;max-height:86vh;
+  display:flex;flex-direction:column;gap:11px}
+.expbox h3{margin:0;font-size:1rem}
+.expbox p{margin:0;font-size:.83rem;color:var(--mut);line-height:1.6}
+.expbox textarea{width:100%;flex:1;min-height:190px;font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:.74rem;border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical}
+.exprow{display:flex;gap:8px;flex-wrap:wrap}
+.exprow button{border:1px solid var(--line);background:#fff;padding:7px 13px;border-radius:9px;
+  cursor:pointer;font-size:.82rem;font-weight:600}
+.exprow button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.exprow button.dan{color:#dc2626;border-color:#fecaca}
 code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:.92em}
 table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line);padding:3px 7px}
 .present-btn{margin-left:auto;border:1px solid var(--accent);color:var(--accent);background:#fff;
@@ -137,6 +170,7 @@ table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line
    <select id="ftype"></select>
    <select id="fsol"></select>
    <button class="btn" id="random">🎲 สุ่มข้อ</button>
+   <button id="exportbtn" style="display:none">📥 ผลตรวจ</button>
    <span class="seg" id="layout">
      <button data-v="list">รายการ</button>
      <button data-v="cards">การ์ด</button>
@@ -163,6 +197,21 @@ table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line
     <span class="mpos" id="mpos"></span>
   </div>
   <div class="foot" id="mfoot" style="margin-top:14px"></div>
+</div></div>
+
+<div class="expwrap" id="expwrap"><div class="expbox">
+  <h3>📥 ผลตรวจเฉลย</h3>
+  <p id="expsum"></p>
+  <textarea id="exptext" readonly></textarea>
+  <p>ก๊อปข้อความนี้ส่งให้ตัวเอง (LINE / Notes) หรือกดดาวน์โหลดเป็นไฟล์ แล้วเอาไปวางในเครื่องที่มีโปรเจกต์
+     สั่ง <code>python tools/apply_review.py &lt;ไฟล์&gt;</code> ระบบจะอัปเดต <code>Checked:</code> ใน
+     <code>solutions/*.md</code> ให้เอง</p>
+  <div class="exprow">
+    <button class="pri" id="expcopy">📋 คัดลอก</button>
+    <button id="expdl">💾 ดาวน์โหลดไฟล์</button>
+    <button class="dan" id="expclear">🗑 ล้างผลตรวจทั้งหมด</button>
+    <button id="expclose" style="margin-left:auto">ปิด</button>
+  </div>
 </div></div>
 
 <script>
@@ -236,21 +285,55 @@ function chBadge(q){
   return `<span class="badge b-ch">บท ${parseInt(q.ch)}. ${q.chName}</span>`;}
 function footHtml(q){return `📄 ${q.source} &nbsp;·&nbsp; เฉลย: ${q.answer||"—"}`;}
 function figHtml(q){return q.figure?`<img class="fig" src="${q.figure}" alt="${q.id} figure" loading="lazy">`:"";}
+/* ---- review marks: Prat ticks solutions off in the browser (iPad-friendly),
+   they persist in localStorage, and get exported as JSON for tools/apply_review.py ---- */
+let REV = {};
+try{ REV = JSON.parse(localStorage.getItem("cqb_review")||"{}") || {}; }catch(e){ REV = {}; }
+function saveRev(){
+  try{ localStorage.setItem("cqb_review", JSON.stringify(REV)); }
+  catch(e){ alert("บันทึกผลตรวจไม่ได้ (พื้นที่เบราว์เซอร์เต็ม) — กด 📥 ผลตรวจ แล้วเซฟออกมาก่อน"); }
+  refreshExport();
+}
+function revCount(){ return Object.keys(REV).length; }
+function refreshExport(){
+  const n=revCount(), b=$("#exportbtn");
+  b.style.display = (DATA.solcount&&DATA.solcount.have) ? "inline-block" : "none";
+  b.textContent = n ? `📥 ผลตรวจ (${n})` : "📥 ผลตรวจ";
+  b.classList.toggle("none", n===0);
+}
+function revBar(q){
+  const r = REV[q.id] || {};
+  const note = (r.note||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  return `<div class="revbar" data-q="${q.id}">
+      <span>ตรวจแล้วหรือยัง:</span>
+      <button class="revbtn ok${r.v==="ok"?" on":""}"  data-v="ok">✓ ถูก</button>
+      <button class="revbtn bad${r.v==="bad"?" on":""}" data-v="bad">✗ ผิด / ต้องแก้</button>
+      ${r.v?`<span class="revmark">${r.v==="ok"?"✅ บันทึกแล้ว":"❌ ทำเครื่องหมายว่าผิด"}</span>`:""}
+      <textarea class="revnote${r.v==="bad"?" show":""}" data-q="${q.id}"
+        placeholder="ผิดตรงไหน / คำตอบที่ถูกคืออะไร (ไม่ใส่ก็ได้)">${note}</textarea>
+    </div>`;
+}
+
 /* Solution block — ALWAYS collapsed on render. Never auto-open: the whole point of
    present mode is that the student attempts it before seeing the working. */
 function solHtml(q){
   if(!q.solHtml && !q.solAnswer) return "";
-  const f = q.solFlag ? " flag" : "";
-  const label = q.solFlag ? "⚠️ ดูเฉลย (มีข้อสงสัย)" : "👁 ดูวิธีทำ";
+  const r = REV[q.id] || {};
+  const mark = r.v==="ok" ? " done" : r.v==="bad" ? " wrong" : "";
+  const f = (q.solFlag ? " flag" : "") + mark;
+  const label = r.v==="ok" ? "✅ ดูวิธีทำ (ตรวจแล้ว)"
+              : r.v==="bad" ? "❌ ดูวิธีทำ (ทำเครื่องหมายว่าผิด)"
+              : q.solFlag ? "⚠️ ดูเฉลย (มีข้อสงสัย)" : "👁 ดูวิธีทำ";
   const dis = q.solFlag
     ? "⚠️ ข้อนี้ผมไม่ฟันธง — โจทย์กำกวมหรือตัวเลือกไม่ตรง อ่านเหตุผลในวิธีทำแล้วตัดสินเอง"
     : "เฉลยนี้ AI ทำขึ้นเอง ไม่ใช่เฉลยทางการ (ข้อสอบ สอวน./PAT2/9 วิชาสามัญ ไม่มีเฉลยแจก)"
       + (q.solChecked ? " · ✅ พี่ปราชตรวจแล้ว" : " · ยังไม่ผ่านการตรวจ ใช้เป็นแนวทาง อย่าเชื่อ 100%");
-  return `<button class="solbtn${f}" data-sol="1">${label}</button>
+  return `<button class="solbtn${f}" data-sol="1" data-label="${label}">${label}</button>
     <div class="solwrap${f}">
       <div class="soldis">${dis}</div>
       ${q.solAnswer?`<div class="solans">ตอบ: ${q.solAnswer}</div>`:""}
       <div class="solbody">${q.solHtml}</div>
+      ${revBar(q)}
     </div>`;
 }
 
@@ -372,19 +455,49 @@ $("#layout").querySelectorAll("button").forEach(b=>{
 // subject change → rebuild the topic dropdown for that subject, then re-filter
 $("#fsubj").addEventListener("change",()=>{populateChapters($("#fsubj").value);apply();});
 $("#random").onclick=()=>{if(filtered.length)openModal(Math.floor(Math.random()*filtered.length));};
-/* one delegated handler for every solution toggle, in any layout or in the modal */
+/* one delegated handler for every solution toggle + review button, any layout or the modal */
 function solToggle(e){
+  // --- review buttons ---
+  const rb=e.target.closest(".revbtn");
+  if(rb){
+    e.stopPropagation();
+    const bar=rb.closest(".revbar"), qid=bar.dataset.q, v=rb.dataset.v;
+    const wrap=bar.closest(".solwrap"), sb=wrap.previousElementSibling;
+    const cur=(REV[qid]||{}).v;
+    if(cur===v){ const n=(REV[qid]||{}).note; if(n) REV[qid]={note:n}; else delete REV[qid]; }
+    else { REV[qid]=Object.assign({}, REV[qid]||{}, {v:v}); }        // tapping the same one un-marks
+    saveRev();
+    // repaint ONLY this bar + its toggle button — nothing else re-renders under his finger
+    const q=DATA.questions.find(x=>x.id===qid);
+    const tmp=document.createElement("div"); tmp.innerHTML=revBar(q);
+    bar.replaceWith(tmp.firstElementChild);
+    const r=REV[qid]||{};
+    sb.classList.toggle("done", r.v==="ok");
+    sb.classList.toggle("wrong", r.v==="bad");
+    sb.dataset.label = r.v==="ok" ? "✅ ดูวิธีทำ (ตรวจแล้ว)"
+                     : r.v==="bad" ? "❌ ดูวิธีทำ (ทำเครื่องหมายว่าผิด)"
+                     : sb.classList.contains("flag") ? "⚠️ ดูเฉลย (มีข้อสงสัย)" : "👁 ดูวิธีทำ";
+    return true;
+  }
+  if(e.target.closest(".revnote")) { e.stopPropagation(); return true; }   // let him type in peace
+  // --- show / hide the solution ---
   const b=e.target.closest(".solbtn");
   if(!b) return false;
   e.stopPropagation();                       // don't collapse the accordion row underneath
   const w=b.nextElementSibling;
   if(w && w.classList.contains("solwrap")){
     const open=w.classList.toggle("show");
-    b.textContent = open
-      ? (b.classList.contains("flag") ? "⚠️ ซ่อนเฉลย" : "🙈 ซ่อนวิธีทำ")
-      : (b.classList.contains("flag") ? "⚠️ ดูเฉลย (มีข้อสงสัย)" : "👁 ดูวิธีทำ");
+    b.textContent = open ? "🙈 ซ่อนวิธีทำ" : (b.dataset.label || "👁 ดูวิธีทำ");
   }
   return true;
+}
+function noteInput(e){
+  const ta=e.target.closest(".revnote");
+  if(!ta) return;
+  const qid=ta.dataset.q, val=ta.value;
+  if(!val && !(REV[qid]||{}).v){ delete REV[qid]; }
+  else REV[qid]=Object.assign({}, REV[qid]||{}, {note:val});
+  saveRev();
 }
 $("#root").addEventListener("click",e=>{
   if(solToggle(e)) return;
@@ -393,6 +506,45 @@ $("#root").addEventListener("click",e=>{
   const rh=e.target.closest(".row-h");if(rh){rh.parentElement.classList.toggle("open");}
 });
 $("#msol").addEventListener("click",solToggle);
+$("#root").addEventListener("input",noteInput);
+$("#msol").addEventListener("input",noteInput);
+
+/* ---- export ---- */
+function revPayload(){
+  const items=Object.entries(REV).map(([id,r])=>({id:id, v:r.v||"", note:r.note||""}))
+                                 .sort((a,b)=>a.id.localeCompare(b.id));
+  return JSON.stringify({tool:"chem-exam-bank-review", version:1, items:items}, null, 1);
+}
+function openExport(){
+  const items=Object.values(REV);
+  const ok=items.filter(r=>r.v==="ok").length, bad=items.filter(r=>r.v==="bad").length;
+  $("#expsum").textContent = revCount()
+    ? `ตรวจแล้ว ${revCount()} ข้อ — ถูก ${ok} · ผิด/ต้องแก้ ${bad}`
+    : "ยังไม่ได้ทำเครื่องหมายข้อไหนเลย — กด ✓ ถูก หรือ ✗ ผิด ใต้วิธีทำก่อน";
+  $("#exptext").value = revPayload();
+  $("#expwrap").classList.add("show");
+}
+$("#exportbtn").onclick=openExport;
+$("#expclose").onclick=()=>$("#expwrap").classList.remove("show");
+$("#expwrap").onclick=e=>{if(e.target.id==="expwrap")$("#expwrap").classList.remove("show");};
+$("#expcopy").onclick=async()=>{
+  const t=$("#exptext");
+  try{ await navigator.clipboard.writeText(t.value); $("#expcopy").textContent="✅ คัดลอกแล้ว"; }
+  catch(e){ t.focus(); t.select(); $("#expcopy").textContent="กด Ctrl/⌘+C"; }
+  setTimeout(()=>$("#expcopy").textContent="📋 คัดลอก",1800);
+};
+$("#expdl").onclick=()=>{
+  const blob=new Blob([revPayload()],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download="chem-review.json";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+};
+$("#expclear").onclick=()=>{
+  if(!confirm("ล้างผลตรวจทั้งหมดในเบราว์เซอร์นี้? กู้คืนไม่ได้")) return;
+  REV={}; saveRev(); $("#expwrap").classList.remove("show"); render();
+};
+refreshExport();
 $("#mx").onclick=()=>$("#modal").classList.remove("show");
 $("#modal").onclick=e=>{if(e.target.id==="modal")$("#modal").classList.remove("show");};
 $("#mreveal").onclick=()=>$("#mans").classList.toggle("show");
