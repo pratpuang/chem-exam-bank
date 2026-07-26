@@ -69,7 +69,14 @@ main{max-width:1040px;margin:16px auto;padding:0 14px}
 .solbody hr{border:0;border-top:1px dashed var(--line);margin:.7em 0}
 .sheet .solbody{font-size:1rem}
 .banner{background:#fef3c7;border-bottom:1px solid #fcd34d;color:#92400e;
-  padding:7px 14px;font-size:.8rem;text-align:center;line-height:1.5}
+  padding:7px 34px 7px 14px;font-size:.8rem;text-align:center;line-height:1.5;position:relative}
+.banner .bx{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;
+  color:#92400e;font-size:1.05rem;line-height:1;cursor:pointer;padding:4px 7px;border-radius:6px;opacity:.65}
+.banner .bx:hover{opacity:1;background:rgba(146,64,14,.12)}
+/* re-open handle once dismissed — the disclaimer is never fully gone */
+#soltab{display:none;background:#fef3c7;border-bottom:1px solid #fcd34d;color:#92400e;
+  padding:3px 14px;font-size:.72rem;text-align:center;cursor:pointer}
+#soltab:hover{background:#fde68a}
 code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:.92em}
 table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line);padding:3px 7px}
 .present-btn{margin-left:auto;border:1px solid var(--accent);color:var(--accent);background:#fff;
@@ -138,6 +145,7 @@ table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line
    <span id="count"></span>
  </div>
  <div class="banner" id="soldis" style="display:none"></div>
+ <div id="soltab">⚠️ เฉลยทั้งหมดเป็นเฉลยที่ AI ทำขึ้น — แตะเพื่ออ่านคำเตือนเต็ม</div>
 </header>
 <main id="root"></main>
 
@@ -193,12 +201,21 @@ opt($("#fdiff"),"","📊 ทุกระดับ");["easy","medium","hard"].for
 opt($("#ftype"),"","✏️ ทุกชนิด");DATA.types.forEach(t=>opt($("#ftype"),t,t));
 const SC=DATA.solcount||{have:0,flag:0,unchecked:0};
 if(SC.have){
-  $("#soldis").style.display="block";
   $("#soldis").innerHTML=`⚠️ <b>เฉลย ${SC.have} ข้อในคลังนี้เป็นเฉลยที่ AI ทำขึ้น ไม่ใช่เฉลยทางการ</b> — `
     +`ข้อสอบ สอวน. / PAT2 / 9 วิชาสามัญ ไม่มีเฉลยแจก ทุกข้อจึงเป็นการหาคำตอบเอง`
     +(SC.unchecked?` · <b>${SC.unchecked} ข้อยังไม่ผ่านการตรวจโดยพี่ปราช</b>`:``)
     +(SC.flag?` · ${SC.flag} ข้อติดธง ⚠️ (ตอบไม่ฟันธง)`:``)
-    +` — ใช้เป็นแนวทาง อย่าเชื่อ 100%`;
+    +` — ใช้เป็นแนวทาง อย่าเชื่อ 100%`
+    +`<button class="bx" id="bx" title="ปิด">✕</button>`;
+  // dismissible, and the choice sticks — but it collapses to a one-line tab, never to nothing.
+  // The per-question disclaimer inside each solution is NOT dismissible.
+  const setBanner=open=>{
+    $("#soldis").style.display = open?"block":"none";
+    $("#soltab").style.display = open?"none":"block";
+  };
+  setBanner(localStorage.getItem("cqb_banner")!=="0");
+  $("#bx").onclick=()=>{localStorage.setItem("cqb_banner","0");setBanner(false);};
+  $("#soltab").onclick=()=>{localStorage.removeItem("cqb_banner");setBanner(true);};
 }
 opt($("#fsol"),"","📖 เฉลย: ทั้งหมด");
 if(SC.have){
