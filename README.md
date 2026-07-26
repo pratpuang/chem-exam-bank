@@ -1,3 +1,11 @@
+---
+title: Chemistry Question Bank
+type: readme
+tags: [chem, exams, bank, posn, reference]
+created: 2026-07-01
+summary: Repository of 922 Thai chemistry past-exam questions (POSN, 9 วิชาสามัญ, PAT2) sorted by chapter, tagged by exam/year/difficulty; interactive web viewer available.
+---
+
 # คลังข้อสอบเคมี · Chemistry Question Bank
 
 A single, chapter-sorted bank of Thai chemistry past-exam questions (สอวน. / POSN,

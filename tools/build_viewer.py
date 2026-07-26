@@ -121,8 +121,54 @@ for q in questions:
 examcount = {}
 for q in questions: examcount[q["exam"]] = examcount.get(q["exam"],0)+1
 
+# ---------- solutions (solutions/chNN.md) ----------
+# AI-derived worked solutions, keyed by Q-id. Deliberately a SEPARATE store:
+# build_bank.py's META whitelist silently deletes any **Solution:** line written
+# into question-bank.md, and body-level text would show the answer to the student.
+SOLDIR = os.path.join(ROOT, "solutions")
+SOLMETA = ("**Answer:**", "**Confidence:**", "**Checked:**", "**Solution:**")
+solutions = {}
+if os.path.isdir(SOLDIR):
+    for fn in sorted(os.listdir(SOLDIR)):
+        if not fn.endswith(".md"): continue
+        stxt = open(os.path.join(SOLDIR, fn), encoding="utf-8").read()
+        sblocks = re.split(r"(?m)^### (Q-\d+)\b", stxt)
+        for i in range(1, len(sblocks), 2):
+            sqid = sblocks[i].strip()
+            slines = sblocks[i+1].splitlines()[1:]   # drop the header remainder
+            fields, cur = {}, None
+            for ln in slines:
+                s = ln.strip()
+                lab = next((m for m in SOLMETA if s.startswith(m)), None)
+                if lab:
+                    cur = lab.strip("*: ")
+                    fields[cur] = [s[len(lab):].strip()]
+                elif cur:
+                    fields[cur].append(ln)
+            if not fields: continue
+            body = "\n".join(fields.get("Solution", [])).strip()
+            solutions[sqid] = {
+                "answer": " ".join(fields.get("Answer", [])).strip(),
+                "conf":   " ".join(fields.get("Confidence", [])).strip(),
+                "checked":" ".join(fields.get("Checked", [])).strip().lower(),
+                "html":   markdown.markdown(body, extensions=["tables"]) if body else "",
+            }
+solcount = {"have": 0, "flag": 0, "unchecked": 0}
+for q in questions:
+    s = solutions.get(q["id"])
+    q["solHtml"]   = s["html"]   if s else ""
+    q["solAnswer"] = s["answer"] if s else ""
+    q["solFlag"]   = bool(s and "⚠" in s["conf"])
+    q["solChecked"]= bool(s and s["checked"].startswith("yes"))
+    if s:
+        solcount["have"] += 1
+        if q["solFlag"]: solcount["flag"] += 1
+        if not q["solChecked"]: solcount["unchecked"] += 1
+print("solutions loaded:", solcount["have"], "| flagged:", solcount["flag"],
+      "| unchecked:", solcount["unchecked"])
+
 data = {
- "questions": questions, "chapters": CHAPTERS,
+ "questions": questions, "chapters": CHAPTERS, "solcount": solcount,
  "bioChapters": BIO_CHAPTERS, "appTopics": APP_TOPICS,
  "exams": {k:{"label":v[0],"color":v[1]} for k,v in EXAMS.items()},
  "years": sorted({q["year"] for q in questions if q["year"]}),
@@ -184,6 +230,26 @@ main{max-width:1040px;margin:16px auto;padding:0 14px}
 .sheet .fig{max-height:52vh;width:auto}
 .foot{margin-top:11px;padding-top:8px;border-top:1px dashed var(--line);font-size:.8rem;color:var(--mut);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .note{background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:7px 11px;border-radius:9px;margin-top:9px;font-size:.85rem}
+/* ---------- solutions (collapsed by default: protects attempt-before-instruction) ---------- */
+.solbtn{margin-top:10px;border:1px solid #059669;color:#059669;background:#fff;padding:6px 13px;
+  border-radius:9px;cursor:pointer;font-size:.82rem;font-weight:600}
+.solbtn:hover{background:#059669;color:#fff}
+.solbtn.flag{border-color:#d97706;color:#d97706}
+.solbtn.flag:hover{background:#d97706;color:#fff}
+.solwrap{display:none;margin-top:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:11px;padding:11px 14px}
+.solwrap.show{display:block}
+.solwrap.flag{background:#fffbeb;border-color:#fcd34d}
+.soldis{font-size:.75rem;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;
+  border-radius:7px;padding:5px 9px;margin-bottom:9px;line-height:1.5}
+.solans{font-weight:700;color:#065f46;margin-bottom:7px;font-size:.95rem}
+.solwrap.flag .solans{color:#92400e}
+.solbody{font-size:.9rem;line-height:1.75}
+.solbody p{margin:.4em 0}
+.solbody table{font-size:.88em;margin:.5em 0}
+.solbody hr{border:0;border-top:1px dashed var(--line);margin:.7em 0}
+.sheet .solbody{font-size:1rem}
+.banner{background:#fef3c7;border-bottom:1px solid #fcd34d;color:#92400e;
+  padding:7px 14px;font-size:.8rem;text-align:center;line-height:1.5}
 code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:.92em}
 table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line);padding:3px 7px}
 .present-btn{margin-left:auto;border:1px solid var(--accent);color:var(--accent);background:#fff;
@@ -242,6 +308,7 @@ table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line
    <select id="fyear"></select>
    <select id="fdiff"></select>
    <select id="ftype"></select>
+   <select id="fsol"></select>
    <button class="btn" id="random">🎲 สุ่มข้อ</button>
    <span class="seg" id="layout">
      <button data-v="list">รายการ</button>
@@ -250,6 +317,7 @@ table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line
    </span>
    <span id="count"></span>
  </div>
+ <div class="banner" id="soldis" style="display:none"></div>
 </header>
 <main id="root"></main>
 
@@ -259,6 +327,7 @@ table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line
   <div class="body" id="mbody"></div>
   <div class="note" id="mnote" style="display:none"></div>
   <div class="ans-box" id="mans"></div>
+  <div id="msol"></div>
   <div class="mctrl">
     <button id="mreveal" class="reveal">👁 เฉลย / หมายเหตุ</button>
     <button id="mprev">◀ ก่อนหน้า</button>
@@ -302,6 +371,24 @@ for(const[k,c]of Object.entries(DATA.examcount||{})){const e=DATA.exams[k]||{lab
 opt($("#fyear"),"","📅 ทุกปี");DATA.years.forEach(y=>opt($("#fyear"),y,"ปี "+y));
 opt($("#fdiff"),"","📊 ทุกระดับ");["easy","medium","hard"].forEach(d=>opt($("#fdiff"),d,DIFF_TH[d]));
 opt($("#ftype"),"","✏️ ทุกชนิด");DATA.types.forEach(t=>opt($("#ftype"),t,t));
+const SC=DATA.solcount||{have:0,flag:0,unchecked:0};
+if(SC.have){
+  $("#soldis").style.display="block";
+  $("#soldis").innerHTML=`⚠️ <b>เฉลย ${SC.have} ข้อในคลังนี้เป็นเฉลยที่ AI ทำขึ้น ไม่ใช่เฉลยทางการ</b> — `
+    +`ข้อสอบ สอวน. / PAT2 / 9 วิชาสามัญ ไม่มีเฉลยแจก ทุกข้อจึงเป็นการหาคำตอบเอง`
+    +(SC.unchecked?` · <b>${SC.unchecked} ข้อยังไม่ผ่านการตรวจโดยพี่ปราช</b>`:``)
+    +(SC.flag?` · ${SC.flag} ข้อติดธง ⚠️ (ตอบไม่ฟันธง)`:``)
+    +` — ใช้เป็นแนวทาง อย่าเชื่อ 100%`;
+}
+opt($("#fsol"),"","📖 เฉลย: ทั้งหมด");
+if(SC.have){
+  opt($("#fsol"),"has",`✅ มีวิธีทำ (${SC.have})`);
+  opt($("#fsol"),"none",`— ยังไม่มีวิธีทำ (${DATA.questions.length-SC.have})`);
+  if(SC.flag)      opt($("#fsol"),"flag",`⚠️ ต้องดูเอง (${SC.flag})`);
+  if(SC.unchecked) opt($("#fsol"),"unchecked",`🕗 ยังไม่ตรวจ (${SC.unchecked})`);
+  const done=SC.have-SC.unchecked;
+  if(done)         opt($("#fsol"),"checked",`✅ ตรวจแล้ว (${done})`);
+}
 
 function examBadge(q){const e=DATA.exams[q.exam]||{label:q.exam.toUpperCase(),color:"#64748b"};
   return `<span class="badge b-exam" style="background:${e.color}">${e.label} ${q.year}</span>`;}
@@ -312,10 +399,28 @@ function chBadge(q){
   return `<span class="badge b-ch">บท ${parseInt(q.ch)}. ${q.chName}</span>`;}
 function footHtml(q){return `📄 ${q.source} &nbsp;·&nbsp; เฉลย: ${q.answer||"—"}`;}
 function figHtml(q){return q.figure?`<img class="fig" src="${q.figure}" alt="${q.id} figure" loading="lazy">`:"";}
+/* Solution block — ALWAYS collapsed on render. Never auto-open: the whole point of
+   present mode is that the student attempts it before seeing the working. */
+function solHtml(q){
+  if(!q.solHtml && !q.solAnswer) return "";
+  const f = q.solFlag ? " flag" : "";
+  const label = q.solFlag ? "⚠️ ดูเฉลย (มีข้อสงสัย)" : "👁 ดูวิธีทำ";
+  const dis = q.solFlag
+    ? "⚠️ ข้อนี้ผมไม่ฟันธง — โจทย์กำกวมหรือตัวเลือกไม่ตรง อ่านเหตุผลในวิธีทำแล้วตัดสินเอง"
+    : "เฉลยนี้ AI ทำขึ้นเอง ไม่ใช่เฉลยทางการ (ข้อสอบ สอวน./PAT2/9 วิชาสามัญ ไม่มีเฉลยแจก)"
+      + (q.solChecked ? " · ✅ พี่ปราชตรวจแล้ว" : " · ยังไม่ผ่านการตรวจ ใช้เป็นแนวทาง อย่าเชื่อ 100%");
+  return `<button class="solbtn${f}" data-sol="1">${label}</button>
+    <div class="solwrap${f}">
+      <div class="soldis">${dis}</div>
+      ${q.solAnswer?`<div class="solans">ตอบ: ${q.solAnswer}</div>`:""}
+      <div class="solbody">${q.solHtml}</div>
+    </div>`;
+}
 
 function apply(){
   const t=$("#q").value.trim().toLowerCase(),subj=$("#fsubj").value,ch=$("#fch").value,
-        ex=$("#fexam").value,yr=$("#fyear").value,df=$("#fdiff").value,tp=$("#ftype").value;
+        ex=$("#fexam").value,yr=$("#fyear").value,df=$("#fdiff").value,tp=$("#ftype").value,
+        sl=$("#fsol").value;
   filtered=DATA.questions.filter(x=>{
     // subject: chem = neither bio nor applied
     if(subj==="chem" && (x.subject==="bio"||x.subject==="applied")) return false;
@@ -331,6 +436,12 @@ function apply(){
     if(yr && x.year!==yr) return false;
     if(df && x.diff!==df) return false;
     if(tp && x.type!==tp) return false;
+    const hasSol = !!(x.solHtml||x.solAnswer);
+    if(sl==="has"       && !hasSol) return false;
+    if(sl==="none"      &&  hasSol) return false;
+    if(sl==="flag"      && !(hasSol && x.solFlag)) return false;
+    if(sl==="unchecked" && !(hasSol && !x.solChecked)) return false;
+    if(sl==="checked"   && !(hasSol && x.solChecked)) return false;
     if(t && !(x.search.includes(t)||x.id.toLowerCase().includes(t))) return false;
     return true;
   });
@@ -351,6 +462,7 @@ function cardHtml(q,idx){return `<div class="card lv-${q.diff}">
      <button class="present-btn" data-i="${idx}">▶ แสดงให้นักเรียน</button></div>
    <div class="body">${q.bodyHtml}${figHtml(q)}</div>
    ${q.note?`<div class="note">📌 ${q.note}</div>`:""}
+   ${solHtml(q)}
    <div class="foot">${footHtml(q)}</div></div>`;}
 function renderCards(R){
   // group by chapter (or biology bucket)
@@ -371,6 +483,7 @@ function renderList(R){
         <span class="row-snip">${q.snippet||""}</span>${examBadge(q)}</div>
       <div class="row-body"><div class="body">${q.bodyHtml}${figHtml(q)}</div>
         ${q.note?`<div class="note">📌 ${q.note}</div>`:""}
+        ${solHtml(q)}
         <div class="foot">${footHtml(q)}
         <button class="present-btn" data-i="${i}">▶ แสดงให้นักเรียน</button></div></div></div>`;
   });
@@ -391,6 +504,7 @@ function paneShow(i){
   d.innerHTML=`<div class="card-top">${chBadge(q)}${examBadge(q)}${diffBadge(q)}<span class="spacer"></span>
      <span class="qid">${q.id}</span><button class="present-btn" data-i="${i}">▶ แสดงให้นักเรียน</button></div>
      <div class="body">${q.bodyHtml}${figHtml(q)}</div>${q.note?`<div class="note">📌 ${q.note}</div>`:""}
+     ${solHtml(q)}
      <div class="foot">${footHtml(q)}</div>`;
 }
 
@@ -405,6 +519,7 @@ function fillModal(){
   const nb=$("#mnote");if(q.note){nb.style.display="block";nb.textContent="📌 "+q.note;}else nb.style.display="none";
   const ans=$("#mans");ans.classList.remove("show");
   ans.innerHTML=`<b>เฉลย:</b> ${q.answer||"—"}`;
+  $("#msol").innerHTML=solHtml(q);   // rebuilt each step → always starts collapsed
   $("#mpos").textContent=`${mIdx+1} / ${filtered.length}`;
 }
 function step(d){mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal();}
@@ -416,15 +531,31 @@ $("#layout").querySelectorAll("button").forEach(b=>{
     $("#layout").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.v===view));render();};
 });
 ["input","change"].forEach(ev=>{$("#q").addEventListener(ev,apply);
-  ["#fch","#fexam","#fyear","#fdiff","#ftype"].forEach(s=>$(s).addEventListener(ev,apply));});
+  ["#fch","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).addEventListener(ev,apply));});
 // subject change → rebuild the topic dropdown for that subject, then re-filter
 $("#fsubj").addEventListener("change",()=>{populateChapters($("#fsubj").value);apply();});
 $("#random").onclick=()=>{if(filtered.length)openModal(Math.floor(Math.random()*filtered.length));};
+/* one delegated handler for every solution toggle, in any layout or in the modal */
+function solToggle(e){
+  const b=e.target.closest(".solbtn");
+  if(!b) return false;
+  e.stopPropagation();                       // don't collapse the accordion row underneath
+  const w=b.nextElementSibling;
+  if(w && w.classList.contains("solwrap")){
+    const open=w.classList.toggle("show");
+    b.textContent = open
+      ? (b.classList.contains("flag") ? "⚠️ ซ่อนเฉลย" : "🙈 ซ่อนวิธีทำ")
+      : (b.classList.contains("flag") ? "⚠️ ดูเฉลย (มีข้อสงสัย)" : "👁 ดูวิธีทำ");
+  }
+  return true;
+}
 $("#root").addEventListener("click",e=>{
+  if(solToggle(e)) return;
   const p=e.target.closest(".present-btn");if(p){openModal(+p.dataset.i);return;}
   const item=e.target.closest(".pane-item");if(item){paneShow(+item.dataset.i);return;}
   const rh=e.target.closest(".row-h");if(rh){rh.parentElement.classList.toggle("open");}
 });
+$("#msol").addEventListener("click",solToggle);
 $("#mx").onclick=()=>$("#modal").classList.remove("show");
 $("#modal").onclick=e=>{if(e.target.id==="modal")$("#modal").classList.remove("show");};
 $("#mreveal").onclick=()=>$("#mans").classList.toggle("show");
