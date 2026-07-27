@@ -58,6 +58,57 @@ at the bottom of this file (§Agent brief) — paste it + the paper's params whe
 ## Gold-standard example
 `tools/incoming/done/pat2-2554-oct.md` — the reference output. Always read it first.
 
+## Notation convention — superscript `^` / subscript `_` / bare formulas (C10, fixed 2026-07-27)
+`build_viewer.py` converts chemistry notation to real ⁿ/ₙ at build time — write it exactly like
+this in the fragment, plain ASCII, nothing fancier. There are TWO separate mechanisms:
+
+**1. Marked notation (`^`/`_`) — for anything that ISN'T a plain molecular formula:**
+
+| Meaning | Write it as | Renders as |
+|---|---|---|
+| Scientific notation | `1.94 × 10^-18`, `5.0×10^22` | 1.94 × 10⁻¹⁸ |
+| Units | `cm^3`, `g/cm^3`, `mol/dm^3` | cm³ |
+| Electron config | `1s^2 2s^2 2p^6`, `[Kr]4d^3` | 1s²2s²2p⁶ |
+| Nuclear symbol | `^13_6A` — mass `^`, atomic number `_`, then the element letter, no spaces | ¹³₆A |
+| Named/variable subscript | `IE_1`, `K_sp`, `K_eq`, `E_cell`, `A_xB_y` | IE₁, Kₛₚ |
+
+**2. Bare molecular formulas — write them completely plain, NO markup at all:**
+`H2SO4`, `CaCl2`, `Ca(OH)2`, `CH3COOH`, `Al2(SO4)3`, `SO42-`, `NO3-`, `CH3NH3+` all auto-convert
+(`H₂SO₄`, `Ca(OH)₂`, `SO₄²⁻`, …) — the build recognizes real element symbols + digits + optional
+`(...)`group + optional trailing charge and renders them. **You don't add anything.** This only
+works for REAL periodic-table symbols; an unrecognized "element" (a placeholder letter, a typo)
+leaves the whole token untouched rather than half-converting it — so a genuinely unknown/hypothetical
+element (`ธาตุ A`, `ธาตุ D`) is always safe to leave as bare letters, but if it needs a **variable**
+subscript (not a specific known count), still use the underscore form (`A_xB_y`), not bare digits.
+
+Rules:
+- No space between `^`/`_` and what follows it (`^2+` not `^ 2+`).
+- Don't hand-type real Unicode superscript/subscript characters (¹²³, ₁₂₃) for new questions — plain
+  ASCII `^`/`_` only; the build converts it for you. (Older Unicode already in the bank, e.g. `⁵⁶₂₆D`,
+  is left alone by the converter — don't touch it if you see it.)
+- Charges on a bare formula (no caret) DO auto-convert (`SO42-`, `Mg2+`, `NO3-` all work) — but if
+  you're not sure the split is unambiguous, marking it explicitly with `^` (`Cu^2+`) is always safer
+  and never wrong; when both a bare and a `^`-marked form would work, prefer whichever you'd naturally
+  type — you don't have to force the caret.
+- ASCII hyphen `-` for negative exponents/charges is fine and preferred (`10^-5`, `Cl-`); Unicode
+  minus `−` also works if that's what you copied from the PDF — no need to normalize it either way.
+- **Isotope names** (`Co-60`, `I-131`, `Pb-206`) and **bond notation** (`C-H`, `Cl-Cl`, `N−C−C−N`)
+  are recognized automatically and left alone — don't add any markup to them, they already render
+  correctly as-is.
+- **Known gotcha — don't do this:** never glue a variable letter straight onto a real formula with
+  no separator (`PCH4` meaning "partial pressure of CH4") — it reads as an actual compound (a real
+  bug found in Q-0210, left as-is: `PSO2 > PCH4 > PH2` renders as if they were literal formulas).
+  Write `P(CH4)` instead (renders correctly as P(CH₄)) — the parenthesis is enough to keep it clean.
+- **Reaction arrows need a space before them if a formula (with digits) comes right before the
+  arrow:** write `H2SO4 -> CO2`, not `H2SO4->CO2` glued with no space. A bare `-` directly before
+  `>` is now specifically excluded from charge conversion, so a glued arrow no longer gets eaten —
+  but a space is still the clean, unambiguous way to write it, so keep doing that in new fragments.
+- **Superoxide vs. oxide ambiguity:** bare `O2-` always resolves as oxide (O²⁻ — one oxygen, charge
+  2-, the single-element-ion rule wins), never as superoxide (O₂⁻ — two oxygens, charge -1). Bare
+  ASCII genuinely can't tell those apart. If you mean superoxide, mark it explicitly: `O2^-` (with
+  the caret) renders correctly as O₂⁻. Neither reading has come up in the corpus yet — this is a
+  documented trap for when it does, not a live bug.
+
 ---
 
 ## §Agent brief (paste this to each spawned agent, then add the paper's params)
@@ -80,7 +131,8 @@ Add `**Figure:** images/Q-NNNN.png` (after choices, before `**Answer:**`) + a `*
 ```
 ### Q-NNNN · 4. พันธะเคมี · PAT2 <BE> · <diff>
 **Tags:** #ch/04 #exam/pat2 #year/<BE> #ver/<session> #diff/<easy|medium|hard> #type/<mcq|calc|short|essay>
-<text; subscripts A_xB_y, arrows ->>
+<text; charges/exponents A^n+, subscripts A_xB_y, nuclear ^13_6A, arrows "A -> B" WITH a space before
+the arrow if a formula precedes it — see §Notation convention above>
 
 - 1) ...
 - 2) ...

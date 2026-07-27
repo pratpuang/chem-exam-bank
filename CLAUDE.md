@@ -56,7 +56,9 @@ question bank. These rules keep every session consistent. Follow them exactly.
 ```markdown
 ### Q-0001 · 7. ปริมาณสารสัมพันธ์ · A-level 2022 · hard
 **Tags:** #ch/07 #exam/alevel #year/2022 #diff/hard #type/mcq
-Question text. Equations as plain text or LaTeX, e.g. 2H_2 + O_2 -> 2H_2O.
+Question text. Plain formulas need no markup (H2SO4, Ca(OH)2, SO42- all auto-render). Anything
+that ISN'T a formula uses ^ / _ : exponents/units as A^n+ (10^-5, cm^3), subscripts as A_x (K_sp,
+IE_1), nuclear as ^13_6A.
 
 - A) ...
 - B) ...
@@ -64,6 +66,14 @@ Question text. Equations as plain text or LaTeX, e.g. 2H_2 + O_2 -> 2H_2O.
 **Answer:** B
 **Source:** A-level 2022, Q14
 ```
+- **Chemistry notation (superscript/subscript/formulas):** bare molecular formulas (`H2SO4`,
+  `CaCl2`, `SO42-`) need NO markup — the viewer recognizes real element symbols and auto-renders
+  them at build time. Everything else (scientific notation, units, electron config, nuclear
+  symbols, named constants like `K_sp`/`IE_1`) uses plain ASCII `^charge` / `_subscript`, converted
+  the same way. Render-time only — the source file stays plain ASCII, never hand-write real
+  Unicode super/subscript characters. Full convention table + gotchas (isotope names, bond
+  notation, the `PCH4`-reads-as-a-compound trap): `tools/PAT2-EXTRACTION-METHOD.md` → "Notation
+  convention" section.
 - **Answer handling (per file):** if the source includes an answer key, fill in `**Answer:**`.
   If it doesn't, leave it as `**Answer:** _(no key)_` — do NOT guess unless Prat asks. A
   Claude-guessed answer must be marked `**Answer:** B _(my guess — unverified)_`.

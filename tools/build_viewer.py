@@ -39,6 +39,180 @@ EXAMS = {
  "unknown":("ยังไม่ระบุ",   "#64748b"),
 }
 
+# ---------- superscript/subscript rendering (render-time only; source stays plain ASCII) ----------
+# Convention (see project CLAUDE.md): charges & exponents use ^ (Cu^2+, 10^-18, cm^3, [Kr]4d^3);
+# subscripts use _ (IE_1, K_eq, A_xB_y, nuclear ^13_6A). Real Unicode super/subscript chars already
+# in the bank (e.g. ⁵⁶₂₆D^2+) have no ASCII marker and are left untouched — only ^ / _ get converted.
+# Subscript token = digits/lowercase letters, OR a single uppercase letter (R_A, R_B) — never more,
+# so a nuclear "13_6A" subscripts only the "6", not "6A". The lookbehind requires an uppercase
+# letter/digit/bracket/degree-sign immediately before "_", so lowercase prose/filenames
+# (build_bank.py) never match. "°" is real corpus content (E°_cell, E°_red — standard-potential
+# notation, ch12 เคมีไฟฟ้า). Checked for "'" (prime) and Greek letters in the same trailing-symbol
+# position too — zero occurrences in the corpus, so they're deliberately not added here.
+_SUB_RE = re.compile(r"(?<=[A-Z0-9\)\]°])_((?:[a-z0-9]+)|[A-Z])")
+_SUP_RE = re.compile(r"\^([0-9+\-−]+)")
+def supersub(t):
+    if not t or ("_" not in t and "^" not in t): return t
+    t = _SUB_RE.sub(r"<sub>\1</sub>", t)
+    t = _SUP_RE.sub(r"<sup>\1</sup>", t)
+    return t
+
+# ---------- bare chemical formulas (NO ^ / _ marker at all: H2SO4, SO42-, Ca(OH)2) ----------
+# The caret/underscore convention above only fires when the author explicitly marked one. Most
+# formulas in the bank were never marked -- they're just plain "H2SO4" -- so this is a second,
+# independent pass: recognize a formula by its SHAPE (real element symbols + digits + optional
+# parens + optional trailing charge) and add the markup ourselves. Whitelist-gated: every symbol in
+# a candidate token must be a real periodic-table symbol, or the WHOLE token is left untouched
+# (a half-converted "Na<sub>3</sub>AO4" is worse than a plain "Na3AO4" -- see Na3AO4 in the bank,
+# a genuine "element A" placeholder that must NOT be mistaken for real sodium-A-oxide).
+_ELEMENTS = {
+ "H","He","Li","Be","B","C","N","O","F","Ne","Na","Mg","Al","Si","P","S","Cl","Ar",
+ "K","Ca","Sc","Ti","V","Cr","Mn","Fe","Co","Ni","Cu","Zn","Ga","Ge","As","Se","Br","Kr",
+ "Rb","Sr","Y","Zr","Nb","Mo","Tc","Ru","Rh","Pd","Ag","Cd","In","Sn","Sb","Te","I","Xe",
+ "Cs","Ba","La","Ce","Pr","Nd","Pm","Sm","Eu","Gd","Tb","Dy","Ho","Er","Tm","Yb","Lu",
+ "Hf","Ta","W","Re","Os","Ir","Pt","Au","Hg","Tl","Pb","Bi","Po","At","Rn",
+ "Fr","Ra","Ac","Th","Pa","U","Np","Pu","Am","Cm","Bk","Cf","Es","Fm","Md","No","Lr",
+ "Rf","Db","Sg","Bh","Hs","Mt","Ds","Rg","Cn","Nh","Fl","Mc","Lv","Ts","Og",
+}
+_CHARGE_SIGNS = "+-−"
+_ASCII_DIGITS = set("0123456789")  # NOT str.isdigit() -- that also matches ¹²³/₁₂₃, which must
+                                   # never be touched (already-real Unicode super/subscript).
+
+def _formula_element(text, i):
+    """Try a 2-letter then 1-letter element symbol at i. Returns (symbol, end) or (None, i)."""
+    if (i + 1 < len(text) and text[i].isupper() and text[i].isascii()
+            and text[i+1].islower() and text[i+1].isascii()):
+        two = text[i:i+2]
+        if two in _ELEMENTS:
+            return two, i + 2
+    if text[i].isupper() and text[i].isascii() and text[i] in _ELEMENTS:
+        return text[i], i + 1
+    return None, i
+
+def _formula_segment(text, i):
+    """One element+digits, or a (...)digits group. Returns (pieces, end, has_digit) or None."""
+    n = len(text)
+    if i < n and text[i] == '(':
+        body = _formula_body(text, i + 1)
+        if body is None:
+            return None
+        pieces, j, has_digit = body
+        if j >= n or text[j] != ')':
+            return None
+        j += 1
+        k = j
+        while k < n and text[k] in _ASCII_DIGITS: k += 1
+        digits = text[j:k]
+        out = [('lit', '(')] + pieces + [('lit', ')')]
+        if digits: out.append(('sub', digits))
+        return out, k, (has_digit or bool(digits))
+    if i >= n:
+        return None
+    el, j = _formula_element(text, i)
+    if el is None:
+        return None
+    k = j
+    while k < n and text[k] in _ASCII_DIGITS: k += 1
+    digits = text[j:k]
+    out = [('lit', el)]
+    if digits: out.append(('sub', digits))
+    return out, k, bool(digits)
+
+def _formula_body(text, i):
+    """One-or-more segments back to back. Returns (pieces, end, has_digit), or None if zero segments."""
+    pieces, has_digit, j, count = [], False, i, 0
+    while True:
+        r = _formula_segment(text, j)
+        if r is None: break
+        seg_pieces, k, seg_digit = r
+        pieces.extend(seg_pieces)
+        has_digit = has_digit or seg_digit
+        j, count = k, count + 1
+    return (pieces, j, has_digit) if count else None
+
+def _try_bare_formula(text, i):
+    """Parse+render a bare formula (+ optional trailing charge) starting at i.
+    Returns (rendered_html, end_index) or None."""
+    n = len(text)
+    body = _formula_body(text, i)
+    if body is None:
+        return None
+    pieces, j, has_digit = body
+    # All-or-nothing: parsing stopped right at another letter/digit (e.g. the "A" in "Na3AO4" --
+    # not a real element, so _formula_segment gave up, but the token clearly isn't finished) means
+    # part of this candidate failed the whitelist. Reject the WHOLE token, don't half-convert it.
+    if j < n and text[j].isascii() and (text[j].isalpha() or text[j] in _ASCII_DIGITS):
+        return None
+    seg_count = 0
+    k = i
+    while True:
+        r = _formula_segment(text, k)
+        if r is None: break
+        _, k, _ = r
+        seg_count += 1
+    # A trailing digit run is always swallowed whole by _formula_body's own greedy consumption, so
+    # the charge/subscript split (SO42- vs IO3- vs Mg2+) has to be resolved from the last piece
+    # already produced, not by scanning further ahead.
+    charge, end = None, j
+    # A real charge is never followed by a digit (magnitude comes BEFORE the sign: "2-" not "-2");
+    # element-hyphen-massnumber isotope labels (B-10, Co-60, I-131, Pb-206) look identical otherwise.
+    is_isotope_hyphen = j < n and text[j] in _CHARGE_SIGNS and j+1 < n and text[j+1] in _ASCII_DIGITS
+    # A "-"/"−" immediately followed by another valid element (Cl-Cl, H-Cl bond-energy notation;
+    # N−C−C−N skeletal/Lewis-structure notation) is a BOND, not a charge -- real charges are always
+    # terminal, never glued straight onto a second formula with no space ("+" isn't used this way).
+    is_bond_hyphen = (j < n and text[j] in ('-', '−') and j+1 < n
+                       and _formula_element(text, j+1)[0] is not None)
+    # A "-" immediately followed by ">" is a bare reaction arrow ("->"), not a charge -- otherwise
+    # the "-" gets eaten as a charge sign and only the ">" survives (e.g. "H2SO4->Al2(SO4)3").
+    is_arrow_hyphen = j < n and text[j] == '-' and j+1 < n and text[j+1] == '>'
+    if (j < n and text[j] in _CHARGE_SIGNS
+            and not is_isotope_hyphen and not is_bond_hyphen and not is_arrow_hyphen):
+        sign = text[j]
+        last_sub = pieces[-1][1] if pieces and pieces[-1][0] == 'sub' else None
+        if last_sub and seg_count == 1:
+            # Lone single-element ion, e.g. Mg2+: the whole digit run IS the charge, no subscript.
+            pieces = pieces[:-1]
+            charge = (last_sub, sign)
+        elif last_sub and len(last_sub) >= 2:
+            # Multi-segment formula whose last digit run absorbed the charge digit too (SO42-):
+            # last digit = charge magnitude, the rest stays as that segment's own subscript.
+            pieces[-1] = ('sub', last_sub[:-1])
+            charge = (last_sub[-1], sign)
+        else:
+            # Single digit (or none) right before the sign (IO3-, HSO4-, OH-): unambiguous -- that
+            # digit is the subscript, and the charge is bare (magnitude 1).
+            charge = ("", sign)
+        end = j + 1
+    html = "".join(f"<sub>{v}</sub>" if k == "sub" else v for k, v in pieces)
+    if charge is not None:
+        html += f"<sup>{charge[0]}{charge[1]}</sup>"
+    if not has_digit and charge is None:
+        return None  # nothing to actually render -> not worth touching
+    return html, end
+
+def bare_formulas(text):
+    if not text:
+        return text
+    out, i, n = [], 0, len(text)
+    while i < n:
+        c = text[i]
+        can_start = c == '(' or (c.isupper() and c.isascii())
+        prev_is_letter = i > 0 and text[i-1].isascii() and text[i-1].isalpha()
+        if can_start and not prev_is_letter:
+            r = _try_bare_formula(text, i)
+            if r is not None:
+                html, end = r
+                out.append(html)
+                i = end
+                continue
+        out.append(c)
+        i += 1
+    return "".join(out)
+
+def chem_notation(t):
+    """Full render-time chemistry pass: bare formulas first, then ^/_ marked notation."""
+    return supersub(bare_formulas(t))
+
 txt = open(SRC, encoding="utf-8").read()
 blocks = re.split(r"(?m)^### (Q-\d+)\b", txt)
 questions = []
@@ -78,21 +252,25 @@ for i in range(1, len(blocks), 2):
         groupKey = "ch-" + ch
         groupLabel = f"บทที่ {int(ch)} · {chName}" if ch else "บทที่ ?"
     body_md = "\n".join(body_lines).strip()
-    # short snippet for list/two-pane rows: first non-empty body line, stripped of md
+    # short snippet for list/two-pane rows: first non-empty body line, stripped of md.
+    # Cut to 90 raw chars BEFORE running chem_notation()/strip, not after — converting first then
+    # slicing can chop a generated <sup>/<sub> tag in half at the cut point.
+    # (chem_notation() also runs before stripping *_` so the chem "_" markers become <sub> tags
+    # first, not plain-stripped away along with genuine markdown emphasis chars)
     snip = ""
     for bl in body_lines:
         t = bl.strip()
         if t and not t.startswith(("-","*","#")):
-            snip = re.sub(r"[*_`]","",t); break
+            snip = re.sub(r"[*_`]","",chem_notation(t[:90])); break
     questions.append({
         "id": qid, "ch": ch, "chName": chName,
         "subject": subject, "bio": bio, "app": app, "groupKey": groupKey, "groupLabel": groupLabel,
         "exam": exam, "year": tag("year"), "ver": tag("ver"),
         "diff": tag("diff"), "type": tag("type"),
-        "bodyHtml": markdown.markdown(body_md, extensions=["tables"]),
-        "snippet": snip[:90],
+        "bodyHtml": markdown.markdown(chem_notation(body_md), extensions=["tables"]),
+        "snippet": snip,
         "answer": meta.get("Answer",""), "source": meta.get("Source",""),
-        "note": meta.get("Note",""), "figure": meta.get("Figure",""),
+        "note": chem_notation(meta.get("Note","")), "figure": meta.get("Figure",""),
         "search": (body_md+" "+header).lower(),
     })
 
@@ -148,10 +326,10 @@ if os.path.isdir(SOLDIR):
             if not fields: continue
             body = "\n".join(fields.get("Solution", [])).strip()
             solutions[sqid] = {
-                "answer": " ".join(fields.get("Answer", [])).strip(),
+                "answer": chem_notation(" ".join(fields.get("Answer", [])).strip()),
                 "conf":   " ".join(fields.get("Confidence", [])).strip(),
                 "checked":" ".join(fields.get("Checked", [])).strip().lower(),
-                "html":   markdown.markdown(body, extensions=["tables"]) if body else "",
+                "html":   markdown.markdown(chem_notation(body), extensions=["tables"]) if body else "",
             }
 solcount = {"have": 0, "flag": 0, "unchecked": 0}
 for q in questions:
