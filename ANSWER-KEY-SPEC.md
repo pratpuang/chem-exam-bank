@@ -1,7 +1,10 @@
 # Answer key + solutions — LOCKED SPEC (scoped 2026-07-26)
 
-> **STATUS: GREEN-LIT and IN PROGRESS (2026-07-26, ~20:00).**
-> **ch07 ปริมาณสารสัมพันธ์ is DONE — all 146 questions solved → `solutions/ch07.md`.**
+> **STATUS: GREEN-LIT and IN PROGRESS.**
+> **Done so far: `ch07` 146/146 · `ch09` อัตราการเกิดปฏิกิริยาเคมี 27/27 · `ch10` สมดุลเคมี 25/25
+> (both added 2026-08-16, Prat's pick — "the สมดุล and อัตรา, this one is small cuz it has no สอวน paper";
+> correct, neither chapter has a single POSN question) · `ch04` 40/135 (POSN, paused).
+> Total solved: 238 / 1,104.**
 > Prat picked ch07 first (not ch10) and merged this with the น้องมิล problem-set job: the solutions
 > ARE the source of her sheet, "so it's not a separate job."
 >
