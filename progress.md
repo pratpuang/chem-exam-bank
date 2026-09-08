@@ -95,3 +95,9 @@ taking the whole bank 922 → 1,104.** 1 paper is part-drafted (2552·ต.ค., 
 - POSN: 595 (8/8 source files merged). Samanya: 200 (3 source files identified + 1 unaccounted-for
   source, all 4 years merged). PAT2: 127 merged (2/12 source files), 4 more drafted in `_wip/`
   awaiting merge, 1 partial, 5 pending/unclassified (incl. one odd filename needing a look).
+
+## A-Level เคมี (TCAS, ทปอ.) — 1 source file, drafted
+
+| Source file | Year (B.E.) | Format | Status | Q-IDs | Notes |
+|---|---|---|---|---|---|
+| tcas68-chem-a-level.pdf | 2568 | born-digital PDF, **text layer mojibake** (subsetted AngsanaNew, no Unicode map) — transcribed from rendered page images instead | **extracted** (fragment drafted, not yet merged) | Q-1278–Q-1312 | 35 Q, all chem (chem-only paper — no bio/physics to skip). 5 figures cropped (Q-1286, Q-1287, Q-1288, Q-1295, Q-1310). **Official answer key WAS printed in this paper** (page 27) — every `**Answer:**` filled from it, not `_(no key)_`. 2 items flagged: ข้อ 8 has two accepted choices (3,5); ข้อ 19 and ข้อ 24 were voided by the official key ("ฟรีทุกข้อ" = full credit all choices). Fragment at `tools/incoming/tcas68-alevel.md`, STAGED — needs-review spot-check before merge (image-transcribed). |
