@@ -267,7 +267,7 @@ for i in range(1, len(blocks), 2):
         "subject": subject, "bio": bio, "app": app, "groupKey": groupKey, "groupLabel": groupLabel,
         "exam": exam, "year": tag("year"), "ver": tag("ver"),
         "diff": tag("diff"), "type": tag("type"),
-        "bodyHtml": markdown.markdown(chem_notation(body_md), extensions=["tables"]),
+        "bodyHtml": markdown.markdown(chem_notation(body_md), extensions=["tables", "nl2br"]),
         "snippet": snip,
         "answer": meta.get("Answer",""), "source": meta.get("Source",""),
         "note": chem_notation(meta.get("Note","")), "figure": meta.get("Figure",""),
@@ -329,7 +329,7 @@ if os.path.isdir(SOLDIR):
                 "answer": chem_notation(" ".join(fields.get("Answer", [])).strip()),
                 "conf":   " ".join(fields.get("Confidence", [])).strip(),
                 "checked":" ".join(fields.get("Checked", [])).strip().lower(),
-                "html":   markdown.markdown(chem_notation(body), extensions=["tables"]) if body else "",
+                "html":   markdown.markdown(chem_notation(body), extensions=["tables", "nl2br"]) if body else "",
             }
 solcount = {"have": 0, "flag": 0, "unchecked": 0}
 for q in questions:
