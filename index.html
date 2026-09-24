@@ -948,7 +948,7 @@ function closeModal(){if(!$("#modal").classList.contains("show"))return;$("#moda
 function fillModal(){
   const q=filtered[mIdx];seen(q);
   $("#mtop").innerHTML=`${idBadge(q)}${chBadge(q)}${examBadge(q)}${diffBadge(q)}`;
-  $("#mbody").innerHTML=q.bodyHtml+figHtml(q);
+  $("#mbody").innerHTML=q.bodyHtml+figHtml(q).replace(' loading="lazy"','');
   $("#mfoot").innerHTML=footHtml(q);
   const nb=$("#mnote");if(q.note){nb.style.display="block";nb.innerHTML="📌 "+q.note;}else nb.style.display="none";
   const ans=$("#mans");ans.classList.remove("show");
@@ -956,7 +956,9 @@ function fillModal(){
   $("#msol").innerHTML=solHtml(q);tex($("#msol"));
   $("#mpos").textContent=`${mIdx+1} / ${filtered.length}`;
   const sh=$("#modal .sheet");sh.classList.remove("lv-easy","lv-medium","lv-hard");if(q.diff)sh.classList.add("lv-"+q.diff);sh.style.animation="none";void sh.offsetWidth;sh.style.animation="";
-  if(window.prepShot)prepShot(450);
+  if(window.prepShot)prepShot(150);
+  // fetch the neighbours' figures now so ◀ / ▶ show them (and can save them) without waiting
+  [1,-1].forEach(d=>{const n=filtered[(mIdx+d+filtered.length)%filtered.length];if(n&&n.figure)(new Image()).src=n.figure;});
 }
 function step(d){mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal();SFX.play("swish",d);}
 
@@ -1142,11 +1144,14 @@ function loadH2C(){return h2cP||(h2cP=new Promise((res,rej)=>{const sc=document.
   sc.onload=()=>res(window.html2canvas);sc.onerror=()=>{h2cP=null;rej(new Error("cdn"));};document.head.appendChild(sc);}));}
 function shotKey(){const q=filtered[mIdx];if(!q)return"";
   return q.id+"|"+document.body.className+"|"+$("#mtop").innerHTML+"|"+$("#mbody").innerHTML;}
+const imgsReady=root=>Promise.all([...root.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{im.addEventListener("load",r,{once:true});im.addEventListener("error",r,{once:true});})));
 async function renderShot(){const q=filtered[mIdx];const h2c=await loadH2C();
+  // let the figure on screen finish downloading first; cloning earlier starts a second parallel download of the same file
+  await imgsReady($("#mbody"));
   const wrap=document.createElement("div");wrap.className="shotwrap";
   const sh=document.createElement("div");sh.className=$("#modal .sheet").className+" shot";
   ["#mtop","#mbody"].forEach(sel=>sh.appendChild($(sel).cloneNode(true)));
-  sh.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));
+  sh.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));sh.querySelectorAll("img").forEach(im=>im.loading="eager");
   const sd=document.createElement("div");sd.className="shotsd";wrap.appendChild(sd);
   wrap.appendChild(sh);document.body.appendChild(wrap);
   try{
@@ -1154,12 +1159,15 @@ async function renderShot(){const q=filtered[mIdx];const h2c=await loadH2C();
     sd.style.cssText=`left:${sh.offsetLeft+12}px;top:${sh.offsetTop+12}px;width:${sh.offsetWidth}px;height:${sh.offsetHeight}px;background:${q.diff==="easy"?"var(--blue)":q.diff==="medium"?"var(--yel)":"var(--red)"}`;
     if(document.fonts&&document.fonts.ready)await document.fonts.ready;
     // any figure in the question goes into the PNG too: wait until every image has loaded
-    await Promise.all([...sh.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r;})));
-    const cv=await h2c(wrap,{scale:2,backgroundColor:getComputedStyle(wrap).backgroundColor,useCORS:true,logging:false,
+    await imgsReady(sh);
+    const cv=await h2c(wrap,{scale:2,backgroundColor:getComputedStyle(wrap).backgroundColor,logging:false,   // same-origin figures: no useCORS, so the copy on screen is reused, not downloaded again
+      
       // copy only the capture box, not the whole page (list view is ~45k elements)
       ignoreElements:el=>document.body.contains(el)&&el!==document.body&&!wrap.contains(el)&&!el.contains(wrap),
       onclone:doc=>{const c=doc.querySelector(".shotwrap");if(c)c.style.opacity="1";}});
-    const blob=await new Promise(r=>cv.toBlob(r,"image/png"));if(!blob)throw new Error("blob");return blob;
+    // a scanned figure makes a huge PNG that is slow to encode on iPad; those go out as a high-quality JPG
+    const jpg=!!sh.querySelector("img");
+    const blob=await new Promise(r=>cv.toBlob(r,jpg?"image/jpeg":"image/png",jpg?.92:undefined));if(!blob)throw new Error("blob");return blob;
   }finally{wrap.remove();}}
 /* the PNG is made in the background while you look at the question, so the button only hands it over */
 let shot={key:"",blob:null,job:null},shotT=0;
@@ -1168,22 +1176,24 @@ function prepShot(delay){clearTimeout(shotT);shotT=setTimeout(()=>{
   if(shot.key===k&&(shot.blob||shot.job))return;
   const job=renderShot();shot={key:k,blob:null,job};
   job.then(b=>{if(shot.job===job)shot.blob=b;},()=>{if(shot.job===job)shot={key:"",blob:null,job:null};});},delay);}
-function deliverShot(blob,name){const file=new File([blob],name,{type:"image/png"});
+function deliverShot(blob,name){const file=new File([blob],name,{type:blob.type});
   const dl=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
     setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);};
   if(matchMedia("(pointer:coarse)").matches&&navigator.canShare&&navigator.canShare({files:[file]}))
     return navigator.share({files:[file]}).catch(e=>{if(e&&e.name!=="AbortError")dl();});
   dl();}
 async function saveShot(){const q=filtered[mIdx],b=$("#mshot");if(!q||b.disabled)return;
-  const lbl="💾 บันทึกเป็นรูป",k=shotKey(),name=`${q.id}.png`;
-  if(shot.key===k&&shot.blob){deliverShot(shot.blob,name);SFX.play("ok");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1200);return;}
+  const lbl="💾 บันทึกเป็นรูป",k=shotKey();const nm=b=>`${q.id}.${b.type==="image/jpeg"?"jpg":"png"}`;
+  if(shot.key===k&&shot.blob){deliverShot(shot.blob,nm(shot.blob));SFX.play("ok");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1200);return;}
   b.disabled=true;b.textContent="กำลังสร้างรูป…";
   try{if(!(shot.key===k&&shot.job)){const job=renderShot();shot={key:k,blob:null,job};}
-    const blob=await shot.job;shot.blob=blob;deliverShot(blob,name);
+    const blob=await shot.job;shot.blob=blob;deliverShot(blob,nm(blob));
     SFX.play("ok");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1200);
   }catch(e){shot={key:"",blob:null,job:null};b.textContent=lbl;alert("บันทึกรูปไม่ได้ — ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างรูป");}
   finally{b.disabled=false;}}
 $("#mshot").onclick=saveShot;
+// fetch the image maker quietly once the site has settled, so the first save doesn't wait on the CDN
+setTimeout(()=>{(window.requestIdleCallback||setTimeout)(()=>loadH2C().catch(()=>{}));},4000);
 
 
 /* ================= TOOLS DRAWER: constants · unit converter · ions ================= */
