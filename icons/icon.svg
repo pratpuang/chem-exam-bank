@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Chem Exam Bank app icon: Bauhaus flask (blue) + bubble (red) + block (yellow) on cream.
+       Everything that matters sits inside the maskable safe circle (r = 205 around the centre). -->
+  <rect width="512" height="512" fill="#efe9dc"/>
+  <rect x="92" y="262" width="150" height="150" fill="#f2b705"/>
+  <circle cx="366" cy="156" r="60" fill="#e4412b"/>
+  <!-- flask: lip, neck, body -->
+  <rect x="214" y="96" width="100" height="24" fill="#141414"/>
+  <rect x="236" y="120" width="56" height="96" fill="#1f3fbf"/>
+  <polygon points="236,214 292,214 404,414 124,414" fill="#1f3fbf"/>
+  <!-- liquid level + base -->
+  <polygon points="177,320 351,320 358,333 170,333" fill="#141414"/>
+  <rect x="112" y="414" width="304" height="20" fill="#141414"/>
+  <!-- small bubbles in the liquid -->
+  <circle cx="232" cy="372" r="13" fill="#efe9dc"/>
+  <circle cx="290" cy="386" r="8" fill="#efe9dc"/>
+</svg>
