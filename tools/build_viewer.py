@@ -1234,7 +1234,7 @@ const chOf=(x,subj)=>subj==="bio"?(x.bio.split(".")[0]||"?"):subj==="applied"?x.
 function qMatch(x,f,skip){
   if(skip!=="subj"&&f.subj&&subjOf(x)!==f.subj) return false;
   if(skip!=="ch"&&f.ch&&chOf(x,f.subj)!==f.ch) return false;
-  if(skip!=="ex"&&f.ex&&x.exam!==f.ex) return false;
+  if(skip!=="ex"&&f.ex&&!f.ex.split("+").includes(x.exam)) return false;   // "samanya+alevel" = either
   if(skip!=="yr"&&f.yr&&x.year!==f.yr) return false;
   if(skip!=="df"&&f.df&&x.diff!==f.df) return false;
   if(skip!=="tp"&&f.tp&&x.type!==f.tp) return false;
@@ -1253,7 +1253,7 @@ function chList(subj){
 const FACETS=[
   ["#fsubj","subj",f=>[["chem","เคมี"],["bio","ชีววิทยา"],["applied","เคมีประยุกต์"]],x=>subjOf(x),()=>"ทุกวิชา",true],
   ["#fch","ch",f=>chList(f.subj),(x,f)=>chOf(x,f.subj),f=>f.subj==="bio"||f.subj==="applied"?"ทุกหัวข้อ":"ทุกบท"],
-  ["#fexam","ex",f=>Object.keys(DATA.examcount||{}).map(k=>[k,(DATA.exams[k]||{label:k}).label]),x=>x.exam,()=>"ทุกสนามสอบ"],
+  ["#fexam","ex",f=>[["samanya+alevel","9 วิชาสามัญ + A-Level"],...Object.keys(DATA.examcount||{}).map(k=>[k,(DATA.exams[k]||{label:k}).label])],x=>x.exam,()=>"ทุกสนามสอบ"],
   ["#fyear","yr",f=>DATA.years.map(y=>[y,"ปี "+y]),x=>x.year,()=>"ทุกปี"],
   ["#fdiff","df",f=>["easy","medium","hard"].map(d=>[d,DIFF_TH[d]]),x=>x.diff,()=>"ทุกระดับ"],
   ["#ftype","tp",f=>DATA.types.map(t=>[t,t]),x=>x.type,()=>"ทุกชนิด"]];
@@ -1265,7 +1265,7 @@ function syncFacets(f){
   for(const[sel,key,list,keyOf,all,countAll]of FACETS){
     const pool=DATA.questions.filter(x=>qMatch(x,f,key)),cnt={};
     pool.forEach(x=>{const k=keyOf(x,f);cnt[k]=(cnt[k]||0)+1;});
-    fill($(sel),all(f)+(countAll?` (${pool.length})`:""),list(f).map(([v,l])=>[v,l,cnt[v]||0]));}
+    fill($(sel),all(f)+(countAll?` (${pool.length})`:""),list(f).map(([v,l])=>[v,l,v.split("+").reduce((a,k)=>a+(cnt[k]||0),0)]));}
   if(SC.have){const pool=DATA.questions.filter(x=>qMatch(x,f,"sl"));
     fill($("#fsol"),"วิธีทำ: ทั้งหมด",SOLOPTS.map(([v,l])=>[v,l,pool.filter(x=>qMatch(x,{...f,sl:v},null)).length]));}}
 function apply(keepPos){
