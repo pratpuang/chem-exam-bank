@@ -407,13 +407,14 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 .fc .fm{padding:12px;border-bottom:3px solid var(--ink);background:color-mix(in srgb,var(--c) 16%,var(--card));font:600 1rem "JetBrains Mono",monospace;overflow-x:auto;min-height:78px;display:flex;align-items:center;justify-content:center;text-align:center}
 .fc .fm{flex-direction:column;gap:6px}.fc .fl{max-width:100%}
 .fc .fm .katex-display{margin:0;overflow:visible;padding:0}.fc .fm .katex{font-size:1.18em}
-@media(max-width:520px){.fc .fm .katex{font-size:1.02em}}
+@media(max-width:520px){.fc .fp .katex{font-size:1.12em}}
 .fc .fn{font-weight:800;padding:9px 12px 2px;font-size:1rem}
 .fc .fn i{font-style:normal;font-size:.68rem;border:2px solid var(--ink);padding:0 6px;margin-left:8px;vertical-align:2px;background:var(--yel);color:#141414;white-space:nowrap}
 .fc .fk{padding:2px 12px 11px;font-size:.86rem;color:var(--mut);line-height:1.55}
 .fc.wide{grid-column:1/-1;border-left:10px solid var(--c)}
 .fc.fhero{grid-column:1/-1;box-shadow:7px 7px 0 var(--c)}
-.fc .fm.chain{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;column-gap:.35em;row-gap:10px}.fc.fhero .fm{min-height:120px;padding:18px 14px}.fc.fhero .fm .katex{font-size:1.5em}
+.fc .fl.chain{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;column-gap:.4em;row-gap:10px}
+.fc .fp{white-space:nowrap}.fc .fp .katex{font-size:1.3em}.fc.fhero .fm{min-height:120px;padding:18px 14px}.fc.fhero .fp .katex{font-size:1.75em}
 .fc.wide .fn{padding-top:10px}
 .fc ul{margin:6px 0 11px;padding:0 14px 0 30px;line-height:1.7;font-size:.93rem}
 .fc li::marker{color:var(--c)}
@@ -424,12 +425,13 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 .fxnone{padding:40px 10px;text-align:center;color:var(--mut);font-weight:700}
 /* desktop (mouse) only: the sheet read small at arm's length; iPad (touch) keeps the base size */
 @media (hover:hover) and (pointer:fine) and (min-width:900px){
+  #td{width:min(1500px,96vw)}
   .fxbar input{font-size:1.15rem;padding:10px 14px}
   .fxchips button{min-width:44px;height:38px;font-size:1.05rem}
   .fno{width:60px;height:60px;font-size:1.8rem}
   .fsh b{font-size:1.38rem}.fcur{font-size:.82rem}.fct{font-size:.92rem}
   .fgrid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
-  .fc .fm{min-height:90px}.fc .fm .katex{font-size:1.34em}
+  .fc .fm{min-height:90px}.fc .fp .katex{font-size:1.5em}
   .fc .fn{font-size:1.16rem;padding-top:11px}.fc .fn i{font-size:.76rem}
   .fc .fk{font-size:1rem;line-height:1.6}
   .fc ul{font-size:1.07rem;line-height:1.75}
@@ -1284,8 +1286,13 @@ const TD=(()=>{
     if(q)return q.subject!=="bio"&&q.subject!=="applied"&&FX[q.ch]?q.ch:null;
     if(!document.body.classList.contains("inapp"))return null;
     const sj=$("#fsubj").value,c=$("#fch").value;return(sj===""||sj==="chem")&&FX[c]?c:null;}
+  // "a = b = c" -> ["a","= b","= c"], splitting only outside braces so fractions stay whole
+  function eqParts(t){const out=[];let d=0,st=0;
+    for(let i=0;i<t.length;i++){const ch=t[i];if(ch==="{")d++;else if(ch==="}")d--;
+      else if(d===0&&t.startsWith(" = ",i)){out.push(t.slice(st,i).trim());st=i+1;i+=2;}}
+    out.push(t.slice(st).trim());return out.map(x=>x.replace(/^=\s*/,"= ")).filter(Boolean);}
   function fcard(c){const x=c.x?`<i>เพิ่มเติม</i>`:"",srch=esc(plain([c.n,c.key,c.note,c.tex||"",(c.lines||[]).join(" "),(c.rows||[]).flat().join(" ")].join(" ")));
-    if(c.k==="f")return `<div class="fc${c.w?" fhero":""}" data-s="${srch}"><div class="fm${c.w?" chain":""}">${(c.w?c.tex.split(" = ").map((t,i)=>(i?"= ":"")+t):c.tex.split(/\\qquad/)).map(t=>`<div class="fl" data-tex="${esc(t.trim())}">${esc(t.trim())}</div>`).join("")}</div>
+    if(c.k==="f")return `<div class="fc${c.w?" fhero":""}" data-s="${srch}"><div class="fm">${c.tex.split(/\\qquad/).map(t=>`<div class="fl chain">${eqParts(t.trim()).map(p=>`<span class="fp" data-tex="${esc(p)}">${esc(p)}</span>`).join("")}</div>`).join("")}</div>
       <div class="fn">${c.n}${x}</div>${c.key||c.note?`<div class="fk">${[c.key,c.note].filter(Boolean).join("<br>")}</div>`:""}</div>`;
     if(c.k==="t")return `<div class="fc wide" data-s="${srch}"><div class="fn">${c.n}${x}</div><div class="ftw"><table class="ftbl">
       <tr>${c.head.map(h=>`<th>${h}</th>`).join("")}</tr>${c.rows.map(r=>`<tr>${r.map(d=>`<td>${d}</td>`).join("")}</tr>`).join("")}</table></div>
@@ -1293,8 +1300,8 @@ const TD=(()=>{
     return `<div class="fc wide" data-s="${srch}"><div class="fn">${c.n}${x}</div><ul>${c.lines.map(l=>`<li>${l}</li>`).join("")}</ul>
       ${c.note?`<div class="fk">${c.note}</div>`:""}</div>`;}
   function fxTex(){if(!window.katex)return;
-    document.querySelectorAll("#td-fx .fl[data-tex]:not(.done)").forEach(el=>{
-      try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false,strict:false});el.classList.add("done");}catch(e){}});fxFit();}
+    document.querySelectorAll("#td-fx .fp[data-tex]:not(.done)").forEach(el=>{
+      try{katex.render(el.dataset.tex,el,{displayMode:false,throwOnError:false,strict:false});el.classList.add("done");}catch(e){}});fxFit();}
   // a long formula shrinks to fit its card instead of scrolling sideways (only measurable while visible)
   function fxFit(){const pane=$("#td-fx");if(!pane||!pane.classList.contains("on")||!isOpen())return;
     pane.querySelectorAll(".fm").forEach(fm=>{if(fm.offsetParent===null)return;fm.querySelectorAll(".fl").forEach(l=>l.style.fontSize="");
