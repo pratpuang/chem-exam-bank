@@ -626,6 +626,63 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .exprow button.pri{background:var(--ink);color:var(--paper)}
 .exprow button.dan{color:var(--red)}
 @media(max-width:640px){.poster{padding:20px 16px 18px 26px}.poster .pnum{font-size:4.2rem}.poster .body,.poster .solbox{max-width:100%}.poster .phead,.poster .pmeta{max-width:78%}.sheet{padding:22px 16px 18px 28px}.sheet .body{font-size:1.15rem}}
+
+/* ---------- periodic table drawer + Mw calculator ---------- */
+#pdtab{position:fixed;left:0;top:42%;z-index:45;writing-mode:vertical-rl;background:var(--red);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--ink);cursor:pointer;display:none;transition:transform .2s}
+body.inapp #pdtab{display:block}
+#pdtab:hover{transform:translateX(4px)}
+#pdscrim{position:fixed;inset:0;z-index:70;background:rgba(20,20,20,.35);opacity:0;pointer-events:none;transition:opacity .35s}
+#pd{position:fixed;left:0;top:0;bottom:0;z-index:71;width:min(960px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--ink);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 28px;overflow:auto}
+body.pdopen #pd{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
+body.pdopen #pdscrim{opacity:1;pointer-events:auto}
+.pdh{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.pdh>b{font-size:1.3rem;font-weight:800}
+.pdq{font-size:.8rem;background:var(--card);border:2px solid var(--ink);padding:3px 8px}
+.pdq:empty{display:none}
+.pdq button{border:0;background:none;font:800 .85rem "Anuphan",sans-serif;color:var(--red);padding:0 3px;cursor:pointer;text-decoration:underline dotted}
+.pdq button:hover{background:var(--red);color:#fff}
+.pdhov{font:600 .8rem "JetBrains Mono",monospace;color:var(--mut)}
+.pdx{margin-left:auto;background:var(--ink);color:var(--paper);border:0;width:36px;height:36px;font-weight:800;cursor:pointer}
+.pdw{container-type:inline-size;overflow-x:auto}
+.pdg{--u:calc(max(100cqi,600px)/18);display:grid;grid-template-columns:repeat(18,minmax(0,1fr));gap:3px;min-width:600px}
+.pde{aspect-ratio:1/1;border:2px solid var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:3px 3px 4px;cursor:pointer;user-select:none;-webkit-user-select:none;min-width:0;overflow:hidden;position:relative;line-height:1;transition:transform .15s,box-shadow .15s}
+.pde i{align-self:flex-start;font-style:normal;font-weight:500;opacity:.75;font-size:calc(var(--u)*.16)}
+.pde b{font-weight:800;font-size:calc(var(--u)*.33);margin-top:-6%}
+.pde s{text-decoration:none;font-family:"JetBrains Mono",monospace;font-size:calc(var(--u)*.15);opacity:.85}
+.pde:hover{transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--ink);z-index:2}
+.pde.inq::after{content:"";position:absolute;inset:-2px;border:3px solid var(--red);animation:pdpulse 1.2s infinite}
+@keyframes pdpulse{50%{inset:3px;opacity:.3}}
+.pde.inf{outline:3px solid var(--blue);outline-offset:-3px}
+.pde.pdflash{animation:pdfl .35s}
+@keyframes pdfl{0%{background:var(--ink);color:var(--yel)}}
+.k-alk{background:var(--red);color:#fff}.k-ae{background:#f28c28}.k-tm{background:var(--card)}.k-pt{background:#d9d2c1}.k-md{background:#9fb0e8}.k-nm{background:var(--yel)}.k-hal{background:var(--blue);color:#fff}.k-ng{background:var(--ink);color:var(--paper)}.k-ln{background:#f3c3b8}.k-an{background:#e39c8c}
+.pdph{display:flex;align-items:center;justify-content:center;font:600 calc(var(--u)*.17) "JetBrains Mono",monospace;opacity:.55;aspect-ratio:1/1}
+.pdinfo{grid-row:1/4;grid-column:3/13;display:flex;gap:16px;align-items:flex-start;padding:0 6px;overflow:auto}
+.pdbig{flex:none;position:relative;width:calc(var(--u)*2.3);height:calc(var(--u)*2.3);border:4px solid var(--ink);background:var(--card);box-shadow:6px 6px 0 var(--ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:calc(var(--u)*1.2);padding-bottom:30px;line-height:1}
+.pdbig i{position:absolute;left:6px;top:4px;font:700 .8rem "JetBrains Mono",monospace;font-style:normal}
+.pdbig u{position:absolute;left:0;right:0;bottom:22px;text-align:center;font:700 .8rem "Anuphan",sans-serif;text-decoration:none}
+.pdbig s{position:absolute;left:0;right:0;bottom:5px;text-align:center;font:700 .85rem "JetBrains Mono",monospace;text-decoration:none}
+.pdbrk{flex:1;min-width:0}
+.pdbrk table{border-collapse:collapse;font:600 .78rem "JetBrains Mono",monospace;width:100%;background:var(--card)}
+.pdbrk th,.pdbrk td{border:2px solid var(--ink);padding:2px 7px;text-align:right;white-space:nowrap}
+.pdbrk th{background:var(--ink);color:var(--paper);font-weight:700}
+.pdbrk td:first-child{text-align:left;font-weight:800}
+.pdbrk .pc{background-image:linear-gradient(90deg,var(--yel) var(--p),transparent var(--p))}
+.pdbrk .hint{opacity:.6;font-size:.88rem}
+.pdbrk .err{color:var(--red);font-weight:700}
+.pdcalc{border:3px solid var(--ink);background:var(--card);box-shadow:6px 6px 0 var(--ink);padding:12px;margin-top:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:stretch}
+.pdcalc input{flex:1 1 220px;min-width:0;font:700 1.45rem "JetBrains Mono",monospace;border:3px solid var(--ink);padding:6px 12px;background:var(--paper);outline:none}
+.pdcalc input:focus{border-color:var(--blue)}
+.pdmw{background:var(--ink);color:var(--yel);padding:6px 16px;font:800 1.5rem "JetBrains Mono",monospace;min-width:210px;text-align:right;display:flex;flex-direction:column;justify-content:center}
+.pdmw small{font:600 .75rem "Anuphan",sans-serif;color:#bbb}
+.pdkeys{display:flex;flex-wrap:wrap;gap:4px;width:100%;align-items:center}
+.pdkeys button{border:2px solid var(--ink);background:var(--paper);font:800 .95rem "JetBrains Mono",monospace;min-width:36px;height:34px;padding:0 8px;cursor:pointer}
+.pdkeys button:hover{background:var(--yel)}
+.pdkeys button:active{transform:translate(2px,2px)}
+.pdkeys .kp{background:var(--blue);color:#fff}.pdkeys .kx{background:var(--red);color:#fff}
+.pdkeys .sep{width:10px}
+.pdkeys .tip{margin-left:auto;font-size:.75rem;color:var(--mut)}
+@media (prefers-reduced-motion:reduce){#pd,#pdscrim{transition:none}.pde.inq::after{animation:none}}
 </style></head><body>
 <div class="kin" aria-hidden="true"><i class="k1"></i><i class="k2"></i><i class="k3"></i><i class="k4"></i><i class="k5"></i></div>
 
@@ -646,6 +703,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
    <button class="home" id="home" title="กลับไปเลือกบท">⌂ <span>เลือกบท</span></button>
    <span class="title"><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>คลังข้อสอบเคมี <small>Chem Question Bank</small></span>
    <input id="q" placeholder="ค้นหาข้อความ / สูตร / Q-id…  ( / )">
+   <button class="hbtn" id="ptbtn" title="ตารางธาตุ + คำนวณ Mw">⚛ ตารางธาตุ</button>
    <button class="hbtn" id="random">🎲 สุ่ม</button>
    <button class="hbtn" id="ftoggle">ตัวกรอง ▾</button>
  </div>
@@ -683,6 +741,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
     <button id="mreveal" class="reveal">เฉลย / หมายเหตุ</button>
     <button id="mprev">◀ ก่อนหน้า</button>
     <button id="mnext">ถัดไป ▶</button>
+    <button id="mpt" title="ตารางธาตุ">⚛</button>
     <span class="mpos" id="mpos"></span>
   </div>
   <div class="foot" id="mfoot" style="margin-top:14px"></div>
@@ -702,6 +761,16 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
     <button id="expclose" style="margin-left:auto">ปิด</button>
   </div>
 </div></div>
+
+<button id="pdtab" title="ตารางธาตุ + คำนวณ Mw">ตารางธาตุ</button>
+<div id="pdscrim"></div>
+<aside id="pd" aria-label="ตารางธาตุ">
+  <div class="pdh"><b>ตารางธาตุ</b><span class="pdq" id="pdq"></span><span class="pdhov" id="pdhov"></span><button class="pdx" id="pdx" title="ปิด (Esc)">✕</button></div>
+  <div class="pdw"><div class="pdg" id="pdg"></div></div>
+  <div class="pdcalc"><input id="pdin" spellcheck="false" autocomplete="off" placeholder="พิมพ์สูตร เช่น Al2(SO4)3 หรือแตะธาตุ">
+    <div class="pdmw"><small id="pdfd"></small><span id="pdmw">Mw = —</span></div>
+    <div class="pdkeys" id="pdkeys"></div></div>
+</aside>
 
 <script>
 const DATA = __DATA__;
@@ -1152,6 +1221,7 @@ $("#mprev").onclick=()=>step(-1);$("#mnext").onclick=()=>step(1);
 document.addEventListener("keydown",e=>{
   if(e.target.classList&&e.target.classList.contains("vol"))return;   // arrows on the volume slider adjust volume only
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&e.target.type!=="range";
+  if(PD.isOpen()){if(e.key==="Escape")PD.close();return;}   // drawer open: keys stay inside it
   if($("#modal").classList.contains("show")){
     if(e.key==="Escape")closeModal();
     if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1);
@@ -1168,6 +1238,98 @@ document.addEventListener("keydown",e=>{
     else if(e.key==="Enter"){const b=$("#deck .solbtn");if(b){e.preventDefault();b.click();}}
   }
 });
+
+/* ================= PERIODIC TABLE DRAWER + Mw CALCULATOR ================= */
+const PD=(()=>{
+  const RAW="H,Hydrogen,1.008|He,Helium,4.0026|Li,Lithium,6.94|Be,Beryllium,9.0122|B,Boron,10.81|C,Carbon,12.011|N,Nitrogen,14.007|O,Oxygen,15.999|F,Fluorine,18.998|Ne,Neon,20.180|Na,Sodium,22.990|Mg,Magnesium,24.305|Al,Aluminium,26.982|Si,Silicon,28.085|P,Phosphorus,30.974|S,Sulfur,32.06|Cl,Chlorine,35.45|Ar,Argon,39.948|K,Potassium,39.098|Ca,Calcium,40.078|Sc,Scandium,44.956|Ti,Titanium,47.867|V,Vanadium,50.942|Cr,Chromium,51.996|Mn,Manganese,54.938|Fe,Iron,55.845|Co,Cobalt,58.933|Ni,Nickel,58.693|Cu,Copper,63.546|Zn,Zinc,65.38|Ga,Gallium,69.723|Ge,Germanium,72.630|As,Arsenic,74.922|Se,Selenium,78.971|Br,Bromine,79.904|Kr,Krypton,83.798|Rb,Rubidium,85.468|Sr,Strontium,87.62|Y,Yttrium,88.906|Zr,Zirconium,91.224|Nb,Niobium,92.906|Mo,Molybdenum,95.95|Tc,Technetium,98|Ru,Ruthenium,101.07|Rh,Rhodium,102.91|Pd,Palladium,106.42|Ag,Silver,107.87|Cd,Cadmium,112.41|In,Indium,114.82|Sn,Tin,118.71|Sb,Antimony,121.76|Te,Tellurium,127.60|I,Iodine,126.90|Xe,Xenon,131.29|Cs,Caesium,132.91|Ba,Barium,137.33|La,Lanthanum,138.91|Ce,Cerium,140.12|Pr,Praseodymium,140.91|Nd,Neodymium,144.24|Pm,Promethium,145|Sm,Samarium,150.36|Eu,Europium,151.96|Gd,Gadolinium,157.25|Tb,Terbium,158.93|Dy,Dysprosium,162.50|Ho,Holmium,164.93|Er,Erbium,167.26|Tm,Thulium,168.93|Yb,Ytterbium,173.05|Lu,Lutetium,174.97|Hf,Hafnium,178.49|Ta,Tantalum,180.95|W,Tungsten,183.84|Re,Rhenium,186.21|Os,Osmium,190.23|Ir,Iridium,192.22|Pt,Platinum,195.08|Au,Gold,196.97|Hg,Mercury,200.59|Tl,Thallium,204.38|Pb,Lead,207.2|Bi,Bismuth,208.98|Po,Polonium,209|At,Astatine,210|Rn,Radon,222|Fr,Francium,223|Ra,Radium,226|Ac,Actinium,227|Th,Thorium,232.04|Pa,Protactinium,231.04|U,Uranium,238.03|Np,Neptunium,237|Pu,Plutonium,244|Am,Americium,243|Cm,Curium,247|Bk,Berkelium,247|Cf,Californium,251|Es,Einsteinium,252|Fm,Fermium,257|Md,Mendelevium,258|No,Nobelium,259|Lr,Lawrencium,266|Rf,Rutherfordium,267|Db,Dubnium,268|Sg,Seaborgium,269|Bh,Bohrium,270|Hs,Hassium,277|Mt,Meitnerium,278|Ds,Darmstadtium,281|Rg,Roentgenium,282|Cn,Copernicium,285|Nh,Nihonium,286|Fl,Flerovium,289|Mc,Moscovium,290|Lv,Livermorium,293|Ts,Tennessine,294|Og,Oganesson,294";
+  const cat=z=>[2,10,18,36,54,86,118].includes(z)?"ng":[3,11,19,37,55,87].includes(z)?"alk":[4,12,20,38,56,88].includes(z)?"ae":[5,14,32,33,51,52].includes(z)?"md":[9,17,35,53,85,117].includes(z)?"hal":[1,6,7,8,15,16,34].includes(z)?"nm":(z>=57&&z<=71)?"ln":(z>=89&&z<=103)?"an":((z>=21&&z<=30)||(z>=39&&z<=48)||(z>=72&&z<=80)||(z>=104&&z<=112))?"tm":"pt";
+  const pg=z=>{const B=[0,2,10,18,36,54,86,118];let p=1;while(z>B[p])p++;const s=z-B[p-1];let g=null,f=null;
+    if(p==1)g=z==1?1:18;else if(p<=3)g=s<=2?s:s+10;else if(p<=5)g=s;else{if(s<=2)g=s;else if(s<=17)f=s-3;else g=s-14;}return{p,g,f};};
+  const ELS=RAW.split("|").map((r,i)=>{const[s,n,m]=r.split(",");const z=i+1;return{z,s,n,m:+m,cat:cat(z),...pg(z)};});
+  const BY={},SYM={};ELS.forEach(e=>{BY[e.z]=e;SYM[e.s]=e;});
+  const fm=e=>{if(Number.isInteger(e.m))return`(${e.m})`;const d=e.m<10?3:2,f=10**d;return(Math.round(e.m*f+1e-6)/f).toFixed(d);};
+  // formula -> {symbol:count}; nested ( ) [ ], leading coefficients, hydrates split by · . * •
+  function parseF(str){
+    const s=str.replace(/\s+/g,"").replace(/[•*.]/g,"·");if(!s)return null;const total={};
+    for(const part of s.split("·")){
+      if(!part)throw"มีจุด · เกินมา";let i=0;
+      const num=()=>{const m=part.slice(i).match(/^\d+/);if(!m)return 1;i+=m[0].length;return +m[0];};
+      const grp=close=>{const c={};
+        while(i<part.length){const ch=part[i];
+          if(ch=="("||ch=="["){i++;const inner=grp(ch=="("?")":"]");const n=num();for(const k in inner)c[k]=(c[k]||0)+inner[k]*n;}
+          else if(ch==")"||ch=="]"){if(ch!==close)throw`วงเล็บ ${ch} ไม่มีคู่`;i++;return c;}
+          else if(/[A-Z]/.test(ch)){const nx=part[i+1]||"";let sym=ch;
+            if(/[a-z]/.test(nx)){if(SYM[ch+nx])sym=ch+nx;else throw`ไม่รู้จักธาตุ ${ch+nx}`;}
+            if(!SYM[sym])throw`ไม่รู้จักธาตุ ${sym}`;i+=sym.length;const n=num();c[sym]=(c[sym]||0)+n;}
+          else if(/\d/.test(ch))throw"ตัวเลขต้องตามหลังธาตุหรือวงเล็บ";
+          else throw`อ่านไม่ออกตรง "${ch}"`;}
+        if(close)throw`ขาดวงเล็บปิด ${close}`;return c;};
+      const coef=num();const c=grp(null);if(!Object.keys(c).length)throw"ยังไม่มีธาตุ";
+      for(const k in c)total[k]=(total[k]||0)+c[k]*coef;}
+    return total;}
+  const fHTML=str=>str.replace(/\s+/g,"").replace(/[•*.]/g,"·").split("·").map(p=>{const m=p.match(/^\d+/);const co=m?m[0]:"";return co+p.slice(co.length).replace(/(\d+)/g,"<sub>$1</sub>");}).join(" · ");
+  let built=false,last=null;const inp=$("#pdin"),G=$("#pdg");
+  function build(){
+    let h="";
+    ELS.forEach(e=>{const[r,c]=e.f!==null?[e.p==6?9:10,3+e.f]:[e.p,e.g];
+      h+=`<div class="pde k-${e.cat}" data-z="${e.z}" style="grid-row:${r};grid-column:${c}"><i>${e.z}</i><b>${e.s}</b><s>${fm(e)}</s></div>`;});
+    h+=`<div class="pdph" style="grid-row:6;grid-column:3">57–71</div><div class="pdph" style="grid-row:7;grid-column:3">89–103</div><div style="grid-row:8;grid-column:1;height:10px"></div>`;
+    h+=`<div class="pdinfo"><div class="pdbig" id="pdbig"></div><div class="pdbrk" id="pdbrk"></div></div>`;
+    G.innerHTML=h;
+    $("#pdkeys").innerHTML=["(",")","[","]","·"].map(k=>`<button class="kp" data-k="${k}">${k}</button>`).join("")+`<span class="sep"></span>`+[..."1234567890"].map(k=>`<button data-k="${k}">${k}</button>`).join("")+`<span class="sep"></span><button class="kx" data-k="bk" title="ลบตัวสุดท้าย">⌫</button><button class="kx" data-k="clr">ล้าง</button><span class="tip">คลิกซ้าย = เพิ่มธาตุ · คลิกขวา = ลดทีละ 1</span>`;
+    big(BY[1]);update();built=true;}
+  const big=e=>{last=e;$("#pdbig").innerHTML=`<i>${e.z}</i>${e.s}<u>${e.n}</u><s>${fm(e)}</s>`;};
+  function update(){
+    let c;G.querySelectorAll(".pde.inf").forEach(t=>t.classList.remove("inf"));
+    try{c=parseF(inp.value);}catch(err){$("#pdmw").textContent="Mw = —";$("#pdfd").textContent="";$("#pdbrk").innerHTML=`<span class="err">⚠ ${err}</span>`;return;}
+    if(!c){$("#pdmw").textContent="Mw = —";$("#pdfd").textContent="";$("#pdbrk").innerHTML=`<span class="hint">แตะธาตุหรือพิมพ์สูตรด้านล่าง เพื่อคำนวณมวลโมเลกุล (Mw)<br>คลิกซ้าย = เพิ่มธาตุ · คลิกขวา = ลดทีละ 1</span>`;return;}
+    const tot=Object.entries(c).reduce((a,[k,n])=>a+SYM[k].m*n,0);
+    $("#pdmw").textContent="Mw = "+tot.toFixed(2);$("#pdfd").innerHTML=fHTML(inp.value);
+    $("#pdbrk").innerHTML=`<table><tr><th>ธาตุ</th><th>จำนวน</th><th>มวลอะตอม</th><th>รวม</th><th>% มวล</th></tr>${Object.entries(c).map(([k,n])=>{const sub=SYM[k].m*n,p=sub/tot*100;return`<tr><td>${k}</td><td>${n}</td><td>${fm(SYM[k])}</td><td>${sub.toFixed(2)}</td><td class="pc" style="--p:${p.toFixed(1)}%">${p.toFixed(2)}%</td></tr>`;}).join("")}</table>`;
+    Object.keys(c).forEach(k=>{const t=G.querySelector(`.pde[data-z="${SYM[k].z}"]`);if(t)t.classList.add("inf");});}
+  const put=v=>{inp.value=v;update();};
+  const flash=z=>{const t=G.querySelector(`.pde[data-z="${z}"]`);if(!t)return;t.classList.remove("pdflash");void t.offsetWidth;t.classList.add("pdflash");};
+  function addSym(sym){const v=inp.value,m=v.match(/([A-Z][a-z]?)(\d*)$/);
+    if(m&&m[1]==sym)put(v.slice(0,v.length-m[0].length)+sym+((+m[2]||1)+1));else put(v+sym);}
+  // right-click: take ONE atom of that element off its last occurrence; drop brackets left empty
+  function decSym(sym){const v=inp.value,re=new RegExp(sym+"(?![a-z])(\\d*)","g");let m,hit=null;while((m=re.exec(v)))hit=m;
+    if(!hit)return false;const n=+hit[1]||1;
+    let nv=v.slice(0,hit.index)+(n>2?sym+(n-1):n==2?sym:"")+v.slice(hit.index+hit[0].length);
+    let prev;do{prev=nv;nv=nv.replace(/\(\)\d*|\[\]\d*/g,"");}while(nv!==prev);
+    put(nv.replace(/^[·.*•]+|[·.*•]+$/g,""));return true;}
+  // formulas in the question on screen -> one-tap chips + pulsing elements
+  function curQ(){if($("#modal").classList.contains("show"))return filtered[mIdx];
+    if(view==="poster")return filtered[pIdx];
+    if(view==="pane"){const s=document.querySelector(".pane-item.sel");return s?filtered[+s.dataset.i]:null;}
+    return null;}
+  function refreshQ(){
+    G.querySelectorAll(".pde.inq").forEach(t=>t.classList.remove("inq"));
+    const q=curQ();let out=[];
+    if(q){const d=document.createElement("div");d.innerHTML=(q.bodyHtml||"").replace(/<sup>[\s\S]*?<\/sup>/g," ");
+      const txt=d.textContent.replace(/[₀-₉]/g,c=>"₀₁₂₃₄₅₆₇₈₉".indexOf(c)).replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]/g," ");
+      for(let m of (txt.match(/[A-Z][A-Za-z0-9()\[\]]*/g)||[])){
+        while(/[)\]]$/.test(m)&&(m.match(/[)\]]/g)||[]).length>(m.match(/[(\[]/g)||[]).length)m=m.slice(0,-1);
+        if(m.length<2||/^[IVX]+$/.test(m)||/^K\d$/.test(m)||out.includes(m))continue;   // skip roman numerals and K1/K2 (equilibrium constants, not potassium)
+        try{if(parseF(m))out.push(m);}catch(e){}}
+      out=out.slice(0,8);}
+    $("#pdq").innerHTML=out.length?"ในโจทย์: "+out.map(f=>`<button data-f="${f}">${fHTML(f)}</button>`).join(""):"";
+    const zs=new Set();out.forEach(f=>Object.keys(parseF(f)).forEach(k=>zs.add(SYM[k].z)));
+    zs.forEach(z=>{const t=G.querySelector(`.pde[data-z="${z}"]`);if(t)t.classList.add("inq");});}
+  const isOpen=()=>document.body.classList.contains("pdopen");
+  function open(){if(!built)build();refreshQ();document.body.classList.add("pdopen");SFX.play("open");}
+  function close(){if(!isOpen())return;document.body.classList.remove("pdopen");SFX.play("close");}
+  G.addEventListener("click",e=>{const t=e.target.closest(".pde");if(!t)return;const el=BY[t.dataset.z];addSym(el.s);big(el);flash(el.z);SFX.play("tick");});
+  G.addEventListener("contextmenu",e=>{const t=e.target.closest(".pde");if(!t)return;e.preventDefault();const el=BY[t.dataset.z];big(el);
+    if(decSym(el.s)){flash(el.z);SFX.play("unmark");}else SFX.play("bad");});
+  G.addEventListener("mouseover",e=>{const t=e.target.closest(".pde");if(t){const el=BY[t.dataset.z];$("#pdhov").textContent=`${el.s} · ${el.n} · Z ${el.z} · ${fm(el)}`;}});
+  inp.addEventListener("input",update);
+  $("#pdkeys").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.k;SFX.play("click");
+    if(k=="bk")put(inp.value.slice(0,-1));else if(k=="clr")put("");else put(inp.value+k);});
+  $("#pdq").addEventListener("click",e=>{const b=e.target.closest("button");if(b){put(b.dataset.f);SFX.play("click");}});
+  $("#pdtab").onclick=open;$("#pdx").onclick=close;$("#pdscrim").onclick=close;
+  return{open,close,isOpen,parseF};
+})();
+$("#ptbtn").onclick=()=>PD.open();$("#mpt").onclick=()=>PD.open();
 
 /* ================= LANDING (grid board) ================= */
 const PAL=["c-red","c-yel","c-blue","c-card","c-ink","c-card","c-yel","c-red","c-card","c-blue"];
