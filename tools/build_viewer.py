@@ -769,10 +769,11 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 .fxbar input{width:100%;font:700 1.02rem "Anuphan",sans-serif;border:3px solid var(--ink);padding:8px 12px;background:var(--card);color:var(--ink);outline:none;box-shadow:4px 4px 0 var(--sh)}
 .fxbar input:focus{border-color:var(--blue)}
 .fxchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.fxchips button{min-width:38px;height:34px;border:3px solid var(--ink);background:var(--card);color:var(--ink);font:800 .95rem "JetBrains Mono",monospace;cursor:pointer;border-bottom:6px solid var(--c)}
+.fxchips button{min-width:38px;height:34px;padding:0 10px;border:3px solid var(--ink);background:var(--card);color:var(--ink);font:700 .88rem "Anuphan",sans-serif;white-space:nowrap;cursor:pointer;border-bottom:6px solid var(--c)}
 .fxchips button:hover{background:var(--c);color:#141414}
 .fxchips button.cur{background:var(--ink);color:var(--paper)}
 .fxchips button.dim{opacity:.3}
+.fxchips button b{font:800 .95rem "JetBrains Mono",monospace;margin-right:2px}
 .fsec{margin:20px 0 6px;scroll-margin-top:118px}
 .fsh{display:flex;align-items:center;gap:14px;margin-bottom:12px}
 .fno{flex:none;width:54px;height:54px;display:grid;place-items:center;background:var(--c);border:3px solid var(--ink);font:800 1.6rem "JetBrains Mono",monospace;color:#141414;box-shadow:4px 4px 0 var(--sh)}
@@ -805,7 +806,8 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 @media (hover:hover) and (pointer:fine) and (min-width:900px){
   #td{width:min(1500px,96vw)}
   .fxbar input{font-size:1.15rem;padding:10px 14px}
-  .fxchips button{min-width:44px;height:38px;font-size:1.05rem}
+  .fxchips{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+  .fxchips button{height:40px;font-size:1rem;padding:0 10px;text-align:left}.fxchips button b{font-size:1.05rem;margin-right:6px}
   .fno{width:60px;height:60px;font-size:1.8rem}
   .fsh b{font-size:1.38rem}.fcur{font-size:.82rem}.fct{font-size:.92rem}
   .fgrid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
@@ -1657,6 +1659,8 @@ const TD=(()=>{
   /* ----- สูตร ----- */
   const FX=DATA.formulas,FXK=Object.keys(FX).sort(),FXC=["var(--red)","var(--blue)","var(--yel)"];
   const fcol=k=>FXC[(parseInt(k)-1)%3];
+  const FXS={"01":"ปลอดภัย","02":"อะตอม","03":"ตารางธาตุ","04":"พันธะ","05":"โมล","06":"สารละลาย","07":"ปริมาณสาร",
+    "08":"แก๊ส","09":"อัตรา","10":"สมดุล","11":"กรดเบส","12":"ไฟฟ้า","13":"อินทรีย์","14":"พอลิเมอร์"};
   const esc=t=>String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   const plain=t=>String(t).replace(/<[^>]+>/g,"").toLowerCase();
   // the chemistry chapter on screen: the open question first, else the chapter filter
@@ -1692,7 +1696,7 @@ const TD=(()=>{
     if(fxFor===cur&&$("#fxlist"))return;fxFor=cur;
     const order=cur?[cur,...FXK.filter(k=>k!==cur)]:FXK;
     $("#td-fx").innerHTML=`<div class="fxbar"><input id="fxq" placeholder="ค้นหาสูตร เช่น pH · แก๊ส · Ka · ครึ่งชีวิต" autocomplete="off" spellcheck="false">
-      <div class="fxchips" id="fxchips">${FXK.map(k=>`<button data-j="${k}" class="${k===cur?"cur":""}" style="--c:${fcol(k)}" title="${DATA.chapters[k]}">${+k}</button>`).join("")}</div></div>
+      <div class="fxchips" id="fxchips">${FXK.map(k=>`<button data-j="${k}" class="${k===cur?"cur":""}" style="--c:${fcol(k)}" title="${DATA.chapters[k]}"><b>${+k}</b> ${FXS[k]||""}</button>`).join("")}</div></div>
       <div id="fxlist">${order.map(k=>`<section class="fsec${k===cur?" cur":""}" id="fx-${k}" style="--c:${fcol(k)}">
         <div class="fsh"><span class="fno">${+k}</span><div><b>${DATA.chapters[k]}</b>${k===cur?`<span class="fcur">บทที่กำลังดูอยู่</span>`:""}</div>
         <span class="fct">${FX[k].length} รายการ</span></div><div class="fgrid">${FX[k].map(fcard).join("")}</div></section>`).join("")}</div>
