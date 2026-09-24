@@ -810,6 +810,7 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 /* desktop (mouse) only: the sheet read small at arm's length; iPad (touch) keeps the base size */
 @media (hover:hover) and (pointer:fine) and (min-width:900px){
   #td{width:min(1500px,96vw)}
+  #vs{width:min(1500px,96vw)}
   .fxbar input{font-size:1.15rem;padding:10px 14px}
   .fxchips{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
   .fxchips button{height:40px;font-size:1rem;padding:0 10px;text-align:left}.fxchips button b{font-size:1.05rem;margin-right:6px}
@@ -827,7 +828,9 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 /* ---------- simple timer: right-side panel ---------- */
 #tmtab{position:fixed;left:0;top:calc(28% + 256px);z-index:45;writing-mode:vertical-rl;background:var(--blue);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:block;transition:transform .2s}
 #tmtab:hover{transform:translateX(4px)}
-#vstab{position:fixed;left:0;top:calc(28% + 384px);z-index:45;writing-mode:vertical-rl;background:var(--paper);color:#141414;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:block;transition:transform .2s}
+#stabs{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;align-items:flex-start;gap:14px}
+#stabs>button{position:static!important;min-height:104px;text-align:center}
+#vstab{position:fixed;left:0;top:calc(28% + 384px);z-index:45;writing-mode:vertical-rl;background:var(--ink);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:block;transition:transform .2s}
 #vstab:hover{transform:translateX(4px)}
 #vs{position:fixed;left:0;top:0;bottom:0;z-index:73;width:min(1040px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--red);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 18px;display:flex;flex-direction:column}
 body.vsopen #vs{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
@@ -983,15 +986,15 @@ body.dark .kin .k2{border-color:#2c2c32}body.dark .kin .k4{opacity:.25}
 </div></div>
 
 
-<button id="pdtab" title="ตารางธาตุ + คำนวณ Mw">ตารางธาตุ</button>
+<nav id="stabs"><button id="pdtab" title="ตารางธาตุ + คำนวณ Mw">ตารางธาตุ</button>
 <button id="tdtab" title="ค่าคงที่ · แปลงหน่วย · ไอออน · สูตร">เครื่องมือ</button>
+<button id="tmtab" title="จับเวลา">จับเวลา</button>
+<button id="vstab" title="รูปร่างโมเลกุล 3 มิติ (VSEPR)">โมเลกุล 3D</button></nav>
 <aside id="td" aria-label="เครื่องมือ">
   <div class="pdh"><b>🧰 เครื่องมือ</b><span class="pdhov">ค่าคงที่ · แปลงหน่วย · ไอออน · สูตร</span><button class="pdx" id="tdx" title="ปิด (Esc)">✕</button></div>
-  <div class="tdtabs" id="tdtabs"><button data-t="k" class="on">ค่าคงที่</button><button data-t="cv">แปลงหน่วย</button><button data-t="io">ไอออน</button><button data-t="fx" id="fxtabb">สูตร</button></div>
-  <div class="tdpane on" id="td-k"></div><div class="tdpane" id="td-cv"></div><div class="tdpane" id="td-io"></div><div class="tdpane" id="td-fx"></div>
+  <div class="tdtabs" id="tdtabs"><button data-t="fx" id="fxtabb" class="on">สูตร</button><button data-t="k">ค่าคงที่</button><button data-t="cv">แปลงหน่วย</button><button data-t="io">ไอออน</button></div>
+  <div class="tdpane on" id="td-fx"></div><div class="tdpane" id="td-k"></div><div class="tdpane" id="td-cv"></div><div class="tdpane" id="td-io"></div>
 </aside>
-<button id="tmtab" title="จับเวลา">จับเวลา</button>
-<button id="vstab" title="รูปร่างโมเลกุล 3 มิติ (VSEPR)">โมเลกุล 3D</button>
 <aside id="vs" aria-label="รูปร่างโมเลกุล">
   <div class="pdh"><b>รูปร่างโมเลกุล 3D</b><span class="pdhov">VSEPR · เพิ่ม/ลดพันธะและอิเล็กตรอนคู่โดดเดี่ยว · ลากหมุนได้</span><button class="pdx" id="vsx" title="ปิด (Esc)">✕</button></div>
   <iframe id="vsf" title="รูปร่างโมเลกุล 3D"></iframe>

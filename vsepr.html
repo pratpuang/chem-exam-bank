@@ -28,11 +28,17 @@ h1{font-size:2rem;margin:0 0 4px}.sub{color:var(--mut);margin:0 0 22px}
 .pm button{width:38px;height:38px;border:3px solid var(--ink);background:var(--card);font:800 1.2rem "JetBrains Mono",monospace;box-shadow:3px 3px 0 var(--ink);cursor:pointer}
 .pm button:active{transform:translate(3px,3px);box-shadow:none}
 .pm .n{font:800 1.5rem "JetBrains Mono",monospace}
-.shape{background:var(--yel);border:3px solid var(--ink);padding:11px}
-.shape .ax{font:800 1.4rem "JetBrains Mono",monospace}.shape .nm{font-weight:800;font-size:1.2rem}
-.shape .en{font:700 .9rem "JetBrains Mono",monospace;margin:-2px 0 4px;opacity:.8}
-.shape .an{font:700 .86rem "JetBrains Mono",monospace;min-height:1.2em}
-.shape .fc{margin-top:6px;padding-top:6px;border-top:2px solid var(--ink);font-weight:700;font-size:.9rem}
+.shape{background:var(--yel);border:3px solid var(--ink);padding:12px 14px 14px;box-shadow:5px 5px 0 var(--ink)}
+.shape .ax{display:inline-block;background:var(--ink);color:#fff;font:800 1.7rem "JetBrains Mono",monospace;padding:2px 10px 4px;margin-bottom:8px}
+.shape .nm{font-weight:800;font-size:1.9rem;line-height:1.15}
+.shape .en{font:800 1.2rem "JetBrains Mono",monospace;margin-top:4px}
+.cnt{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cnt .row{padding:7px 8px}
+.cnt h4{display:flex;justify-content:space-between;align-items:baseline;gap:4px;margin:0 0 6px}
+.cnt h4 em{font:800 .95rem "JetBrains Mono",monospace;font-style:normal;letter-spacing:0}
+.cnt .row.lp{background:#fff6d6}
+.pm .n{min-width:1.4ch;text-align:center}
+.pm button:disabled{opacity:.3;cursor:default;box-shadow:none}
 .tg{display:flex;flex-direction:column;gap:6px}
 .tg label{display:flex;gap:8px;align-items:center;font-weight:700;font-size:.9rem;cursor:pointer}
 .tg input{width:18px;height:18px;accent-color:var(--ink)}
@@ -40,9 +46,6 @@ h1{font-size:2rem;margin:0 0 4px}.sub{color:var(--mut);margin:0 0 22px}
 .seg button{border:0;border-right:3px solid var(--ink);background:var(--card);padding:7px 2px;font:800 .8rem "Anuphan",sans-serif;cursor:pointer}
 .seg button:last-child{border-right:0}.seg button.on{background:var(--ink);color:#fff}
 .cap{font-size:.74rem;font-weight:800;letter-spacing:.05em;margin-bottom:-5px}
-.sel{border:3px solid var(--ink);padding:9px;min-height:62px;font-size:.88rem;background:#fff}
-.sel b{display:block;font-size:.95rem}
-.sel.on{border-color:var(--red);box-shadow:4px 4px 0 var(--red)}
 .chips{display:flex;flex-wrap:wrap;gap:5px}
 .chips button{border:2px solid var(--ink);background:var(--card);font:700 .8rem "JetBrains Mono",monospace;padding:4px 8px;cursor:pointer}
 .chips button:hover{background:var(--yel)}
@@ -91,16 +94,19 @@ body.embed{overflow:hidden}body.embed .wrap{height:100vh}body.embed .stage{heigh
 </style></head><body><div class="page">
 <h1>รูปร่างโมเลกุล 3D</h1>
 <p class="sub">กด + / − ดูแขนผลักกัน · <b>ลากอะตอมหรือคู่โดดเดี่ยว</b> แล้วปล่อยให้เด้งกลับ · <b>แตะ</b>เพื่อเลือกดูมุม · ลากที่ว่างเพื่อหมุน · เปิด “ลากเส้นจุดต่อจุด” ให้เห็นทรงของมันจริงๆ</p>
-<div class="wrap"><div class="stage" id="stage"><div class="lab" id="lab"></div><div class="hint">ลากอะตอม = ขยับ · แตะ = เลือก · ลากที่ว่าง = หมุน</div></div>
+<div class="wrap"><div class="stage" id="stage"><div class="lab" id="lab"></div><div class="hint">ลากอะตอม = ขยับ · แตะ = ชี้ให้ดู · ลากที่ว่าง = หมุน · สกรอลล์ / ถ่างสองนิ้ว = ซูม · ดับเบิลคลิก = ขนาดเดิม</div></div>
 <div class="panel">
- <div class="two"><div class="row"><h4>พันธะ (X)</h4><div class="pm"><button data-d="b-">−</button><span class="n" id="nb"></span><button data-d="b+">+</button></div></div>
- <div class="row"><h4>คู่โดดเดี่ยว (E)</h4><div class="pm"><button data-d="l-">−</button><span class="n" id="nl"></span><button data-d="l+">+</button></div></div></div>
- <div class="shape"><div class="ax" id="ax"></div><div class="nm" id="nm"></div><div class="en" id="en"></div><div class="an" id="an"></div><div class="fc" id="fc"></div></div>
+ <div class="shape"><div class="ax" id="ax"></div><div class="nm" id="nm"></div><div class="en" id="en"></div></div>
+ <div class="cnt">
+  <div class="row"><h4>พันธะเดี่ยว <em>A–X</em></h4><div class="pm"><button data-d="1-">−</button><span class="n" id="n1"></span><button data-d="1+">+</button></div></div>
+  <div class="row"><h4>พันธะคู่ <em>A=X</em></h4><div class="pm"><button data-d="2-">−</button><span class="n" id="n2"></span><button data-d="2+">+</button></div></div>
+  <div class="row"><h4>พันธะสาม <em>A≡X</em></h4><div class="pm"><button data-d="3-">−</button><span class="n" id="n3"></span><button data-d="3+">+</button></div></div>
+  <div class="row lp"><h4>คู่โดดเดี่ยว <em>E</em></h4><div class="pm"><button data-d="e-">−</button><span class="n" id="nl"></span><button data-d="e+">+</button></div></div>
+ </div>
  <div class="tg"><label><input type="checkbox" id="tDots" checked> ลากเส้นจุดต่อจุด</label>
   <label><input type="checkbox" id="tFaces" checked> ระบายสี + เลขแต่ละหน้า</label>
   <label><input type="checkbox" id="tAng" checked> แสดงมุมพันธะ</label>
   <label><input type="checkbox" id="tLp" checked> แสดงคู่โดดเดี่ยว</label></div>
-  <div class="sel" id="sel"><b>ยังไม่ได้เลือก</b>แตะอะตอมหรือคู่โดดเดี่ยวเพื่อดูรายละเอียด</div>
  <div class="chips" id="chips"></div>
 </div></div></div>
 <script>
@@ -121,9 +127,39 @@ const SHAPE_EN={"10":"linear","11":"linear","12":"linear","13":"linear","20":"li
 "50":"trigonal bipyramidal","51":"square pyramidal","60":"octahedral"};
 const sub=n=>String(n).replace(/\d/g,d=>"₀₁₂₃₄₅₆₇₈₉"[d]);
 const axName=(b,l)=>`AX${b>1?sub(b):""}${l?"E"+(l>1?sub(l):""):""}`;
-const MOLS=[["CO2",2,0],["BF3",3,0],["SO2",2,1],["CH4",4,0],["NH3",3,1],["H2O",2,2],["PCl5",5,0],["SF4",4,1],["ClF3",3,2],["XeF2",2,3],["SF6",6,0],["BrF5",5,1],["XeF4",4,2]];
+const MOLS=[["HCN",1,0,1,0],["CO2",0,2,0,0],["BF3",3,0,0,0],["CH2O",2,1,0,0],["SO2",1,1,0,1],["CH4",4,0,0,0],["NH3",3,0,0,1],["H2O",2,0,0,2],
+  ["PCl5",5,0,0,0],["SF4",4,0,0,1],["ClF3",3,0,0,2],["XeF2",2,0,0,3],["SF6",6,0,0,0],["BrF5",5,0,0,1],["XeF4",4,0,0,2]];
 const ANIM={spring:{k:.07,damp:.8,rep:.03,fade:1.2,g1:.1,g2:.74},magnet:{k:.022,damp:.9,rep:.07,fade:2.6,g1:.04,g2:.84},
   slow:{k:.012,damp:.93,rep:.018,fade:5,g1:.02,g2:.88},snap:{k:.35,damp:.35,rep:0,fade:.1,g1:.5,g2:.3}};
+
+/* ---- sound: small synth, soft + round; obeys the main site's mute + volume ---- */
+const SND=(()=>{let ctx=null,out=null;
+  const get=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;}};
+  function ac(){if(!ctx){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;ctx=new A();
+      const comp=ctx.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=7000;
+      out=ctx.createGain();out.connect(lp);lp.connect(comp);comp.connect(ctx.destination);}
+    if(ctx.state==="suspended")ctx.resume();const v=parseInt(get("cqb_vol","70"),10);out.gain.value=Math.pow((isNaN(v)?70:v)/100,1.6)*1.35;return ctx;}
+  const vary=(x,p=.025)=>x*(1+(Math.random()*2-1)*p);
+  function tone(f,dur,o={}){const c=ac();if(!c)return;const t=c.currentTime+(o.delay||0),os=c.createOscillator(),g=c.createGain();
+    os.type=o.type||"sine";os.frequency.setValueAtTime(f,t);if(o.to)os.frequency.exponentialRampToValueAtTime(o.to,t+(o.slideT||dur*.6));
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(o.vol||.14,t+(o.a||.004));g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    os.connect(g);g.connect(out);os.start(t);os.stop(t+dur+.05);}
+  function tick(o={}){const c=ac();if(!c)return;const t=c.currentTime+(o.delay||0),n=Math.floor(c.sampleRate*.02),b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);
+    for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3);const s=c.createBufferSource();s.buffer=b;const f=c.createBiquadFilter();f.type="bandpass";f.frequency.value=o.f||3200;f.Q.value=1.2;
+    const g=c.createGain();g.gain.value=o.vol||.12;s.connect(f);f.connect(g);g.connect(out);s.start(t);}
+  const P={
+    pop:k=>{const f=vary(420*Math.pow(1.12,k));tone(f,.16,{to:f*2.1,slideT:.06,vol:.16});tone(f*3,.09,{vol:.035,delay:.012});tick({f:2600,vol:.07});},  // bubble pop, rises as the molecule fills
+    lp:k=>{const f=vary(260*Math.pow(1.1,k));tone(f,.24,{to:f*1.6,slideT:.1,vol:.16});tone(f*1.5,.2,{to:f*2.3,slideT:.1,vol:.07,delay:.05});},     // softer, rounder "bloop" for a lone pair
+    unpop:()=>{const f=vary(700);tone(f,.16,{to:f*.45,slideT:.12,vol:.12});tick({f:1500,vol:.05});},
+    order:n=>{for(let i=0;i<n;i++){tone(vary(880+i*220),.09,{vol:.09,delay:i*.055});tick({f:3800,vol:.06,delay:i*.055});}},        // 1 / 2 / 3 clicks for single / double / triple
+    sel:()=>{tone(vary(1046),.32,{vol:.1});tone(vary(1568),.22,{vol:.05,delay:.04});},
+    unsel:()=>tone(vary(660),.12,{to:520,vol:.07}),
+    boing:()=>{const f=vary(300);tone(f,.3,{to:f*1.9,slideT:.05,vol:.1});tone(f*1.9,.25,{to:f*1.2,slideT:.2,vol:.06,delay:.05});},
+    grab:()=>tick({f:1800,vol:.08}),
+    mol:()=>[523,659,784,1046].forEach((f,i)=>tone(vary(f,.01),.22,{vol:.09,delay:i*.06})),
+    nope:()=>{tone(160,.14,{to:120,vol:.14,type:"triangle"});tone(150,.14,{to:110,vol:.1,type:"triangle",delay:.1});},
+    tog:()=>tick({f:2400,vol:.1})};
+  return{play:(n,a)=>{if(get("cqb_sfx","1")==="0")return;try{if(ac())P[n](a);}catch(e){}}};})();
 
 /* geometry: exact textbook seats, lone pairs placed first (5 pairs: equatorial, 6: opposite), bonds nudged 0.05 away from each lone pair */
 const r3=Math.sqrt(3),r8=Math.sqrt(8);
@@ -187,13 +223,26 @@ const sph=(r,s=36)=>new THREE.SphereGeometry(r,s,Math.round(s*.7));
 function outlined(geo,color,w){const m=new THREE.Mesh(geo,flat(color));const h=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:C.o,side:THREE.BackSide}));
   h.scale.setScalar(1+w);m.add(h);m.userData.hull=h;return m;}
 const center=outlined(sph(.5),C.c,.07);G.add(center);castAll(center);center.userData.kind="center";
-function mkArm(lp){const g=new THREE.Group();let pick;
-  if(lp){pick=outlined(sph(.37,30),C.e,.08);pick.scale.set(.78,1.25,.78);pick.position.y=.66;g.add(pick);}
-  else{const st=new THREE.Mesh(new THREE.CylinderGeometry(.095,.095,L,18),flat(C.b));st.position.y=L/2;g.add(st);
-    pick=outlined(sph(.32),C.x,.09);pick.position.y=L;g.add(pick);}
-  G.add(g);castAll(g);return{g,pick};}
+// sticks sit in their own group that turns every frame so a double/triple bond is always seen side by side, never edge-on
+function mkSticks(o){const s=new THREE.Group(),r=o===1?.095:.068,off=o===1?[0]:o===2?[-.1,.1]:[-.16,0,.16];
+  off.forEach(x=>{const st=new THREE.Mesh(new THREE.CylinderGeometry(r,r,L,16),flat(C.b));st.position.set(x,L/2,0);s.add(st);});castAll(s);return s;}
+function setOrder(d,o){d.o=o;if(d.sticks){d.g.remove(d.sticks);d.sticks.traverse(m=>{m.geometry&&m.geometry.dispose();});}d.sticks=mkSticks(o);d.g.add(d.sticks);}
+const DOTG=sph(.062,14),DOTM=flat(INK);
+function mkArm(lp,o){const g=new THREE.Group();let pick,dots=null;
+  if(lp){pick=outlined(sph(.37,30),C.e,.08);pick.scale.set(.78,1.25,.78);pick.position.y=.66;g.add(pick);
+    // the two electrons of the pair: two ink dots on the side of the lobe that faces you
+    dots=new THREE.Group();dots.position.y=.66;[-1,1].forEach(k=>{const m=new THREE.Mesh(DOTG,DOTM);m.userData.k=k;dots.add(m);});g.add(dots);}
+  else{pick=outlined(sph(.32),C.x,.09);pick.position.y=L;g.add(pick);}
+  G.add(g);castAll(g);const a={g,pick,dots};if(!lp){a.o=o||1;a.sticks=mkSticks(a.o);g.add(a.sticks);}return a;}
+const _c=new V(),_u=new V(),_p=new V();
+function faceCam(d){d.g.updateMatrixWorld(true);_c.copy(cam.position);d.g.worldToLocal(_c);
+  if(d.sticks)d.sticks.rotation.y=Math.atan2(_c.x,_c.z);
+  if(d.dots){_c.y-=.66;_c.normalize();const a=.37*.78,b=.37*1.25;
+    const q=Math.sqrt(a*a*_c.x*_c.x+b*b*_c.y*_c.y+a*a*_c.z*_c.z)||1;_p.set(a*a*_c.x/q,b*b*_c.y/q,a*a*_c.z/q);      // point on the lobe facing the camera
+    _u.set(_c.z,0,-_c.x);if(_u.lengthSq()<1e-4)_u.set(1,0,0);_u.normalize().multiplyScalar(.1);          // side by side, across the lobe
+    d.dots.children.forEach(m=>{m.position.copy(_p).multiplyScalar(.93).addScaledVector(_u,m.userData.k);});}}
 
-let fr=0,doms=[],nb=4,nl=0,t0=0,mode="spring",pairs=[],selected=null,held=null,showLp=true;
+let fr=0,doms=[],nb=4,nl=0,t0=0,mode="spring",pairs=[],selected=null,held=null,showLp=true,W=[0,4,0,0],newOrders=[];
 function alive(){return doms.filter(d=>!d.dying);}
 function setShape(b,l,instant){b=Math.max(1,Math.min(6,b));l=Math.max(0,Math.min(6-b,l));
   let cb=alive().filter(d=>!d.lp).length,cl=alive().filter(d=>d.lp).length;
@@ -207,9 +256,16 @@ function setShape(b,l,instant){b=Math.max(1,Math.min(6,b));l=Math.max(0,Math.min
     if(!best||e<best.e)best={e,q,pr};}
   const q=best?best.q:new THREE.Quaternion(),taken=new Set();
   if(best)best.pr.forEach(([d,s])=>{d.target=T[s].v.clone().applyQuaternion(q);taken.add(s);});
-  T.forEach((s,i)=>{if(taken.has(i))return;const dir=s.v.clone().applyQuaternion(q),a=mkArm(s.lp);
+  T.forEach((s,i)=>{if(taken.has(i))return;const dir=s.v.clone().applyQuaternion(q),a=mkArm(s.lp,s.lp?0:newOrders.shift()||1);
     const d={lp:s.lp,dir:dir.clone(),target:dir,vel:new V(),len:instant?1:0,lv:0,...a};a.pick.userData.dom=d;doms.push(d);});
   nb=b;nl=l;t0=performance.now();computePairs();refresh();fr=0;}
+/* w = [_, single, double, triple]; each bond is ONE electron domain whatever its order, so only the count moves the shape */
+function setMol(w,l,instant){const tot=w[1]+w[2]+w[3];if(tot<1||tot+l>6||w.some(x=>x<0)||l<0)return false;
+  const B=alive().filter(d=>!d.lp),ex=[],def=[];
+  for(const o of [1,2,3]){const a=B.filter(d=>d.o===o);for(let k=w[o];k<a.length;k++)ex.push(a[k]);for(let k=a.length;k<w[o];k++)def.push(o);}
+  while(ex.length&&def.length)setOrder(ex.shift(),def.shift());          // single -> double etc. happens in place, no arm is born or dies
+  ex.forEach(d=>{d.dying=true;if(selected===d)select(null);});
+  newOrders=def;W=w.slice();setShape(tot,l,instant);newOrders=[];return true;}
 function computePairs(){const b=alive().filter(d=>!d.lp);pairs=[];
   for(let i=0;i<b.length;i++)for(let j=i+1;j<b.length;j++){const a=b[i].target.angleTo(b[j].target)*180/Math.PI;
     if(!pairs.some(p=>Math.abs(p.a-a)<1.5))pairs.push({a,i:b[i],j:b[j]});}pairs.sort((x,y)=>x.a-y.a);}
@@ -222,7 +278,8 @@ function physics(){const P=ANIM[mode],age=(performance.now()-t0)/1000,rep=held?P
     d.vel.multiplyScalar(P.damp).add(f);d.dir.add(d.vel).normalize();}
   doms=doms.filter(d=>{if(d.dying&&d.len<.015&&Math.abs(d.lv)<.01){G.remove(d.g);d.g.traverse(o=>{o.geometry&&o.geometry.dispose();});return false;}return true;});
   const now=performance.now();
-  for(const d of doms){d.g.quaternion.setFromUnitVectors(Y,d.dir);d.g.scale.setScalar(Math.max(.001,d.len));d.g.visible=!d.lp||showLp;
+  G.updateMatrixWorld(true);
+  for(const d of doms){d.g.quaternion.setFromUnitVectors(Y,d.dir);d.g.scale.setScalar(Math.max(.001,d.len));d.g.visible=!d.lp||showLp;if(d.g.visible&&d.len>.05)faceCam(d);
     const on=d===selected,s=on?1+.07*Math.sin(now/140):1;d.pick.scale.set((d.lp?.78:1)*s,(d.lp?1.25:1)*s,(d.lp?.78:1)*s);paint(d.pick,on,d.lp?C.e:C.x,C.h);}
   const c=selected==="center";center.scale.setScalar(c?1+.05*Math.sin(now/140):1);paint(center,c,C.c,C.h);}
 // selected = swapped fill colour + thick red outline
@@ -264,28 +321,31 @@ function labels(){G.updateMatrixWorld();let html="";
   lab.innerHTML=html;}
 
 /* ---- panel ---- */
-function refresh(){$("nb").textContent=nb;$("nl").textContent=nl;$("ax").textContent=axName(nb,nl);$("nm").textContent=SHAPE[""+nb+nl];$("en").textContent=SHAPE_EN[""+nb+nl];}
-function live(){if(fr++%4)return;
-  $("an").textContent=pairs.map(p=>(p.i.dir.angleTo(p.j.dir)*180/Math.PI).toFixed(1)+"°").join(" · ")||"—";
-  const n=faceInfo.length,tri=faceInfo.filter(f=>f.sides===3).length,quad=faceInfo.filter(f=>f.sides===4).length;
-  $("fc").textContent=!$("tDots").checked&&!$("tFaces").checked?"":n===0?"มีอะตอมรอบนอกแค่ 2 ตัว — ต่อจุดได้แค่เส้นเดียว ไม่มีหน้า":faceInfo[0].flatOnly?`รูปแบน: ${faceInfo[0].sides===3?"สามเหลี่ยม":faceInfo[0].sides===4?"สี่เหลี่ยม":faceInfo[0].sides+" เหลี่ยม"} 1 รูป`:
-    `ทรงตัน ${n} หน้า${tri?` · สามเหลี่ยม ${tri}`:""}${quad?` · สี่เหลี่ยม ${quad}`:""}`;}
-function select(x){selected=x;const box=$("sel");box.classList.toggle("on",!!x);
-  if(!x){box.innerHTML="<b>ยังไม่ได้เลือก</b>แตะอะตอมหรือคู่โดดเดี่ยวเพื่อดูรายละเอียด";return;}
-  if(x==="center"){box.innerHTML=`<b>อะตอมกลาง (A)</b>ล้อมด้วยอิเล็กตรอน ${nb+nl} คู่: พันธะ ${nb} · คู่โดดเดี่ยว ${nl}`;return;}
-  if(x.lp){box.innerHTML="<b>อิเล็กตรอนคู่โดดเดี่ยว (E)</b>อยู่ใกล้อะตอมกลางและกินที่มากกว่า จึงผลักพันธะแรงกว่า มุมพันธะเลยหุบลง";return;}
-  box.innerHTML="<b>อะตอมรอบนอก (X)</b>มุมที่ทำกับอะตอมอื่นแสดงเป็นป้ายสีแดงบนโมเลกุล";}
+function refresh(){[1,2,3].forEach(o=>$("n"+o).textContent=W[o]);$("nl").textContent=nl;$("ax").textContent=axName(nb,nl);$("nm").textContent=SHAPE[""+nb+nl];$("en").textContent=SHAPE_EN[""+nb+nl];
+  const full=nb+nl>=6;document.querySelectorAll("[data-d]").forEach(b=>{const k=b.dataset.d[0],plus=b.dataset.d[1]==="+";
+    b.disabled=plus?full:k==="e"?nl<=0:(W[+k]<=0||nb<=1);});}
+function live(){}
+// the highlight is just a pointer for the class: no text box, the pulse + the angle labels do the talking
+function select(x){selected=x;}
 
 /* ---- pointer: drag empty space = rotate, drag an arm = pull it, tap = select ---- */
 const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
 function hitAt(e){const r=stage.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(ndc,cam);
   const picks=[center,...doms.filter(d=>!d.dying&&d.g.visible).map(d=>d.pick)];const h=ray.intersectObjects(picks,false)[0];
   if(!h)return null;return h.object===center?"center":h.object.userData.dom;}
-let down=null;
-stage.addEventListener("pointerdown",e=>{const h=hitAt(e);down={x:e.clientX,y:e.clientY,h,moved:false,px:e.clientX,py:e.clientY};stage.setPointerCapture(e.pointerId);stage.classList.add("grab");});
-stage.addEventListener("pointermove",e=>{if(!down){stage.classList.toggle("over",!!hitAt(e));return;}
+let down=null,zoom=1,pinch=null;const pts=new Map();
+function setZoom(z){zoom=Math.max(.55,Math.min(2.8,z));cam.zoom=zoom;cam.updateProjectionMatrix();}
+const pdist=()=>{const [a,b]=[...pts.values()];return Math.hypot(a.x-b.x,a.y-b.y)||1;};
+stage.addEventListener("pointerdown",e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pts.size===2){ // second finger: stop dragging, start pinching
+    if(held){held.vel.set(0,0,0);held=null;}down=null;pinch={d0:pdist(),z0:zoom};stage.classList.remove("grab");return;}
+  if(pts.size>2)return;
+  const h=hitAt(e);down={x:e.clientX,y:e.clientY,h,moved:false,px:e.clientX,py:e.clientY};stage.setPointerCapture(e.pointerId);stage.classList.add("grab");});
+stage.addEventListener("pointermove",e=>{if(pts.has(e.pointerId))pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(pinch&&pts.size>=2){setZoom(pinch.z0*pdist()/pinch.d0);idle=performance.now();return;}
+  if(!down){stage.classList.toggle("over",!!hitAt(e));return;}
   if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>4)down.moved=true;if(!down.moved)return;
-  if(down.h&&down.h!=="center"){held=down.h;
+  if(down.h&&down.h!=="center"){if(!held)SND.play("grab");held=down.h;
     // pull the arm: aim it where the pointer ray meets the sphere it lives on
     const r=stage.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(ndc,cam);
     const inv=new THREE.Matrix4().copy(G.matrixWorld).invert(),o=ray.ray.origin.clone().applyMatrix4(inv),dir=ray.ray.direction.clone().transformDirection(inv);
@@ -294,21 +354,30 @@ stage.addEventListener("pointermove",e=>{if(!down){stage.classList.toggle("over"
     held.dir.lerp(p.normalize(),.6).normalize();held.vel.set(0,0,0);t0=performance.now();}
   else{const dx=e.clientX-down.px,dy=e.clientY-down.py;if(dx||dy)G.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new V(dy,dx,0).normalize(),Math.hypot(dx,dy)*.011));idle=performance.now();}
   down.px=e.clientX;down.py=e.clientY;});
-const up=e=>{if(!down)return;if(!down.moved)select(down.h&&down.h===selected?null:down.h);
-  if(held){held.vel.set(0,0,0);t0=performance.now();held=null;}down=null;stage.classList.remove("grab");};
+const up=e=>{pts.delete(e.pointerId);if(pinch){if(pts.size<2)pinch=null;return;}
+  if(!down)return;if(!down.moved){const nx=down.h&&down.h===selected?null:down.h;if(nx)SND.play("sel");else if(selected)SND.play("unsel");select(nx);}
+  if(held){held.vel.set(0,0,0);t0=performance.now();held=null;SND.play("boing");}down=null;stage.classList.remove("grab");};
 stage.addEventListener("pointerup",up);stage.addEventListener("pointercancel",up);
 let idle=0;
+stage.addEventListener("wheel",e=>{e.preventDefault();setZoom(zoom*Math.exp(-e.deltaY*(e.ctrlKey?.01:.0015)));idle=performance.now();},{passive:false});
+stage.addEventListener("dblclick",()=>setZoom(1));
 
 /* ---- controls ---- */
 const fsub=s=>s.replace(/(\d+)/g,"<sub>$1</sub>");
 $("chips").innerHTML=MOLS.map((m,k)=>`<button data-m="${k}">${fsub(m[0])}</button>`).join("");
-document.querySelector(".panel").addEventListener("click",e=>{const b=e.target.closest("[data-d]");if(b){const s=b.dataset.d[1]==="+"?1:-1;b.dataset.d[0]==="b"?setShape(nb+s,nl):setShape(nb,nl+s);return;}
-  const m=e.target.closest("[data-m]");if(m){const M=MOLS[+m.dataset.m];setShape(M[1],M[2]);return;}
+document.querySelector(".panel").addEventListener("click",e=>{const b=e.target.closest("[data-d]");
+  if(b){const k=b.dataset.d[0],s=b.dataset.d[1]==="+"?1:-1,w=W.slice();let l=nl;
+    if(k==="e")l+=s;else w[+k]+=s;
+    const before=nb+nl;
+    if(!setMol(w,l)){SND.play("nope");return;}
+    const after=nb+nl;after>before?SND.play(k==="e"?"lp":"pop",after):after<before?SND.play("unpop"):SND.play("order",+k);return;}
+  const m=e.target.closest("[data-m]");if(m){const M=MOLS[+m.dataset.m];setMol([0,M[1],M[2],M[3]],M[4]);SND.play("mol");return;}
 });
+document.querySelector(".tg").addEventListener("change",()=>SND.play("tog"));
 $("tLp").onchange=e=>{showLp=e.target.checked;if(!showLp&&selected&&selected.lp)select(null);};
 
 function size(){const w=stage.clientWidth,h=stage.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
 new ResizeObserver(size).observe(stage);size();
-setShape(4,0,true);
+setMol([0,4,0,0],0,true);
 (function loop(){physics();if(!down&&performance.now()-idle>3000&&!selected)G.rotation.y+=.0035;buildHull();R.render(scene,cam);labels();live();requestAnimationFrame(loop);})();
 </script></body></html>
