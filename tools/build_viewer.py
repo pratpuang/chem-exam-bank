@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """Parse question-bank.md -> self-contained interactive HTML viewer.
-Features: 3 switchable layouts (list / cards / two-pane), focus/present mode,
-random pick, full filters incl. exam-type, responsive for iPad + laptop."""
+Design (2026-09-24, Prat's picks): Bauhaus grid-board landing page to choose a chapter (circle-reveal
+into the bank), poster-deck question layout, kinetic animated background (toggleable, off under
+prefers-reduced-motion). Features: 4 switchable layouts (poster deck / cards / list / two-pane),
+present mode, random pick, full filters incl. subject/exam/solution status, collapsed solutions with
+in-browser ✓/✗ review marks exported for tools/apply_review.py. No AI-disclaimer banner (personal use)."""
 import re, json, markdown, os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -360,167 +363,286 @@ data = {
 HTML = r"""<!doctype html><html lang="th"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
 <title>คลังข้อสอบเคมี · Chem Question Bank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700;800&family=Sarabun:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f4f6fb;--card:#fff;--line:#e5e9f0;--ink:#1f2937;--mut:#6b7280;--accent:#2563eb;--radius:14px}
+:root{--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--line:#141414}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;font-family:"Sarabun","Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--ink);font-size:16px}
-button,select,input{font-family:inherit}
-/* ---------- toolbar ---------- */
-header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);
-  border-bottom:1px solid var(--line);padding:12px 16px}
-.bar1{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:9px}
-.title{font-size:1.05rem;font-weight:700;margin-right:auto}
-.title small{font-weight:400;color:var(--mut);font-size:.8rem}
-#q{flex:1;min-width:180px;padding:10px 13px;border:1px solid var(--line);border-radius:10px;font-size:1rem}
-.bar2{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-select{padding:8px 10px;border:1px solid var(--line);border-radius:10px;font-size:.88rem;background:#fff;max-width:46vw}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.seg button{border:0;background:#fff;padding:8px 12px;cursor:pointer;font-size:.85rem;color:var(--mut)}
-.seg button.on{background:var(--accent);color:#fff;font-weight:600}
-.btn{padding:8px 13px;border:1px solid var(--line);background:#fff;border-radius:10px;cursor:pointer;font-size:.85rem}
-.btn:hover{background:#f1f5f9}
-#count{color:var(--mut);font-size:.82rem;margin-left:auto;white-space:nowrap}
-/* ---------- badges ---------- */
-.badge{font-size:.72rem;padding:2px 9px;border-radius:999px;font-weight:600;white-space:nowrap;display:inline-block}
-.b-ch{background:#eef2ff;color:#3730a3}
-.b-exam{color:#fff}
-.b-diff{color:#fff}
-.d-easy{background:#16a34a}.d-medium{background:#d97706}.d-hard{background:#dc2626}
-.b-type{background:#ecfeff;color:#0e7490}
-.diff-txt{font-size:.72rem;font-weight:700}
-.de-easy{color:#16a34a}.de-medium{color:#d97706}.de-hard{color:#dc2626}
-/* ---------- main + layouts ---------- */
-main{max-width:1040px;margin:16px auto;padding:0 14px}
-.chap-h{margin:26px 0 10px;font-size:1.02rem;font-weight:700;color:#334155;border-bottom:2px solid var(--line);padding-bottom:5px}
-/* cards */
-.card{background:var(--card);border:1px solid var(--line);border-left:5px solid #cbd5e1;border-radius:var(--radius);
-  padding:15px 17px;margin-bottom:13px}
-.card.lv-easy{border-left-color:#16a34a}.card.lv-medium{border-left-color:#d97706}.card.lv-hard{border-left-color:#dc2626}
-.card-top{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:9px}
-.qid{font-weight:800;color:var(--accent)}
-.spacer{flex:1}
-.body{font-size:1rem;line-height:1.7}
-.body ul{margin:.5em 0;padding-left:0;list-style:none}
-.body li{padding:5px 10px;border-radius:8px;margin:3px 0}
-.body li:hover{background:#f8fafc}
+body{margin:0;font-family:"Anuphan","Sarabun","Segoe UI",Tahoma,sans-serif;background:var(--paper);color:var(--ink);font-size:16px}
+button,select,input,textarea{font-family:inherit;color:inherit}
+button{cursor:pointer}
+/* ---------- kinetic background (B5) ---------- */
+.kin{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.kin i{position:absolute;display:block}
+.kin .k1{width:460px;height:460px;border-radius:50%;background:var(--blue);right:-170px;top:90px;clip-path:polygon(0 0,100% 0,100% 50%,0 50%);animation:spin 46s linear infinite;opacity:.9}
+.kin .k2{width:240px;height:240px;border:24px solid var(--ink);border-radius:50%;left:-80px;bottom:30px;animation:drift 20s ease-in-out infinite alternate;opacity:.85}
+.kin .k3{width:170px;height:150px;background:var(--red);clip-path:polygon(50% 0,100% 100%,0 100%);left:4%;top:34%;animation:spin 32s linear infinite reverse;opacity:.85}
+.kin .k4{width:280px;height:280px;right:6%;bottom:-70px;background:radial-gradient(var(--ink) 2px,transparent 2.5px) 0 0/18px 18px;animation:drift 24s ease-in-out infinite alternate-reverse;opacity:.5}
+.kin .k5{width:120px;height:120px;background:var(--yel);right:30%;top:55%;animation:drift 28s ease-in-out infinite alternate;opacity:.9}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes drift{to{transform:translate(70px,-50px) rotate(25deg)}}
+body.nobg .kin{display:none}
+@media(prefers-reduced-motion:reduce){.kin i{animation:none!important}}
+#landing,#app{position:relative;z-index:1}
+
+/* ================= LANDING (B1 grid board) ================= */
+#landing{min-height:100vh;padding:0 16px 60px}
+.lwrap{max-width:1180px;margin:0 auto}
+.lhead{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;padding:26px 0 18px}
+.lhead h1{margin:0;font-size:2.4rem;font-weight:800;line-height:1;letter-spacing:-.01em;display:flex;align-items:center;gap:12px}
+.shapes{display:inline-flex;gap:6px;align-items:center}
+.shapes i{display:inline-block;width:18px;height:18px}
+.shapes .c{background:var(--red);border-radius:50%}.shapes .s{background:var(--yel)}.shapes .t{background:var(--blue);clip-path:polygon(50% 0,100% 100%,0 100%)}
+.lhead p{margin:0 0 4px;color:var(--mut);font-size:.9rem}
+.lhead .sp{flex:1}
+.lbtn{border:3px solid var(--ink);background:var(--card);font-weight:700;padding:8px 14px;box-shadow:4px 4px 0 var(--ink);transition:transform .1s,box-shadow .1s;font-size:.88rem}
+.lbtn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.lbtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+.board{display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:150px;grid-auto-flow:row;gap:6px;background:var(--ink);border:6px solid var(--ink)}
+.tile{position:relative;border:0;padding:14px 16px;text-align:left;overflow:hidden;display:flex;flex-direction:column;gap:4px;background:var(--card);animation:tileIn .6s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--i,0)*45ms);transition:transform .25s}
+@keyframes tileIn{from{opacity:0;transform:scale(.6) rotate(-6deg)}to{opacity:1;transform:none}}
+button.tile:hover{transform:scale(.965)}
+button.tile:after{content:"↗";position:absolute;right:12px;top:8px;font-size:1.25rem;font-weight:800;opacity:0;transform:translate(-6px,6px);transition:.25s}
+button.tile:hover:after{opacity:1;transform:none}
+.tile .no{font-size:2.8rem;font-weight:800;line-height:.95}
+.tile .nm{font-weight:700;font-size:1rem;line-height:1.25}
+.tile .ct{font-size:.78rem;opacity:.75;margin-top:auto}
+.tile .cov{height:6px;background:rgba(0,0,0,.14);margin-top:5px;overflow:hidden}
+.tile .cov i{display:block;height:100%;background:currentColor;opacity:.85}
+.tile.w2{grid-column:span 2}.tile.h2{grid-row:span 2}
+.tile.big .no{font-size:4.4rem}.tile.big .nm{font-size:1.3rem}
+.c-red{background:var(--red);color:#fff}.c-yel{background:var(--yel)}.c-blue{background:var(--blue);color:#fff}.c-ink{background:var(--ink);color:var(--paper)}.c-card{background:var(--card)}
+.hero{grid-column:span 2;grid-row:span 2;justify-content:flex-end;background:var(--card);cursor:default}
+.hero b{font-size:4.6rem;font-weight:800;line-height:.9;color:var(--red)}
+.hero span{font-size:1.5rem;font-weight:800;line-height:1.15}
+.hero small{font-size:.8rem;color:var(--mut);margin-top:6px;line-height:1.5}
+.deco1{background:radial-gradient(circle at 100% 100%,var(--blue) 0 58%,transparent 59%),var(--paper)}
+.deco2{background:repeating-linear-gradient(45deg,var(--yel) 0 18px,var(--ink) 18px 36px)}
+.deco3{background:radial-gradient(circle at 50% 50%,var(--red) 0 32%,transparent 33%),var(--card)}
+.sec-t{grid-column:1/-1;background:var(--ink);color:var(--paper);font-weight:800;letter-spacing:.2em;font-size:.72rem;padding:6px 14px;display:flex;align-items:center;animation:none}
+.board .sec-t{grid-row:span 1;height:auto}
+.lfoot{margin-top:14px;font-size:.8rem;color:var(--mut)}
+@media(max-width:900px){.board{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:560px){.board{grid-template-columns:repeat(2,1fr);grid-auto-rows:130px}.tile.w2,.hero{grid-column:span 2}.lhead h1{font-size:1.8rem}.tile.big .no{font-size:3.2rem}}
+
+/* circle reveal between landing and app */
+#app{display:none}
+#app.show{display:block}
+#app.opening{clip-path:circle(0 at var(--x,50%) var(--y,50%));animation:reveal .65s cubic-bezier(.7,0,.2,1) forwards}
+@keyframes reveal{to{clip-path:circle(150% at var(--x,50%) var(--y,50%))}}
+body.inapp #landing{display:none}
+
+/* ================= APP HEADER ================= */
+header{position:sticky;top:0;z-index:20;background:var(--ink);color:var(--paper)}
+.bar1{display:flex;align-items:stretch;flex-wrap:wrap;max-width:1180px;margin:0 auto}
+.home{border:0;background:var(--red);color:#fff;font-weight:800;padding:0 16px;font-size:.9rem;display:flex;align-items:center;gap:6px}
+.home:hover{background:#c73621}
+.title{font-weight:800;font-size:1.05rem;padding:12px 16px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.title small{font-weight:400;opacity:.6;font-size:.75rem}
+#q{flex:1;min-width:170px;background:var(--ink);border:0;border-left:3px solid var(--paper);color:var(--paper);padding:0 14px;font-size:.95rem;outline:none}
+#q::placeholder{color:#8a8578}
+#q:focus{background:#262626}
+.hbtn{border:0;border-left:3px solid var(--paper);background:var(--ink);color:var(--paper);padding:0 14px;font-weight:700;font-size:.84rem;white-space:nowrap}
+.hbtn:hover{background:#2a2a2a}
+.hbtn.on{background:var(--yel);color:var(--ink)}
+#ftoggle{display:none}
+.bar2{background:var(--card);color:var(--ink);border-bottom:3px solid var(--ink)}
+.bar2 .in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 12px}
+select{padding:6px 8px;border:2px solid var(--ink);background:var(--card);font-size:.84rem;font-weight:600;max-width:46vw;border-radius:0;cursor:pointer}
+select:focus{outline:3px solid var(--yel);outline-offset:1px}
+.seg{display:inline-flex;border:2px solid var(--ink)}
+.seg button{border:0;border-right:2px solid var(--ink);background:var(--card);padding:6px 10px;font-size:.8rem;font-weight:700}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:var(--paper)}
+.btn{padding:6px 11px;border:2px solid var(--ink);background:var(--card);font-size:.82rem;font-weight:700;box-shadow:3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+#exportbtn{background:var(--yel)}
+#exportbtn.none{opacity:.5}
+#count{margin-left:auto;font-weight:700;font-size:.82rem;white-space:nowrap}
+@media(max-width:760px){#ftoggle{display:block}.bar2{display:none}header.fopen .bar2{display:block}.title small{display:none}.title{padding:10px 12px}}
+
+/* ================= MAIN / SHARED ================= */
+main{max-width:1060px;margin:18px auto 60px;padding:0 14px}
+.chap-h{margin:30px 0 14px;display:flex;align-items:stretch;border:3px solid var(--ink);background:var(--card);font-weight:800}
+.chap-h b{background:var(--red);color:#fff;padding:6px 14px;font-size:1.2rem;border-right:3px solid var(--ink);min-width:58px;text-align:center}
+.chap-h span{padding:8px 14px;font-size:1rem;display:flex;align-items:center}
+.chap-h.bio b{background:var(--blue)}.chap-h.app b{background:var(--yel);color:var(--ink)}
+.badge{font-size:.72rem;padding:2px 8px;font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;border:2px solid var(--ink);background:var(--card)}
+.b-id{background:var(--ink);color:var(--paper);font-family:"JetBrains Mono";font-size:.7rem}
+.b-exam i{width:9px;height:9px;display:inline-block}
+.b-ch{border-style:dashed}
+.b-diff:before{content:"";display:inline-block;width:10px;height:10px}
+.d-easy:before{background:var(--blue);border-radius:50%}
+.d-medium:before{background:var(--yel)}
+.d-hard:before{background:var(--red);clip-path:polygon(50% 0,100% 100%,0 100%)}
+.b-type{opacity:.75}
+.diff-txt{font-size:.72rem;font-weight:800;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.diff-txt:before{content:"";display:inline-block;width:10px;height:10px}
+.de-easy:before{background:var(--blue);border-radius:50%}.de-medium:before{background:var(--yel)}.de-hard:before{background:var(--red);clip-path:polygon(50% 0,100% 100%,0 100%)}
+.body{font-size:1.02rem;line-height:1.8}
 .body p{margin:.45em 0}
-.fig{display:block;max-width:100%;height:auto;margin:12px auto;border:1px solid var(--line);border-radius:10px;background:#fff;padding:6px}
-.sheet .fig{max-height:52vh;width:auto}
-.foot{margin-top:11px;padding-top:8px;border-top:1px dashed var(--line);font-size:.8rem;color:var(--mut);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.note{background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:7px 11px;border-radius:9px;margin-top:9px;font-size:.85rem}
-/* ---------- solutions (collapsed by default: protects attempt-before-instruction) ---------- */
-.solbtn{margin-top:10px;border:1px solid #059669;color:#059669;background:#fff;padding:6px 13px;
-  border-radius:9px;cursor:pointer;font-size:.82rem;font-weight:600}
-.solbtn:hover{background:#059669;color:#fff}
-.solbtn.flag{border-color:#d97706;color:#d97706}
-.solbtn.flag:hover{background:#d97706;color:#fff}
-.solwrap{display:none;margin-top:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:11px;padding:11px 14px}
-.solwrap.show{display:block}
-.solwrap.flag{background:#fffbeb;border-color:#fcd34d}
-.soldis{font-size:.75rem;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;
-  border-radius:7px;padding:5px 9px;margin-bottom:9px;line-height:1.5}
-.solans{font-weight:700;color:#065f46;margin-bottom:7px;font-size:.95rem}
-.solwrap.flag .solans{color:#92400e}
-.solbody{font-size:.9rem;line-height:1.75}
+.body ul,.body ol{margin:.5em 0;padding-left:0;list-style:none}
+.body li{padding:6px 12px;margin:4px 0;border:2px solid transparent;cursor:pointer;transition:background .15s,border-color .15s}
+.body li:hover{background:#f6f0e2;border-color:#d8cfbb}
+.body li.mk{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.body table{border-collapse:collapse;font-size:.92em;margin:.5em 0}
+.body td,.body th,.solbody td,.solbody th{border:2px solid var(--ink);padding:3px 8px}
+.fig{display:block;max-width:100%;height:auto;margin:12px auto;border:3px solid var(--ink);background:#fff;padding:6px}
+.note{background:#fff4cc;border:2px solid var(--ink);padding:7px 11px;margin-top:10px;font-size:.86rem}
+.foot{margin-top:12px;padding-top:9px;border-top:2px dashed #cfc5b0;font-size:.8rem;color:var(--mut);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.present-btn{margin-left:auto;border:2px solid var(--ink);background:var(--card);padding:4px 11px;font-size:.8rem;font-weight:700;box-shadow:3px 3px 0 var(--ink)}
+.present-btn:hover{background:var(--yel)}
+code{background:#efe6d2;padding:1px 5px;font-size:.92em}
+.empty{text-align:center;color:var(--mut);padding:60px 10px;font-weight:600}
+/* ---------- solutions ---------- */
+.solbtn{margin-top:12px;border:2px solid var(--ink);background:var(--card);padding:6px 14px;font-size:.84rem;font-weight:800;box-shadow:3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.solbtn:hover{background:var(--yel)}
+.solbtn:active{transform:translate(3px,3px);box-shadow:none}
+.solbtn.flag{border-style:dashed}
+.solbtn.done{background:#e3f1dc}
+.solbtn.wrong{background:#fbe0da}
+.solwrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s cubic-bezier(.2,.8,.2,1);overflow:hidden}
+.solwrap>.solin{min-height:0;overflow:hidden;visibility:hidden;transition:visibility 0s .45s}
+.solwrap.show{grid-template-rows:1fr}
+.solwrap.show>.solin{visibility:visible;transition:none}
+.solbox{margin-top:12px;border:3px solid var(--ink);background:var(--card);padding:12px 16px;position:relative}
+.solbox:before{content:"";position:absolute;left:-3px;top:-3px;bottom:-3px;width:10px;background:var(--blue)}
+.solbox{padding-left:22px}
+.flag .solbox:before{background:var(--yel)}
+.soldis{font-size:.78rem;background:#fff4cc;border:2px solid var(--ink);padding:5px 9px;margin-bottom:9px}
+.solans{font-weight:800;margin-bottom:6px;font-size:1rem}
+.chk{display:inline-block;font-size:.72rem;font-weight:700;background:#e3f1dc;border:2px solid var(--ink);padding:0 7px;margin-bottom:6px}
+.solbody{font-size:.94rem;line-height:1.8}
 .solbody p{margin:.4em 0}
-.solbody table{font-size:.88em;margin:.5em 0}
-.solbody hr{border:0;border-top:1px dashed var(--line);margin:.7em 0}
-.sheet .solbody{font-size:1rem}
-.banner{background:#fef3c7;border-bottom:1px solid #fcd34d;color:#92400e;
-  padding:7px 34px 7px 14px;font-size:.8rem;text-align:center;line-height:1.5;position:relative}
-.banner .bx{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;
-  color:#92400e;font-size:1.05rem;line-height:1;cursor:pointer;padding:4px 7px;border-radius:6px;opacity:.65}
-.banner .bx:hover{opacity:1;background:rgba(146,64,14,.12)}
-/* re-open handle once dismissed — the disclaimer is never fully gone */
-#soltab{display:none;background:#fef3c7;border-bottom:1px solid #fcd34d;color:#92400e;
-  padding:3px 14px;font-size:.72rem;text-align:center;cursor:pointer}
-#soltab:hover{background:#fde68a}
-/* ---------- in-browser review (marks live in localStorage, exported as JSON) ---------- */
-.revbar{margin-top:11px;padding-top:9px;border-top:1px dashed #bbf7d0;display:flex;gap:7px;
-  flex-wrap:wrap;align-items:center;font-size:.78rem;color:var(--mut)}
-.solwrap.flag .revbar{border-top-color:#fcd34d}
-.revbtn{border:1px solid var(--line);background:#fff;color:#475569;padding:5px 12px;
-  border-radius:8px;cursor:pointer;font-size:.78rem;font-weight:600}
-.revbtn:hover{border-color:#94a3b8}
-.revbtn.ok.on{background:#059669;border-color:#059669;color:#fff}
-.revbtn.bad.on{background:#dc2626;border-color:#dc2626;color:#fff}
-.revnote{flex:1 1 100%;margin-top:6px;border:1px solid var(--line);border-radius:8px;
-  padding:7px 10px;font-size:.82rem;min-height:52px;resize:vertical;display:none;font-family:inherit}
+.solbody table{border-collapse:collapse;font-size:.9em;margin:.5em 0}
+.solbody hr{border:0;border-top:2px dashed #cfc5b0;margin:.7em 0}
+.revbar{margin-top:12px;padding-top:10px;border-top:2px dashed #cfc5b0;display:flex;gap:7px;flex-wrap:wrap;align-items:center;font-size:.8rem;color:var(--mut)}
+.revbtn{border:2px solid var(--ink);background:var(--card);padding:4px 12px;font-size:.8rem;font-weight:700;color:var(--ink)}
+.revbtn.ok.on{background:#2f8f4e;border-color:#2f8f4e;color:#fff}
+.revbtn.bad.on{background:var(--red);border-color:var(--red);color:#fff}
+.revnote{flex:1 1 100%;margin-top:6px;border:2px solid var(--ink);padding:7px 10px;font-size:.84rem;min-height:54px;resize:vertical;display:none;background:#fff}
 .revnote.show{display:block}
-.revmark{font-size:.9rem;margin-left:5px}
-.solbtn.done{border-color:#059669;background:#ecfdf5}
-.solbtn.wrong{border-color:#dc2626;color:#dc2626;background:#fef2f2}
-#exportbtn{border:1px solid #7c3aed;color:#7c3aed;background:#fff;padding:6px 12px;
-  border-radius:9px;cursor:pointer;font-size:.8rem;font-weight:600}
-#exportbtn:hover{background:#7c3aed;color:#fff}
-#exportbtn.none{opacity:.45}
-.expwrap{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:60;display:none;
-  align-items:center;justify-content:center;padding:18px}
-.expwrap.show{display:flex}
-.expbox{background:#fff;border-radius:16px;padding:18px;max-width:620px;width:100%;max-height:86vh;
-  display:flex;flex-direction:column;gap:11px}
-.expbox h3{margin:0;font-size:1rem}
-.expbox p{margin:0;font-size:.83rem;color:var(--mut);line-height:1.6}
-.expbox textarea{width:100%;flex:1;min-height:190px;font-family:ui-monospace,Menlo,Consolas,monospace;
-  font-size:.74rem;border:1px solid var(--line);border-radius:10px;padding:10px;resize:vertical}
-.exprow{display:flex;gap:8px;flex-wrap:wrap}
-.exprow button{border:1px solid var(--line);background:#fff;padding:7px 13px;border-radius:9px;
-  cursor:pointer;font-size:.82rem;font-weight:600}
-.exprow button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
-.exprow button.dan{color:#dc2626;border-color:#fecaca}
-code{background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:.92em}
-table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line);padding:3px 7px}
-.present-btn{margin-left:auto;border:1px solid var(--accent);color:var(--accent);background:#fff;
-  padding:5px 11px;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:600}
-.present-btn:hover{background:var(--accent);color:#fff}
-/* list (accordion) */
-.row{background:#fff;border:1px solid var(--line);border-radius:11px;margin-bottom:7px;overflow:hidden}
-.row-h{display:flex;align-items:center;gap:9px;padding:11px 14px;cursor:pointer}
-.row-h:hover{background:#f8fafc}
-.row-id{font-weight:700;color:var(--accent);font-size:.9rem;white-space:nowrap}
-.row-snip{flex:1;color:#475569;font-size:.93rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.row-body{padding:0 16px 14px;display:none}
+.revmark{font-size:.82rem;font-weight:700;color:var(--ink)}
+
+/* ---------- POSTER view (B3) ---------- */
+.deckbar{display:flex;align-items:center;gap:10px;margin:6px 0 18px;flex-wrap:wrap}
+.deckbar>*:not(.deckhint){flex-shrink:0}
+.deckbar #pscrub{flex:1 1 60px}
+@media(max-width:640px){.deckhint{display:none}.dbtn{width:42px;height:40px}#ppos{min-width:70px;font-size:.8rem}}
+.dbtn{border:3px solid var(--ink);background:var(--card);font-weight:800;font-size:1.1rem;width:48px;height:44px;box-shadow:4px 4px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.dbtn:hover{background:var(--yel)}
+.dbtn:active{transform:translate(4px,4px);box-shadow:none}
+#pscrub{flex:1;min-width:60px;accent-color:var(--red);height:6px;cursor:pointer}
+#ppos{font-family:"JetBrains Mono";font-weight:700;font-size:.9rem;min-width:96px;text-align:center}
+.deckhint{font-size:.74rem;color:var(--mut);width:100%}
+.deck{position:relative}
+.deck:before,.deck:after{content:"";position:absolute;inset:0;background:var(--card);border:3px solid var(--ink);z-index:0}
+.deck:before{transform:rotate(1.8deg) translate(8px,8px)}
+.deck:after{transform:rotate(-1.2deg) translate(-6px,6px)}
+.poster{position:relative;z-index:2;background:var(--card);border:3px solid var(--ink);padding:26px 30px 22px 40px;overflow:hidden;min-height:420px}
+.poster:before{content:"";position:absolute;width:320px;height:320px;border-radius:50%;background:var(--blue);right:-150px;bottom:-170px;opacity:.95;z-index:0}
+.poster:after{content:"";position:absolute;left:0;top:0;width:14px;height:100%;background:var(--red);z-index:0}
+.poster>*{position:relative;z-index:1}
+.poster .pnum{position:absolute;right:20px;top:4px;font-size:7rem;font-weight:800;line-height:1;color:transparent;-webkit-text-stroke:3px var(--red);z-index:0;pointer-events:none;font-family:"Anuphan"}
+.poster .pnum.l4{font-size:4.8rem;top:10px}
+.poster .phead{font-size:.72rem;font-weight:800;letter-spacing:.14em;border-bottom:3px solid var(--ink);padding-bottom:8px;margin-bottom:12px;max-width:66%}
+.poster .pmeta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;max-width:70%}
+.poster .body{max-width:88%}
+.poster .body{font-size:1.08rem}
+.poster.inR{animation:pInR .38s cubic-bezier(.2,1.1,.4,1)}.poster.inL{animation:pInL .38s cubic-bezier(.2,1.1,.4,1)}
+.poster.enter{animation:pIn .5s cubic-bezier(.2,1.2,.4,1)}
+@keyframes pIn{from{opacity:0;transform:translateY(34px) rotate(2deg) scale(.97)}}
+@keyframes pInR{from{opacity:0;transform:translateX(60px) rotate(2deg)}}
+@keyframes pInL{from{opacity:0;transform:translateX(-60px) rotate(-2deg)}}
+.poster.outL{animation:pOutL .2s ease-in forwards}.poster.outR{animation:pOutR .2s ease-in forwards}
+@keyframes pOutL{to{opacity:0;transform:translateX(-90%) rotate(-10deg)}}
+@keyframes pOutR{to{opacity:0;transform:translateX(90%) rotate(10deg)}}
+.poster .solbox{max-width:88%}
+
+/* ---------- CARDS view (mini posters) ---------- */
+.card{position:relative;background:var(--card);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--ink);padding:18px 20px 16px 32px;margin-bottom:22px;overflow:hidden}
+.card.anim{animation:cardIn .5s cubic-bezier(.2,1.1,.4,1) both;animation-delay:calc(var(--i,0)*50ms)}
+@keyframes cardIn{from{opacity:0;transform:translateY(20px)}}
+.card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:10px;background:var(--red)}
+.card.lv-medium:before{background:var(--yel)}.card.lv-easy:before{background:var(--blue)}
+.card .cnum{position:absolute;right:14px;top:0;font-size:3.6rem;font-weight:800;color:transparent;-webkit-text-stroke:2px #e1d8c4;line-height:1;pointer-events:none}
+.card-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;position:relative;padding-right:70px}
+/* ---------- LIST view ---------- */
+.row{background:var(--card);border:3px solid var(--ink);margin-bottom:8px;overflow:hidden;transition:box-shadow .15s,transform .15s}
+.row:hover{box-shadow:5px 5px 0 var(--ink);transform:translate(-2px,-2px)}
+.row-h{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer}
+.row-id{font-family:"JetBrains Mono";font-weight:700;font-size:.8rem;white-space:nowrap}
+.row-snip{flex:1;font-size:.93rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-body{padding:0 18px 16px;display:none;border-top:2px dashed #cfc5b0}
 .row.open .row-body{display:block}
-.chev{color:var(--mut);transition:transform .15s}
+.chev{font-weight:800;transition:transform .15s}
 .row.open .chev{transform:rotate(90deg)}
-/* two-pane */
-.pane{display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:start}
-.pane-list{max-height:calc(100vh - 150px);overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
-.pane-item{display:flex;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);cursor:pointer}
-.pane-item:hover{background:#f1f5f9}
-.pane-item.sel{background:#eef2ff}
-.pane-detail{background:#fff;border:1px solid var(--line);border-radius:12px;padding:20px 22px;position:sticky;top:140px}
-.pane-detail .body{font-size:1.06rem}
-.empty{text-align:center;color:var(--mut);padding:50px}
-/* ---------- focus / present modal ---------- */
-.modal{position:fixed;inset:0;z-index:50;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:16px}
+.row .badge{font-size:.66rem}
+/* ---------- PANE view ---------- */
+.pane{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+.pane-list{max-height:calc(100vh - 170px);overflow:auto;border:3px solid var(--ink);background:var(--card);position:sticky;top:130px}
+.pane-item{display:flex;gap:8px;align-items:center;padding:10px 12px;border-bottom:2px solid #e3dac6;cursor:pointer}
+.pane-item:hover{background:#f6f0e2}
+.pane-item.sel{background:var(--ink);color:var(--paper)}
+.pane-detail{position:sticky;top:130px}
+.pane-detail .poster{min-height:300px}
+@media(max-width:820px){.pane{grid-template-columns:1fr}.pane-detail{display:none}.pane-list{position:static;max-height:none}}
+
+/* ---------- PRESENT modal (full-screen poster) ---------- */
+.modal{position:fixed;inset:0;z-index:50;background:rgba(20,20,20,.72);display:none;align-items:center;justify-content:center;padding:18px}
 .modal.show{display:flex}
-.sheet{background:#fff;border-radius:18px;max-width:880px;width:100%;max-height:92vh;overflow:auto;padding:26px 30px;position:relative}
-.sheet .mtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.sheet .body{font-size:1.35rem;line-height:1.85}
-.sheet .body li{padding:9px 14px;font-size:1.05em}
-.x{position:absolute;top:14px;right:16px;border:0;background:#f1f5f9;border-radius:50%;width:38px;height:38px;font-size:1.2rem;cursor:pointer}
+.sheet{background:var(--card);border:4px solid var(--ink);box-shadow:12px 12px 0 var(--red);max-width:960px;width:100%;max-height:92vh;overflow:auto;padding:30px 34px 26px 44px;position:relative;animation:pIn .4s cubic-bezier(.2,1.2,.4,1)}
+.sheet:before{content:"";position:absolute;left:0;top:0;bottom:0;width:16px;background:var(--red)}
+.sheet .mtop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding-right:50px}
+.sheet .body{font-size:1.38rem;line-height:1.85}
+.sheet .body li{padding:9px 14px;font-size:1.02em}
+.sheet .fig{max-height:52vh;width:auto}
+.sheet .solbody{font-size:1.05rem}
+.x{position:absolute;top:14px;right:16px;border:3px solid var(--ink);background:var(--ink);color:var(--paper);width:42px;height:42px;font-size:1.1rem;font-weight:800}
 .mctrl{display:flex;gap:10px;align-items:center;margin-top:20px;flex-wrap:wrap}
-.mctrl button{padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:1rem}
-.reveal{background:var(--accent)!important;color:#fff;border-color:var(--accent)!important;font-weight:700}
-.ans-box{margin-top:16px;padding:14px 18px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;font-size:1.1rem;display:none}
+.mctrl button{padding:10px 18px;border:3px solid var(--ink);background:var(--card);font-size:1rem;font-weight:800;box-shadow:4px 4px 0 var(--ink)}
+.mctrl button:active{transform:translate(4px,4px);box-shadow:none}
+.reveal{background:var(--blue)!important;color:#fff}
+.ans-box{margin-top:16px;padding:12px 18px;background:#fff4cc;border:3px solid var(--ink);font-size:1.1rem;display:none}
 .ans-box.show{display:block}
-.mpos{margin-left:auto;color:var(--mut);font-size:.9rem}
-@media(max-width:820px){
-  .pane{grid-template-columns:1fr}
-  .pane-detail{position:static;display:none}
-  select{max-width:42vw}
-  .sheet .body{font-size:1.18rem}
-  main{margin-top:10px}
-}
+.mpos{margin-left:auto;font-family:"JetBrains Mono";font-weight:700}
+/* ---------- export modal ---------- */
+.expwrap{position:fixed;inset:0;background:rgba(20,20,20,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
+.expwrap.show{display:flex}
+.expbox{background:var(--card);border:4px solid var(--ink);box-shadow:10px 10px 0 var(--yel);padding:20px;max-width:640px;width:100%;max-height:86vh;display:flex;flex-direction:column;gap:11px}
+.expbox h3{margin:0;font-size:1.1rem}
+.expbox p{margin:0;font-size:.84rem;color:var(--mut);line-height:1.6}
+.expbox textarea{width:100%;flex:1;min-height:190px;font-family:"JetBrains Mono",monospace;font-size:.74rem;border:2px solid var(--ink);padding:10px;resize:vertical;background:#fff}
+.exprow{display:flex;gap:8px;flex-wrap:wrap}
+.exprow button{border:2px solid var(--ink);background:var(--card);padding:7px 13px;font-size:.84rem;font-weight:700;box-shadow:3px 3px 0 var(--ink)}
+.exprow button.pri{background:var(--ink);color:var(--paper)}
+.exprow button.dan{color:var(--red)}
+@media(max-width:640px){.poster{padding:20px 16px 18px 26px}.poster .pnum{font-size:4.2rem}.poster .body,.poster .solbox{max-width:100%}.poster .phead,.poster .pmeta{max-width:78%}.sheet{padding:22px 16px 18px 28px}.sheet .body{font-size:1.15rem}}
 </style></head><body>
-<header>
+<div class="kin" aria-hidden="true"><i class="k1"></i><i class="k2"></i><i class="k3"></i><i class="k4"></i><i class="k5"></i></div>
+
+<!-- ================= LANDING ================= -->
+<section id="landing"><div class="lwrap">
+  <div class="lhead"><h1><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>คลังข้อสอบเคมี</h1>
+    <p id="lsub"></p><span class="sp"></span>
+    <button class="lbtn" id="lbg" title="เปิด/ปิดพื้นหลังเคลื่อนไหว">◐ พื้นหลัง</button></div>
+  <div class="board" id="board"></div>
+  <div class="lfoot">แตะบล็อกเพื่อเข้าบทนั้น · แถบใต้แต่ละบล็อก = สัดส่วนข้อที่มีวิธีทำ</div>
+</div></section>
+
+<!-- ================= APP ================= -->
+<div id="app">
+<header id="hdr">
  <div class="bar1">
-   <span class="title">🧪 คลังข้อสอบเคมี <small>Chem Question Bank</small></span>
-   <input id="q" placeholder="🔍 ค้นหาข้อความ / สูตร / Q-id...">
+   <button class="home" id="home" title="กลับไปเลือกบท">⌂ <span>เลือกบท</span></button>
+   <span class="title"><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>คลังข้อสอบเคมี <small>Chem Question Bank</small></span>
+   <input id="q" placeholder="ค้นหาข้อความ / สูตร / Q-id…  ( / )">
+   <button class="hbtn" id="random">🎲 สุ่ม</button>
+   <button class="hbtn" id="ftoggle">ตัวกรอง ▾</button>
  </div>
- <div class="bar2">
+ <div class="bar2"><div class="in">
    <select id="fsubj"></select>
    <select id="fch"></select>
    <select id="fexam"></select>
@@ -528,19 +650,19 @@ table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line
    <select id="fdiff"></select>
    <select id="ftype"></select>
    <select id="fsol"></select>
-   <button class="btn" id="random">🎲 สุ่มข้อ</button>
-   <button id="exportbtn" style="display:none">📥 ผลตรวจ</button>
    <span class="seg" id="layout">
-     <button data-v="list">รายการ</button>
+     <button data-v="poster">โปสเตอร์</button>
      <button data-v="cards">การ์ด</button>
+     <button data-v="list">รายการ</button>
      <button data-v="pane">2 คอลัมน์</button>
    </span>
+   <button class="btn" id="exportbtn" style="display:none">📥 ผลตรวจ</button>
+   <button class="btn" id="bgbtn" title="เปิด/ปิดพื้นหลังเคลื่อนไหว">◐</button>
    <span id="count"></span>
- </div>
- <div class="banner" id="soldis" style="display:none"></div>
- <div id="soltab">⚠️ เฉลยทั้งหมดเป็นเฉลยที่ AI ทำขึ้น — แตะเพื่ออ่านคำเตือนเต็ม</div>
+ </div></div>
 </header>
 <main id="root"></main>
+</div>
 
 <div class="modal" id="modal"><div class="sheet">
   <button class="x" id="mx">✕</button>
@@ -550,7 +672,7 @@ table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line
   <div class="ans-box" id="mans"></div>
   <div id="msol"></div>
   <div class="mctrl">
-    <button id="mreveal" class="reveal">👁 เฉลย / หมายเหตุ</button>
+    <button id="mreveal" class="reveal">เฉลย / หมายเหตุ</button>
     <button id="mprev">◀ ก่อนหน้า</button>
     <button id="mnext">ถัดไป ▶</button>
     <span class="mpos" id="mpos"></span>
@@ -577,77 +699,80 @@ table{border-collapse:collapse;font-size:.92em}td,th{border:1px solid var(--line
 const DATA = __DATA__;
 const DIFF_TH={easy:"ง่าย",medium:"ปานกลาง",hard:"ยาก"};
 const $=s=>document.querySelector(s);
-let view = localStorage.getItem("cqb_view") || "cards";
-let filtered = [];
+// chapter keys "10".."14" are integer-like, so JS object order puts them BEFORE "01".."09" -- sort explicitly
+const CHS=Object.entries(DATA.chapters).sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
+const ls={get:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;}},set:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}},del:k=>{try{localStorage.removeItem(k);}catch(e){}}};
+let view = ls.get("cqb_view","poster");
+if(!["poster","cards","list","pane"].includes(view)) view="poster";
+let filtered = [], pIdx = 0;
+const hasSol=q=>!!(q.solHtml||q.solAnswer);
 
+/* ---------- background toggle ---------- */
+function setBg(on){document.body.classList.toggle("nobg",!on);ls.set("cqb_bg",on?"1":"0");}
+setBg(ls.get("cqb_bg","1")!=="0");
+$("#lbg").onclick=$("#bgbtn").onclick=()=>setBg(document.body.classList.contains("nobg"));
+
+/* ---------- filters ---------- */
 function opt(sel,val,label){const o=document.createElement("option");o.value=val;o.textContent=label;sel.appendChild(o);}
-// subject selector (เคมี / ชีววิทยา / เคมีประยุกต์) — drives the topic dropdown below
-opt($("#fsubj"),"",`🧪 ทุกวิชา (${DATA.questions.length})`);
-if(DATA.chemcount)opt($("#fsubj"),"chem",`⚗️ เคมี (${DATA.chemcount})`);
-if(DATA.biocount)opt($("#fsubj"),"bio",`🧬 ชีววิทยา (${DATA.biocount})`);
-if(DATA.appcount)opt($("#fsubj"),"applied",`🧫 เคมีประยุกต์ (${DATA.appcount})`);
-
+opt($("#fsubj"),"",`ทุกวิชา (${DATA.questions.length})`);
+if(DATA.chemcount)opt($("#fsubj"),"chem",`เคมี (${DATA.chemcount})`);
+if(DATA.biocount)opt($("#fsubj"),"bio",`ชีววิทยา (${DATA.biocount})`);
+if(DATA.appcount)opt($("#fsubj"),"applied",`เคมีประยุกต์ (${DATA.appcount})`);
 function populateChapters(subj){
   const sel=$("#fch"); sel.innerHTML="";
   if(subj==="bio"){
-    opt(sel,"","📚 ทุกหัวข้อ");
+    opt(sel,"","ทุกหัวข้อ");
     for(const[n,name]of Object.entries(DATA.bioChapters)){const c=DATA.biocounts[n]||0;if(c)opt(sel,n,`${n}. ${name} (${c})`);}
   }else if(subj==="applied"){
-    opt(sel,"","📚 ทุกหัวข้อ");
+    opt(sel,"","ทุกหัวข้อ");
     for(const[k,name]of Object.entries(DATA.appTopics)){const c=DATA.appcounts[k]||0;if(c)opt(sel,k,`${name} (${c})`);}
     for(const k of Object.keys(DATA.appcounts)){if(!DATA.appTopics[k])opt(sel,k,`${k} (${DATA.appcounts[k]})`);}
-  }else{ // chem, or "ทุกวิชา"
-    opt(sel,"","📚 ทุกบท");
-    for(const[n,name]of Object.entries(DATA.chapters)){const c=DATA.counts[n]||0;if(c)opt(sel,n,`${parseInt(n)}. ${name} (${c})`);}
+  }else{
+    opt(sel,"","ทุกบท");
+    for(const[n,name]of CHS){const c=DATA.counts[n]||0;if(c)opt(sel,n,`${parseInt(n)}. ${name} (${c})`);}
   }
 }
 populateChapters("");
-opt($("#fexam"),"","🏷 ทุกสนามสอบ");
+opt($("#fexam"),"","ทุกสนามสอบ");
 for(const[k,c]of Object.entries(DATA.examcount||{})){const e=DATA.exams[k]||{label:k};opt($("#fexam"),k,`${e.label} (${c})`);}
-opt($("#fyear"),"","📅 ทุกปี");DATA.years.forEach(y=>opt($("#fyear"),y,"ปี "+y));
-opt($("#fdiff"),"","📊 ทุกระดับ");["easy","medium","hard"].forEach(d=>opt($("#fdiff"),d,DIFF_TH[d]));
-opt($("#ftype"),"","✏️ ทุกชนิด");DATA.types.forEach(t=>opt($("#ftype"),t,t));
+opt($("#fyear"),"","ทุกปี");DATA.years.forEach(y=>opt($("#fyear"),y,"ปี "+y));
+opt($("#fdiff"),"","ทุกระดับ");["easy","medium","hard"].forEach(d=>opt($("#fdiff"),d,DIFF_TH[d]));
+opt($("#ftype"),"","ทุกชนิด");DATA.types.forEach(t=>opt($("#ftype"),t,t));
 const SC=DATA.solcount||{have:0,flag:0,unchecked:0};
+opt($("#fsol"),"","วิธีทำ: ทั้งหมด");
 if(SC.have){
-  $("#soldis").innerHTML=`⚠️ <b>เฉลย ${SC.have} ข้อในคลังนี้เป็นเฉลยที่ AI ทำขึ้น ไม่ใช่เฉลยทางการ</b> — `
-    +`ข้อสอบ สอวน. / PAT2 / 9 วิชาสามัญ ไม่มีเฉลยแจก ทุกข้อจึงเป็นการหาคำตอบเอง`
-    +(SC.unchecked?` · <b>${SC.unchecked} ข้อยังไม่ผ่านการตรวจโดยพี่ปราช</b>`:``)
-    +(SC.flag?` · ${SC.flag} ข้อติดธง ⚠️ (ตอบไม่ฟันธง)`:``)
-    +` — ใช้เป็นแนวทาง อย่าเชื่อ 100%`
-    +`<button class="bx" id="bx" title="ปิด">✕</button>`;
-  // dismissible, and the choice sticks — but it collapses to a one-line tab, never to nothing.
-  // The per-question disclaimer inside each solution is NOT dismissible.
-  const setBanner=open=>{
-    $("#soldis").style.display = open?"block":"none";
-    $("#soltab").style.display = open?"none":"block";
-  };
-  setBanner(localStorage.getItem("cqb_banner")!=="0");
-  $("#bx").onclick=()=>{localStorage.setItem("cqb_banner","0");setBanner(false);};
-  $("#soltab").onclick=()=>{localStorage.removeItem("cqb_banner");setBanner(true);};
-}
-opt($("#fsol"),"","📖 เฉลย: ทั้งหมด");
-if(SC.have){
-  opt($("#fsol"),"has",`✅ มีวิธีทำ (${SC.have})`);
-  opt($("#fsol"),"none",`— ยังไม่มีวิธีทำ (${DATA.questions.length-SC.have})`);
-  if(SC.flag)      opt($("#fsol"),"flag",`⚠️ ต้องดูเอง (${SC.flag})`);
-  if(SC.unchecked) opt($("#fsol"),"unchecked",`🕗 ยังไม่ตรวจ (${SC.unchecked})`);
+  opt($("#fsol"),"has",`มีวิธีทำ (${SC.have})`);
+  opt($("#fsol"),"none",`ยังไม่มีวิธีทำ (${DATA.questions.length-SC.have})`);
+  if(SC.flag)      opt($("#fsol"),"flag",`⚠ ไม่ฟันธง (${SC.flag})`);
+  if(SC.unchecked) opt($("#fsol"),"unchecked",`ยังไม่ตรวจ (${SC.unchecked})`);
   const done=SC.have-SC.unchecked;
-  if(done)         opt($("#fsol"),"checked",`✅ ตรวจแล้ว (${done})`);
+  if(done)         opt($("#fsol"),"checked",`ตรวจแล้ว (${done})`);
 }
 
+/* ---------- badges ---------- */
 function examBadge(q){const e=DATA.exams[q.exam]||{label:q.exam.toUpperCase(),color:"#64748b"};
-  return `<span class="badge b-exam" style="background:${e.color}">${e.label} ${q.year}</span>`;}
-function diffBadge(q){return `<span class="badge b-diff d-${q.diff}">${DIFF_TH[q.diff]||q.diff}</span>`;}
+  return `<span class="badge b-exam"><i style="background:${e.color}"></i>${e.label} ${q.year}</span>`;}
+function diffBadge(q){return q.diff?`<span class="badge b-diff d-${q.diff}">${DIFF_TH[q.diff]||q.diff}</span>`:"";}
+function idBadge(q){return `<span class="badge b-id">${q.id}</span>`;}
+function typeBadge(q){return q.type?`<span class="badge b-type">${q.type}</span>`:"";}
 function chBadge(q){
   if(q.subject==="bio") return `<span class="badge b-ch">ชีววิทยา ${q.bio}. ${q.chName}</span>`;
   if(q.subject==="applied") return `<span class="badge b-ch">ประยุกต์ · ${q.chName}</span>`;
   return `<span class="badge b-ch">บท ${parseInt(q.ch)}. ${q.chName}</span>`;}
-function footHtml(q){return `📄 ${q.source} &nbsp;·&nbsp; เฉลย: ${q.answer||"—"}`;}
+const NOKEY=/no key/i;
+function keyTxt(q){return (q.answer&&!NOKEY.test(q.answer))?q.answer:"";}
+function footHtml(q){const k=keyTxt(q);return `📄 ${q.source}${k?` &nbsp;·&nbsp; เฉลยทางการ: ${k}`:""}`;}
 function figHtml(q){return q.figure?`<img class="fig" src="${q.figure}" alt="${q.id} figure" loading="lazy">`:"";}
-/* ---- review marks: Prat ticks solutions off in the browser (iPad-friendly),
-   they persist in localStorage, and get exported as JSON for tools/apply_review.py ---- */
+function noteHtml(q){return q.note?`<div class="note">📌 ${q.note}</div>`:"";}
+const qnum=q=>parseInt(q.id.slice(2),10);
+function chapH(q){const cls=q.subject==="bio"?" bio":q.subject==="applied"?" app":"";
+  const n=q.subject==="bio"?(q.bio.split(".")[0]||"?"):q.subject==="applied"?"✦":(q.ch?parseInt(q.ch):"?");
+  const nm=q.groupLabel.replace(/^บทที่ \d+ · /,"");
+  return `<div class="chap-h${cls}"><b>${n}</b><span>${nm}</span></div>`;}
+
+/* ---- review marks: persist in localStorage, exported as JSON for tools/apply_review.py ---- */
 let REV = {};
-try{ REV = JSON.parse(localStorage.getItem("cqb_review")||"{}") || {}; }catch(e){ REV = {}; }
+try{ REV = JSON.parse(ls.get("cqb_review","{}")) || {}; }catch(e){ REV = {}; }
 function saveRev(){
   try{ localStorage.setItem("cqb_review", JSON.stringify(REV)); }
   catch(e){ alert("บันทึกผลตรวจไม่ได้ (พื้นที่เบราว์เซอร์เต็ม) — กด 📥 ผลตรวจ แล้วเซฟออกมาก่อน"); }
@@ -672,40 +797,32 @@ function revBar(q){
         placeholder="ผิดตรงไหน / คำตอบที่ถูกคืออะไร (ไม่ใส่ก็ได้)">${note}</textarea>
     </div>`;
 }
-
-/* Solution block — ALWAYS collapsed on render. Never auto-open: the whole point of
-   present mode is that the student attempts it before seeing the working. */
+function solLabel(q){const r=REV[q.id]||{};
+  return r.v==="ok" ? "✅ ดูวิธีทำ (ตรวจแล้ว)" : r.v==="bad" ? "❌ ดูวิธีทำ (ผิด / ต้องแก้)" : q.solFlag ? "⚠ ดูวิธีทำ (ไม่ฟันธง)" : "ดูวิธีทำ →";}
+/* Solution block — ALWAYS collapsed on render (attempt before seeing the working). */
 function solHtml(q){
-  if(!q.solHtml && !q.solAnswer) return "";
+  if(!hasSol(q)) return "";
   const r = REV[q.id] || {};
-  const mark = r.v==="ok" ? " done" : r.v==="bad" ? " wrong" : "";
-  const f = (q.solFlag ? " flag" : "") + mark;
-  const label = r.v==="ok" ? "✅ ดูวิธีทำ (ตรวจแล้ว)"
-              : r.v==="bad" ? "❌ ดูวิธีทำ (ทำเครื่องหมายว่าผิด)"
-              : q.solFlag ? "⚠️ ดูเฉลย (มีข้อสงสัย)" : "👁 ดูวิธีทำ";
-  const dis = q.solFlag
-    ? "⚠️ ข้อนี้ผมไม่ฟันธง — โจทย์กำกวมหรือตัวเลือกไม่ตรง อ่านเหตุผลในวิธีทำแล้วตัดสินเอง"
-    : "เฉลยนี้ AI ทำขึ้นเอง ไม่ใช่เฉลยทางการ (ข้อสอบ สอวน./PAT2/9 วิชาสามัญ ไม่มีเฉลยแจก)"
-      + (q.solChecked ? " · ✅ พี่ปราชตรวจแล้ว" : " · ยังไม่ผ่านการตรวจ ใช้เป็นแนวทาง อย่าเชื่อ 100%");
+  const f = (q.solFlag ? " flag" : "") + (r.v==="ok" ? " done" : r.v==="bad" ? " wrong" : "");
+  const label = solLabel(q);
   return `<button class="solbtn${f}" data-sol="1" data-label="${label}">${label}</button>
-    <div class="solwrap${f}">
-      <div class="soldis">${dis}</div>
+    <div class="solwrap${f}"><div class="solin"><div class="solbox">
+      ${q.solFlag?`<div class="soldis">⚠ ข้อนี้ไม่ฟันธง — โจทย์กำกวมหรือตัวเลือกไม่ตรง อ่านเหตุผลในวิธีทำแล้วตัดสินเอง</div>`:""}
+      ${q.solChecked?`<span class="chk">✅ ตรวจแล้ว</span>`:""}
       ${q.solAnswer?`<div class="solans">ตอบ: ${q.solAnswer}</div>`:""}
       <div class="solbody">${q.solHtml}</div>
       ${revBar(q)}
-    </div>`;
+    </div></div></div>`;
 }
 
-function apply(){
+function apply(keepPos){
   const t=$("#q").value.trim().toLowerCase(),subj=$("#fsubj").value,ch=$("#fch").value,
         ex=$("#fexam").value,yr=$("#fyear").value,df=$("#fdiff").value,tp=$("#ftype").value,
         sl=$("#fsol").value;
   filtered=DATA.questions.filter(x=>{
-    // subject: chem = neither bio nor applied
     if(subj==="chem" && (x.subject==="bio"||x.subject==="applied")) return false;
     if(subj==="bio" && x.subject!=="bio") return false;
     if(subj==="applied" && x.subject!=="applied") return false;
-    // topic within the chosen subject
     if(ch){
       if(subj==="bio"){ if((x.bio.split(".")[0]||"?")!==ch) return false; }
       else if(subj==="applied"){ if(x.app!==ch) return false; }
@@ -715,15 +832,16 @@ function apply(){
     if(yr && x.year!==yr) return false;
     if(df && x.diff!==df) return false;
     if(tp && x.type!==tp) return false;
-    const hasSol = !!(x.solHtml||x.solAnswer);
-    if(sl==="has"       && !hasSol) return false;
-    if(sl==="none"      &&  hasSol) return false;
-    if(sl==="flag"      && !(hasSol && x.solFlag)) return false;
-    if(sl==="unchecked" && !(hasSol && !x.solChecked)) return false;
-    if(sl==="checked"   && !(hasSol && x.solChecked)) return false;
+    const hs = hasSol(x);
+    if(sl==="has"       && !hs) return false;
+    if(sl==="none"      &&  hs) return false;
+    if(sl==="flag"      && !(hs && x.solFlag)) return false;
+    if(sl==="unchecked" && !(hs && !x.solChecked)) return false;
+    if(sl==="checked"   && !(hs && x.solChecked)) return false;
     if(t && !(x.search.includes(t)||x.id.toLowerCase().includes(t))) return false;
     return true;
   });
+  if(!keepPos) pIdx=0;
   $("#count").textContent=`${filtered.length} / ${DATA.questions.length} ข้อ`;
   render();
 }
@@ -731,92 +849,119 @@ function apply(){
 function render(){
   const R=$("#root");
   if(!filtered.length){R.innerHTML='<div class="empty">ไม่พบข้อสอบที่ตรงกับเงื่อนไข</div>';return;}
-  if(view==="cards") renderCards(R);
+  if(view==="poster") renderPoster(R);
+  else if(view==="cards") renderCards(R);
   else if(view==="list") renderList(R);
   else renderPane(R);
 }
-function cardHtml(q,idx){return `<div class="card lv-${q.diff}">
-   <div class="card-top">${chBadge(q)}${examBadge(q)}${diffBadge(q)}<span class="badge b-type">${q.type}</span>
-     <span class="spacer"></span><span class="qid">${q.id}</span>
-     <button class="present-btn" data-i="${idx}">▶ แสดงให้นักเรียน</button></div>
-   <div class="body">${q.bodyHtml}${figHtml(q)}</div>
-   ${q.note?`<div class="note">📌 ${q.note}</div>`:""}
+/* ---- POSTER (one question at a time, deck) ---- */
+function posterHtml(q,i,anim){return `<article class="poster ${anim||""}" data-i="${i}">
+   <div class="pnum${qnum(q)>999?" l4":""}">${qnum(q)}</div>
+   <div class="phead">${q.groupLabel}</div>
+   <div class="pmeta">${idBadge(q)}${examBadge(q)}${diffBadge(q)}${typeBadge(q)}</div>
+   <div class="body">${q.bodyHtml}${figHtml(q)}</div>${noteHtml(q)}
+   ${solHtml(q)}
+   <div class="foot">${footHtml(q)}<button class="present-btn" data-i="${i}">⤢ แสดงให้นักเรียน</button></div></article>`;}
+function renderPoster(R){
+  if(pIdx>=filtered.length) pIdx=0;
+  R.innerHTML=`<div class="deckbar"><button class="dbtn" id="pprev" title="ก่อนหน้า (←)">←</button>
+    <input type="range" id="pscrub" min="1" max="${filtered.length}" value="${pIdx+1}" aria-label="เลื่อนไปข้อ">
+    <span id="ppos"></span><button class="dbtn" id="pnext" title="ถัดไป (→)">→</button>
+    <span class="deckhint">← → เปลี่ยนข้อ · Enter เปิดวิธีทำ · ลากแถบเพื่อกระโดด · แตะตัวเลือกเพื่อวงไว้</span></div>
+    <div class="deck" id="deck"></div>`;
+  fillPoster("enter");
+}
+function fillPoster(anim){
+  const q=filtered[pIdx];if(!q)return;
+  $("#deck").innerHTML=posterHtml(q,pIdx,anim);
+  $("#ppos").textContent=`${pIdx+1} / ${filtered.length}`;
+  $("#pscrub").value=pIdx+1;
+}
+let pBusy=false;
+function pstep(d){
+  if(view!=="poster"||!filtered.length||pBusy) return;
+  const p=$("#deck .poster");pBusy=true;
+  if(p) p.classList.add(d>0?"outL":"outR");
+  setTimeout(()=>{pIdx=(pIdx+d+filtered.length)%filtered.length;fillPoster(d>0?"inR":"inL");pBusy=false;},180);
+}
+/* ---- CARDS ---- */
+function cardHtml(q,idx){return `<div class="card lv-${q.diff}${idx<12?" anim":""}" style="--i:${idx}">
+   <span class="cnum">${qnum(q)}</span>
+   <div class="card-top">${idBadge(q)}${chBadge(q)}${examBadge(q)}${diffBadge(q)}${typeBadge(q)}
+     <button class="present-btn" data-i="${idx}">⤢ แสดง</button></div>
+   <div class="body">${q.bodyHtml}${figHtml(q)}</div>${noteHtml(q)}
    ${solHtml(q)}
    <div class="foot">${footHtml(q)}</div></div>`;}
 function renderCards(R){
-  // group by chapter (or biology bucket)
   let html="",lastG=null;
   filtered.forEach((q,i)=>{
-    if(q.groupKey!==lastG){lastG=q.groupKey;html+=`<div class="chap-h">${q.groupLabel}</div>`;}
+    if(q.groupKey!==lastG){lastG=q.groupKey;html+=chapH(q);}
     html+=cardHtml(q,i);
   });
   R.innerHTML=html;
 }
+/* ---- LIST (accordion) ---- */
 function renderList(R){
   let html="",lastG=null;
   filtered.forEach((q,i)=>{
-    if(q.groupKey!==lastG){lastG=q.groupKey;html+=`<div class="chap-h">${q.groupLabel}</div>`;}
+    if(q.groupKey!==lastG){lastG=q.groupKey;html+=chapH(q);}
     html+=`<div class="row" data-i="${i}">
       <div class="row-h"><span class="chev">▸</span><span class="row-id">${q.id}</span>
-        <span class="diff-txt de-${q.diff}">${DIFF_TH[q.diff]}</span>
+        <span class="diff-txt de-${q.diff}">${DIFF_TH[q.diff]||""}</span>
         <span class="row-snip">${q.snippet||""}</span>${examBadge(q)}</div>
-      <div class="row-body"><div class="body">${q.bodyHtml}${figHtml(q)}</div>
-        ${q.note?`<div class="note">📌 ${q.note}</div>`:""}
+      <div class="row-body"><div class="body">${q.bodyHtml}${figHtml(q)}</div>${noteHtml(q)}
         ${solHtml(q)}
         <div class="foot">${footHtml(q)}
-        <button class="present-btn" data-i="${i}">▶ แสดงให้นักเรียน</button></div></div></div>`;
+        <button class="present-btn" data-i="${i}">⤢ แสดงให้นักเรียน</button></div></div></div>`;
   });
   R.innerHTML=html;
 }
+/* ---- PANE (list + poster detail) ---- */
 function renderPane(R){
   let items=filtered.map((q,i)=>`<div class="pane-item" data-i="${i}">
-     <span class="row-id">${q.id}</span><span class="diff-txt de-${q.diff}">${DIFF_TH[q.diff]}</span>
+     <span class="row-id">${q.id}</span><span class="diff-txt de-${q.diff}">${DIFF_TH[q.diff]||""}</span>
      <span class="row-snip">${q.snippet||""}</span></div>`).join("");
   R.innerHTML=`<div class="pane"><div class="pane-list">${items}</div>
      <div class="pane-detail" id="detail"><div class="empty">เลือกข้อทางซ้ายเพื่อดูรายละเอียด</div></div></div>`;
+  if(window.innerWidth>820) paneShow(0);
 }
 function paneShow(i){
-  const q=filtered[i];const d=$("#detail");
   if(window.innerWidth<=820){openModal(i);return;}
   document.querySelectorAll(".pane-item").forEach(el=>el.classList.toggle("sel",el.dataset.i==i));
-  d.style.display="block";
-  d.innerHTML=`<div class="card-top">${chBadge(q)}${examBadge(q)}${diffBadge(q)}<span class="spacer"></span>
-     <span class="qid">${q.id}</span><button class="present-btn" data-i="${i}">▶ แสดงให้นักเรียน</button></div>
-     <div class="body">${q.bodyHtml}${figHtml(q)}</div>${q.note?`<div class="note">📌 ${q.note}</div>`:""}
-     ${solHtml(q)}
-     <div class="foot">${footHtml(q)}</div>`;
+  $("#detail").innerHTML=posterHtml(filtered[i],i,"enter");
 }
 
-/* ---- focus / present modal ---- */
+/* ---- present modal ---- */
 let mIdx=0;
 function openModal(i){mIdx=i;fillModal();$("#modal").classList.add("show");}
 function fillModal(){
   const q=filtered[mIdx];
-  $("#mtop").innerHTML=`${chBadge(q)}${examBadge(q)}${diffBadge(q)}<span class="qid">${q.id}</span>`;
+  $("#mtop").innerHTML=`${idBadge(q)}${chBadge(q)}${examBadge(q)}${diffBadge(q)}`;
   $("#mbody").innerHTML=q.bodyHtml+figHtml(q);
   $("#mfoot").innerHTML=footHtml(q);
-  const nb=$("#mnote");if(q.note){nb.style.display="block";nb.textContent="📌 "+q.note;}else nb.style.display="none";
+  const nb=$("#mnote");if(q.note){nb.style.display="block";nb.innerHTML="📌 "+q.note;}else nb.style.display="none";
   const ans=$("#mans");ans.classList.remove("show");
-  ans.innerHTML=`<b>เฉลย:</b> ${q.answer||"—"}`;
-  $("#msol").innerHTML=solHtml(q);   // rebuilt each step → always starts collapsed
+  ans.innerHTML=keyTxt(q)?`<b>เฉลยทางการ:</b> ${keyTxt(q)}`:q.solAnswer?`<b>ตอบ:</b> ${q.solAnswer}`:`ข้อนี้ไม่มีเฉลยทางการ และยังไม่มีวิธีทำ`;
+  $("#msol").innerHTML=solHtml(q);
   $("#mpos").textContent=`${mIdx+1} / ${filtered.length}`;
+  const sh=$("#modal .sheet");sh.style.animation="none";void sh.offsetWidth;sh.style.animation="";
 }
 function step(d){mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal();}
 
-/* events */
+/* ---- view switch ---- */
 $("#layout").querySelectorAll("button").forEach(b=>{
   b.classList.toggle("on",b.dataset.v===view);
-  b.onclick=()=>{view=b.dataset.v;localStorage.setItem("cqb_view",view);
+  b.onclick=()=>{view=b.dataset.v;ls.set("cqb_view",view);
     $("#layout").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.v===view));render();};
 });
-["input","change"].forEach(ev=>{$("#q").addEventListener(ev,apply);
-  ["#fch","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).addEventListener(ev,apply));});
-// subject change → rebuild the topic dropdown for that subject, then re-filter
+["input","change"].forEach(ev=>{$("#q").addEventListener(ev,()=>apply());
+  ["#fch","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).addEventListener(ev,()=>apply()));});
 $("#fsubj").addEventListener("change",()=>{populateChapters($("#fsubj").value);apply();});
 $("#random").onclick=()=>{if(filtered.length)openModal(Math.floor(Math.random()*filtered.length));};
-/* one delegated handler for every solution toggle + review button, any layout or the modal */
+$("#ftoggle").onclick=()=>$("#hdr").classList.toggle("fopen");
+
+/* ---- solution toggle + review buttons (delegated: every view + the modal) ---- */
 function solToggle(e){
-  // --- review buttons ---
   const rb=e.target.closest(".revbtn");
   if(rb){
     e.stopPropagation();
@@ -826,27 +971,24 @@ function solToggle(e){
     if(cur===v){ const n=(REV[qid]||{}).note; if(n) REV[qid]={note:n}; else delete REV[qid]; }
     else { REV[qid]=Object.assign({}, REV[qid]||{}, {v:v}); }        // tapping the same one un-marks
     saveRev();
-    // repaint ONLY this bar + its toggle button — nothing else re-renders under his finger
     const q=DATA.questions.find(x=>x.id===qid);
     const tmp=document.createElement("div"); tmp.innerHTML=revBar(q);
     bar.replaceWith(tmp.firstElementChild);
     const r=REV[qid]||{};
     sb.classList.toggle("done", r.v==="ok");
     sb.classList.toggle("wrong", r.v==="bad");
-    sb.dataset.label = r.v==="ok" ? "✅ ดูวิธีทำ (ตรวจแล้ว)"
-                     : r.v==="bad" ? "❌ ดูวิธีทำ (ทำเครื่องหมายว่าผิด)"
-                     : sb.classList.contains("flag") ? "⚠️ ดูเฉลย (มีข้อสงสัย)" : "👁 ดูวิธีทำ";
+    sb.dataset.label = solLabel(q);
+    if(!wrap.classList.contains("show")) sb.textContent = sb.dataset.label;
     return true;
   }
-  if(e.target.closest(".revnote")) { e.stopPropagation(); return true; }   // let him type in peace
-  // --- show / hide the solution ---
+  if(e.target.closest(".revnote")) { e.stopPropagation(); return true; }
   const b=e.target.closest(".solbtn");
   if(!b) return false;
-  e.stopPropagation();                       // don't collapse the accordion row underneath
+  e.stopPropagation();
   const w=b.nextElementSibling;
   if(w && w.classList.contains("solwrap")){
     const open=w.classList.toggle("show");
-    b.textContent = open ? "🙈 ซ่อนวิธีทำ" : (b.dataset.label || "👁 ดูวิธีทำ");
+    b.textContent = open ? "ซ่อนวิธีทำ ↑" : (b.dataset.label || "ดูวิธีทำ →");
   }
   return true;
 }
@@ -858,15 +1000,23 @@ function noteInput(e){
   else REV[qid]=Object.assign({}, REV[qid]||{}, {note:val});
   saveRev();
 }
+function markChoice(e){const li=e.target.closest(".body li");if(!li)return false;li.classList.toggle("mk");return true;}
 $("#root").addEventListener("click",e=>{
   if(solToggle(e)) return;
+  if(e.target.closest("#pprev")){pstep(-1);return;}
+  if(e.target.closest("#pnext")){pstep(1);return;}
   const p=e.target.closest(".present-btn");if(p){openModal(+p.dataset.i);return;}
   const item=e.target.closest(".pane-item");if(item){paneShow(+item.dataset.i);return;}
-  const rh=e.target.closest(".row-h");if(rh){rh.parentElement.classList.toggle("open");}
+  const rh=e.target.closest(".row-h");if(rh){rh.parentElement.classList.toggle("open");return;}
+  markChoice(e);
+});
+$("#root").addEventListener("input",e=>{
+  if(e.target.id==="pscrub"){pIdx=(+e.target.value)-1;fillPoster("");return;}
+  noteInput(e);
 });
 $("#msol").addEventListener("click",solToggle);
-$("#root").addEventListener("input",noteInput);
 $("#msol").addEventListener("input",noteInput);
+$("#mbody").addEventListener("click",markChoice);
 
 /* ---- export ---- */
 function revPayload(){
@@ -908,12 +1058,78 @@ $("#mx").onclick=()=>$("#modal").classList.remove("show");
 $("#modal").onclick=e=>{if(e.target.id==="modal")$("#modal").classList.remove("show");};
 $("#mreveal").onclick=()=>$("#mans").classList.toggle("show");
 $("#mprev").onclick=()=>step(-1);$("#mnext").onclick=()=>step(1);
+
+/* ---- keyboard ---- */
 document.addEventListener("keydown",e=>{
-  if(!$("#modal").classList.contains("show"))return;
-  if(e.key==="Escape")$("#modal").classList.remove("show");
-  if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1);
+  const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&e.target.type!=="range";
+  if($("#modal").classList.contains("show")){
+    if(e.key==="Escape")$("#modal").classList.remove("show");
+    if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1);
+    return;
+  }
+  if($("#expwrap").classList.contains("show")){if(e.key==="Escape")$("#expwrap").classList.remove("show");return;}
+  if(typing){if(e.key==="Escape")e.target.blur();return;}
+  if(!document.body.classList.contains("inapp")) return;
+  if(e.key==="/"){e.preventDefault();$("#q").focus();return;}
+  if(view==="poster"){
+    if(e.key==="ArrowRight"){e.preventDefault();pstep(1);}
+    else if(e.key==="ArrowLeft"){e.preventDefault();pstep(-1);}
+    else if(e.key==="Enter"){const b=$("#deck .solbtn");if(b){e.preventDefault();b.click();}}
+  }
 });
-apply();
+
+/* ================= LANDING (grid board) ================= */
+const PAL=["c-red","c-yel","c-blue","c-card","c-ink","c-card","c-yel","c-red","c-card","c-blue"];
+function cov(qs){const n=qs.length;return n?Math.round(qs.filter(hasSol).length/n*100):0;}
+function tileSize(n,max){const r=n/max;return r>=.8?"w2 h2 big":r>=.5?"w2":"";}
+function buildBoard(){
+  const Q=DATA.questions, chem=Q.filter(q=>q.subject!=="bio"&&q.subject!=="applied");
+  const counts=Object.entries(DATA.counts).filter(([k,c])=>c&&k);
+  const max=Math.max(...counts.map(([,c])=>c));
+  $("#lsub").textContent=`${Q.length} ข้อ · ${Object.keys(DATA.examcount).length} สนามสอบ · มีวิธีทำ ${SC.have} ข้อ`;
+  let h=`<div class="tile hero"><b>${chem.length}</b><span>ข้อสอบเคมี<br>แยกตามบท</span><small>สอวน. · PAT2 · A-Level · 9 วิชาสามัญ<br>เลือกบทด้านข้าง หรือกด ทุกบท</small></div>`;
+  let i=1;
+  h+=`<button class="tile c-ink" data-go="all" style="--i:${i++}"><span class="no">∀</span><span class="nm">ทุกบท</span><span class="ct">${Q.length} ข้อ · ทุกวิชา</span></button>`;
+  h+=`<button class="tile c-yel" data-go="random" style="--i:${i++}"><span class="no">🎲</span><span class="nm">สุ่ม 1 ข้อ</span><span class="ct">จากทั้งคลัง</span></button>`;
+  CHS.forEach(([k,name],j)=>{
+    const c=DATA.counts[k]||0;if(!c)return;
+    const qs=chem.filter(q=>q.ch===k),cv=cov(qs);
+    h+=`<button class="tile ${PAL[j%PAL.length]} ${tileSize(c,max)}" data-go="ch" data-ch="${k}" style="--i:${i++}">
+      <span class="no">${parseInt(k)}</span><span class="nm">${name}</span>
+      <span class="ct">${c} ข้อ${cv?` · วิธีทำ ${cv}%`:""}</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;
+    if(j===4) h+=`<div class="tile deco1" style="--i:${i++}"></div>`;
+    if(j===9) h+=`<div class="tile deco2" style="--i:${i++}"></div>`;
+  });
+  if(DATA.biocount){const qs=Q.filter(q=>q.subject==="bio"),cv=cov(qs);
+    h+=`<button class="tile c-blue w2" data-go="bio" style="--i:${i++}"><span class="no">ชีว</span><span class="nm">ชีววิทยา</span><span class="ct">${DATA.biocount} ข้อ${cv?` · วิธีทำ ${cv}%`:""}</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;}
+  if(DATA.appcount){const qs=Q.filter(q=>q.subject==="applied"),cv=cov(qs);
+    h+=`<button class="tile c-red" data-go="applied" style="--i:${i++}"><span class="no">✦</span><span class="nm">เคมีประยุกต์</span><span class="ct">${DATA.appcount} ข้อ</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;}
+  if(SC.flag) h+=`<button class="tile c-card" data-go="flag" style="--i:${i++}"><span class="no">⚠</span><span class="nm">วิธีทำไม่ฟันธง</span><span class="ct">${SC.flag} ข้อ</span></button>`;
+  if(SC.unchecked) h+=`<button class="tile c-yel" data-go="unchecked" style="--i:${i++}"><span class="no">✓?</span><span class="nm">ยังไม่ตรวจวิธีทำ</span><span class="ct">${SC.unchecked} ข้อ</span></button>`;
+  h+=`<div class="tile deco3" style="--i:${i++}"></div>`;
+  $("#board").innerHTML=h;
+}
+function resetFilters(){$("#q").value="";$("#fsubj").value="";populateChapters("");["#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).value="");}
+function enterApp(x,y,fn){
+  const app=$("#app");app.style.setProperty("--x",x+"px");app.style.setProperty("--y",y+"px");
+  fn();document.body.classList.add("inapp");app.classList.add("show","opening");window.scrollTo(0,0);
+  setTimeout(()=>app.classList.remove("opening"),700);
+}
+$("#board").addEventListener("click",e=>{
+  const t=e.target.closest("[data-go]");if(!t)return;
+  const r=t.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,g=t.dataset.go;
+  enterApp(x,y,()=>{
+    resetFilters();
+    if(g==="ch"){$("#fsubj").value="chem";populateChapters("chem");$("#fch").value=t.dataset.ch;}
+    else if(g==="bio"){$("#fsubj").value="bio";populateChapters("bio");}
+    else if(g==="applied"){$("#fsubj").value="applied";populateChapters("applied");}
+    else if(g==="flag"||g==="unchecked"){$("#fsol").value=g;}
+    apply();
+    if(g==="random"&&filtered.length) setTimeout(()=>openModal(Math.floor(Math.random()*filtered.length)),450);
+  });
+});
+$("#home").onclick=()=>{document.body.classList.remove("inapp");$("#app").classList.remove("show");window.scrollTo(0,0);buildBoard();};
+buildBoard();
 </script></body></html>"""
 
 open(OUT,"w",encoding="utf-8").write(HTML.replace("__DATA__", json.dumps(data, ensure_ascii=False)))
