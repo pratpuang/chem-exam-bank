@@ -265,6 +265,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 <section id="landing"><div class="lwrap">
   <div class="lhead"><h1><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>คลังข้อสอบเคมี</h1>
     <p id="lsub"></p><span class="sp"></span>
+    <button class="lbtn sfxbtn" id="lsfx">🔊</button>
     <button class="lbtn" id="lbg" title="เปิด/ปิดพื้นหลังเคลื่อนไหว">◐ พื้นหลัง</button></div>
   <div class="board" id="board"></div>
   <div class="lfoot">แตะบล็อกเพื่อเข้าบทนั้น · แถบใต้แต่ละบล็อก = สัดส่วนข้อที่มีวิธีทำ</div>
@@ -296,6 +297,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
    </span>
    <button class="btn" id="exportbtn" style="display:none">📥 ผลตรวจ</button>
    <button class="btn" id="bgbtn" title="เปิด/ปิดพื้นหลังเคลื่อนไหว">◐</button>
+   <button class="btn sfxbtn" id="sfxbtn">🔊</button>
    <span id="count"></span>
  </div></div>
 </header>
@@ -345,10 +347,50 @@ if(!["poster","cards","list","pane"].includes(view)) view="poster";
 let filtered = [], pIdx = 0;
 const hasSol=q=>!!(q.solHtml||q.solAnswer);
 
+/* ---------- sound fx: synthesized with Web Audio (no files to host), muteable, remembered ---------- */
+const SFX=(()=>{let ctx=null,on=ls.get("cqb_sfx","1")!=="0";
+  function ac(){if(!ctx){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;ctx=new A();}
+    if(ctx.state==="suspended")ctx.resume();return ctx;}
+  function tone(f,dur,o={}){const c=ac();if(!c)return;const t=c.currentTime+(o.delay||0),os=c.createOscillator(),g=c.createGain();
+    os.type=o.type||"sine";os.frequency.setValueAtTime(f,t);if(o.slide)os.frequency.exponentialRampToValueAtTime(Math.max(30,f*o.slide),t+dur);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(o.vol||.12,t+(o.attack||.006));g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    os.connect(g).connect(c.destination);os.start(t);os.stop(t+dur+.03);}
+  function noise(dur,o={}){const c=ac();if(!c)return;const t=c.currentTime+(o.delay||0),n=Math.max(1,Math.floor(c.sampleRate*dur)),
+    b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
+    const src=c.createBufferSource();src.buffer=b;const f=c.createBiquadFilter();f.type=o.type||"bandpass";
+    f.frequency.setValueAtTime(o.freq||1800,t);if(o.sweep)f.frequency.exponentialRampToValueAtTime((o.freq||1800)*o.sweep,t+dur);f.Q.value=o.q||.8;
+    const g=c.createGain();g.gain.setValueAtTime(o.vol||.1,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    src.connect(f).connect(g).connect(c.destination);src.start(t);src.stop(t+dur+.03);}
+  const P={
+    click:()=>tone(1400,.04,{type:"square",vol:.035}),
+    tile:()=>{tone(523,.09,{type:"triangle",vol:.14});tone(784,.13,{type:"triangle",vol:.11,delay:.055});},
+    whoosh:()=>noise(.55,{vol:.13,freq:350,sweep:7,q:.7}),
+    swish:d=>{noise(.2,{vol:.13,freq:d>0?800:2800,sweep:d>0?3.5:.3,q:1.1});tone(d>0?196:247,.07,{vol:.05,delay:.03});},
+    open:()=>tone(440,.13,{vol:.12,slide:1.7}),
+    close:()=>tone(720,.11,{vol:.09,slide:.55}),
+    ok:()=>{tone(784,.14,{type:"triangle",vol:.13});tone(1175,.24,{type:"triangle",vol:.12,delay:.085});},
+    bad:()=>{tone(185,.24,{type:"sawtooth",vol:.06,slide:.65});noise(.14,{vol:.08,freq:260,type:"lowpass"});},
+    mark:()=>{noise(.045,{vol:.07,freq:5200,q:2});tone(1050,.05,{type:"triangle",vol:.07});},
+    unmark:()=>tone(620,.05,{type:"triangle",vol:.05}),
+    dice:()=>{for(let i=0;i<6;i++)noise(.035,{vol:.13,freq:1500+Math.random()*1800,q:3,delay:i*.055});tone(659,.18,{type:"triangle",vol:.1,delay:.37});tone(988,.22,{type:"triangle",vol:.08,delay:.43});},
+    present:()=>{tone(392,.1,{type:"triangle",vol:.1});tone(587,.18,{type:"triangle",vol:.1,delay:.07});},
+    home:()=>{noise(.38,{vol:.1,freq:2600,sweep:.18,q:.7});tone(620,.13,{vol:.07,slide:.6});},
+    toggle:()=>{tone(880,.045,{type:"square",vol:.03});tone(1320,.05,{type:"square",vol:.03,delay:.05});},
+    tick:()=>tone(1900,.018,{type:"square",vol:.018})
+  };
+  let lastTick=0;
+  return {play(k,a){if(!on)return;if(k==="tick"){const n=Date.now();if(n-lastTick<45)return;lastTick=n;}try{P[k]&&P[k](a);}catch(e){}},
+          get on(){return on;},set(v){on=v;ls.set("cqb_sfx",v?"1":"0");}};
+})();
+function syncSfxBtns(){document.querySelectorAll(".sfxbtn").forEach(b=>{b.textContent=SFX.on?"🔊":"🔇";b.title=SFX.on?"ปิดเสียง (M)":"เปิดเสียง (M)";});}
+function toggleSfx(){SFX.set(!SFX.on);syncSfxBtns();SFX.play("toggle");}
+document.querySelectorAll(".sfxbtn").forEach(b=>b.onclick=toggleSfx);
+syncSfxBtns();
+
 /* ---------- background toggle ---------- */
 function setBg(on){document.body.classList.toggle("nobg",!on);ls.set("cqb_bg",on?"1":"0");}
 setBg(ls.get("cqb_bg","1")!=="0");
-$("#lbg").onclick=$("#bgbtn").onclick=()=>setBg(document.body.classList.contains("nobg"));
+$("#lbg").onclick=$("#bgbtn").onclick=()=>{setBg(document.body.classList.contains("nobg"));SFX.play("toggle");};
 
 /* ---------- filters ---------- */
 function opt(sel,val,label){const o=document.createElement("option");o.value=val;o.textContent=label;sel.appendChild(o);}
@@ -520,6 +562,7 @@ function pstep(d){
   if(view!=="poster"||!filtered.length||pBusy) return;
   const p=$("#deck .poster");pBusy=true;
   if(p) p.classList.add(d>0?"outL":"outR");
+  SFX.play("swish",d);
   setTimeout(()=>{pIdx=(pIdx+d+filtered.length)%filtered.length;fillPoster(d>0?"inR":"inL");pBusy=false;},180);
 }
 /* ---- CARDS ---- */
@@ -571,7 +614,8 @@ function paneShow(i){
 
 /* ---- present modal ---- */
 let mIdx=0;
-function openModal(i){mIdx=i;fillModal();$("#modal").classList.add("show");}
+function openModal(i){mIdx=i;fillModal();$("#modal").classList.add("show");SFX.play("present");}
+function closeModal(){if(!$("#modal").classList.contains("show"))return;$("#modal").classList.remove("show");SFX.play("close");}
 function fillModal(){
   const q=filtered[mIdx];
   $("#mtop").innerHTML=`${idBadge(q)}${chBadge(q)}${examBadge(q)}${diffBadge(q)}`;
@@ -584,19 +628,20 @@ function fillModal(){
   $("#mpos").textContent=`${mIdx+1} / ${filtered.length}`;
   const sh=$("#modal .sheet");sh.style.animation="none";void sh.offsetWidth;sh.style.animation="";
 }
-function step(d){mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal();}
+function step(d){mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal();SFX.play("swish",d);}
 
 /* ---- view switch ---- */
 $("#layout").querySelectorAll("button").forEach(b=>{
   b.classList.toggle("on",b.dataset.v===view);
-  b.onclick=()=>{view=b.dataset.v;ls.set("cqb_view",view);
+  b.onclick=()=>{view=b.dataset.v;ls.set("cqb_view",view);SFX.play("toggle");
     $("#layout").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.v===view));render();};
 });
 ["input","change"].forEach(ev=>{$("#q").addEventListener(ev,()=>apply());
   ["#fch","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).addEventListener(ev,()=>apply()));});
 $("#fsubj").addEventListener("change",()=>{populateChapters($("#fsubj").value);apply();});
-$("#random").onclick=()=>{if(filtered.length)openModal(Math.floor(Math.random()*filtered.length));};
-$("#ftoggle").onclick=()=>$("#hdr").classList.toggle("fopen");
+["#fsubj","#fch","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).addEventListener("change",()=>SFX.play("click")));
+$("#random").onclick=()=>{if(!filtered.length)return;SFX.play("dice");const i=Math.floor(Math.random()*filtered.length);setTimeout(()=>openModal(i),380);};
+$("#ftoggle").onclick=()=>{$("#hdr").classList.toggle("fopen");SFX.play("click");};
 
 /* ---- solution toggle + review buttons (delegated: every view + the modal) ---- */
 function solToggle(e){
@@ -608,6 +653,7 @@ function solToggle(e){
     const cur=(REV[qid]||{}).v;
     if(cur===v){ const n=(REV[qid]||{}).note; if(n) REV[qid]={note:n}; else delete REV[qid]; }
     else { REV[qid]=Object.assign({}, REV[qid]||{}, {v:v}); }        // tapping the same one un-marks
+    SFX.play(cur===v?"unmark":(v==="ok"?"ok":"bad"));
     saveRev();
     const q=DATA.questions.find(x=>x.id===qid);
     const tmp=document.createElement("div"); tmp.innerHTML=revBar(q);
@@ -626,6 +672,7 @@ function solToggle(e){
   const w=b.nextElementSibling;
   if(w && w.classList.contains("solwrap")){
     const open=w.classList.toggle("show");
+    SFX.play(open?"open":"close");
     b.textContent = open ? "ซ่อนวิธีทำ ↑" : (b.dataset.label || "ดูวิธีทำ →");
   }
   return true;
@@ -638,18 +685,18 @@ function noteInput(e){
   else REV[qid]=Object.assign({}, REV[qid]||{}, {note:val});
   saveRev();
 }
-function markChoice(e){const li=e.target.closest(".body li");if(!li)return false;li.classList.toggle("mk");return true;}
+function markChoice(e){const li=e.target.closest(".body li");if(!li)return false;SFX.play(li.classList.toggle("mk")?"mark":"unmark");return true;}
 $("#root").addEventListener("click",e=>{
   if(solToggle(e)) return;
   if(e.target.closest("#pprev")){pstep(-1);return;}
   if(e.target.closest("#pnext")){pstep(1);return;}
   const p=e.target.closest(".present-btn");if(p){openModal(+p.dataset.i);return;}
-  const item=e.target.closest(".pane-item");if(item){paneShow(+item.dataset.i);return;}
-  const rh=e.target.closest(".row-h");if(rh){rh.parentElement.classList.toggle("open");return;}
+  const item=e.target.closest(".pane-item");if(item){SFX.play("click");paneShow(+item.dataset.i);return;}
+  const rh=e.target.closest(".row-h");if(rh){SFX.play(rh.parentElement.classList.toggle("open")?"open":"close");return;}
   markChoice(e);
 });
 $("#root").addEventListener("input",e=>{
-  if(e.target.id==="pscrub"){pIdx=(+e.target.value)-1;fillPoster("");return;}
+  if(e.target.id==="pscrub"){pIdx=(+e.target.value)-1;fillPoster("");SFX.play("tick");return;}
   noteInput(e);
 });
 $("#msol").addEventListener("click",solToggle);
@@ -670,13 +717,14 @@ function openExport(){
     : "ยังไม่ได้ทำเครื่องหมายข้อไหนเลย — กด ✓ ถูก หรือ ✗ ผิด ใต้วิธีทำก่อน";
   $("#exptext").value = revPayload();
   $("#expwrap").classList.add("show");
+  SFX.play("open");
 }
 $("#exportbtn").onclick=openExport;
 $("#expclose").onclick=()=>$("#expwrap").classList.remove("show");
 $("#expwrap").onclick=e=>{if(e.target.id==="expwrap")$("#expwrap").classList.remove("show");};
 $("#expcopy").onclick=async()=>{
   const t=$("#exptext");
-  try{ await navigator.clipboard.writeText(t.value); $("#expcopy").textContent="✅ คัดลอกแล้ว"; }
+  try{ await navigator.clipboard.writeText(t.value); $("#expcopy").textContent="✅ คัดลอกแล้ว"; SFX.play("ok"); }
   catch(e){ t.focus(); t.select(); $("#expcopy").textContent="กด Ctrl/⌘+C"; }
   setTimeout(()=>$("#expcopy").textContent="📋 คัดลอก",1800);
 };
@@ -692,23 +740,24 @@ $("#expclear").onclick=()=>{
   REV={}; saveRev(); $("#expwrap").classList.remove("show"); render();
 };
 refreshExport();
-$("#mx").onclick=()=>$("#modal").classList.remove("show");
-$("#modal").onclick=e=>{if(e.target.id==="modal")$("#modal").classList.remove("show");};
-$("#mreveal").onclick=()=>$("#mans").classList.toggle("show");
+$("#mx").onclick=closeModal;
+$("#modal").onclick=e=>{if(e.target.id==="modal")closeModal();};
+$("#mreveal").onclick=()=>SFX.play($("#mans").classList.toggle("show")?"open":"close");
 $("#mprev").onclick=()=>step(-1);$("#mnext").onclick=()=>step(1);
 
 /* ---- keyboard ---- */
 document.addEventListener("keydown",e=>{
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&e.target.type!=="range";
   if($("#modal").classList.contains("show")){
-    if(e.key==="Escape")$("#modal").classList.remove("show");
+    if(e.key==="Escape")closeModal();
     if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1);
     return;
   }
   if($("#expwrap").classList.contains("show")){if(e.key==="Escape")$("#expwrap").classList.remove("show");return;}
   if(typing){if(e.key==="Escape")e.target.blur();return;}
-  if(!document.body.classList.contains("inapp")) return;
+  if(!document.body.classList.contains("inapp")){if(e.key==="m"||e.key==="M")toggleSfx();return;}
   if(e.key==="/"){e.preventDefault();$("#q").focus();return;}
+  if(e.key==="m"||e.key==="M"){toggleSfx();return;}
   if(view==="poster"){
     if(e.key==="ArrowRight"){e.preventDefault();pstep(1);}
     else if(e.key==="ArrowLeft"){e.preventDefault();pstep(-1);}
@@ -756,6 +805,7 @@ function enterApp(x,y,fn){
 $("#board").addEventListener("click",e=>{
   const t=e.target.closest("[data-go]");if(!t)return;
   const r=t.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,g=t.dataset.go;
+  SFX.play("tile");setTimeout(()=>SFX.play("whoosh"),70);
   enterApp(x,y,()=>{
     resetFilters();
     if(g==="ch"){$("#fsubj").value="chem";populateChapters("chem");$("#fch").value=t.dataset.ch;}
@@ -763,9 +813,9 @@ $("#board").addEventListener("click",e=>{
     else if(g==="applied"){$("#fsubj").value="applied";populateChapters("applied");}
     else if(g==="flag"||g==="unchecked"){$("#fsol").value=g;}
     apply();
-    if(g==="random"&&filtered.length) setTimeout(()=>openModal(Math.floor(Math.random()*filtered.length)),450);
+    if(g==="random"&&filtered.length){setTimeout(()=>SFX.play("dice"),250);setTimeout(()=>openModal(Math.floor(Math.random()*filtered.length)),650);}
   });
 });
-$("#home").onclick=()=>{document.body.classList.remove("inapp");$("#app").classList.remove("show");window.scrollTo(0,0);buildBoard();};
+$("#home").onclick=()=>{SFX.play("home");document.body.classList.remove("inapp");$("#app").classList.remove("show");window.scrollTo(0,0);buildBoard();};
 buildBoard();
 </script></body></html>
