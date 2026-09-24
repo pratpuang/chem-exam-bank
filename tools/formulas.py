@@ -1,15 +1,15 @@
 """Formula sheet for the viewer's เครื่องมือ → สูตร tab, one list per chem chapter (keys match CHAPTERS).
 
 Three card kinds:
-  F(tex, name, key, note, extra)  a formula. `tex` is KaTeX (raw string!), `key` explains the symbols.
+  F(tex, name, key, note, extra, wide)  a formula (wide=True spans the full row). `tex` is KaTeX (raw string!), `key` explains the symbols.
   T(name, head, rows, note)       a small table (VSEPR shapes, Le Chatelier...).
   R(name, lines, note)            a list of rules / relations in words.
 `extra=True` tags a card "เพิ่มเติม" = beyond the core ม.ปลาย curriculum (สอวน./A-Level stretch).
 Text fields may hold simple HTML (<sub>, <sup>, <b>). Edit freely, then re-run build_viewer.py.
 """
 
-def F(tex, name, key="", note="", extra=False):
-    return {"k": "f", "tex": tex, "n": name, "key": key, "note": note, "x": extra}
+def F(tex, name, key="", note="", extra=False, wide=False):
+    return {"k": "f", "tex": tex, "n": name, "key": key, "note": note, "x": extra, "w": wide}
 
 def T(name, head, rows, note="", extra=False):
     return {"k": "t", "n": name, "head": head, "rows": rows, "note": note, "x": extra}
@@ -46,6 +46,8 @@ FORMULAS = {
       "h = 6.626×10<sup>−34</sup> J·s · ความยาวคลื่นสั้น → พลังงานสูง"),
     F(r"E_n = -\dfrac{2.18 \times 10^{-18}}{n^2}\ \text{J}", "ระดับพลังงานของไฮโดรเจน (บอร์)",
       "n = 1, 2, 3 … · ΔE = E<sub>ปลาย</sub> − E<sub>ต้น</sub> · คายแสงเมื่อตกจากระดับสูงลงต่ำ", extra=True),
+    F(r"\dfrac{1}{\lambda} = R_H\left(\dfrac{1}{n_1^2} - \dfrac{1}{n_2^2}\right)", "สมการริดเบิร์ก",
+      "R<sub>H</sub> = 1.097×10<sup>7</sup> m<sup>−1</sup> · n<sub>1</sub> < n<sub>2</sub> · อนุกรมบัลเมอร์ (แสงที่มองเห็น) n<sub>1</sub> = 2", extra=True),
     R("จำนวนอิเล็กตรอน", [
         "ระดับพลังงานหลัก n รับได้สูงสุด 2n<sup>2</sup> ตัว",
         "ระดับย่อย s 2 · p 6 · d 10 · f 14",
@@ -108,13 +110,16 @@ FORMULAS = {
         "จุดหลอมเหลว: โครงผลึกร่างตาข่าย และไอออนิก สูงกว่าโมเลกุลโคเวเลนต์มาก (โดยทั่วไป)"]),
 ],
 "05": [
-    F(r"n = \dfrac{m}{M}", "โมลจากมวล", "m มวล (g) · M มวลโมเลกุล / มวลสูตร (g/mol)"),
-    F(r"n = \dfrac{N}{6.02 \times 10^{23}}", "โมลจากจำนวนอนุภาค", "N จำนวนอะตอม โมเลกุล หรือไอออน"),
-    F(r"n = \dfrac{V}{22.4}", "โมลจากปริมาตรแก๊สที่ STP", "V ปริมาตรแก๊ส (dm³ = L) ที่ 0 °C, 1 atm"),
+    F(r"\text{mol} = \dfrac{g}{M_w} = \dfrac{V}{22.4} = \dfrac{N}{6.02 \times 10^{23}} = \dfrac{C \times V_{\text{mL}}}{1000}",
+      "สะพานโมล — เปลี่ยนทุกอย่างผ่านโมล",
+      "g มวล (กรัม) · M<sub>w</sub> มวลโมเลกุล (g/mol) · V ปริมาตรแก๊สที่ STP (dm³ = L) · "
+      "N จำนวนอนุภาค (อะตอม โมเลกุล ไอออน) · C ความเข้มข้น (mol/L) กับ V<sub>mL</sub> ปริมาตรสารละลาย",
+      "แก๊สที่ไม่ใช่ STP ใช้ n = PV/RT แทน V/22.4", wide=True),
+    F(r"M = d_{\text{STP}} \times 22.4", "มวลโมเลกุลแก๊สจากความหนาแน่น", "d ความหนาแน่นของแก๊สที่ STP (g/L)"),
     F(r"\text{มวล 1 อนุภาค} = \dfrac{M}{6.02 \times 10^{23}}\ \text{g}", "มวลของอะตอม/โมเลกุลเดียว",
       "1 u = 1.66×10<sup>−24</sup> g"),
-    F(r"\%\,\text{ธาตุ} = \dfrac{(\text{จำนวนอะตอม}) \times (\text{มวลอะตอม})}{M} \times 100",
-      "ร้อยละโดยมวลของธาตุในสาร"),
+    F(r"\%\,x = \dfrac{a \times A}{M_w} \times 100", "ร้อยละโดยมวลของธาตุในสาร",
+      "a จำนวนอะตอมของธาตุนั้นใน 1 สูตร · A มวลอะตอมของธาตุ · M<sub>w</sub> มวลโมเลกุลของสาร"),
     R("สูตรเอมพิริคัล → สูตรโมเลกุล", [
         "เปลี่ยน % หรือกรัมของแต่ละธาตุเป็นโมล (หารด้วยมวลอะตอม)",
         "หารทุกตัวด้วยค่าที่น้อยที่สุด ได้อัตราส่วนอย่างต่ำ (ถ้าได้ .5 ให้คูณ 2 · .33 ให้คูณ 3)",
@@ -134,7 +139,8 @@ FORMULAS = {
     F(r"X_A = \dfrac{n_A}{n_{\text{ทั้งหมด}}}", "เศษส่วนโมล", "ผลรวมเศษส่วนโมลทุกตัว = 1"),
     F(r"C = \dfrac{\%\tfrac{w}{w} \times d \times 10}{M}", "เปลี่ยน % โดยมวล → โมลาริตี",
       "d ความหนาแน่นสารละลาย (g/mL)"),
-    F(r"C_1V_1 = C_2V_2", "การเจือจาง", "โมลตัวละลายก่อนเติมน้ำ = หลังเติมน้ำ"),
+    F(r"C_1V_1 = C_2V_2", "การเจือจาง", "โมลตัวละลายก่อนเติมน้ำ = หลังเติมน้ำ · V<sub>2</sub> คือปริมาตรสุดท้าย ไม่ใช่น้ำที่เติม"),
+    F(r"C = \dfrac{\%\tfrac{w}{v} \times 10}{M}", "เปลี่ยน % w/v → โมลาริตี", "M มวลโมเลกุลตัวละลาย"),
     F(r"C_{\text{ผสม}} = \dfrac{C_1V_1 + C_2V_2}{V_1 + V_2}", "ผสมสารละลายชนิดเดียวกัน"),
     F(r"\Delta T_b = K_b\, m \qquad \Delta T_f = K_f\, m", "จุดเดือดสูงขึ้น · จุดเยือกแข็งต่ำลง",
       "น้ำ: K<sub>b</sub> = 0.51 °C/m · K<sub>f</sub> = 1.86 °C/m · ขึ้นกับจำนวนอนุภาค ไม่ขึ้นกับชนิด"),
@@ -149,6 +155,8 @@ FORMULAS = {
         "ขั้นตอน: มวล/ปริมาตร/อนุภาค → โมล → เทียบสัมประสิทธิ์ → โมลที่ต้องการ → หน่วยที่โจทย์ถาม"]),
     F(r"\dfrac{n_A}{a} \;\text{vs}\; \dfrac{n_B}{b}", "หาสารกำหนดปริมาณ",
       "หารโมลที่มีด้วยสัมประสิทธิ์ของตัวเอง · ค่าที่<b>น้อยกว่า</b>คือสารกำหนดปริมาณ (ใช้หมดก่อน)"),
+    F(r"n_{B,\text{เหลือ}} = n_{B,\text{เริ่ม}} - \dfrac{b}{a}\,n_{A}", "สารที่เหลือ (สารมากเกินพอ)",
+      "A สารกำหนดปริมาณ (ใช้หมด) · a, b สัมประสิทธิ์ของ A และ B ในสมการ"),
     F(r"\%\,\text{yield} = \dfrac{\text{ผลได้จริง}}{\text{ผลได้ตามทฤษฎี}} \times 100", "ร้อยละผลได้",
       "ผลได้ตามทฤษฎีคิดจากสารกำหนดปริมาณ"),
     F(r"\%\,\text{ความบริสุทธิ์} = \dfrac{m_{\text{สารบริสุทธิ์}}}{m_{\text{ตัวอย่าง}}} \times 100", "ร้อยละความบริสุทธิ์"),
@@ -224,8 +232,20 @@ FORMULAS = {
     F(r"\%\,\text{แตกตัว} = \dfrac{[\text{H}_3\text{O}^+]}{C} \times 100", "ร้อยละการแตกตัว",
       "K<sub>a</sub> ≈ Cα<sup>2</sup> เมื่อ α คือสัดส่วนการแตกตัว"),
     F(r"K_a \times K_b = K_w", "คู่กรด-เบส", "กรดแรงขึ้น → เบสคู่ของมันอ่อนลง"),
+    F(r"\text{p}K_a = -\log K_a \qquad \text{p}K_a + \text{p}K_b = 14", "pK<sub>a</sub> และ pK<sub>b</sub>",
+      "pK<sub>a</sub> น้อย → กรดแรงกว่า · pK<sub>a</sub> + pK<sub>b</sub> = 14 ใช้กับคู่กรด-เบสคู่ควบ ที่ 25 °C"),
+    F(r"[\text{H}_3\text{O}^+] = (\text{จำนวน H}^+) \times C_{\text{กรดแก่}}", "กรดแก่ / เบสแก่",
+      "แตกตัว 100% · เช่น H<sub>2</sub>SO<sub>4</sub> 0.01 M → [H<sub>3</sub>O<sup>+</sup>] ≈ 0.02 M · เบสแก่: [OH<sup>−</sup>] = จำนวน OH × C"),
+    F(r"\alpha = \sqrt{\dfrac{K_a}{C}}", "สัดส่วนการแตกตัวของกรดอ่อน",
+      "ร้อยละการแตกตัว = α × 100 · เจือจางลง (C ลด) → แตกตัวได้มากขึ้น"),
     F(r"[\text{H}_3\text{O}^+] = K_a \times \dfrac{[\text{HA}]}{[\text{A}^-]}", "บัฟเฟอร์กรด",
-      "รูป log: pH = pK<sub>a</sub> + log([A<sup>−</sup>]/[HA]) · บัฟเฟอร์เบส: [OH<sup>−</sup>] = K<sub>b</sub> × [B]/[BH<sup>+</sup>]"),
+      "HA กรดอ่อน · A<sup>−</sup> มาจากเกลือของมัน · ใช้โมลแทนความเข้มข้นได้ (อยู่ในปริมาตรเดียวกัน)"),
+    F(r"\text{pH} = \text{p}K_a + \log\dfrac{[\text{A}^-]}{[\text{HA}]}", "เฮนเดอร์สัน-ฮัสเซลบัลค์ (บัฟเฟอร์กรด)",
+      "[A<sup>−</sup>] = [HA] → pH = pK<sub>a</sub> · บัฟเฟอร์ต้านได้ดีที่สุดช่วง pK<sub>a</sub> ± 1"),
+    F(r"\text{pOH} = \text{p}K_b + \log\dfrac{[\text{BH}^+]}{[\text{B}]}", "เฮนเดอร์สัน-ฮัสเซลบัลค์ (บัฟเฟอร์เบส)",
+      "เช่น NH<sub>3</sub> + NH<sub>4</sub>Cl · หา pOH แล้ว pH = 14 − pOH · รูปไม่ใช้ log: [OH<sup>−</sup>] = K<sub>b</sub> × [B]/[BH<sup>+</sup>]"),
+    F(r"[\text{H}_3\text{O}^+]_{\text{เหลือ}} = \dfrac{n_{\text{H}^+} - n_{\text{OH}^-}}{V_{\text{รวม}}}", "ผสมกรดแก่กับเบสแก่",
+      "หักโมลกันก่อน ตัวที่เหลือกำหนด pH · หารด้วยปริมาตรรวม (L) · ถ้า OH<sup>−</sup> เหลือ ให้หา pOH"),
     F(r"a\,M_aV_a = b\,M_bV_b", "จุดสมมูลของการไทเทรต",
       "a จำนวน H<sup>+</sup> ที่กรดให้ต่อโมเลกุล · b จำนวน OH<sup>−</sup> ที่เบสให้ (หรือรับ H<sup>+</sup>)"),
     T("เกลือในน้ำ", ["เกลือที่มาจาก", "สารละลาย", "ตัวอย่าง"], [
@@ -252,6 +272,10 @@ FORMULAS = {
         "แผนภาพเซลล์: แอโนด | สารละลายแอโนด || สารละลายแคโทด | แคโทด",
         "E° รีดักชันสูงกว่า → เป็นตัวออกซิไดซ์ที่แรงกว่า → เป็นแคโทด",
         "การคูณครึ่งปฏิกิริยาด้วยตัวเลข <b>ไม่</b>เปลี่ยนค่า E°"]),
+    R("ดุลสมการรีดอกซ์ (ครึ่งปฏิกิริยา)", [
+        "แยกครึ่งออกซิเดชันกับรีดักชัน → ดุลอะตอมที่ไม่ใช่ O และ H",
+        "ดุล O ด้วย H<sub>2</sub>O → ดุล H ด้วย H<sup>+</sup> → ดุลประจุด้วย e<sup>−</sup>",
+        "คูณให้ e<sup>−</sup> ของสองครึ่งเท่ากันแล้วรวม · ในเบส: เติม OH<sup>−</sup> เท่ากับจำนวน H<sup>+</sup> ทั้งสองข้าง แล้วรวมเป็นน้ำ"]),
     F(r"Q = It \qquad n_{e^-} = \dfrac{Q}{F}", "ปริมาณไฟฟ้า",
       "I กระแส (A) · t เวลา (s) · F = 96,500 C/mol e<sup>−</sup>"),
     F(r"m = \dfrac{M\,I\,t}{nF}", "มวลที่เกิดขึ้นที่ขั้วไฟฟ้า",

@@ -790,6 +790,8 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 .fc .fn i{font-style:normal;font-size:.68rem;border:2px solid var(--ink);padding:0 6px;margin-left:8px;vertical-align:2px;background:var(--yel);color:#141414;white-space:nowrap}
 .fc .fk{padding:2px 12px 11px;font-size:.86rem;color:var(--mut);line-height:1.55}
 .fc.wide{grid-column:1/-1;border-left:10px solid var(--c)}
+.fc.fhero{grid-column:1/-1;box-shadow:7px 7px 0 var(--c)}
+.fc .fm.chain{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;column-gap:.35em;row-gap:10px}.fc.fhero .fm{min-height:120px;padding:18px 14px}.fc.fhero .fm .katex{font-size:1.5em}
 .fc.wide .fn{padding-top:10px}
 .fc ul{margin:6px 0 11px;padding:0 14px 0 30px;line-height:1.7;font-size:.93rem}
 .fc li::marker{color:var(--c)}
@@ -798,6 +800,20 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 .ftbl th{background:var(--ink);color:var(--paper);text-align:left;padding:5px 10px;font-size:.8rem;white-space:nowrap}
 .ftbl td{border-bottom:2px solid var(--ink);padding:5px 10px}
 .fxnone{padding:40px 10px;text-align:center;color:var(--mut);font-weight:700}
+/* desktop (mouse) only: the sheet read small at arm's length; iPad (touch) keeps the base size */
+@media (hover:hover) and (pointer:fine) and (min-width:900px){
+  .fxbar input{font-size:1.15rem;padding:10px 14px}
+  .fxchips button{min-width:44px;height:38px;font-size:1.05rem}
+  .fno{width:60px;height:60px;font-size:1.8rem}
+  .fsh b{font-size:1.38rem}.fcur{font-size:.82rem}.fct{font-size:.92rem}
+  .fgrid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+  .fc .fm{min-height:90px}.fc .fm .katex{font-size:1.34em}
+  .fc .fn{font-size:1.16rem;padding-top:11px}.fc .fn i{font-size:.76rem}
+  .fc .fk{font-size:1rem;line-height:1.6}
+  .fc ul{font-size:1.07rem;line-height:1.75}
+  .ftbl{font-size:1.04rem}.ftbl th{font-size:.92rem}
+  #td-fx .tdnote{font-size:.9rem}
+}
 
 /* ---------- simple timer: right-side panel ---------- */
 #tmtab{position:fixed;left:0;top:calc(28% + 256px);z-index:45;writing-mode:vertical-rl;background:var(--blue);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:block;transition:transform .2s}
@@ -1647,7 +1663,7 @@ const TD=(()=>{
     if(!document.body.classList.contains("inapp"))return null;
     const sj=$("#fsubj").value,c=$("#fch").value;return(sj===""||sj==="chem")&&FX[c]?c:null;}
   function fcard(c){const x=c.x?`<i>เพิ่มเติม</i>`:"",srch=esc(plain([c.n,c.key,c.note,c.tex||"",(c.lines||[]).join(" "),(c.rows||[]).flat().join(" ")].join(" ")));
-    if(c.k==="f")return `<div class="fc" data-s="${srch}"><div class="fm">${c.tex.split(/\\qquad/).map(t=>`<div class="fl" data-tex="${esc(t.trim())}">${esc(t.trim())}</div>`).join("")}</div>
+    if(c.k==="f")return `<div class="fc${c.w?" fhero":""}" data-s="${srch}"><div class="fm${c.w?" chain":""}">${(c.w?c.tex.split(" = ").map((t,i)=>(i?"= ":"")+t):c.tex.split(/\\qquad/)).map(t=>`<div class="fl" data-tex="${esc(t.trim())}">${esc(t.trim())}</div>`).join("")}</div>
       <div class="fn">${c.n}${x}</div>${c.key||c.note?`<div class="fk">${[c.key,c.note].filter(Boolean).join("<br>")}</div>`:""}</div>`;
     if(c.k==="t")return `<div class="fc wide" data-s="${srch}"><div class="fn">${c.n}${x}</div><div class="ftw"><table class="ftbl">
       <tr>${c.head.map(h=>`<th>${h}</th>`).join("")}</tr>${c.rows.map(r=>`<tr>${r.map(d=>`<td>${d}</td>`).join("")}</tr>`).join("")}</table></div>
@@ -1656,7 +1672,12 @@ const TD=(()=>{
       ${c.note?`<div class="fk">${c.note}</div>`:""}</div>`;}
   function fxTex(){if(!window.katex)return;
     document.querySelectorAll("#td-fx .fl[data-tex]:not(.done)").forEach(el=>{
-      try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false,strict:false});el.classList.add("done");}catch(e){}});}
+      try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false,strict:false});el.classList.add("done");}catch(e){}});fxFit();}
+  // a long formula shrinks to fit its card instead of scrolling sideways (only measurable while visible)
+  function fxFit(){const pane=$("#td-fx");if(!pane||!pane.classList.contains("on")||!isOpen())return;
+    pane.querySelectorAll(".fm").forEach(fm=>{if(fm.offsetParent===null)return;fm.querySelectorAll(".fl").forEach(l=>l.style.fontSize="");
+      let k=1;while(fm.scrollWidth>fm.clientWidth+1&&k>.62){k-=.06;fm.querySelectorAll(".fl").forEach(l=>l.style.fontSize=k+"em");}});}
+  addEventListener("resize",()=>{clearTimeout(fxFit.t);fxFit.t=setTimeout(fxFit,150);});
   const texWas=window.texReady;window.texReady=()=>{texWas&&texWas();fxTex();};
   let fxFor;
   function fxRender(){const cur=curCh();
@@ -1670,7 +1691,7 @@ const TD=(()=>{
         <span class="fct">${FX[k].length} รายการ</span></div><div class="fgrid">${FX[k].map(fcard).join("")}</div></section>`).join("")}</div>
       <div class="fxnone" id="fxnone" style="display:none">ไม่พบสูตรที่ค้นหา</div>
       <p class="tdnote">แท็ก <b>เพิ่มเติม</b> = เกินหลักสูตรแกน ใช้ในสอวน. / ข้อสอบที่ยากขึ้น · ถ้าโจทย์กำหนดค่าคงที่ให้ ใช้ค่าตามโจทย์</p>`;
-    fxTex();
+    fxTex();fxFit();
     $("#fxq").addEventListener("input",fxFilter);
     $("#fxchips").onclick=e=>{const b=e.target.closest("button");if(!b)return;SFX.play("click");
       const sec=$("#fx-"+b.dataset.j);if(sec&&sec.style.display!=="none")sec.scrollIntoView({behavior:"smooth",block:"start"});};}
@@ -1686,11 +1707,11 @@ const TD=(()=>{
   const isOpen=()=>document.body.classList.contains("tdopen");
   function open(){if(PD.isOpen())PD.close();if(!built)build();
     const was=fxFor;fxRender();if(was!==fxFor)$("#td").scrollTop=0;
-    document.body.classList.add("tdopen");SFX.play("open");}
+    document.body.classList.add("tdopen");fxFit();SFX.play("open");}
   function close(){if(!isOpen())return;document.body.classList.remove("tdopen");SFX.play("close");}
   $("#tdtabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;SFX.play("click");
     $("#tdtabs").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
-    document.querySelectorAll(".tdpane").forEach(p=>p.classList.toggle("on",p.id==="td-"+b.dataset.t));};
+    document.querySelectorAll(".tdpane").forEach(p=>p.classList.toggle("on",p.id==="td-"+b.dataset.t));fxFit();};
   $("#tdtab").onclick=open;$("#tdx").onclick=close;
   $("#pdscrim").onclick=()=>{PD.close();close();TM.close();};
   return{open,close,isOpen};
