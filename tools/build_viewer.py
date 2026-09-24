@@ -396,6 +396,13 @@ body.nobg .kin{display:none}
 .shapes .c{background:var(--red);border-radius:50%}.shapes .s{background:var(--yel)}.shapes .t{background:var(--blue);clip-path:polygon(50% 0,100% 100%,0 100%)}
 .lhead p{margin:0 0 4px;color:var(--mut);font-size:.9rem}
 .lhead .sp{flex:1}
+.lsearch{display:flex;flex:0 1 290px;min-width:200px;border:3px solid var(--ink);background:var(--card);box-shadow:4px 4px 0 var(--ink);transition:box-shadow .15s}
+.lsearch:focus-within{box-shadow:6px 6px 0 var(--blue)}
+.lsearch input{flex:1;min-width:0;border:0;background:transparent;font:600 1rem "Anuphan",sans-serif;padding:9px 12px;outline:none}
+.lsearch .lct{align-self:center;padding:0 10px;font:700 .8rem "JetBrains Mono",monospace;color:var(--mut);white-space:nowrap}
+.lsearch button{border:0;border-left:3px solid var(--ink);background:var(--ink);color:var(--yel);font-weight:800;font-size:1.1rem;padding:0 16px;cursor:pointer}
+.lsearch.shake{animation:lshake .35s}
+@keyframes lshake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 .lbtn{border:3px solid var(--ink);background:var(--card);font-weight:700;padding:8px 14px;box-shadow:4px 4px 0 var(--ink);transition:transform .1s,box-shadow .1s;font-size:.88rem}
 .lbtn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
 .lbtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
@@ -689,7 +696,8 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 <!-- ================= LANDING ================= -->
 <section id="landing"><div class="lwrap">
   <div class="lhead"><h1><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>คลังข้อสอบเคมี</h1>
-    <p id="lsub"></p><span class="sp"></span>
+    <p id="lsub"></p>
+    <div class="lsearch" id="lsearch"><input id="lq" placeholder="ค้นหา · สูตร · Q-id  ( / )" autocomplete="off" spellcheck="false"><span class="lct" id="lct"></span><button id="lgo" title="ค้นหา (Enter)">→</button></div>
     <span class="volbox lvol"><button class="sfxbtn" id="lsfx">🔊</button><input type="range" class="vol" min="0" max="100" aria-label="ระดับเสียง"></span>
     <button class="lbtn" id="lbg" title="เปิด/ปิดพื้นหลังเคลื่อนไหว">◐ พื้นหลัง</button></div>
   <div class="board" id="board"></div>
@@ -1229,7 +1237,7 @@ document.addEventListener("keydown",e=>{
   }
   if($("#expwrap").classList.contains("show")){if(e.key==="Escape")$("#expwrap").classList.remove("show");return;}
   if(typing){if(e.key==="Escape")e.target.blur();return;}
-  if(!document.body.classList.contains("inapp")){if(e.key==="m"||e.key==="M")toggleSfx();return;}
+  if(!document.body.classList.contains("inapp")){if(e.key==="/"){e.preventDefault();$("#lq").focus();}else if(e.key==="m"||e.key==="M")toggleSfx();return;}
   if(e.key==="/"){e.preventDefault();$("#q").focus();return;}
   if(e.key==="m"||e.key==="M"){toggleSfx();return;}
   if(view==="poster"){
@@ -1299,6 +1307,7 @@ const PD=(()=>{
     put(nv.replace(/^[·.*•]+|[·.*•]+$/g,""));return true;}
   // formulas in the question on screen -> one-tap chips + pulsing elements
   function curQ(){if($("#modal").classList.contains("show"))return filtered[mIdx];
+    if(!document.body.classList.contains("inapp"))return null;   // on the landing board there's no question on screen
     if(view==="poster")return filtered[pIdx];
     if(view==="pane"){const s=document.querySelector(".pane-item.sel");return s?filtered[+s.dataset.i]:null;}
     return null;}
@@ -1344,6 +1353,7 @@ function buildBoard(){
   let i=1;
   h+=`<button class="tile c-ink" data-go="all" style="--i:${i++}"><span class="no">∀</span><span class="nm">ทุกบท</span><span class="ct">${Q.length} ข้อ · ทุกวิชา</span></button>`;
   h+=`<button class="tile c-yel" data-go="random" style="--i:${i++}"><span class="no">🎲</span><span class="nm">สุ่ม 1 ข้อ</span><span class="ct">จากทั้งคลัง</span></button>`;
+  h+=`<button class="tile c-blue" data-go="pt" style="--i:${i++}"><span class="no">⚛</span><span class="nm">ตารางธาตุ</span><span class="ct">+ คำนวณ Mw</span></button>`;
   CHS.forEach(([k,name],j)=>{
     const c=DATA.counts[k]||0;if(!c)return;
     const qs=chem.filter(q=>q.ch===k),cv=cov(qs);
@@ -1362,6 +1372,19 @@ function buildBoard(){
   h+=`<div class="tile deco3" style="--i:${i++}"></div>`;
   $("#board").innerHTML=h;
 }
+/* ---- search straight from the board: text / formula / Q-id ("38" or "q38" -> Q-0038) ---- */
+function lsNorm(v){v=v.trim();const m=v.match(/^(?:q-?)?0*(\d{1,4})$/i);
+  if(m){const id="Q-"+m[1].padStart(4,"0");if(DATA.questions.some(x=>x.id===id))return id;}return v;}
+function lsCount(v){const t=v.trim().toLowerCase();if(!t)return -1;return DATA.questions.filter(x=>x.search.includes(t)||x.id.toLowerCase().includes(t)).length;}
+function lsGo(){
+  const v=lsNorm($("#lq").value),n=lsCount(v),box=$("#lsearch");if(n<0)return;
+  if(!n){SFX.play("bad");box.classList.remove("shake");void box.offsetWidth;box.classList.add("shake");return;}
+  const r=box.getBoundingClientRect();SFX.play("tile");setTimeout(()=>SFX.play("whoosh"),70);
+  enterApp(r.left+r.width/2,r.top+r.height/2,()=>{resetFilters();$("#q").value=v;apply();});
+  $("#lq").value="";$("#lct").textContent="";$("#lq").blur();}
+$("#lq").addEventListener("input",()=>{const v=lsNorm($("#lq").value),n=lsCount(v);$("#lct").textContent=n<0?"":v!==$("#lq").value.trim()?v:`${n} ข้อ`;});
+$("#lq").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();lsGo();}});
+$("#lgo").onclick=lsGo;
 function resetFilters(){$("#q").value="";$("#fsubj").value="";populateChapters("");["#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).value="");}
 function enterApp(x,y,fn){
   const app=$("#app");app.style.setProperty("--x",x+"px");app.style.setProperty("--y",y+"px");
@@ -1370,6 +1393,7 @@ function enterApp(x,y,fn){
 }
 $("#board").addEventListener("click",e=>{
   const t=e.target.closest("[data-go]");if(!t)return;
+  if(t.dataset.go==="pt"){PD.open();return;}   // periodic table opens over the landing, no app transition
   const r=t.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,g=t.dataset.go;
   SFX.play("tile");setTimeout(()=>SFX.play("whoosh"),70);
   enterApp(x,y,()=>{
