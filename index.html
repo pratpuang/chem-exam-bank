@@ -97,6 +97,12 @@ select:focus{outline:3px solid var(--yel);outline-offset:1px}
 .btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
 .btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
 #exportbtn{background:var(--yel)}
+.volbox{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--ink);background:var(--card);padding:2px 8px 2px 2px;box-shadow:3px 3px 0 var(--ink)}
+.volbox .sfxbtn{border:0;background:none;font-size:1rem;width:30px;height:28px;padding:0}
+.vol{width:92px;accent-color:var(--red);cursor:pointer;height:4px}
+.vol.off{opacity:.35}
+.lvol{border-width:3px;box-shadow:4px 4px 0 var(--ink);padding:5px 10px 5px 4px}
+.lvol .vol{width:110px}
 #exportbtn.none{opacity:.5}
 #count{margin-left:auto;font-weight:700;font-size:.82rem;white-space:nowrap}
 @media(max-width:760px){#ftoggle{display:block}.bar2{display:none}header.fopen .bar2{display:block}.title small{display:none}.title{padding:10px 12px}}
@@ -265,7 +271,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 <section id="landing"><div class="lwrap">
   <div class="lhead"><h1><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>คลังข้อสอบเคมี</h1>
     <p id="lsub"></p><span class="sp"></span>
-    <button class="lbtn sfxbtn" id="lsfx">🔊</button>
+    <span class="volbox lvol"><button class="sfxbtn" id="lsfx">🔊</button><input type="range" class="vol" min="0" max="100" aria-label="ระดับเสียง"></span>
     <button class="lbtn" id="lbg" title="เปิด/ปิดพื้นหลังเคลื่อนไหว">◐ พื้นหลัง</button></div>
   <div class="board" id="board"></div>
   <div class="lfoot">แตะบล็อกเพื่อเข้าบทนั้น · แถบใต้แต่ละบล็อก = สัดส่วนข้อที่มีวิธีทำ</div>
@@ -297,7 +303,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
    </span>
    <button class="btn" id="exportbtn" style="display:none">📥 ผลตรวจ</button>
    <button class="btn" id="bgbtn" title="เปิด/ปิดพื้นหลังเคลื่อนไหว">◐</button>
-   <button class="btn sfxbtn" id="sfxbtn">🔊</button>
+   <span class="volbox"><button class="sfxbtn" id="sfxbtn">🔊</button><input type="range" class="vol" min="0" max="100" aria-label="ระดับเสียง"></span>
    <span id="count"></span>
  </div></div>
 </header>
@@ -348,43 +354,78 @@ let filtered = [], pIdx = 0;
 const hasSol=q=>!!(q.solHtml||q.solAnswer);
 
 /* ---------- sound fx: synthesized with Web Audio (no files to host), muteable, remembered ---------- */
-const SFX=(()=>{let ctx=null,on=ls.get("cqb_sfx","1")!=="0";
-  function ac(){if(!ctx){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;ctx=new A();}
+const SFX=(()=>{let ctx=null,master=null,verb=null,on=ls.get("cqb_sfx","1")!=="0",vol=Math.max(0,Math.min(100,parseInt(ls.get("cqb_vol","70"),10)||0));
+  const gainFor=v=>Math.pow(v/100,1.6)*1.35;   // perceptual-ish curve: the slider feels even across its range
+  /* signal chain: every voice -> master -> soft lowpass -> compressor -> out, plus a send into a small
+     generated-impulse room reverb. Voices are layered (low "body" + tiny transient) and pitch-varied
+     a few % per hit so repeats never sound robotic. */
+  function ac(){
+    if(!ctx){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;ctx=new A();
+      const comp=ctx.createDynamicsCompressor();comp.threshold.value=-20;comp.knee.value=14;comp.ratio.value=4;comp.attack.value=.003;comp.release.value=.18;
+      const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=8500;
+      master=ctx.createGain();master.gain.value=gainFor(vol);master.connect(lp);lp.connect(comp);comp.connect(ctx.destination);
+      const len=Math.floor(ctx.sampleRate*1.2),ir=ctx.createBuffer(2,len,ctx.sampleRate);
+      for(let c=0;c<2;c++){const d=ir.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3.4);}
+      const cv=ctx.createConvolver();cv.buffer=ir;verb=ctx.createGain();verb.gain.value=.9;verb.connect(cv);cv.connect(master);}
     if(ctx.state==="suspended")ctx.resume();return ctx;}
+  const vary=(x,p=.03)=>x*(1+(Math.random()*2-1)*p);
+  function route(g,wet){g.connect(master);if(wet){const s=ctx.createGain();s.gain.value=wet;g.connect(s);s.connect(verb);}}
+  function env(g,t,vol,a,dur){g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+dur);}
   function tone(f,dur,o={}){const c=ac();if(!c)return;const t=c.currentTime+(o.delay||0),os=c.createOscillator(),g=c.createGain();
-    os.type=o.type||"sine";os.frequency.setValueAtTime(f,t);if(o.slide)os.frequency.exponentialRampToValueAtTime(Math.max(30,f*o.slide),t+dur);
-    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(o.vol||.12,t+(o.attack||.006));g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-    os.connect(g).connect(c.destination);os.start(t);os.stop(t+dur+.03);}
+    os.type=o.type||"sine";os.frequency.setValueAtTime(f,t);
+    if(o.slide)os.frequency.exponentialRampToValueAtTime(Math.max(20,f*o.slide),t+(o.slideT||dur));
+    let n=os;if(o.lp){const fl=c.createBiquadFilter();fl.type="lowpass";fl.frequency.value=o.lp;os.connect(fl);n=fl;}
+    env(g,t,o.vol||.12,o.attack||.004,dur);n.connect(g);route(g,o.wet);os.start(t);os.stop(t+dur+.05);}
   function noise(dur,o={}){const c=ac();if(!c)return;const t=c.currentTime+(o.delay||0),n=Math.max(1,Math.floor(c.sampleRate*dur)),
     b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
     const src=c.createBufferSource();src.buffer=b;const f=c.createBiquadFilter();f.type=o.type||"bandpass";
     f.frequency.setValueAtTime(o.freq||1800,t);if(o.sweep)f.frequency.exponentialRampToValueAtTime((o.freq||1800)*o.sweep,t+dur);f.Q.value=o.q||.8;
-    const g=c.createGain();g.gain.setValueAtTime(o.vol||.1,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-    src.connect(f).connect(g).connect(c.destination);src.start(t);src.stop(t+dur+.03);}
+    const g=c.createGain();env(g,t,o.vol||.1,o.attack||.002,dur);src.connect(f);f.connect(g);route(g,o.wet);src.start(t);src.stop(t+dur+.05);}
+  function bell(f,dur,o={}){const c=ac();if(!c)return;const t=c.currentTime+(o.delay||0),car=c.createOscillator(),mod=c.createOscillator(),mg=c.createGain(),g=c.createGain();
+    car.frequency.value=f;mod.frequency.value=f*(o.ratio||3.5);mg.gain.setValueAtTime(f*(o.index||1.6),t);mg.gain.exponentialRampToValueAtTime(1,t+dur);
+    mod.connect(mg);mg.connect(car.frequency);env(g,t,o.vol||.08,.003,dur);car.connect(g);route(g,o.wet==null?.5:o.wet);
+    car.start(t);mod.start(t);car.stop(t+dur+.05);mod.stop(t+dur+.05);}
+  function mallet(f,o={}){const v=o.vol||.14;tone(f,.42,{vol:v,wet:.25,delay:o.delay,attack:.002});tone(f*3.98,.07,{vol:v*.22,delay:o.delay,attack:.001});noise(.012,{vol:v*.3,freq:3000,q:1,delay:o.delay});}
+  function thock(o={}){const v=o.vol||.15,d=o.delay||0;
+    tone(vary(o.f||190),.1,{vol:v,slide:.5,slideT:.07,attack:.001,delay:d,lp:1400});
+    noise(.016,{vol:v*.55,freq:vary(3600,.1),q:1.3,delay:d});}
   const P={
-    click:()=>tone(1400,.04,{type:"square",vol:.035}),
-    tile:()=>{tone(523,.09,{type:"triangle",vol:.14});tone(784,.13,{type:"triangle",vol:.11,delay:.055});},
-    whoosh:()=>noise(.55,{vol:.13,freq:350,sweep:7,q:.7}),
-    swish:d=>{noise(.2,{vol:.13,freq:d>0?800:2800,sweep:d>0?3.5:.3,q:1.1});tone(d>0?196:247,.07,{vol:.05,delay:.03});},
-    open:()=>tone(440,.13,{vol:.12,slide:1.7}),
-    close:()=>tone(720,.11,{vol:.09,slide:.55}),
-    ok:()=>{tone(784,.14,{type:"triangle",vol:.13});tone(1175,.24,{type:"triangle",vol:.12,delay:.085});},
-    bad:()=>{tone(185,.24,{type:"sawtooth",vol:.06,slide:.65});noise(.14,{vol:.08,freq:260,type:"lowpass"});},
-    mark:()=>{noise(.045,{vol:.07,freq:5200,q:2});tone(1050,.05,{type:"triangle",vol:.07});},
-    unmark:()=>tone(620,.05,{type:"triangle",vol:.05}),
-    dice:()=>{for(let i=0;i<6;i++)noise(.035,{vol:.13,freq:1500+Math.random()*1800,q:3,delay:i*.055});tone(659,.18,{type:"triangle",vol:.1,delay:.37});tone(988,.22,{type:"triangle",vol:.08,delay:.43});},
-    present:()=>{tone(392,.1,{type:"triangle",vol:.1});tone(587,.18,{type:"triangle",vol:.1,delay:.07});},
-    home:()=>{noise(.38,{vol:.1,freq:2600,sweep:.18,q:.7});tone(620,.13,{vol:.07,slide:.6});},
-    toggle:()=>{tone(880,.045,{type:"square",vol:.03});tone(1320,.05,{type:"square",vol:.03,delay:.05});},
-    tick:()=>tone(1900,.018,{type:"square",vol:.018})
+    click:()=>thock({f:240,vol:.1}),
+    preview:()=>thock({f:210,vol:.14}),
+    tile:()=>{mallet(vary(523,.015));mallet(vary(784,.015),{delay:.065,vol:.12});},
+    whoosh:()=>{noise(.62,{freq:260,sweep:9,q:.7,vol:.12,attack:.26,wet:.35});tone(95,.45,{vol:.16,slide:.65,delay:.42,lp:320,attack:.01,wet:.2});},
+    swish:d=>{noise(.26,{freq:d>0?650:2700,sweep:d>0?4.2:.28,q:.9,vol:.11,attack:.07,wet:.12});thock({f:140,vol:.11,delay:.18});},
+    open:()=>{tone(vary(360),.13,{vol:.15,slide:2.3,slideT:.045,attack:.001,wet:.18});noise(.02,{vol:.04,freq:2600,q:2});},
+    close:()=>tone(vary(640),.12,{vol:.11,slide:.48,slideT:.06,attack:.001,wet:.1}),
+    ok:()=>{mallet(523,{vol:.08});bell(1046.5,1,{vol:.085,delay:.02});bell(1568,1.25,{vol:.075,delay:.11});},
+    bad:()=>{tone(172,.34,{vol:.17,slide:.6,slideT:.22,lp:520,attack:.002,wet:.22});tone(115,.3,{vol:.08,delay:.025,lp:400});},
+    mark:()=>{noise(.028,{freq:vary(4600,.1),q:3,vol:.09});tone(vary(2300),.022,{vol:.035,type:"triangle",attack:.001});noise(.07,{freq:6500,q:.6,vol:.025,delay:.012});},
+    unmark:()=>tone(vary(900),.06,{vol:.05,type:"triangle",slide:.75,attack:.001}),
+    dice:()=>{[0,.075,.14,.195,.24,.275].forEach((t,i)=>{noise(.032,{freq:vary(1900,.3),q:6,vol:.15-i*.012,delay:t});tone(vary(720,.25),.045,{vol:.05,type:"triangle",delay:t,attack:.001});});
+      [1046.5,1318.5,1568].forEach((f,i)=>bell(f,.7,{vol:.055,delay:.4+i*.075}));},
+    present:()=>{mallet(392);mallet(587,{delay:.075,vol:.12});bell(1175,.7,{vol:.035,delay:.16});},
+    home:()=>{noise(.42,{freq:2800,sweep:.14,q:.7,vol:.1,attack:.05,wet:.3});mallet(440,{delay:.24,vol:.1});mallet(330,{delay:.32,vol:.1});},
+    toggle:()=>{thock({f:300,vol:.08});thock({f:430,vol:.07,delay:.06});},
+    tick:()=>tone(vary(2400,.02),.016,{vol:.02,type:"triangle",attack:.001})
   };
-  let lastTick=0;
-  return {play(k,a){if(!on)return;if(k==="tick"){const n=Date.now();if(n-lastTick<45)return;lastTick=n;}try{P[k]&&P[k](a);}catch(e){}},
-          get on(){return on;},set(v){on=v;ls.set("cqb_sfx",v?"1":"0");}};
+  let lastTick=0,lastPrev=0;
+  return {play(k,a){if(!on||vol===0)return;const n=Date.now();
+            if(k==="tick"){if(n-lastTick<45)return;lastTick=n;}
+            if(k==="preview"){if(n-lastPrev<110)return;lastPrev=n;}
+            try{P[k]&&P[k](a);}catch(e){}},
+          get on(){return on;},set(v){on=v;ls.set("cqb_sfx",v?"1":"0");},
+          get vol(){return vol;},
+          setVol(v){vol=Math.max(0,Math.min(100,v|0));ls.set("cqb_vol",String(vol));
+            if(master)master.gain.setTargetAtTime(gainFor(vol),ctx.currentTime,.015);}};
 })();
-function syncSfxBtns(){document.querySelectorAll(".sfxbtn").forEach(b=>{b.textContent=SFX.on?"🔊":"🔇";b.title=SFX.on?"ปิดเสียง (M)":"เปิดเสียง (M)";});}
+function syncSfxBtns(){const v=SFX.vol,live=SFX.on&&v>0,ic=!live?"🔇":v<34?"🔈":v<67?"🔉":"🔊";
+  document.querySelectorAll(".sfxbtn").forEach(b=>{b.textContent=ic;b.title=SFX.on?"ปิดเสียง (M)":"เปิดเสียง (M)";});
+  document.querySelectorAll(".vol").forEach(r=>{r.value=v;r.classList.toggle("off",!SFX.on);r.title=`ระดับเสียง ${v}%`;});}
 function toggleSfx(){SFX.set(!SFX.on);syncSfxBtns();SFX.play("toggle");}
 document.querySelectorAll(".sfxbtn").forEach(b=>b.onclick=toggleSfx);
+document.querySelectorAll(".vol").forEach(r=>r.addEventListener("input",()=>{
+  if(!SFX.on)SFX.set(true);                       // dragging the slider un-mutes
+  SFX.setVol(+r.value);syncSfxBtns();SFX.play("preview");}));
 syncSfxBtns();
 
 /* ---------- background toggle ---------- */
@@ -747,6 +788,7 @@ $("#mprev").onclick=()=>step(-1);$("#mnext").onclick=()=>step(1);
 
 /* ---- keyboard ---- */
 document.addEventListener("keydown",e=>{
+  if(e.target.classList&&e.target.classList.contains("vol"))return;   // arrows on the volume slider adjust volume only
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&e.target.type!=="range";
   if($("#modal").classList.contains("show")){
     if(e.key==="Escape")closeModal();
