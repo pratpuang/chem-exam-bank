@@ -700,10 +700,10 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .k-alk{background:var(--red);color:#fff}.k-ae{background:#f28c28}.k-tm{background:var(--card)}.k-pt{background:#d9d2c1}.k-md{background:#9fb0e8}.k-nm{background:var(--yel)}.k-hal{background:var(--blue);color:#fff}.k-ng{background:var(--ink);color:var(--paper)}.k-ln{background:#f3c3b8}.k-an{background:#e39c8c}
 .pdph{display:flex;align-items:center;justify-content:center;font:600 calc(var(--u)*.17) "JetBrains Mono",monospace;opacity:.55;aspect-ratio:1/1}
 .pdinfo{grid-row:1/4;grid-column:3/13;display:flex;gap:16px;align-items:flex-start;padding:0 6px;overflow:auto}
-.pdbig{flex:none;position:relative;width:calc(var(--u)*3.2);height:calc(var(--u)*2.95);border:4px solid var(--ink);background:var(--card);box-shadow:6px 6px 0 var(--sh);display:flex;flex-direction:column;align-items:center;justify-content:space-between;font-weight:800;font-size:calc(var(--u)*1.05);padding:4px 10px 6px;line-height:1}
-.pdbig i{align-self:flex-start;font:800 calc(var(--u)*.62) "JetBrains Mono",monospace;font-style:normal;line-height:1;color:var(--blue)}
+.pdbig{flex:none;position:relative;width:calc(var(--u)*2.9);height:calc(var(--u)*2.75);border:4px solid var(--ink);background:var(--card);box-shadow:6px 6px 0 var(--sh);display:flex;flex-direction:column;align-items:center;justify-content:space-between;font-weight:800;font-size:calc(var(--u)*1.05);padding:4px 10px 6px;line-height:1}
+.pdbig i{align-self:flex-start;font:800 calc(var(--u)*.44) "JetBrains Mono",monospace;font-style:normal;line-height:1}
 .pdbig u{font:700 calc(var(--u)*.22) "Anuphan",sans-serif;text-decoration:none;margin-top:-4px}
-.pdbig s{font:800 calc(var(--u)*.5) "JetBrains Mono",monospace;text-decoration:none;line-height:1;color:var(--red)}
+.pdbig s{font:800 calc(var(--u)*.36) "JetBrains Mono",monospace;text-decoration:none;line-height:1}
 .pdbrk{flex:1;min-width:0}
 .pdbrk table{border-collapse:collapse;font:600 .78rem "JetBrains Mono",monospace;width:100%;background:var(--card)}
 .pdbrk th,.pdbrk td{border:2px solid var(--ink);padding:2px 7px;text-align:right;white-space:nowrap}
