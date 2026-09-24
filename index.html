@@ -63,9 +63,12 @@ button.tile:hover:after{opacity:1;transform:none}
 .hero b{font-size:4.6rem;font-weight:800;line-height:.9;color:var(--red)}
 .hero span{font-size:1.5rem;font-weight:800;line-height:1.15}
 .hero small{font-size:.8rem;color:var(--mut);margin-top:6px;line-height:1.5}
-.deco1{background:radial-gradient(circle at 100% 100%,var(--blue) 0 58%,transparent 59%),var(--paper)}
-.deco2{background:repeating-linear-gradient(45deg,var(--yel) 0 18px,var(--ink) 18px 36px)}
-.deco3{background:radial-gradient(circle at 50% 50%,var(--red) 0 32%,transparent 33%),var(--card)}
+.tile.deco{cursor:default}
+.d0{background:radial-gradient(circle at 100% 100%,var(--blue) 0 58%,transparent 59%),var(--paper)}
+.d1{background:repeating-linear-gradient(45deg,var(--yel) 0 18px,var(--ink) 18px 36px)}
+.d2{background:radial-gradient(circle at 50% 50%,var(--red) 0 32%,transparent 33%),var(--card)}
+.d3{background:linear-gradient(var(--yel),var(--yel)) center/40% 40% no-repeat,var(--ink)}
+.d4{background:var(--card)}.d4:after{content:"";position:absolute;inset:24%;background:var(--blue);clip-path:polygon(50% 0,100% 100%,0 100%)}
 .sec-t{grid-column:1/-1;background:var(--ink);color:var(--paper);font-weight:800;letter-spacing:.2em;font-size:.72rem;padding:6px 14px;display:flex;align-items:center;animation:none}
 .board .sec-t{grid-row:span 1;height:auto}
 .lfoot{margin-top:14px;font-size:.8rem;color:var(--mut)}
@@ -336,7 +339,7 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 #tdtab:hover{transform:translateX(4px)}
 #td{position:fixed;left:0;top:0;bottom:0;z-index:71;width:min(780px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--yel);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 28px;overflow:auto}
 body.tdopen #td{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
-body.tdopen #pdscrim{opacity:1;pointer-events:auto}
+body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 .tdtabs{display:flex;border:3px solid var(--ink);margin-bottom:14px;box-shadow:4px 4px 0 var(--sh)}
 .tdtabs button{flex:1;border:0;border-right:3px solid var(--ink);background:var(--card);font:800 .95rem "Anuphan",sans-serif;padding:9px 6px;cursor:pointer}
 .tdtabs button:last-child{border-right:0}
@@ -409,6 +412,8 @@ body.tmopen #tm{transform:none;visibility:visible;transition:transform .55s cubi
 /* ---------- night mode: ink-black surfaces, cream text, black offset shadows ---------- */
 body.dark{--paper:#18181b;--card:#232327;--ink:#e8e2d4;--mut:#9c958a;--sh:#050506;--blue:#3b57d6;--red:#e2492f;--yel:#e8ae06;color-scheme:dark}
 body.dark .board{background:#050506;border-color:#050506}
+body.dark .d1{background:repeating-linear-gradient(45deg,var(--yel) 0 18px,#050506 18px 36px)}
+body.dark .d3{background:linear-gradient(var(--yel),var(--yel)) center/40% 40% no-repeat,#050506}
 body.dark .c-ink,body.dark .b-id,body.dark .sec-t,body.dark .pane-item.sel,body.dark .seg button.on,body.dark .tmseg button.on,body.dark .tdtabs button.on,body.dark .tmpre button.on,body.dark .cvout div.src,body.dark .iontbl th,body.dark .pdbrk th,body.dark .pdx,body.dark .x,body.dark .exprow button.pri,body.dark .pdmw{background:#050506;color:#e8e2d4}
 body.dark .k-ng{background:#050506;color:#e8e2d4;border-color:#e8e2d4}
 body.dark header{background:#050506;color:#e8e2d4}
@@ -1174,7 +1179,7 @@ const TD=(()=>{
     $("#tdtabs").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
     document.querySelectorAll(".tdpane").forEach(p=>p.classList.toggle("on",p.id==="td-"+b.dataset.t));};
   $("#tdtab").onclick=open;$("#tdx").onclick=close;
-  $("#pdscrim").onclick=()=>{PD.close();close();};
+  $("#pdscrim").onclick=()=>{PD.close();close();TM.close();};
   return{open,close,isOpen};
 })();
 
@@ -1232,22 +1237,41 @@ function buildBoard(){
     h+=`<button class="tile ${PAL[j%PAL.length]} ${tileSize(c,max)}" data-go="ch" data-ch="${k}" style="--i:${i++}">
       <span class="no">${parseInt(k)}</span><span class="nm">${name}</span>
       <span class="ct">${c} ข้อ${cv?` · วิธีทำ ${cv}%`:""}</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;
-    if(j===4) h+=`<div class="tile deco1" style="--i:${i++}"></div>`;
-    if(j===9) h+=`<div class="tile deco2" style="--i:${i++}"></div>`;
   });
   if(DATA.biocount){const qs=Q.filter(q=>q.subject==="bio"),cv=cov(qs);
-    h+=`<button class="tile c-blue w2" data-go="bio" style="--i:${i++}"><span class="no">ชีว</span><span class="nm">ชีววิทยา</span><span class="ct">${DATA.biocount} ข้อ${cv?` · วิธีทำ ${cv}%`:""}</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;}
+    h+=`<button class="tile c-blue w2" data-go="bio" style="--i:${i++}"><span class="no">ชีวะ</span><span class="nm">ชีววิทยา</span><span class="ct">${DATA.biocount} ข้อ${cv?` · วิธีทำ ${cv}%`:""}</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;}
   if(DATA.appcount){const qs=Q.filter(q=>q.subject==="applied"),cv=cov(qs);
     h+=`<button class="tile c-red" data-go="applied" style="--i:${i++}"><span class="no">✦</span><span class="nm">เคมีประยุกต์</span><span class="ct">${DATA.appcount} ข้อ</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;}
   if(SC.flag) h+=`<button class="tile c-card" data-go="flag" style="--i:${i++}"><span class="no">⚠</span><span class="nm">วิธีทำไม่ฟันธง</span><span class="ct">${SC.flag} ข้อ</span></button>`;
   if(SC.unchecked) h+=`<button class="tile c-yel" data-go="unchecked" style="--i:${i++}"><span class="no">✓?</span><span class="nm">ยังไม่ตรวจวิธีทำ</span><span class="ct">${SC.unchecked} ข้อ</span></button>`;
   const rq=RECENT.map(id=>DATA.questions.find(x=>x.id===id)).filter(Boolean);
   h+=`<div class="tile c-card w2 recent" style="--i:${i++}"><span class="no">🕘</span><span class="nm">เพิ่งดู</span>${rq.length
-    ?`<div class="rl">${rq.map(q=>`<button data-go="qid" data-q="${q.id}" title="${(q.snippet||"").replace(/<[^>]+>/g,"").replace(/"/g,"&quot;").slice(0,90)}">${q.id.slice(2)} · ${q.subject==="bio"?"ชีว":q.subject==="applied"?"ประยุกต์":"บท "+parseInt(q.ch)}</button>`).join("")}</div>`
+    ?`<div class="rl">${rq.map(q=>`<button data-go="qid" data-q="${q.id}" title="${(q.snippet||"").replace(/<[^>]+>/g,"").replace(/"/g,"&quot;").slice(0,90)}">${q.id.slice(2)} · ${q.subject==="bio"?"ชีวะ":q.subject==="applied"?"ประยุกต์":"บท "+parseInt(q.ch)}</button>`).join("")}</div>`
     :`<span class="empty-r">เปิดข้อไหนก็ได้ แล้วจะมาอยู่ที่นี่</span>`}</div>`;
-  h+=`<div class="tile deco3" style="--i:${i++}"></div>`;
-  $("#board").innerHTML=h;
+  $("#board").innerHTML=h;packBoard();
 }
+/* Place tiles in order (same rule as CSS sparse auto-placement) at explicit cells, then fill
+   every cell left empty -- a wide tile that doesn't fit at a row end leaves one -- with a filler. */
+let boardCols=0;
+function packBoard(){
+  const B=$("#board");B.querySelectorAll(".tile.deco").forEach(x=>x.remove());
+  const cols=getComputedStyle(B).gridTemplateColumns.split(" ").filter(Boolean).length;boardCols=cols;
+  const occ=[],used=(r,c)=>occ[r]&&occ[r][c];
+  const fits=(r,c,w,h)=>{if(c+w>cols)return false;for(let y=r;y<r+h;y++)for(let x=c;x<c+w;x++)if(used(y,x))return false;return true;};
+  let r=0,c=0;
+  [...B.children].forEach(el=>{const cl=el.classList,big=cl.contains("hero")||cl.contains("big");
+    const w=Math.min(cols,big||cl.contains("w2")?2:1),h=big||cl.contains("h2")?2:1;
+    let pr=r,pc=c;while(!fits(pr,pc,w,h)){if(++pc>=cols){pc=0;pr++;}}
+    for(let y=pr;y<pr+h;y++){occ[y]=occ[y]||[];for(let x=pc;x<pc+w;x++)occ[y][x]=1;}
+    el.style.gridRow=`${pr+1} / span ${h}`;el.style.gridColumn=`${pc+1} / span ${w}`;
+    r=pr;c=pc+w;if(c>=cols){c=0;r++;}});
+  let k=0,f="";
+  for(let y=0;y<occ.length;y++)for(let x=0;x<cols;x++)if(!used(y,x)){
+    f+=`<div class="tile deco d${(k*2+y)%5}" style="grid-row:${y+1};grid-column:${x+1};--i:${y*cols+x}"></div>`;k++;}
+  B.insertAdjacentHTML("beforeend",f);
+}
+window.addEventListener("resize",()=>{if(document.body.classList.contains("inapp"))return;
+  const n=getComputedStyle($("#board")).gridTemplateColumns.split(" ").filter(Boolean).length;if(n!==boardCols)packBoard();});
 /* ---- search straight from the board: text / formula / Q-id ("38" or "q38" -> Q-0038) ---- */
 function lsNorm(v){v=v.trim();const m=v.match(/^(?:q-?)?0*(\d{1,4})$/i);
   if(m){const id="Q-"+m[1].padStart(4,"0");if(DATA.questions.some(x=>x.id===id))return id;}return v;}
