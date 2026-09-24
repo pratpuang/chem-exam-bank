@@ -216,6 +216,20 @@ def chem_notation(t):
     """Full render-time chemistry pass: bare formulas first, then ^/_ marked notation."""
     return supersub(bare_formulas(t))
 
+# $$...$$ LaTeX (used in some worked solutions) must reach the browser untouched: the chem pass would
+# turn K_b / H2PO4 into <sub> tags and markdown would eat _ and \ inside it, so KaTeX got garbage.
+# Stash each block behind a lowercase placeholder (no chem formula can start lowercase), render, restore.
+import html as _html
+_MATH = re.compile(r"\$\$.+?\$\$", re.S)
+def md_render(t):
+    keep = []
+    def stash(m):
+        keep.append(m.group(0)); return "@@mathblock%dzz@@" % (len(keep) - 1)
+    out = markdown.markdown(chem_notation(_MATH.sub(stash, t)), extensions=["tables", "nl2br"])
+    for i, m in enumerate(keep):
+        out = out.replace("@@mathblock%dzz@@" % i, _html.escape(m, quote=False))
+    return out
+
 txt = open(SRC, encoding="utf-8").read()
 blocks = re.split(r"(?m)^### (Q-\d+)\b", txt)
 questions = []
@@ -270,7 +284,7 @@ for i in range(1, len(blocks), 2):
         "subject": subject, "bio": bio, "app": app, "groupKey": groupKey, "groupLabel": groupLabel,
         "exam": exam, "year": tag("year"), "ver": tag("ver"),
         "diff": tag("diff"), "type": tag("type"),
-        "bodyHtml": markdown.markdown(chem_notation(body_md), extensions=["tables", "nl2br"]),
+        "bodyHtml": md_render(body_md),
         "snippet": snip,
         "answer": meta.get("Answer",""), "source": meta.get("Source",""),
         "note": chem_notation(meta.get("Note","")), "figure": meta.get("Figure",""),
@@ -332,7 +346,7 @@ if os.path.isdir(SOLDIR):
                 "answer": chem_notation(" ".join(fields.get("Answer", [])).strip()),
                 "conf":   " ".join(fields.get("Confidence", [])).strip(),
                 "checked":" ".join(fields.get("Checked", [])).strip().lower(),
-                "html":   markdown.markdown(chem_notation(body), extensions=["tables", "nl2br"]) if body else "",
+                "html":   md_render(body) if body else "",
             }
 solcount = {"have": 0, "flag": 0, "unchecked": 0}
 for q in questions:
@@ -364,6 +378,9 @@ HTML = r"""<!doctype html><html lang="th"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
 <title>คลังข้อสอบเคมี · Chem Question Bank</title>
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml"><link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" onload="window.texReady&&texReady()"></script>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#141414"><meta name="apple-mobile-web-app-title" content="คลังเคมี">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -641,12 +658,14 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .exprow button.dan{color:var(--red)}
 @media(max-width:640px){.poster{padding:20px 16px 18px 26px}.poster .pnum{font-size:4.2rem}.poster .body,.poster .solbox{max-width:100%}.poster .phead,.poster .pmeta{max-width:78%}.sheet{padding:22px 16px 18px 28px}.sheet .body{font-size:1.15rem}}
 
+.katex-display{overflow-x:auto;overflow-y:hidden;padding:4px 0;margin:.6em 0}
+.katex{font-size:1.08em}
 /* ---------- periodic table drawer + Mw calculator ---------- */
 #pdtab{position:fixed;left:0;top:28%;z-index:45;writing-mode:vertical-rl;background:var(--red);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:none;transition:transform .2s}
 #pdtab{display:block!important}
 #pdtab:hover{transform:translateX(4px)}
 #pdscrim{position:fixed;inset:0;z-index:70;background:rgba(20,20,20,.35);opacity:0;pointer-events:none;transition:opacity .35s}
-#pd{position:fixed;left:0;top:0;bottom:0;z-index:71;width:min(960px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--sh);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 28px;overflow:auto}
+#pd{position:fixed;left:0;top:0;bottom:0;z-index:71;width:min(1240px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--sh);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 28px;overflow:auto}
 body.pdopen #pd{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
 body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .pdh{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
@@ -656,7 +675,11 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .pdq button{border:0;background:none;font:800 .85rem "Anuphan",sans-serif;color:var(--red);padding:0 3px;cursor:pointer;text-decoration:underline dotted}
 .pdq button:hover{background:var(--red);color:#fff}
 .pdhov{font:600 .8rem "JetBrains Mono",monospace;color:var(--mut)}
-.pdx{margin-left:auto;background:var(--ink);color:var(--paper);border:0;width:36px;height:36px;font-weight:800;cursor:pointer}
+.pdmwt{margin-left:auto;border:3px solid var(--ink);background:var(--card);font:800 .85rem "Anuphan",sans-serif;padding:6px 12px;cursor:pointer;box-shadow:3px 3px 0 var(--sh)}
+.pdmwt.on{background:var(--blue);color:#fff}
+.pdmwt:active{transform:translate(3px,3px);box-shadow:none}
+#pd.nomw .pdcalc,#pd.nomw .pdbrk,#pd.nomw .pdq{display:none}
+.pdx{background:var(--ink);color:var(--paper);border:0;width:36px;height:36px;font-weight:800;cursor:pointer}
 .pdw{container-type:inline-size;overflow-x:auto}
 .pdg{--u:calc(max(100cqi,600px)/18);display:grid;grid-template-columns:repeat(18,minmax(0,1fr));gap:3px;min-width:600px}
 .pde{aspect-ratio:1/1;border:2px solid var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:3px 3px 4px;cursor:pointer;user-select:none;-webkit-user-select:none;min-width:0;overflow:hidden;position:relative;line-height:1;transition:transform .15s,box-shadow .15s}
@@ -702,7 +725,7 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 #tdtab{position:fixed;left:0;top:calc(28% + 128px);z-index:45;writing-mode:vertical-rl;background:var(--yel);color:#141414;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:none;transition:transform .2s}
 #tdtab{display:block!important}
 #tdtab:hover{transform:translateX(4px)}
-#td{position:fixed;left:0;top:0;bottom:0;z-index:71;width:min(780px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--yel);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 28px;overflow:auto}
+#td{position:fixed;left:0;top:0;bottom:0;z-index:71;width:min(1040px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--yel);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 28px;overflow:auto}
 body.tdopen #td{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
 body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 .tdtabs{display:flex;border:3px solid var(--ink);margin-bottom:14px;box-shadow:4px 4px 0 var(--sh)}
@@ -710,7 +733,7 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 .tdtabs button:last-child{border-right:0}
 .tdtabs button.on{background:var(--ink);color:var(--paper)}
 .tdpane{display:none}.tdpane.on{display:block;animation:pIn .35s cubic-bezier(.2,1.2,.4,1)}
-.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
 .kcard{border:3px solid var(--ink);background:var(--card);box-shadow:4px 4px 0 var(--sh);padding:10px 12px 10px 18px;position:relative}
 .kcard:before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--c,var(--red))}
 .kcard .ks{font:800 1.05rem "JetBrains Mono",monospace}
@@ -741,7 +764,7 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 #tmtab{position:fixed;left:0;top:calc(28% + 256px);z-index:45;writing-mode:vertical-rl;background:var(--blue);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:block;transition:transform .2s}
 #tmtab:hover{transform:translateX(4px)}
 #tmtab.run{background:var(--red);font-family:"JetBrains Mono",monospace}
-#tm{position:fixed;left:0;top:0;bottom:0;z-index:72;width:min(400px,94vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--blue);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .55s cubic-bezier(.34,1.35,.64,1),visibility 0s .55s;padding:14px 18px 24px;overflow:auto}
+#tm{position:fixed;left:0;top:0;bottom:0;z-index:72;width:min(560px,94vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--blue);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .55s cubic-bezier(.34,1.35,.64,1),visibility 0s .55s;padding:14px 18px 24px;overflow:auto}
 body.tmopen #tm{transform:none;visibility:visible;transition:transform .55s cubic-bezier(.34,1.35,.64,1),visibility 0s}
 .tmseg{display:flex;border:3px solid var(--ink);margin-bottom:14px}
 .tmseg button{flex:1;border:0;border-right:3px solid var(--ink);background:var(--card);font:800 .95rem "Anuphan",sans-serif;padding:9px 4px;cursor:pointer}
@@ -749,7 +772,7 @@ body.tmopen #tm{transform:none;visibility:visible;transition:transform .55s cubi
 .tmseg button.on{background:var(--ink);color:var(--paper)}
 .tmface{position:relative;border:4px solid var(--ink);background:var(--card);box-shadow:6px 6px 0 var(--sh);padding:26px 10px 20px;text-align:center;overflow:hidden}
 .tmface:before{content:"";position:absolute;right:-50px;top:-50px;width:130px;height:130px;border-radius:50%;background:var(--yel);opacity:.9}
-.tmdig{position:relative;font:800 4.4rem "JetBrains Mono",monospace;line-height:1;letter-spacing:-.02em}
+.tmdig{position:relative;font:800 clamp(4.4rem,7vw,6.4rem) "JetBrains Mono",monospace;line-height:1;letter-spacing:-.02em}
 .tmbar{position:relative;height:10px;border:2px solid var(--ink);background:var(--paper);margin:18px 6px 0;overflow:hidden}
 .tmbar i{display:block;height:100%;background:var(--blue);transition:width .25s linear}
 .tmface.done{animation:tmflash .5s 6 alternate}
@@ -925,7 +948,7 @@ body.dark .kin .k2{border-color:#2c2c32}body.dark .kin .k4{opacity:.25}
 </aside>
 <div id="pdscrim"></div>
 <aside id="pd" aria-label="ตารางธาตุ">
-  <div class="pdh"><b>ตารางธาตุ</b><span class="pdq" id="pdq"></span><span class="pdhov" id="pdhov"></span><button class="pdx" id="pdx" title="ปิด (Esc)">✕</button></div>
+  <div class="pdh"><b>ตารางธาตุ</b><span class="pdq" id="pdq"></span><span class="pdhov" id="pdhov"></span><button class="pdmwt" id="pdmwt" title="เปิด/ปิดเครื่องคิด Mw">🧮 คิด Mw</button><button class="pdx" id="pdx" title="ปิด (Esc)">✕</button></div>
   <div class="pdw"><div class="pdg" id="pdg"></div></div>
   <div class="pdcalc"><input id="pdin" spellcheck="false" autocomplete="off" placeholder="พิมพ์สูตร เช่น Al2(SO4)3 หรือแตะธาตุ">
     <div class="pdmw"><small id="pdfd"></small><span id="pdmw">Mw = —</span></div>
@@ -943,6 +966,11 @@ let view = ls.get("cqb_view","poster");
 if(!["poster","cards","list","pane"].includes(view)) view="poster";
 let filtered = [], pIdx = 0;
 const hasSol=q=>!!(q.solHtml||q.solAnswer);
+/* worked solutions carry LaTeX ($$\frac{...}$$); KaTeX loads deferred from the CDN, so typeset whatever
+   is on screen now and again once it arrives. Without the CDN the raw text simply stays. */
+function tex(el){if(!el||!window.renderMathInElement)return;
+  try{renderMathInElement(el,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\(",right:"\\)",display:false}],throwOnError:false,strict:false});}catch(e){}}
+window.texReady=()=>{tex($("#root"));tex($("#msol"));};
 
 /* ---------- sound fx: synthesized with Web Audio (no files to host), muteable, remembered ---------- */
 const SFX=(()=>{let ctx=null,master=null,verb=null,on=ls.get("cqb_sfx","1")!=="0",vol=Math.max(0,Math.min(100,parseInt(ls.get("cqb_vol","70"),10)||0));
@@ -1175,6 +1203,7 @@ function render(){
   else if(view==="cards") renderCards(R);
   else if(view==="list") renderList(R);
   else renderPane(R);
+  tex(R);
 }
 /* ---- POSTER (one question at a time, deck) ---- */
 function posterHtml(q,i,anim){return `<article class="poster ${anim||""}" data-i="${i}">
@@ -1195,7 +1224,7 @@ function renderPoster(R){
 }
 function fillPoster(anim){
   const q=filtered[pIdx];if(!q)return;seen(q);
-  $("#deck").innerHTML=posterHtml(q,pIdx,anim);
+  $("#deck").innerHTML=posterHtml(q,pIdx,anim);tex($("#deck"));
   $("#ppos").textContent=`${pIdx+1} / ${filtered.length}`;
   $("#pscrub").value=pIdx+1;
 }
@@ -1251,7 +1280,7 @@ function renderPane(R){
 function paneShow(i){
   if(window.innerWidth<=820){openModal(i);return;}
   document.querySelectorAll(".pane-item").forEach(el=>el.classList.toggle("sel",el.dataset.i==i));
-  $("#detail").innerHTML=posterHtml(filtered[i],i,"enter");seen(filtered[i]);
+  $("#detail").innerHTML=posterHtml(filtered[i],i,"enter");seen(filtered[i]);tex($("#detail"));
 }
 
 /* ---- present modal ---- */
@@ -1266,7 +1295,7 @@ function fillModal(){
   const nb=$("#mnote");if(q.note){nb.style.display="block";nb.innerHTML="📌 "+q.note;}else nb.style.display="none";
   const ans=$("#mans");ans.classList.remove("show");
   ans.innerHTML=keyTxt(q)?`<b>เฉลยทางการ:</b> ${keyTxt(q)}`:q.solAnswer?`<b>ตอบ:</b> ${q.solAnswer}`:`ข้อนี้ไม่มีเฉลยทางการ และยังไม่มีวิธีทำ`;
-  $("#msol").innerHTML=solHtml(q);
+  $("#msol").innerHTML=solHtml(q);tex($("#msol"));
   $("#mpos").textContent=`${mIdx+1} / ${filtered.length}`;
   const sh=$("#modal .sheet");sh.style.animation="none";void sh.offsetWidth;sh.style.animation="";
 }
@@ -1495,8 +1524,15 @@ const PD=(()=>{
   const isOpen=()=>document.body.classList.contains("pdopen");
   function open(){if(TD.isOpen())TD.close();if(!built)build();refreshQ();document.body.classList.add("pdopen");SFX.play("open");}
   function close(){if(!isOpen())return;document.body.classList.remove("pdopen");SFX.play("close");}
-  G.addEventListener("click",e=>{const t=e.target.closest(".pde");if(!t)return;const el=BY[t.dataset.z];addSym(el.s);big(el);flash(el.z);SFX.play("tick");});
-  G.addEventListener("contextmenu",e=>{const t=e.target.closest(".pde");if(!t)return;e.preventDefault();const el=BY[t.dataset.z];big(el);
+  // Mw on: a tap adds the element to the formula. Mw off: a tap only shows it in the big tile.
+  let mwOn=ls.get("cqb_mw","1")!=="0";
+  function setMw(on){mwOn=on;ls.set("cqb_mw",on?"1":"0");$("#pd").classList.toggle("nomw",!on);
+    $("#pdmwt").classList.toggle("on",on);$("#pdmwt").textContent=on?"🧮 คิด Mw: เปิด":"🧮 คิด Mw: ปิด";}
+  setMw(mwOn);
+  $("#pdmwt").onclick=()=>{setMw(!mwOn);SFX.play("toggle");};
+  G.addEventListener("click",e=>{const t=e.target.closest(".pde");if(!t)return;const el=BY[t.dataset.z];
+    if(mwOn){addSym(el.s);SFX.play("tick");}else SFX.play("click");big(el);flash(el.z);});
+  G.addEventListener("contextmenu",e=>{const t=e.target.closest(".pde");if(!t||!mwOn)return;e.preventDefault();const el=BY[t.dataset.z];big(el);
     if(decSym(el.s)){flash(el.z);SFX.play("unmark");}else SFX.play("bad");});
   G.addEventListener("mouseover",e=>{const t=e.target.closest(".pde");if(t){const el=BY[t.dataset.z];$("#pdhov").textContent=`${el.s} · ${el.n} · Z ${el.z} · ${fm(el)}`;}});
   inp.addEventListener("input",update);
@@ -1504,7 +1540,7 @@ const PD=(()=>{
     if(k=="bk")put(inp.value.slice(0,-1));else if(k=="clr")put("");else put(inp.value+k);});
   $("#pdq").addEventListener("click",e=>{const b=e.target.closest("button");if(b){put(b.dataset.f);SFX.play("click");}});
   $("#pdtab").onclick=open;$("#pdx").onclick=close;$("#pdscrim").onclick=close;
-  return{open,close,isOpen,parseF,load(v){open();put(v);}};
+  return{open,close,isOpen,parseF,load(v){open();if(!mwOn)setMw(true);put(v);}};
 })();
 $("#mpt").onclick=()=>PD.open();
 
