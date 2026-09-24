@@ -767,27 +767,23 @@ body.tmopen #tm{transform:none;visibility:visible;transition:transform .55s cubi
 .tmcd{display:block}.tm-up .tmcd{display:none}
 .tmfull{display:block;width:100%;margin-top:12px;border:3px solid var(--ink);background:var(--ink);color:var(--paper);font:800 1rem "Anuphan",sans-serif;padding:11px;cursor:pointer;box-shadow:4px 4px 0 var(--blue)}
 .tmfull:active{transform:translate(4px,4px);box-shadow:none}
-/* full-screen timer */
-#tmbig{position:fixed;inset:0;z-index:80;background:var(--paper);display:none;align-items:center;justify-content:center;overflow:hidden}
-#tmbig.show{display:flex;animation:tbIn .5s cubic-bezier(.7,0,.2,1)}
-@keyframes tbIn{from{clip-path:circle(0 at 0 50%)}to{clip-path:circle(150% at 0 50%)}}
-#tmbig>i{position:absolute;display:block;pointer-events:none}
-#tmbig .b1{width:62vmin;height:62vmin;border-radius:50%;background:var(--blue);right:-18vmin;bottom:-22vmin}
-#tmbig .b2{width:34vmin;height:30vmin;background:var(--red);clip-path:polygon(50% 0,100% 100%,0 100%);left:4vmin;top:5vmin}
-#tmbig .b3{width:14vmin;height:14vmin;background:var(--yel);right:12vmin;top:8vmin}
-.tbw{position:relative;text-align:center;width:min(94vw,1300px);background:var(--card);border:6px solid var(--ink);box-shadow:14px 14px 0 var(--sh);padding:4vh 2vw 3vh}
-.tbdig{font:800 min(24vw,46vh) "JetBrains Mono",monospace;line-height:1;letter-spacing:-.04em}
-.tbbar{height:18px;border:4px solid var(--ink);background:var(--paper);margin:3vh auto 0;width:84%;overflow:hidden}
-.tbbar i{display:block;height:100%;background:var(--blue);transition:width .25s linear}
-#tmbig.up .tbbar{visibility:hidden}
-.tbctl{display:flex;gap:14px;justify-content:center;margin-top:4vh;flex-wrap:wrap}
-.tbctl button{border:4px solid var(--ink);background:var(--card);font:800 1.5rem "Anuphan",sans-serif;padding:14px 30px;cursor:pointer;box-shadow:6px 6px 0 var(--sh)}
-.tbctl button:active{transform:translate(6px,6px);box-shadow:none}
-.tbctl .go{background:var(--red);color:#fff;min-width:220px}
-.tbctl .go.pause{background:var(--yel);color:#141414}
-.tbhint{margin:2.4vh 0 0;font-size:.85rem;color:var(--mut)}
-#tmbig.done .tbw{animation:tmflash .5s 6 alternate}
-#tmbig.done .tbdig{color:var(--red)}
+.tmfull.on{background:var(--blue);box-shadow:4px 4px 0 var(--ink)}
+/* floating corner timer */
+#tmmini{position:fixed;left:14px;bottom:14px;z-index:46;width:230px;background:var(--card);border:4px solid var(--ink);box-shadow:7px 7px 0 var(--sh);padding:10px 12px 12px 18px;display:none}
+#tmmini:before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--blue)}
+#tmmini.show{display:block;animation:pIn .4s cubic-bezier(.2,1.2,.4,1)}
+#tmmini.run:before{background:var(--red)}
+.tmmd{font:800 2.9rem "JetBrains Mono",monospace;line-height:1;letter-spacing:-.03em;text-align:center;cursor:pointer}
+.tmmb{height:8px;border:2px solid var(--ink);background:var(--paper);margin:8px 0 10px;overflow:hidden}
+.tmmb i{display:block;height:100%;background:var(--blue);transition:width .25s linear}
+#tmmini.up .tmmb{visibility:hidden}
+.tmmc{display:flex;gap:6px}
+.tmmc button{flex:1;border:2px solid var(--ink);background:var(--card);font:800 1rem "Anuphan",sans-serif;padding:6px 0;cursor:pointer;box-shadow:2px 2px 0 var(--sh)}
+.tmmc button:active{transform:translate(2px,2px);box-shadow:none}
+.tmmc .go{flex:2;background:var(--red);color:#fff}
+.tmmc .go.pause{background:var(--yel);color:#141414}
+#tmmini.done{animation:tmflash .5s 6 alternate}
+#tmmini.done .tmmd{color:var(--red)}
 
 /* ---------- landing: recent tile + difficulty bar ---------- */
 .tile.recent{cursor:default}
@@ -916,17 +912,15 @@ body.dark .kin .k2{border-color:#2c2c32}body.dark .kin .k4{opacity:.25}
   <div class="tdpane on" id="td-k"></div><div class="tdpane" id="td-cv"></div><div class="tdpane" id="td-io"></div>
 </aside>
 <button id="tmtab" title="จับเวลา">จับเวลา</button>
-<div id="tmbig" aria-label="จับเวลาเต็มจอ"><i class="b1"></i><i class="b2"></i><i class="b3"></i>
-  <div class="tbw"><div class="tbdig" id="tbdig">05:00</div><div class="tbbar"><i id="tbbar"></i></div>
-    <div class="tbctl"><button class="go" id="tbgo">▶ เริ่ม</button><button id="tbreset">↺ รีเซ็ต</button><button id="tbexit">✕ ย่อ</button></div>
-    <p class="tbhint">Space เริ่ม / พัก · Esc ย่อกลับ</p></div></div>
+<div id="tmmini" aria-label="นาฬิกาจับเวลา"><div class="tmmd" id="tmmd" title="เปิดแผงจับเวลา">05:00</div><div class="tmmb"><i id="tmmbar"></i></div>
+  <div class="tmmc"><button class="go" id="tmmgo">▶</button><button id="tmmreset" title="รีเซ็ต">↺</button><button id="tmmx" title="ซ่อน">✕</button></div></div>
 <aside id="tm" aria-label="จับเวลา">
   <div class="pdh"><b>⏱ จับเวลา</b><button class="pdx" id="tmx" title="ปิด">✕</button></div>
   <div class="tmseg" id="tmseg"><button data-m="down" class="on">นับถอยหลัง</button><button data-m="up">นับขึ้น</button></div>
   <div class="tmface" id="tmface"><div class="tmdig" id="tmdig">05:00</div><div class="tmbar tmcd"><i id="tmbar"></i></div></div>
   <div class="tmcd"><div class="tmpre" id="tmpre"></div><div class="tmadj"><button data-a="-60">− 1 นาที</button><button data-a="-10">− 10 วิ</button><button data-a="10">+ 10 วิ</button><button data-a="60">+ 1 นาที</button></div></div>
   <div class="tmctl"><button class="go" id="tmgo">▶ เริ่ม</button><button id="tmreset">↺ รีเซ็ต</button></div>
-  <button class="tmfull" id="tmfull">⛶ ขยายเต็มจอ</button>
+  <button class="tmfull" id="tmfull">⧉ แสดงนาฬิกามุมจอ</button>
   <p class="tdnote">เปิดทิ้งไว้ข้างโจทย์ได้ ปิดแผงแล้วเวลายังเดินต่อ (ดูเวลาที่แถบซ้าย)</p>
 </aside>
 <div id="pdscrim"></div>
@@ -1401,7 +1395,6 @@ $("#mprev").onclick=()=>step(-1);$("#mnext").onclick=()=>step(1);
 document.addEventListener("keydown",e=>{
   if(e.target.classList&&e.target.classList.contains("vol"))return;   // arrows on the volume slider adjust volume only
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&e.target.type!=="range";
-  if(TM.bigOpen()){if(e.key==="Escape")TM.unbig();else if(e.key===" "){e.preventDefault();TM.toggle();}return;}
   if(PD.isOpen()){if(e.key==="Escape")PD.close();return;}   // drawer open: keys stay inside it
   if(TD.isOpen()){if(e.key==="Escape")TD.close();return;}
   if(TM.isOpen()&&!typing){if(e.key==="Escape"){TM.close();return;}if(e.key===" "){e.preventDefault();TM.toggle();return;}}
@@ -1590,16 +1583,16 @@ const TM=(()=>{
     $("#tmpre").querySelectorAll("button").forEach(b=>b.classList.toggle("on",mode==="down"&&+b.dataset.m*60===total));
     const tab=$("#tmtab");tab.classList.toggle("run",running);tab.textContent=running?"⏱ "+$("#tmdig").textContent:"จับเวลา";
     $("#tmgo").textContent=running?"⏸ พัก":"▶ เริ่ม";$("#tmgo").classList.toggle("pause",running);
-    $("#tbdig").textContent=$("#tmdig").textContent;$("#tbbar").style.width=$("#tmbar").style.width;
-    $("#tbgo").textContent=$("#tmgo").textContent;$("#tbgo").classList.toggle("pause",running);$("#tmbig").classList.toggle("up",mode==="up");
+    const mi=$("#tmmini");$("#tmmd").textContent=$("#tmdig").textContent;$("#tmmbar").style.width=$("#tmbar").style.width;
+    $("#tmmgo").textContent=running?"⏸":"▶";$("#tmmgo").classList.toggle("pause",running);mi.classList.toggle("up",mode==="up");mi.classList.toggle("run",running);
     if(running&&mode==="down"&&v<=0)ring();}
   function ring(){running=false;clearInterval(iv);left=0;rang=true;$("#tmface").classList.remove("done");void $("#tmface").offsetWidth;$("#tmface").classList.add("done");
-    $("#tmbig").classList.remove("done");void $("#tmbig").offsetWidth;$("#tmbig").classList.add("done");
+    $("#tmmini").classList.remove("done");void $("#tmmini").offsetWidth;$("#tmmini").classList.add("done");
     [0,380,760].forEach(d=>setTimeout(()=>SFX.play("ok"),d));draw();}
-  function start(){if(mode==="down"&&left<=0)left=total;rang=false;$("#tmface").classList.remove("done");$("#tmbig").classList.remove("done");
+  function start(){if(mode==="down"&&left<=0)left=total;rang=false;$("#tmface").classList.remove("done");$("#tmmini").classList.remove("done");
     running=true;t0=Date.now();clearInterval(iv);iv=setInterval(draw,200);SFX.play("click");draw();}
   function pause(){const el=(Date.now()-t0)/1000;if(mode==="down")left=Math.max(0,left-el);else up+=el;running=false;clearInterval(iv);SFX.play("click");draw();}
-  function reset(){running=false;clearInterval(iv);left=total;up=0;$("#tmface").classList.remove("done");$("#tmbig").classList.remove("done");SFX.play("unmark");draw();}
+  function reset(){running=false;clearInterval(iv);left=total;up=0;$("#tmface").classList.remove("done");$("#tmmini").classList.remove("done");SFX.play("unmark");draw();}
   function setMode(m){if(running)pause();mode=m;document.getElementById("tm").classList.toggle("tm-up",m==="up");
     $("#tmseg").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));SFX.play("toggle");draw();}
   function setTotal(sec){if(running)return;total=Math.max(10,Math.min(5*3600,sec));left=total;$("#tmface").classList.remove("done");SFX.play("click");draw();}
@@ -1611,17 +1604,15 @@ const TM=(()=>{
   $("#tmpre").onclick=e=>{const b=e.target.closest("button");if(b)setTotal(+b.dataset.m*60);};
   document.querySelector(".tmadj").onclick=e=>{const b=e.target.closest("button");if(b)setTotal(total+ +b.dataset.a);};
   $("#tmtab").onclick=()=>isOpen()?close():open();$("#tmx").onclick=close;
-  // full-screen view: same clock, big enough to screen-share; real browser fullscreen when allowed
-  const bigOpen=()=>$("#tmbig").classList.contains("show");
-  function big(){close();$("#tmbig").classList.add("show");SFX.play("present");draw();
-    const el=document.documentElement;if(el.requestFullscreen&&!document.fullscreenElement)el.requestFullscreen().catch(()=>{});}
-  function unbig(){if(!bigOpen())return;$("#tmbig").classList.remove("show");SFX.play("close");
-    if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});}
-  document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement&&bigOpen())unbig();});
-  $("#tmfull").onclick=big;$("#tbexit").onclick=unbig;
-  $("#tbgo").onclick=()=>running?pause():start();$("#tbreset").onclick=reset;
+  // corner widget: a bigger always-visible clock, switched from the panel, remembered
+  function setMini(on){$("#tmmini").classList.toggle("show",on);$("#tmfull").classList.toggle("on",on);
+    $("#tmfull").textContent=on?"✓ นาฬิกามุมจอ (กดเพื่อซ่อน)":"⧉ แสดงนาฬิกามุมจอ";ls.set("cqb_tmmini",on?"1":"0");}
+  $("#tmfull").onclick=()=>{setMini(!$("#tmmini").classList.contains("show"));SFX.play("toggle");};
+  $("#tmmx").onclick=()=>{setMini(false);SFX.play("close");};
+  $("#tmmgo").onclick=()=>running?pause():start();$("#tmmreset").onclick=reset;$("#tmmd").onclick=()=>isOpen()?close():open();
+  setMini(ls.get("cqb_tmmini","0")==="1");
   draw();
-  return{open,close,isOpen,big,unbig,bigOpen,toggle:()=>running?pause():start()};
+  return{open,close,isOpen,toggle:()=>running?pause():start()};
 })();
 
 /* ================= LANDING (grid board) ================= */
