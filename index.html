@@ -1112,13 +1112,14 @@ const PD=(()=>{
     $("#pdkeys").innerHTML=["(",")","[","]","·"].map(k=>`<button class="kp" data-k="${k}">${k}</button>`).join("")+`<span class="sep"></span>`+[..."1234567890"].map(k=>`<button data-k="${k}">${k}</button>`).join("")+`<span class="sep"></span><button class="kx" data-k="bk" title="ลบตัวสุดท้าย">⌫</button><button class="kx" data-k="clr">ล้าง</button><span class="tip">คลิกซ้าย = เพิ่มธาตุ · คลิกขวา = ลดทีละ 1</span>`;
     big(BY[1]);update();built=true;}
   const big=e=>{last=e;$("#pdbig").innerHTML=`<i>${e.z}</i>${e.s}<u>${e.n}</u><s>${fm(e)}</s>`;};
+  const r2=x=>(Math.round(x*100+1e-6)/100).toFixed(2);   // half-up, so 55.845 -> 55.85 like the tile
   function update(){
     let c;G.querySelectorAll(".pde.inf").forEach(t=>t.classList.remove("inf"));
     try{c=parseF(inp.value);}catch(err){$("#pdmw").textContent="Mw = —";$("#pdfd").textContent="";$("#pdbrk").innerHTML=`<span class="err">⚠ ${err}</span>`;return;}
     if(!c){$("#pdmw").textContent="Mw = —";$("#pdfd").textContent="";$("#pdbrk").innerHTML=`<span class="hint">แตะธาตุหรือพิมพ์สูตรด้านล่าง เพื่อคำนวณมวลโมเลกุล (Mw)<br>คลิกซ้าย = เพิ่มธาตุ · คลิกขวา = ลดทีละ 1</span>`;return;}
     const tot=Object.entries(c).reduce((a,[k,n])=>a+SYM[k].m*n,0);
-    $("#pdmw").textContent="Mw = "+tot.toFixed(2);$("#pdfd").innerHTML=fHTML(inp.value);
-    $("#pdbrk").innerHTML=`<table><tr><th>ธาตุ</th><th>จำนวน</th><th>มวลอะตอม</th><th>รวม</th><th>% มวล</th></tr>${Object.entries(c).map(([k,n])=>{const sub=SYM[k].m*n,p=sub/tot*100;return`<tr><td>${k}</td><td>${n}</td><td>${fm(SYM[k])}</td><td>${sub.toFixed(2)}</td><td class="pc" style="--p:${p.toFixed(1)}%">${p.toFixed(2)}%</td></tr>`;}).join("")}</table>`;
+    $("#pdmw").textContent="Mw = "+r2(tot);$("#pdfd").innerHTML=fHTML(inp.value);
+    $("#pdbrk").innerHTML=`<table><tr><th>ธาตุ</th><th>จำนวน</th><th>มวลอะตอม</th><th>รวม</th><th>% มวล</th></tr>${Object.entries(c).map(([k,n])=>{const sub=SYM[k].m*n,p=sub/tot*100;return`<tr><td>${k}</td><td>${n}</td><td>${fm(SYM[k])}</td><td>${r2(sub)}</td><td class="pc" style="--p:${p.toFixed(1)}%">${p.toFixed(2)}%</td></tr>`;}).join("")}</table>`;
     Object.keys(c).forEach(k=>{const t=G.querySelector(`.pde[data-z="${SYM[k].z}"]`);if(t)t.classList.add("inf");});}
   const put=v=>{inp.value=v;update();};
   const flash=z=>{const t=G.querySelector(`.pde[data-z="${z}"]`);if(!t)return;t.classList.remove("pdflash");void t.offsetWidth;t.classList.add("pdflash");};
@@ -1153,8 +1154,8 @@ const PD=(()=>{
   function open(){if(TD.isOpen())TD.close();if(!built)build();refreshQ();document.body.classList.add("pdopen");SFX.play("open");}
   function close(){if(!isOpen())return;document.body.classList.remove("pdopen");SFX.play("close");}
   // Mw on: a tap adds the element to the formula. Mw off: a tap only shows it in the big tile.
-  let mwOn=ls.get("cqb_mw","1")!=="0";
-  function setMw(on){mwOn=on;ls.set("cqb_mw",on?"1":"0");$("#pd").classList.toggle("nomw",!on);
+  let mwOn=ls.get("cqb_mw2","0")==="1";   // off by default; new key so the old saved "on" does not stick
+  function setMw(on){mwOn=on;ls.set("cqb_mw2",on?"1":"0");$("#pd").classList.toggle("nomw",!on);
     $("#pdmwt").classList.toggle("on",on);$("#pdmwt").textContent=on?"🧮 คิด Mw: เปิด":"🧮 คิด Mw: ปิด";}
   setMw(mwOn);
   $("#pdmwt").onclick=()=>{setMw(!mwOn);SFX.play("toggle");};
