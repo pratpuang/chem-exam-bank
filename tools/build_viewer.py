@@ -1225,32 +1225,52 @@ function solHtml(q){
     </div></div></div>`;
 }
 
-function apply(keepPos){
-  const t=$("#q").value.trim().toLowerCase(),subj=$("#fsubj").value,ch=$("#fch").value,
-        ex=$("#fexam").value,yr=$("#fyear").value,df=$("#fdiff").value,tp=$("#ftype").value,
-        sl=$("#fsol").value;
-  filtered=DATA.questions.filter(x=>{
-    if(subj==="chem" && (x.subject==="bio"||x.subject==="applied")) return false;
-    if(subj==="bio" && x.subject!=="bio") return false;
-    if(subj==="applied" && x.subject!=="applied") return false;
-    if(ch){
-      if(subj==="bio"){ if((x.bio.split(".")[0]||"?")!==ch) return false; }
-      else if(subj==="applied"){ if(x.app!==ch) return false; }
-      else if(x.ch!==ch) return false;
-    }
-    if(ex && x.exam!==ex) return false;
-    if(yr && x.year!==yr) return false;
-    if(df && x.diff!==df) return false;
-    if(tp && x.type!==tp) return false;
-    const hs = hasSol(x);
+/* One predicate for everything. `skip` leaves one filter out, so each dropdown can count what it WOULD
+   show with every other filter applied -- that's how the selects stay in sync with each other. */
+function fstate(){return{t:$("#q").value.trim().toLowerCase(),subj:$("#fsubj").value,ch:$("#fch").value,
+  ex:$("#fexam").value,yr:$("#fyear").value,df:$("#fdiff").value,tp:$("#ftype").value,sl:$("#fsol").value};}
+const subjOf=x=>x.subject==="bio"?"bio":x.subject==="applied"?"applied":"chem";
+const chOf=(x,subj)=>subj==="bio"?(x.bio.split(".")[0]||"?"):subj==="applied"?x.app:x.ch;
+function qMatch(x,f,skip){
+  if(skip!=="subj"&&f.subj&&subjOf(x)!==f.subj) return false;
+  if(skip!=="ch"&&f.ch&&chOf(x,f.subj)!==f.ch) return false;
+  if(skip!=="ex"&&f.ex&&x.exam!==f.ex) return false;
+  if(skip!=="yr"&&f.yr&&x.year!==f.yr) return false;
+  if(skip!=="df"&&f.df&&x.diff!==f.df) return false;
+  if(skip!=="tp"&&f.tp&&x.type!==f.tp) return false;
+  if(skip!=="sl"&&f.sl){const hs=hasSol(x),sl=f.sl;
     if(sl==="has"       && !hs) return false;
     if(sl==="none"      &&  hs) return false;
     if(sl==="flag"      && !(hs && x.solFlag)) return false;
     if(sl==="unchecked" && !(hs && !x.solChecked)) return false;
-    if(sl==="checked"   && !(hs && x.solChecked)) return false;
-    if(t && !(x.search.includes(t)||x.id.toLowerCase().includes(t))) return false;
-    return true;
-  });
+    if(sl==="checked"   && !(hs && x.solChecked)) return false;}
+  if(f.t && !(x.search.includes(f.t)||x.id.toLowerCase().includes(f.t))) return false;
+  return true;}
+function chList(subj){
+  if(subj==="bio")return Object.entries(DATA.bioChapters).map(([n,name])=>[n,`${n}. ${name}`]);
+  if(subj==="applied")return[...Object.entries(DATA.appTopics),...Object.keys(DATA.appcounts).filter(k=>!DATA.appTopics[k]).map(k=>[k,k])];
+  return CHS.map(([n,name])=>[n,`${parseInt(n)}. ${name}`]);}
+const FACETS=[
+  ["#fsubj","subj",f=>[["chem","เคมี"],["bio","ชีววิทยา"],["applied","เคมีประยุกต์"]],x=>subjOf(x),()=>"ทุกวิชา",true],
+  ["#fch","ch",f=>chList(f.subj),(x,f)=>chOf(x,f.subj),f=>f.subj==="bio"||f.subj==="applied"?"ทุกหัวข้อ":"ทุกบท"],
+  ["#fexam","ex",f=>Object.keys(DATA.examcount||{}).map(k=>[k,(DATA.exams[k]||{label:k}).label]),x=>x.exam,()=>"ทุกสนามสอบ"],
+  ["#fyear","yr",f=>DATA.years.map(y=>[y,"ปี "+y]),x=>x.year,()=>"ทุกปี"],
+  ["#fdiff","df",f=>["easy","medium","hard"].map(d=>[d,DIFF_TH[d]]),x=>x.diff,()=>"ทุกระดับ"],
+  ["#ftype","tp",f=>DATA.types.map(t=>[t,t]),x=>x.type,()=>"ทุกชนิด"]];
+const SOLOPTS=[["has","มีวิธีทำ"],["none","ยังไม่มีวิธีทำ"],["flag","⚠ ไม่ฟันธง"],["unchecked","ยังไม่ตรวจ"],["checked","ตรวจแล้ว"]];
+// rebuild each select: only values that still have questions under the other filters (the chosen one always stays)
+function syncFacets(f){
+  const fill=(sel,allLabel,items)=>{const cur=sel.value;sel.innerHTML="";opt(sel,"",allLabel);
+    items.forEach(([v,l,c])=>{if(c||v===cur)opt(sel,v,`${l} (${c})`);});sel.value=cur;if(sel.value!==cur)sel.value="";};
+  for(const[sel,key,list,keyOf,all,countAll]of FACETS){
+    const pool=DATA.questions.filter(x=>qMatch(x,f,key)),cnt={};
+    pool.forEach(x=>{const k=keyOf(x,f);cnt[k]=(cnt[k]||0)+1;});
+    fill($(sel),all(f)+(countAll?` (${pool.length})`:""),list(f).map(([v,l])=>[v,l,cnt[v]||0]));}
+  if(SC.have){const pool=DATA.questions.filter(x=>qMatch(x,f,"sl"));
+    fill($("#fsol"),"วิธีทำ: ทั้งหมด",SOLOPTS.map(([v,l])=>[v,l,pool.filter(x=>qMatch(x,{...f,sl:v},null)).length]));}}
+function apply(keepPos){
+  let f=fstate();syncFacets(f);f=fstate();   // a select can fall back to "all" when its value vanished
+  filtered=DATA.questions.filter(x=>qMatch(x,f));
   if(!keepPos) pIdx=0;
   $("#count").textContent=`${filtered.length} / ${DATA.questions.length} ข้อ`;
   render();
