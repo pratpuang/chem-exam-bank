@@ -388,7 +388,7 @@ body.nobg .kin{display:none}
 
 /* ================= LANDING (B1 grid board) ================= */
 #landing{min-height:100vh;padding:0 16px 60px}
-@media(min-width:561px){#landing{padding:0 50px 60px}}   /* room for the side tabs */
+@media(min-width:561px){#landing{padding:0 16px 60px 50px}}   /* room for the side tabs */
 .lwrap{max-width:1180px;margin:0 auto}
 .lhead{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;padding:26px 0 18px}
 .lhead h1{margin:0;font-size:2.4rem;font-weight:800;line-height:1;letter-spacing:-.01em;display:flex;align-items:center;gap:12px}
@@ -636,7 +636,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 @media(max-width:640px){.poster{padding:20px 16px 18px 26px}.poster .pnum{font-size:4.2rem}.poster .body,.poster .solbox{max-width:100%}.poster .phead,.poster .pmeta{max-width:78%}.sheet{padding:22px 16px 18px 28px}.sheet .body{font-size:1.15rem}}
 
 /* ---------- periodic table drawer + Mw calculator ---------- */
-#pdtab{position:fixed;left:0;top:42%;z-index:45;writing-mode:vertical-rl;background:var(--red);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:none;transition:transform .2s}
+#pdtab{position:fixed;left:0;top:28%;z-index:45;writing-mode:vertical-rl;background:var(--red);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:none;transition:transform .2s}
 #pdtab{display:block!important}
 #pdtab:hover{transform:translateX(4px)}
 #pdscrim{position:fixed;inset:0;z-index:70;background:rgba(20,20,20,.35);opacity:0;pointer-events:none;transition:opacity .35s}
@@ -693,7 +693,7 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 @media (prefers-reduced-motion:reduce){#pd,#pdscrim{transition:none}.pde.inq::after{animation:none}}
 
 /* ---------- tools drawer (constants · unit converter · ions) ---------- */
-#tdtab{position:fixed;left:0;top:calc(42% + 128px);z-index:45;writing-mode:vertical-rl;background:var(--yel);color:#141414;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:none;transition:transform .2s}
+#tdtab{position:fixed;left:0;top:calc(28% + 128px);z-index:45;writing-mode:vertical-rl;background:var(--yel);color:#141414;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:none;transition:transform .2s}
 #tdtab{display:block!important}
 #tdtab:hover{transform:translateX(4px)}
 #td{position:fixed;left:0;top:0;bottom:0;z-index:71;width:min(780px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--yel);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 28px;overflow:auto}
@@ -732,10 +732,10 @@ body.tdopen #pdscrim{opacity:1;pointer-events:auto}
 .tdnote{font-size:.78rem;color:var(--mut);margin-top:10px}
 
 /* ---------- simple timer: right-side panel ---------- */
-#tmtab{position:fixed;right:0;top:42%;z-index:45;writing-mode:vertical-rl;background:var(--blue);color:#fff;border:3px solid var(--ink);border-right:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:-4px 4px 0 var(--sh);cursor:pointer;display:block;transition:transform .2s}
-#tmtab:hover{transform:translateX(-4px)}
+#tmtab{position:fixed;left:0;top:calc(28% + 256px);z-index:45;writing-mode:vertical-rl;background:var(--blue);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:block;transition:transform .2s}
+#tmtab:hover{transform:translateX(4px)}
 #tmtab.run{background:var(--red);font-family:"JetBrains Mono",monospace}
-#tm{position:fixed;right:0;top:0;bottom:0;z-index:69;width:min(400px,94vw);background:var(--paper);border-left:4px solid var(--ink);box-shadow:-10px 0 0 var(--blue);transform:translateX(calc(100% + 20px));visibility:hidden;transition:transform .55s cubic-bezier(.34,1.35,.64,1),visibility 0s .55s;padding:14px 18px 24px;overflow:auto}
+#tm{position:fixed;left:0;top:0;bottom:0;z-index:69;width:min(400px,94vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--blue);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .55s cubic-bezier(.34,1.35,.64,1),visibility 0s .55s;padding:14px 18px 24px;overflow:auto}
 body.tmopen #tm{transform:none;visibility:visible;transition:transform .55s cubic-bezier(.34,1.35,.64,1),visibility 0s}
 .tmseg{display:flex;border:3px solid var(--ink);margin-bottom:14px}
 .tmseg button{flex:1;border:0;border-right:3px solid var(--ink);background:var(--card);font:800 .95rem "Anuphan",sans-serif;padding:9px 4px;cursor:pointer}
@@ -891,7 +891,7 @@ body.dark .kin .k2{border-color:#2c2c32}body.dark .kin .k4{opacity:.25}
   <div class="tmface" id="tmface"><div class="tmdig" id="tmdig">05:00</div><div class="tmbar tmcd"><i id="tmbar"></i></div></div>
   <div class="tmcd"><div class="tmpre" id="tmpre"></div><div class="tmadj"><button data-a="-60">− 1 นาที</button><button data-a="-10">− 10 วิ</button><button data-a="10">+ 10 วิ</button><button data-a="60">+ 1 นาที</button></div></div>
   <div class="tmctl"><button class="go" id="tmgo">▶ เริ่ม</button><button id="tmreset">↺ รีเซ็ต</button></div>
-  <p class="tdnote">เปิดทิ้งไว้ข้างโจทย์ได้ ปิดแผงแล้วเวลายังเดินต่อ (ดูเวลาที่แถบขวา)</p>
+  <p class="tdnote">เปิดทิ้งไว้ข้างโจทย์ได้ ปิดแผงแล้วเวลายังเดินต่อ (ดูเวลาที่แถบซ้าย)</p>
 </aside>
 <div id="pdscrim"></div>
 <aside id="pd" aria-label="ตารางธาตุ">
