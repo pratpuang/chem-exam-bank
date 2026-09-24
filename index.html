@@ -261,6 +261,11 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .sheet.lv-easy{box-shadow:12px 12px 0 var(--blue)}.sheet.lv-easy:before{background:var(--blue)}
 .sheet .mtop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding-right:50px}
 .sheet .body{font-size:1.38rem;line-height:1.85}
+/* save-as-image: an off-screen copy of the sheet (badges + question + choices), fixed width so every PNG matches */
+.shotwrap{position:fixed;left:0;top:0;box-sizing:border-box;z-index:-1;pointer-events:none;width:1100px;padding:28px 46px 46px 28px;background:var(--paper)}
+.shotsd{position:absolute}
+.sheet.shot{box-shadow:none;max-height:none;overflow:visible;animation:none!important;max-width:none;width:100%;padding:34px 40px 30px 54px}
+.sheet.shot .body{font-size:1.38rem}.sheet.shot .body img{max-width:100%;height:auto}.sheet.shot .mtop{padding-right:0}
 .sheet .body li{padding:9px 14px;font-size:1.02em}
 .sheet .fig{max-height:52vh;width:auto}
 .sheet .solbody{font-size:1.05rem}
@@ -566,7 +571,6 @@ body.dark .kin .k2{border-color:#2c2c32}body.dark .kin .k4{opacity:.25}
      <button data-v="list">รายการ</button>
      <button data-v="pane">2 คอลัมน์</button>
    </span>
-   <button class="btn" id="exportbtn" style="display:none">📥 ผลตรวจ</button>
    <button class="btn" id="bgbtn" title="เปิด/ปิดพื้นหลังเคลื่อนไหว">◐</button>
    <button class="btn" id="darkbtn" title="โหมดกลางคืน">🌙</button>
    <span class="volbox"><button class="sfxbtn" id="sfxbtn">🔊</button><input type="range" class="vol" min="0" max="100" aria-label="ระดับเสียง"></span>
@@ -588,25 +592,12 @@ body.dark .kin .k2{border-color:#2c2c32}body.dark .kin .k4{opacity:.25}
     <button id="mprev">◀ ก่อนหน้า</button>
     <button id="mnext">ถัดไป ▶</button>
     <button id="mpt" title="ตารางธาตุ">เปิดตารางธาตุ</button>
+    <button id="mshot" title="บันทึกโจทย์ข้อนี้เป็นไฟล์ PNG">💾 บันทึกเป็นรูป</button>
     <span class="mpos" id="mpos"></span>
   </div>
   <div class="foot" id="mfoot" style="margin-top:14px"></div>
 </div></div>
 
-<div class="expwrap" id="expwrap"><div class="expbox">
-  <h3>📥 ผลตรวจเฉลย</h3>
-  <p id="expsum"></p>
-  <textarea id="exptext" readonly></textarea>
-  <p>ก๊อปข้อความนี้ส่งให้ตัวเอง (LINE / Notes) หรือกดดาวน์โหลดเป็นไฟล์ แล้วเอาไปวางในเครื่องที่มีโปรเจกต์
-     สั่ง <code>python tools/apply_review.py &lt;ไฟล์&gt;</code> ระบบจะอัปเดต <code>Checked:</code> ใน
-     <code>solutions/*.md</code> ให้เอง</p>
-  <div class="exprow">
-    <button class="pri" id="expcopy">📋 คัดลอก</button>
-    <button id="expdl">💾 ดาวน์โหลดไฟล์</button>
-    <button class="dan" id="expclear">🗑 ล้างผลตรวจทั้งหมด</button>
-    <button id="expclose" style="margin-left:auto">ปิด</button>
-  </div>
-</div></div>
 
 <button id="pdtab" title="ตารางธาตุ + คำนวณ Mw">ตารางธาตุ</button>
 <button id="tdtab" title="ค่าคงที่ · แปลงหน่วย · ไอออน · สูตร">เครื่องมือ</button>
@@ -776,9 +767,6 @@ if(SC.have){
   opt($("#fsol"),"has",`มีวิธีทำ (${SC.have})`);
   opt($("#fsol"),"none",`ยังไม่มีวิธีทำ (${DATA.questions.length-SC.have})`);
   if(SC.flag)      opt($("#fsol"),"flag",`⚠ ไม่ฟันธง (${SC.flag})`);
-  if(SC.unchecked) opt($("#fsol"),"unchecked",`ยังไม่ตรวจ (${SC.unchecked})`);
-  const done=SC.have-SC.unchecked;
-  if(done)         opt($("#fsol"),"checked",`ตรวจแล้ว (${done})`);
 }
 
 /* ---------- badges ---------- */
@@ -802,48 +790,17 @@ function chapH(q){const cls=q.subject==="bio"?" bio":q.subject==="applied"?" app
   const nm=q.groupLabel.replace(/^บทที่ \d+ · /,"");
   return `<div class="chap-h${cls}"><b>${n}</b><span>${nm}</span></div>`;}
 
-/* ---- review marks: persist in localStorage, exported as JSON for tools/apply_review.py ---- */
-let REV = {};
-try{ REV = JSON.parse(ls.get("cqb_review","{}")) || {}; }catch(e){ REV = {}; }
-function saveRev(){
-  try{ localStorage.setItem("cqb_review", JSON.stringify(REV)); }
-  catch(e){ alert("บันทึกผลตรวจไม่ได้ (พื้นที่เบราว์เซอร์เต็ม) — กด 📥 ผลตรวจ แล้วเซฟออกมาก่อน"); }
-  refreshExport();
-}
-function revCount(){ return Object.keys(REV).length; }
-function refreshExport(){
-  const n=revCount(), b=$("#exportbtn");
-  b.style.display = (DATA.solcount&&DATA.solcount.have) ? "inline-block" : "none";
-  b.textContent = n ? `📥 ผลตรวจ (${n})` : "📥 ผลตรวจ";
-  b.classList.toggle("none", n===0);
-}
-function revBar(q){
-  const r = REV[q.id] || {};
-  const note = (r.note||"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  return `<div class="revbar" data-q="${q.id}">
-      <span>ตรวจแล้วหรือยัง:</span>
-      <button class="revbtn ok${r.v==="ok"?" on":""}"  data-v="ok">✓ ถูก</button>
-      <button class="revbtn bad${r.v==="bad"?" on":""}" data-v="bad">✗ ผิด / ต้องแก้</button>
-      ${r.v?`<span class="revmark">${r.v==="ok"?"✅ บันทึกแล้ว":"❌ ทำเครื่องหมายว่าผิด"}</span>`:""}
-      <textarea class="revnote${r.v==="bad"?" show":""}" data-q="${q.id}"
-        placeholder="ผิดตรงไหน / คำตอบที่ถูกคืออะไร (ไม่ใส่ก็ได้)">${note}</textarea>
-    </div>`;
-}
-function solLabel(q){const r=REV[q.id]||{};
-  return r.v==="ok" ? "✅ ดูวิธีทำ (ตรวจแล้ว)" : r.v==="bad" ? "❌ ดูวิธีทำ (ผิด / ต้องแก้)" : q.solFlag ? "⚠ ดูวิธีทำ (ไม่ฟันธง)" : "ดูวิธีทำ →";}
+function solLabel(q){return q.solFlag ? "⚠ ดูวิธีทำ (ไม่ฟันธง)" : "ดูวิธีทำ →";}
 /* Solution block — ALWAYS collapsed on render (attempt before seeing the working). */
 function solHtml(q){
   if(!hasSol(q)) return "";
-  const r = REV[q.id] || {};
-  const f = (q.solFlag ? " flag" : "") + (r.v==="ok" ? " done" : r.v==="bad" ? " wrong" : "");
+  const f = q.solFlag ? " flag" : "";
   const label = solLabel(q);
   return `<button class="solbtn${f}" data-sol="1" data-label="${label}">${label}</button>
     <div class="solwrap${f}"><div class="solin"><div class="solbox">
       ${q.solFlag?`<div class="soldis">⚠ ข้อนี้ไม่ฟันธง — โจทย์กำกวมหรือตัวเลือกไม่ตรง อ่านเหตุผลในวิธีทำแล้วตัดสินเอง</div>`:""}
-      ${q.solChecked?`<span class="chk">✅ ตรวจแล้ว</span>`:""}
       ${q.solAnswer?`<div class="solans">ตอบ: ${q.solAnswer}</div>`:""}
       <div class="solbody">${q.solHtml}</div>
-      ${revBar(q)}
     </div></div></div>`;
 }
 
@@ -864,8 +821,7 @@ function qMatch(x,f,skip){
     if(sl==="has"       && !hs) return false;
     if(sl==="none"      &&  hs) return false;
     if(sl==="flag"      && !(hs && x.solFlag)) return false;
-    if(sl==="unchecked" && !(hs && !x.solChecked)) return false;
-    if(sl==="checked"   && !(hs && x.solChecked)) return false;}
+  }
   if(f.t && !(x.search.includes(f.t)||x.id.toLowerCase().includes(f.t))) return false;
   return true;}
 function chList(subj){
@@ -879,7 +835,7 @@ const FACETS=[
   ["#fyear","yr",f=>DATA.years.map(y=>[y,"ปี "+y]),x=>x.year,()=>"ทุกปี"],
   ["#fdiff","df",f=>["easy","medium","hard"].map(d=>[d,DIFF_TH[d]]),x=>x.diff,()=>"ทุกระดับ"],
   ["#ftype","tp",f=>DATA.types.map(t=>[t,t]),x=>x.type,()=>"ทุกชนิด"]];
-const SOLOPTS=[["has","มีวิธีทำ"],["none","ยังไม่มีวิธีทำ"],["flag","⚠ ไม่ฟันธง"],["unchecked","ยังไม่ตรวจ"],["checked","ตรวจแล้ว"]];
+const SOLOPTS=[["has","มีวิธีทำ"],["none","ยังไม่มีวิธีทำ"],["flag","⚠ ไม่ฟันธง"]];
 // rebuild each select: only values that still have questions under the other filters (the chosen one always stays)
 function syncFacets(f){
   const fill=(sel,allLabel,items)=>{const cur=sel.value;sel.innerHTML="";opt(sel,"",allLabel);
@@ -1016,29 +972,8 @@ $("#fsubj").addEventListener("change",()=>{populateChapters($("#fsubj").value);a
 $("#random").onclick=()=>{if(!filtered.length)return;SFX.play("dice");const i=Math.floor(Math.random()*filtered.length);setTimeout(()=>openModal(i),380);};
 $("#ftoggle").onclick=()=>{$("#hdr").classList.toggle("fopen");SFX.play("click");};
 
-/* ---- solution toggle + review buttons (delegated: every view + the modal) ---- */
+/* ---- solution toggle (delegated: every view + the modal) ---- */
 function solToggle(e){
-  const rb=e.target.closest(".revbtn");
-  if(rb){
-    e.stopPropagation();
-    const bar=rb.closest(".revbar"), qid=bar.dataset.q, v=rb.dataset.v;
-    const wrap=bar.closest(".solwrap"), sb=wrap.previousElementSibling;
-    const cur=(REV[qid]||{}).v;
-    if(cur===v){ const n=(REV[qid]||{}).note; if(n) REV[qid]={note:n}; else delete REV[qid]; }
-    else { REV[qid]=Object.assign({}, REV[qid]||{}, {v:v}); }        // tapping the same one un-marks
-    SFX.play(cur===v?"unmark":(v==="ok"?"ok":"bad"));
-    saveRev();
-    const q=DATA.questions.find(x=>x.id===qid);
-    const tmp=document.createElement("div"); tmp.innerHTML=revBar(q);
-    bar.replaceWith(tmp.firstElementChild);
-    const r=REV[qid]||{};
-    sb.classList.toggle("done", r.v==="ok");
-    sb.classList.toggle("wrong", r.v==="bad");
-    sb.dataset.label = solLabel(q);
-    if(!wrap.classList.contains("show")) sb.textContent = sb.dataset.label;
-    return true;
-  }
-  if(e.target.closest(".revnote")) { e.stopPropagation(); return true; }
   const b=e.target.closest(".solbtn");
   if(!b) return false;
   e.stopPropagation();
@@ -1049,14 +984,6 @@ function solToggle(e){
     b.textContent = open ? "ซ่อนวิธีทำ ↑" : (b.dataset.label || "ดูวิธีทำ →");
   }
   return true;
-}
-function noteInput(e){
-  const ta=e.target.closest(".revnote");
-  if(!ta) return;
-  const qid=ta.dataset.q, val=ta.value;
-  if(!val && !(REV[qid]||{}).v){ delete REV[qid]; }
-  else REV[qid]=Object.assign({}, REV[qid]||{}, {note:val});
-  saveRev();
 }
 // one mark per question: marking a line clears any other mark in that question; tapping the marked one clears it
 function markChoice(e){const li=e.target.closest(".body li");if(!li)return false;
@@ -1074,49 +1001,10 @@ $("#root").addEventListener("click",e=>{
 });
 $("#root").addEventListener("input",e=>{
   if(e.target.id==="pscrub"){pIdx=(+e.target.value)-1;fillPoster("");SFX.play("tick");return;}
-  noteInput(e);
 });
 $("#msol").addEventListener("click",solToggle);
-$("#msol").addEventListener("input",noteInput);
 $("#mbody").addEventListener("click",markChoice);
 
-/* ---- export ---- */
-function revPayload(){
-  const items=Object.entries(REV).map(([id,r])=>({id:id, v:r.v||"", note:r.note||""}))
-                                 .sort((a,b)=>a.id.localeCompare(b.id));
-  return JSON.stringify({tool:"chem-exam-bank-review", version:1, items:items}, null, 1);
-}
-function openExport(){
-  const items=Object.values(REV);
-  const ok=items.filter(r=>r.v==="ok").length, bad=items.filter(r=>r.v==="bad").length;
-  $("#expsum").textContent = revCount()
-    ? `ตรวจแล้ว ${revCount()} ข้อ — ถูก ${ok} · ผิด/ต้องแก้ ${bad}`
-    : "ยังไม่ได้ทำเครื่องหมายข้อไหนเลย — กด ✓ ถูก หรือ ✗ ผิด ใต้วิธีทำก่อน";
-  $("#exptext").value = revPayload();
-  $("#expwrap").classList.add("show");
-  SFX.play("open");
-}
-$("#exportbtn").onclick=openExport;
-$("#expclose").onclick=()=>$("#expwrap").classList.remove("show");
-$("#expwrap").onclick=e=>{if(e.target.id==="expwrap")$("#expwrap").classList.remove("show");};
-$("#expcopy").onclick=async()=>{
-  const t=$("#exptext");
-  try{ await navigator.clipboard.writeText(t.value); $("#expcopy").textContent="✅ คัดลอกแล้ว"; SFX.play("ok"); }
-  catch(e){ t.focus(); t.select(); $("#expcopy").textContent="กด Ctrl/⌘+C"; }
-  setTimeout(()=>$("#expcopy").textContent="📋 คัดลอก",1800);
-};
-$("#expdl").onclick=()=>{
-  const blob=new Blob([revPayload()],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob); a.download="chem-review.json";
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(a.href),1500);
-};
-$("#expclear").onclick=()=>{
-  if(!confirm("ล้างผลตรวจทั้งหมดในเบราว์เซอร์นี้? กู้คืนไม่ได้")) return;
-  REV={}; saveRev(); $("#expwrap").classList.remove("show"); render();
-};
-refreshExport();
 $("#mx").onclick=closeModal;
 $("#modal").onclick=e=>{if(e.target.id==="modal")closeModal();};
 $("#mreveal").onclick=()=>SFX.play($("#mans").classList.toggle("show")?"open":"close");
@@ -1134,7 +1022,6 @@ document.addEventListener("keydown",e=>{
     if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1);
     return;
   }
-  if($("#expwrap").classList.contains("show")){if(e.key==="Escape")$("#expwrap").classList.remove("show");return;}
   if(typing){if(e.key==="Escape")e.target.blur();return;}
   if(!document.body.classList.contains("inapp")){if(e.key==="/"){e.preventDefault();$("#lq").focus();}else if(e.key==="m"||e.key==="M")toggleSfx();return;}
   if(e.key==="/"){e.preventDefault();$("#q").focus();return;}
@@ -1246,6 +1133,37 @@ const PD=(()=>{
   return{open,close,isOpen,parseF,curQ,load(v){open();if(!mwOn)setMw(true);put(v);}};
 })();
 $("#mpt").onclick=()=>PD.open();
+/* 💾 save the question on screen as a PNG: badges + question + choices only: no 📌 note, solution or controls.
+   html2canvas loads from the CDN on first use; on touch devices the share sheet offers "Save Image". */
+let h2cP=null;
+function loadH2C(){return h2cP||(h2cP=new Promise((res,rej)=>{const sc=document.createElement("script");
+  sc.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+  sc.onload=()=>res(window.html2canvas);sc.onerror=()=>{h2cP=null;rej(new Error("cdn"));};document.head.appendChild(sc);}));}
+async function saveShot(){const q=filtered[mIdx],b=$("#mshot");if(!q||b.disabled)return;
+  const lbl=b.textContent;b.disabled=true;b.textContent="กำลังสร้างรูป…";
+  try{const h2c=await loadH2C();
+    const wrap=document.createElement("div");wrap.className="shotwrap";
+    const sh=document.createElement("div");sh.className=$("#modal .sheet").className+" shot";
+    ["#mtop","#mbody"].forEach(sel=>sh.appendChild($(sel).cloneNode(true)));
+    sh.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));
+    const sd=document.createElement("div");sd.className="shotsd";wrap.appendChild(sd);
+    wrap.appendChild(sh);document.body.appendChild(wrap);
+    // html2canvas can't draw box-shadow, so the difficulty-coloured offset block is a real div behind the sheet
+    sd.style.cssText=`left:${sh.offsetLeft+12}px;top:${sh.offsetTop+12}px;width:${sh.offsetWidth}px;height:${sh.offsetHeight}px;background:${q.diff==="easy"?"var(--blue)":q.diff==="medium"?"var(--yel)":"var(--red)"}`;
+    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+    // any figure in the question goes into the PNG too: wait until every image has loaded
+    await Promise.all([...sh.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r;})));
+    const cv=await h2c(wrap,{scale:2,backgroundColor:getComputedStyle(wrap).backgroundColor,useCORS:true,logging:false});
+    const blob=await new Promise(r=>cv.toBlob(r,"image/png"));if(!blob)throw new Error("blob");
+    const name=`${q.id}.png`,file=new File([blob],name,{type:"image/png"});
+    if(matchMedia("(pointer:coarse)").matches&&navigator.canShare&&navigator.canShare({files:[file]})){
+      try{await navigator.share({files:[file]});}catch(e){}}
+    else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+      setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
+    SFX.play("ok");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1400);
+  }catch(e){b.textContent=lbl;alert("บันทึกรูปไม่ได้ — ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างรูป");}
+  finally{b.disabled=false;document.querySelectorAll(".shotwrap").forEach(x=>x.remove());}}
+$("#mshot").onclick=saveShot;
 
 
 /* ================= TOOLS DRAWER: constants · unit converter · ions ================= */
@@ -1440,7 +1358,6 @@ function buildBoard(){
   if(DATA.appcount){const qs=Q.filter(q=>q.subject==="applied"),cv=cov(qs);
     h+=`<button class="tile c-red" data-go="applied" style="--i:${i++}"><span class="no">✦</span><span class="nm">เคมีประยุกต์</span><span class="ct">${DATA.appcount} ข้อ</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;}
   if(SC.flag) h+=`<button class="tile c-card" data-go="flag" style="--i:${i++}"><span class="no">⚠</span><span class="nm">วิธีทำไม่ฟันธง</span><span class="ct">${SC.flag} ข้อ</span></button>`;
-  if(SC.unchecked) h+=`<button class="tile c-yel" data-go="unchecked" style="--i:${i++}"><span class="no">✓?</span><span class="nm">ยังไม่ตรวจวิธีทำ</span><span class="ct">${SC.unchecked} ข้อ</span></button>`;
   const rq=RECENT.map(id=>DATA.questions.find(x=>x.id===id)).filter(Boolean);
   h+=`<div class="tile c-card w2 recent" style="--i:${i++}"><span class="no">🕘</span><span class="nm">เพิ่งดู</span>${rq.length
     ?`<div class="rl">${rq.map(q=>`<button data-go="qid" data-q="${q.id}" title="${(q.snippet||"").replace(/<[^>]+>/g,"").replace(/"/g,"&quot;").slice(0,90)}">${q.id.slice(2)} · ${q.subject==="bio"?"ชีวะ":q.subject==="applied"?"ประยุกต์":"บท "+parseInt(q.ch)}</button>`).join("")}</div>`
@@ -1497,7 +1414,7 @@ $("#board").addEventListener("click",e=>{
     if(g==="ch"){$("#fsubj").value="chem";populateChapters("chem");$("#fch").value=t.dataset.ch;}
     else if(g==="bio"){$("#fsubj").value="bio";populateChapters("bio");}
     else if(g==="applied"){$("#fsubj").value="applied";populateChapters("applied");}
-    else if(g==="flag"||g==="unchecked"){$("#fsol").value=g;}
+    else if(g==="flag"){$("#fsol").value=g;}
     else if(g==="qid"){$("#q").value=t.dataset.q;}
     apply();
     if(g==="random"&&filtered.length){setTimeout(()=>SFX.play("dice"),250);setTimeout(()=>openModal(Math.floor(Math.random()*filtered.length)),650);}
