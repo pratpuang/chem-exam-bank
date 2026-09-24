@@ -827,6 +827,12 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 /* ---------- simple timer: right-side panel ---------- */
 #tmtab{position:fixed;left:0;top:calc(28% + 256px);z-index:45;writing-mode:vertical-rl;background:var(--blue);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:block;transition:transform .2s}
 #tmtab:hover{transform:translateX(4px)}
+#vstab{position:fixed;left:0;top:calc(28% + 384px);z-index:45;writing-mode:vertical-rl;background:var(--paper);color:#141414;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:block;transition:transform .2s}
+#vstab:hover{transform:translateX(4px)}
+#vs{position:fixed;left:0;top:0;bottom:0;z-index:73;width:min(1040px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--red);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 18px;display:flex;flex-direction:column}
+body.vsopen #vs{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
+body.vsopen #pdscrim{opacity:1;pointer-events:auto}
+#vsf{flex:1;width:100%;border:0;background:var(--paper);min-height:0}
 #tmtab.run{background:var(--red);font-family:"JetBrains Mono",monospace}
 #tm{position:fixed;left:0;top:0;bottom:0;z-index:72;width:min(560px,94vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--blue);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .55s cubic-bezier(.34,1.35,.64,1),visibility 0s .55s;padding:14px 18px 24px;overflow:auto}
 body.tmopen #tm{transform:none;visibility:visible;transition:transform .55s cubic-bezier(.34,1.35,.64,1),visibility 0s}
@@ -985,6 +991,11 @@ body.dark .kin .k2{border-color:#2c2c32}body.dark .kin .k4{opacity:.25}
   <div class="tdpane on" id="td-k"></div><div class="tdpane" id="td-cv"></div><div class="tdpane" id="td-io"></div><div class="tdpane" id="td-fx"></div>
 </aside>
 <button id="tmtab" title="จับเวลา">จับเวลา</button>
+<button id="vstab" title="รูปร่างโมเลกุล 3 มิติ (VSEPR)">โมเลกุล 3D</button>
+<aside id="vs" aria-label="รูปร่างโมเลกุล">
+  <div class="pdh"><b>รูปร่างโมเลกุล 3D</b><span class="pdhov">VSEPR · เพิ่ม/ลดพันธะและอิเล็กตรอนคู่โดดเดี่ยว · ลากหมุนได้</span><button class="pdx" id="vsx" title="ปิด (Esc)">✕</button></div>
+  <iframe id="vsf" title="รูปร่างโมเลกุล 3D"></iframe>
+</aside>
 <div id="tmmini" aria-label="นาฬิกาจับเวลา"><div class="tmmd" id="tmmd" title="เปิดแผงจับเวลา">05:00</div><div class="tmmb"><i id="tmmbar"></i></div>
   <div class="tmmc"><button class="go" id="tmmgo">▶</button><button id="tmmreset" title="รีเซ็ต">↺</button><button id="tmmx" title="ซ่อน">✕</button></div></div>
 <aside id="tm" aria-label="จับเวลา">
@@ -1397,6 +1408,7 @@ document.addEventListener("keydown",e=>{
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&e.target.type!=="range";
   if(PD.isOpen()){if(e.key==="Escape")PD.close();return;}   // drawer open: keys stay inside it
   if(TD.isOpen()){if(e.key==="Escape")TD.close();return;}
+  if(VS.isOpen()){if(e.key==="Escape")VS.close();return;}
   if(TM.isOpen()&&!typing){if(e.key==="Escape"){TM.close();return;}if(e.key===" "){e.preventDefault();TM.toggle();return;}}
   if($("#modal").classList.contains("show")){
     if(e.key==="Escape")closeModal();
@@ -1693,6 +1705,20 @@ const TD=(()=>{
     document.querySelectorAll(".tdpane").forEach(p=>p.classList.toggle("on",p.id==="td-"+b.dataset.t));fxFit();};
   $("#tdtab").onclick=open;$("#tdx").onclick=close;
   $("#pdscrim").onclick=()=>{PD.close();close();TM.close();};
+  return{open,close,isOpen};
+})();
+
+/* ================= VSEPR 3D (left drawer, vsepr.html in an iframe, loaded on first open) ================= */
+const VS=(()=>{
+  const isOpen=()=>document.body.classList.contains("vsopen");
+  function open(){if(PD.isOpen())PD.close();if(TD.isOpen())TD.close();
+    const f=$("#vsf");if(!f.src)f.src="vsepr.html?embed=1";
+    document.body.classList.add("vsopen");SFX.play("open");}
+  function close(){if(!isOpen())return;document.body.classList.remove("vsopen");SFX.play("close");}
+  $("#vstab").onclick=()=>isOpen()?close():open();$("#vsx").onclick=close;
+  $("#pdscrim").addEventListener("click",close);
+  // Esc pressed inside the 3D view closes the drawer too
+  $("#vsf").addEventListener("load",()=>{try{$("#vsf").contentWindow.addEventListener("keydown",e=>{if(e.key==="Escape")close();});}catch(_){}});
   return{open,close,isOpen};
 })();
 
