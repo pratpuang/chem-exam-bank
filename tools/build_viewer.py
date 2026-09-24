@@ -366,7 +366,7 @@ HTML = r"""<!doctype html><html lang="th"><head><meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700;800&family=Sarabun:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--line:#141414}
+:root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--line:#141414}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;font-family:"Anuphan","Sarabun","Segoe UI",Tahoma,sans-serif;background:var(--paper);color:var(--ink);font-size:16px}
@@ -388,6 +388,7 @@ body.nobg .kin{display:none}
 
 /* ================= LANDING (B1 grid board) ================= */
 #landing{min-height:100vh;padding:0 16px 60px}
+@media(min-width:561px){#landing{padding:0 50px 60px}}   /* room for the side tabs */
 .lwrap{max-width:1180px;margin:0 auto}
 .lhead{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;padding:26px 0 18px}
 .lhead h1{margin:0;font-size:2.4rem;font-weight:800;line-height:1;letter-spacing:-.01em;display:flex;align-items:center;gap:12px}
@@ -396,17 +397,17 @@ body.nobg .kin{display:none}
 .shapes .c{background:var(--red);border-radius:50%}.shapes .s{background:var(--yel)}.shapes .t{background:var(--blue);clip-path:polygon(50% 0,100% 100%,0 100%)}
 .lhead p{margin:0 0 4px;color:var(--mut);font-size:.9rem}
 .lhead .sp{flex:1}
-.lsearch{display:flex;flex:0 1 260px;min-width:200px;border:3px solid var(--ink);background:var(--card);box-shadow:4px 4px 0 var(--ink);transition:box-shadow .15s}
+.lsearch{display:flex;flex:0 1 260px;min-width:200px;border:3px solid var(--ink);background:var(--card);box-shadow:4px 4px 0 var(--sh);transition:box-shadow .15s}
 .lsearch:focus-within{box-shadow:6px 6px 0 var(--blue)}
 .lsearch input{flex:1;min-width:0;border:0;background:transparent;font:600 1rem "Anuphan",sans-serif;padding:9px 12px;outline:none}
 .lsearch .lct{align-self:center;padding:0 10px;font:700 .8rem "JetBrains Mono",monospace;color:var(--mut);white-space:nowrap}
 .lsearch button{border:0;border-left:3px solid var(--ink);background:var(--ink);color:var(--yel);font-weight:800;font-size:1.1rem;padding:0 16px;cursor:pointer}
 .lsearch.shake{animation:lshake .35s}
 @keyframes lshake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
-.lbtn{border:3px solid var(--ink);background:var(--card);font-weight:700;padding:8px 14px;box-shadow:4px 4px 0 var(--ink);transition:transform .1s,box-shadow .1s;font-size:.88rem}
-.lbtn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
-.lbtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
-.board{display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:162px;grid-auto-flow:row;gap:6px;background:var(--ink);border:6px solid var(--ink)}
+.lbtn{border:3px solid var(--ink);background:var(--card);font-weight:700;padding:8px 14px;box-shadow:4px 4px 0 var(--sh);transition:transform .1s,box-shadow .1s;font-size:.88rem}
+.lbtn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--sh)}
+.lbtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--sh)}
+.board{display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:150px;grid-auto-flow:row;gap:6px;background:var(--ink);border:6px solid var(--ink)}
 .tile{position:relative;border:0;padding:14px 16px;text-align:left;overflow:hidden;display:flex;flex-direction:column;gap:4px;background:var(--card);animation:tileIn .6s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--i,0)*45ms);transition:transform .25s}
 @keyframes tileIn{from{opacity:0;transform:scale(.6) rotate(-6deg)}to{opacity:1;transform:none}}
 button.tile:hover{transform:scale(.965)}
@@ -462,15 +463,15 @@ select:focus{outline:3px solid var(--yel);outline-offset:1px}
 .seg button{border:0;border-right:2px solid var(--ink);background:var(--card);padding:6px 10px;font-size:.8rem;font-weight:700}
 .seg button:last-child{border-right:0}
 .seg button.on{background:var(--ink);color:var(--paper)}
-.btn{padding:6px 11px;border:2px solid var(--ink);background:var(--card);font-size:.82rem;font-weight:700;box-shadow:3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s}
-.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
-.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+.btn{padding:6px 11px;border:2px solid var(--ink);background:var(--card);font-size:.82rem;font-weight:700;box-shadow:3px 3px 0 var(--sh);transition:transform .08s,box-shadow .08s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--sh)}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--sh)}
 #exportbtn{background:var(--yel)}
-.volbox{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--ink);background:var(--card);padding:2px 8px 2px 2px;box-shadow:3px 3px 0 var(--ink)}
+.volbox{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--ink);background:var(--card);padding:2px 8px 2px 2px;box-shadow:3px 3px 0 var(--sh)}
 .volbox .sfxbtn{border:0;background:none;font-size:1rem;width:30px;height:28px;padding:0}
 .vol{width:92px;accent-color:var(--red);cursor:pointer;height:4px}
 .vol.off{opacity:.35}
-.lvol{border-width:3px;box-shadow:4px 4px 0 var(--ink);padding:5px 10px 5px 4px}
+.lvol{border-width:3px;box-shadow:4px 4px 0 var(--sh);padding:5px 10px 5px 4px}
 .lvol .vol{width:110px}
 #exportbtn.none{opacity:.5}
 #count{margin-left:auto;font-weight:700;font-size:.82rem;white-space:nowrap}
@@ -505,12 +506,12 @@ main{max-width:1060px;margin:18px auto 60px;padding:0 14px}
 .fig{display:block;max-width:100%;height:auto;margin:12px auto;border:3px solid var(--ink);background:#fff;padding:6px}
 .note{background:#fff4cc;border:2px solid var(--ink);padding:7px 11px;margin-top:10px;font-size:.86rem}
 .foot{margin-top:12px;padding-top:9px;border-top:2px dashed #cfc5b0;font-size:.8rem;color:var(--mut);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.present-btn{margin-left:auto;border:2px solid var(--ink);background:var(--card);padding:4px 11px;font-size:.8rem;font-weight:700;box-shadow:3px 3px 0 var(--ink)}
+.present-btn{margin-left:auto;border:2px solid var(--ink);background:var(--card);padding:4px 11px;font-size:.8rem;font-weight:700;box-shadow:3px 3px 0 var(--sh)}
 .present-btn:hover{background:var(--yel)}
 code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .empty{text-align:center;color:var(--mut);padding:60px 10px;font-weight:600}
 /* ---------- solutions ---------- */
-.solbtn{margin-top:12px;border:2px solid var(--ink);background:var(--card);padding:6px 14px;font-size:.84rem;font-weight:800;box-shadow:3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.solbtn{margin-top:12px;border:2px solid var(--ink);background:var(--card);padding:6px 14px;font-size:.84rem;font-weight:800;box-shadow:3px 3px 0 var(--sh);transition:transform .08s,box-shadow .08s}
 .solbtn:hover{background:var(--yel)}
 .solbtn:active{transform:translate(3px,3px);box-shadow:none}
 .solbtn.flag{border-style:dashed}
@@ -544,7 +545,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .deckbar>*:not(.deckhint){flex-shrink:0}
 .deckbar #pscrub{flex:1 1 60px}
 @media(max-width:640px){.deckhint{display:none}.dbtn{width:42px;height:40px}#ppos{min-width:70px;font-size:.8rem}}
-.dbtn{border:3px solid var(--ink);background:var(--card);font-weight:800;font-size:1.1rem;width:48px;height:44px;box-shadow:4px 4px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.dbtn{border:3px solid var(--ink);background:var(--card);font-weight:800;font-size:1.1rem;width:48px;height:44px;box-shadow:4px 4px 0 var(--sh);transition:transform .08s,box-shadow .08s}
 .dbtn:hover{background:var(--yel)}
 .dbtn:active{transform:translate(4px,4px);box-shadow:none}
 #pscrub{flex:1;min-width:60px;accent-color:var(--red);height:6px;cursor:pointer}
@@ -575,7 +576,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .poster .solbox{max-width:88%}
 
 /* ---------- CARDS view (mini posters) ---------- */
-.card{position:relative;background:var(--card);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--ink);padding:18px 20px 16px 32px;margin-bottom:22px;overflow:hidden}
+.card{position:relative;background:var(--card);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);padding:18px 20px 16px 32px;margin-bottom:22px;overflow:hidden}
 .card.anim{animation:cardIn .5s cubic-bezier(.2,1.1,.4,1) both;animation-delay:calc(var(--i,0)*50ms)}
 @keyframes cardIn{from{opacity:0;transform:translateY(20px)}}
 .card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:10px;background:var(--red)}
@@ -584,7 +585,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .card-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;position:relative;padding-right:70px}
 /* ---------- LIST view ---------- */
 .row{background:var(--card);border:3px solid var(--ink);margin-bottom:8px;overflow:hidden;transition:box-shadow .15s,transform .15s}
-.row:hover{box-shadow:5px 5px 0 var(--ink);transform:translate(-2px,-2px)}
+.row:hover{box-shadow:5px 5px 0 var(--sh);transform:translate(-2px,-2px)}
 .row-h{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer}
 .row-id{font-family:"JetBrains Mono";font-weight:700;font-size:.8rem;white-space:nowrap}
 .row-snip{flex:1;font-size:.93rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -615,7 +616,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .sheet .solbody{font-size:1.05rem}
 .x{position:absolute;top:14px;right:16px;border:3px solid var(--ink);background:var(--ink);color:var(--paper);width:42px;height:42px;font-size:1.1rem;font-weight:800}
 .mctrl{display:flex;gap:10px;align-items:center;margin-top:20px;flex-wrap:wrap}
-.mctrl button{padding:10px 18px;border:3px solid var(--ink);background:var(--card);font-size:1rem;font-weight:800;box-shadow:4px 4px 0 var(--ink)}
+.mctrl button{padding:10px 18px;border:3px solid var(--ink);background:var(--card);font-size:1rem;font-weight:800;box-shadow:4px 4px 0 var(--sh)}
 .mctrl button:active{transform:translate(4px,4px);box-shadow:none}
 .reveal{background:var(--blue)!important;color:#fff}
 .ans-box{margin-top:16px;padding:12px 18px;background:#fff4cc;border:3px solid var(--ink);font-size:1.1rem;display:none}
@@ -629,17 +630,17 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .expbox p{margin:0;font-size:.84rem;color:var(--mut);line-height:1.6}
 .expbox textarea{width:100%;flex:1;min-height:190px;font-family:"JetBrains Mono",monospace;font-size:.74rem;border:2px solid var(--ink);padding:10px;resize:vertical;background:#fff}
 .exprow{display:flex;gap:8px;flex-wrap:wrap}
-.exprow button{border:2px solid var(--ink);background:var(--card);padding:7px 13px;font-size:.84rem;font-weight:700;box-shadow:3px 3px 0 var(--ink)}
+.exprow button{border:2px solid var(--ink);background:var(--card);padding:7px 13px;font-size:.84rem;font-weight:700;box-shadow:3px 3px 0 var(--sh)}
 .exprow button.pri{background:var(--ink);color:var(--paper)}
 .exprow button.dan{color:var(--red)}
 @media(max-width:640px){.poster{padding:20px 16px 18px 26px}.poster .pnum{font-size:4.2rem}.poster .body,.poster .solbox{max-width:100%}.poster .phead,.poster .pmeta{max-width:78%}.sheet{padding:22px 16px 18px 28px}.sheet .body{font-size:1.15rem}}
 
 /* ---------- periodic table drawer + Mw calculator ---------- */
-#pdtab{position:fixed;left:0;top:42%;z-index:45;writing-mode:vertical-rl;background:var(--red);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--ink);cursor:pointer;display:none;transition:transform .2s}
-body.inapp #pdtab{display:block}
+#pdtab{position:fixed;left:0;top:42%;z-index:45;writing-mode:vertical-rl;background:var(--red);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:none;transition:transform .2s}
+#pdtab{display:block!important}
 #pdtab:hover{transform:translateX(4px)}
 #pdscrim{position:fixed;inset:0;z-index:70;background:rgba(20,20,20,.35);opacity:0;pointer-events:none;transition:opacity .35s}
-#pd{position:fixed;left:0;top:0;bottom:0;z-index:71;width:min(960px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--ink);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 28px;overflow:auto}
+#pd{position:fixed;left:0;top:0;bottom:0;z-index:71;width:min(960px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--sh);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 28px;overflow:auto}
 body.pdopen #pd{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
 body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .pdh{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
@@ -656,7 +657,7 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .pde i{align-self:flex-start;font-style:normal;font-weight:500;opacity:.75;font-size:calc(var(--u)*.16)}
 .pde b{font-weight:800;font-size:calc(var(--u)*.33);margin-top:-6%}
 .pde s{text-decoration:none;font-family:"JetBrains Mono",monospace;font-size:calc(var(--u)*.15);opacity:.85}
-.pde:hover{transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--ink);z-index:2}
+.pde:hover{transform:translate(-2px,-2px);box-shadow:3px 3px 0 var(--sh);z-index:2}
 .pde.inq::after{content:"";position:absolute;inset:-2px;border:3px solid var(--red);animation:pdpulse 1.2s infinite}
 @keyframes pdpulse{50%{inset:3px;opacity:.3}}
 .pde.inf{outline:3px solid var(--blue);outline-offset:-3px}
@@ -665,7 +666,7 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .k-alk{background:var(--red);color:#fff}.k-ae{background:#f28c28}.k-tm{background:var(--card)}.k-pt{background:#d9d2c1}.k-md{background:#9fb0e8}.k-nm{background:var(--yel)}.k-hal{background:var(--blue);color:#fff}.k-ng{background:var(--ink);color:var(--paper)}.k-ln{background:#f3c3b8}.k-an{background:#e39c8c}
 .pdph{display:flex;align-items:center;justify-content:center;font:600 calc(var(--u)*.17) "JetBrains Mono",monospace;opacity:.55;aspect-ratio:1/1}
 .pdinfo{grid-row:1/4;grid-column:3/13;display:flex;gap:16px;align-items:flex-start;padding:0 6px;overflow:auto}
-.pdbig{flex:none;position:relative;width:calc(var(--u)*2.3);height:calc(var(--u)*2.3);border:4px solid var(--ink);background:var(--card);box-shadow:6px 6px 0 var(--ink);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:calc(var(--u)*1.2);padding-bottom:30px;line-height:1}
+.pdbig{flex:none;position:relative;width:calc(var(--u)*2.3);height:calc(var(--u)*2.3);border:4px solid var(--ink);background:var(--card);box-shadow:6px 6px 0 var(--sh);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:calc(var(--u)*1.2);padding-bottom:30px;line-height:1}
 .pdbig i{position:absolute;left:6px;top:4px;font:700 .8rem "JetBrains Mono",monospace;font-style:normal}
 .pdbig u{position:absolute;left:0;right:0;bottom:22px;text-align:center;font:700 .8rem "Anuphan",sans-serif;text-decoration:none}
 .pdbig s{position:absolute;left:0;right:0;bottom:5px;text-align:center;font:700 .85rem "JetBrains Mono",monospace;text-decoration:none}
@@ -677,7 +678,7 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .pdbrk .pc{background-image:linear-gradient(90deg,var(--yel) var(--p),transparent var(--p))}
 .pdbrk .hint{opacity:.6;font-size:.88rem}
 .pdbrk .err{color:var(--red);font-weight:700}
-.pdcalc{border:3px solid var(--ink);background:var(--card);box-shadow:6px 6px 0 var(--ink);padding:12px;margin-top:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:stretch}
+.pdcalc{border:3px solid var(--ink);background:var(--card);box-shadow:6px 6px 0 var(--sh);padding:12px;margin-top:18px;display:flex;flex-wrap:wrap;gap:10px;align-items:stretch}
 .pdcalc input{flex:1 1 220px;min-width:0;font:700 1.45rem "JetBrains Mono",monospace;border:3px solid var(--ink);padding:6px 12px;background:var(--paper);outline:none}
 .pdcalc input:focus{border-color:var(--blue)}
 .pdmw{background:var(--ink);color:var(--yel);padding:6px 16px;font:800 1.5rem "JetBrains Mono",monospace;min-width:210px;text-align:right;display:flex;flex-direction:column;justify-content:center}
@@ -692,26 +693,26 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 @media (prefers-reduced-motion:reduce){#pd,#pdscrim{transition:none}.pde.inq::after{animation:none}}
 
 /* ---------- tools drawer (constants · unit converter · ions) ---------- */
-#tdtab{position:fixed;left:0;top:calc(42% + 128px);z-index:45;writing-mode:vertical-rl;background:var(--yel);color:#141414;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--ink);cursor:pointer;display:none;transition:transform .2s}
-body.inapp #tdtab{display:block}
+#tdtab{position:fixed;left:0;top:calc(42% + 128px);z-index:45;writing-mode:vertical-rl;background:var(--yel);color:#141414;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:none;transition:transform .2s}
+#tdtab{display:block!important}
 #tdtab:hover{transform:translateX(4px)}
 #td{position:fixed;left:0;top:0;bottom:0;z-index:71;width:min(780px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--yel);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 28px;overflow:auto}
 body.tdopen #td{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
 body.tdopen #pdscrim{opacity:1;pointer-events:auto}
-.tdtabs{display:flex;border:3px solid var(--ink);margin-bottom:14px;box-shadow:4px 4px 0 var(--ink)}
+.tdtabs{display:flex;border:3px solid var(--ink);margin-bottom:14px;box-shadow:4px 4px 0 var(--sh)}
 .tdtabs button{flex:1;border:0;border-right:3px solid var(--ink);background:var(--card);font:800 .95rem "Anuphan",sans-serif;padding:9px 6px;cursor:pointer}
 .tdtabs button:last-child{border-right:0}
 .tdtabs button.on{background:var(--ink);color:var(--paper)}
 .tdpane{display:none}.tdpane.on{display:block;animation:pIn .35s cubic-bezier(.2,1.2,.4,1)}
 .kgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
-.kcard{border:3px solid var(--ink);background:var(--card);box-shadow:4px 4px 0 var(--ink);padding:10px 12px 10px 18px;position:relative}
+.kcard{border:3px solid var(--ink);background:var(--card);box-shadow:4px 4px 0 var(--sh);padding:10px 12px 10px 18px;position:relative}
 .kcard:before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--c,var(--red))}
 .kcard .ks{font:800 1.05rem "JetBrains Mono",monospace}
 .kcard .kval{font:800 1.2rem "JetBrains Mono",monospace;margin:4px 0 2px;color:var(--blue)}
 .kcard .kval small{font-size:.72rem;color:var(--ink);font-weight:600}
 .kcard .kn{font-size:.8rem;color:var(--mut)}
 .cvcat{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.cvcat button{border:2px solid var(--ink);background:var(--card);font:700 .88rem "Anuphan",sans-serif;padding:6px 12px;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+.cvcat button{border:2px solid var(--ink);background:var(--card);font:700 .88rem "Anuphan",sans-serif;padding:6px 12px;cursor:pointer;box-shadow:3px 3px 0 var(--sh)}
 .cvcat button.on{background:var(--blue);color:#fff}
 .cvin{display:flex;gap:8px;margin-bottom:12px}
 .cvin input{flex:1;min-width:0;font:700 1.4rem "JetBrains Mono",monospace;border:3px solid var(--ink);padding:6px 12px;background:var(--card);outline:none}
@@ -730,131 +731,71 @@ body.tdopen #pdscrim{opacity:1;pointer-events:auto}
 .iontbl .f{font:700 1rem "JetBrains Mono",monospace;white-space:nowrap}
 .tdnote{font-size:.78rem;color:var(--mut);margin-top:10px}
 
-/* ---------- timed practice ---------- */
-body.exopen{overflow:hidden}
-#ex{position:fixed;inset:0;z-index:66;background:var(--paper);display:none;overflow:auto}
-#ex.show{display:block;animation:exIn .5s cubic-bezier(.7,0,.2,1)}
-@keyframes exIn{from{clip-path:circle(0 at 50% 50%)}to{clip-path:circle(150% at 50% 50%)}}
-.exw{max-width:980px;margin:0 auto;padding:20px 16px 70px}
-.exh{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-.exh h2{margin:0;font-size:1.6rem;font-weight:800;display:flex;gap:10px;align-items:center}
-.exh .sp{flex:1}
-.exbtn{border:3px solid var(--ink);background:var(--card);font-weight:800;padding:8px 16px;box-shadow:4px 4px 0 var(--ink);cursor:pointer;font-size:.95rem;transition:transform .08s,box-shadow .08s}
-.exbtn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
-.exbtn:active{transform:translate(4px,4px);box-shadow:none}
-.exbtn.pri{background:var(--red);color:#fff}
-.exbtn.ink{background:var(--ink);color:var(--paper)}
-.exbtn:disabled{opacity:.4;cursor:not-allowed}
-.exset{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.exf{border:3px solid var(--ink);background:var(--card);padding:14px 16px;box-shadow:6px 6px 0 var(--ink)}
-.exf label{display:block;font-weight:800;font-size:.85rem;margin-bottom:8px;letter-spacing:.04em}
-.exf select{width:100%;max-width:none;font-size:1rem;padding:8px}
-.exseg{display:flex;border:3px solid var(--ink)}
-.exseg button{flex:1;border:0;border-right:3px solid var(--ink);background:var(--card);font:800 1rem "Anuphan",sans-serif;padding:9px 4px;cursor:pointer}
-.exseg button:last-child{border-right:0}
-.exseg button.on{background:var(--ink);color:var(--paper)}
-.exsum{grid-column:1/-1;display:flex;align-items:center;gap:18px;flex-wrap:wrap;border:3px solid var(--ink);background:var(--yel);color:#141414;padding:14px 18px;box-shadow:6px 6px 0 var(--ink)}
-.exsum b{font:800 1.9rem "JetBrains Mono",monospace}
-.exsum .go{margin-left:auto;font-size:1.2rem;padding:12px 30px}
-.exchk{display:flex!important;gap:10px;align-items:center;font-weight:600!important;font-size:.95rem!important;cursor:pointer;margin:0!important}
-.exchk input{width:20px;height:20px;accent-color:var(--red)}
-.extop{position:sticky;top:0;z-index:3;background:var(--paper);padding:12px 0 12px;border-bottom:4px solid var(--ink);margin-bottom:18px}
-.extop .exh{margin-bottom:0}
-.exclock{font:800 2.4rem "JetBrains Mono",monospace;line-height:1;min-width:130px}
-.exclock.low{color:var(--red)}
-.exclock.crit{animation:crit .5s infinite alternate}
-@keyframes crit{to{transform:scale(1.08)}}
-.expos{font:700 .95rem "JetBrains Mono",monospace}
-.exbar{height:8px;background:var(--card);border:2px solid var(--ink);margin-top:10px;overflow:hidden}
-.exbar i{display:block;height:100%;background:var(--blue);transition:width .3s linear}
-.exbar.low i{background:var(--red)}
-.exdots{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
-.exdots button{width:30px;height:30px;border:2px solid var(--ink);background:var(--card);font:700 .75rem "JetBrains Mono",monospace;cursor:pointer;padding:0}
-.exdots button.ans{background:var(--ink);color:var(--paper)}
-.exdots button.cur{outline:3px solid var(--red);outline-offset:2px}
-.exq{position:relative;background:var(--card);border:3px solid var(--ink);box-shadow:8px 8px 0 var(--ink);padding:22px 26px 20px 38px;overflow:hidden}
-.exq:before{content:"";position:absolute;left:0;top:0;bottom:0;width:12px;background:var(--red)}
-.exq .pnum{position:absolute;right:16px;top:0;font-size:5rem;font-weight:800;color:transparent;-webkit-text-stroke:2px var(--red);line-height:1;pointer-events:none}
-.exq .pmeta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;padding-right:130px}
-.exq .body{font-size:1.1rem}
-.exq.inR{animation:pInR .35s cubic-bezier(.2,1.1,.4,1)}.exq.inL{animation:pInL .35s cubic-bezier(.2,1.1,.4,1)}
-.exq .body li.nochoice{cursor:default}
-.exq .body li.nochoice:hover{background:none;border-color:transparent}
-.exnav{display:flex;gap:10px;margin-top:20px;align-items:center;flex-wrap:wrap}
-.exnav .hint{font-size:.78rem;color:var(--mut);margin-left:auto}
-.exscore{display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap;border:3px solid var(--ink);background:var(--card);box-shadow:8px 8px 0 var(--ink);padding:18px 22px;margin-bottom:18px;position:relative;overflow:hidden}
-.exscore:after{content:"";position:absolute;right:-60px;bottom:-90px;width:220px;height:220px;border-radius:50%;background:var(--blue);opacity:.9}
-.exscore .big{font:800 4.6rem "Anuphan",sans-serif;line-height:.9;color:var(--red);position:relative;z-index:1}
-.exscore .big small{font-size:1.7rem;color:var(--ink)}
-.exscore .st{font-size:.92rem;line-height:1.75;position:relative;z-index:1}
-.exscore .tu{display:inline-block;background:var(--red);color:#fff;font-weight:800;padding:2px 10px;margin-bottom:4px}
-.exrhead,.exrh{display:grid;grid-template-columns:40px 82px 1fr 56px 56px 60px 34px;gap:8px;align-items:center}
-.exrhead{padding:4px 12px;font-size:.72rem;font-weight:800;color:var(--mut)}
-.exrow{border:3px solid var(--ink);background:var(--card);margin-bottom:8px}
-.exrh{padding:9px 12px;cursor:pointer;font-size:.88rem}
-.exrh .id{font:700 .8rem "JetBrains Mono",monospace}
-.exrh .snip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.exrh .v{font-weight:800;text-align:center}
-.exrh .t{font:600 .8rem "JetBrains Mono",monospace;text-align:center}
-.exrh .res{font-size:1.1rem;text-align:center}
-.exrow.ok{border-left:12px solid #2f8f4e}.exrow.bad{border-left:12px solid var(--red)}.exrow.na{border-left:12px solid #9a927f}
-.exrb{display:none;padding:4px 18px 16px;border-top:2px dashed #cfc5b0}
-.exrow.open .exrb{display:block}
-.exrb .body li{cursor:default}
-.exrb .body li.pick{background:var(--ink);color:var(--paper)}
-.exrb .body li.key{outline:3px solid #2f8f4e;outline-offset:-3px}
-.exrb .solbox{margin-top:10px}
-.exacts{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
-@media(max-width:700px){.exset{grid-template-columns:1fr}.exrhead,.exrh{grid-template-columns:30px 1fr 44px 44px 30px}.exrh .snip,.exrhead .snip,.exrh .t,.exrhead .t{display:none}.exclock{font-size:1.8rem;min-width:96px}.exq{padding:18px 16px 16px 26px}.exq .pnum{font-size:3.4rem}}
+/* ---------- simple timer: right-side panel ---------- */
+#tmtab{position:fixed;right:0;top:42%;z-index:45;writing-mode:vertical-rl;background:var(--blue);color:#fff;border:3px solid var(--ink);border-right:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:-4px 4px 0 var(--sh);cursor:pointer;display:block;transition:transform .2s}
+#tmtab:hover{transform:translateX(-4px)}
+#tmtab.run{background:var(--red);font-family:"JetBrains Mono",monospace}
+#tm{position:fixed;right:0;top:0;bottom:0;z-index:69;width:min(400px,94vw);background:var(--paper);border-left:4px solid var(--ink);box-shadow:-10px 0 0 var(--blue);transform:translateX(calc(100% + 20px));visibility:hidden;transition:transform .55s cubic-bezier(.34,1.35,.64,1),visibility 0s .55s;padding:14px 18px 24px;overflow:auto}
+body.tmopen #tm{transform:none;visibility:visible;transition:transform .55s cubic-bezier(.34,1.35,.64,1),visibility 0s}
+.tmseg{display:flex;border:3px solid var(--ink);margin-bottom:14px}
+.tmseg button{flex:1;border:0;border-right:3px solid var(--ink);background:var(--card);font:800 .95rem "Anuphan",sans-serif;padding:9px 4px;cursor:pointer}
+.tmseg button:last-child{border-right:0}
+.tmseg button.on{background:var(--ink);color:var(--paper)}
+.tmface{position:relative;border:4px solid var(--ink);background:var(--card);box-shadow:6px 6px 0 var(--sh);padding:26px 10px 20px;text-align:center;overflow:hidden}
+.tmface:before{content:"";position:absolute;right:-50px;top:-50px;width:130px;height:130px;border-radius:50%;background:var(--yel);opacity:.9}
+.tmdig{position:relative;font:800 4.4rem "JetBrains Mono",monospace;line-height:1;letter-spacing:-.02em}
+.tmbar{position:relative;height:10px;border:2px solid var(--ink);background:var(--paper);margin:18px 6px 0;overflow:hidden}
+.tmbar i{display:block;height:100%;background:var(--blue);transition:width .25s linear}
+.tmface.done{animation:tmflash .5s 6 alternate}
+.tmface.done .tmdig{color:var(--red)}
+@keyframes tmflash{to{background:var(--red);color:#fff}}
+.tmpre{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:16px}
+.tmpre button,.tmadj button{border:2px solid var(--ink);background:var(--card);font:800 .95rem "Anuphan",sans-serif;padding:8px 4px;cursor:pointer;box-shadow:3px 3px 0 var(--sh)}
+.tmpre button:active,.tmadj button:active,.tmctl button:active{transform:translate(3px,3px);box-shadow:none}
+.tmpre button.on{background:var(--ink);color:var(--paper)}
+.tmadj{display:flex;gap:6px;margin-top:8px}.tmadj button{flex:1}
+.tmctl{display:flex;gap:10px;margin-top:18px}
+.tmctl button{flex:1;border:3px solid var(--ink);font:800 1.15rem "Anuphan",sans-serif;padding:12px 6px;cursor:pointer;box-shadow:4px 4px 0 var(--sh);background:var(--card)}
+.tmctl .go{background:var(--red);color:#fff;flex:2}
+.tmctl .go.pause{background:var(--yel);color:#141414}
+.tmcd{display:block}.tm-up .tmcd{display:none}
 
 /* ---------- landing: recent tile + difficulty bar ---------- */
 .tile.recent{cursor:default}
 .recent .rl{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto}
-.recent .rl button{border:2px solid var(--ink);background:var(--card);color:var(--ink);font:700 .74rem "JetBrains Mono",monospace;padding:3px 8px;cursor:pointer;box-shadow:2px 2px 0 var(--ink)}
+.recent .rl button{border:2px solid var(--ink);background:var(--card);color:var(--ink);font:700 .74rem "JetBrains Mono",monospace;padding:3px 8px;cursor:pointer;box-shadow:2px 2px 0 var(--sh)}
 .recent .rl button:hover{background:var(--ink);color:var(--paper)}
 .recent .empty-r{font-size:.8rem;opacity:.7;margin-top:auto}
-.tile>*{flex-shrink:0}
-.tile:not(.w2):not(.big) .nm{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.tile .dbar{display:flex;gap:3px;height:7px;margin-top:15px}
-.tile .dbar i{position:relative;display:block;min-width:4px}
-.tile .dbar i:nth-child(1){background:color-mix(in srgb,currentColor 30%,transparent)}
-.tile .dbar i:nth-child(2){background:color-mix(in srgb,currentColor 62%,transparent)}
-.tile .dbar i:nth-child(3){background:currentColor}
-.tile .dbar b{position:absolute;bottom:100%;left:0;font:700 .62rem "JetBrains Mono",monospace;padding-bottom:1px;white-space:nowrap}
-.lkey{display:inline-flex;gap:3px;vertical-align:middle;margin:0 2px}
-.lkey i{display:inline-block;width:14px;height:7px;background:var(--ink)}
-.lkey i:nth-child(1){opacity:.3}.lkey i:nth-child(2){opacity:.62}
 .btn.on{background:var(--ink);color:var(--paper)}
 
-/* ---------- teaching (screen-share) mode: hide my review furniture ---------- */
-body.clean .revbar,body.clean .note,body.clean .chk,body.clean .soldis,body.clean #exportbtn{display:none!important}
-body.clean .solbtn.done,body.clean .solbtn.wrong{background:var(--card)}
-body.clean .solbtn.flag{border-style:solid}
-body.clean .flag .solbox:before{background:var(--blue)}
-
-/* ---------- night mode ---------- */
-body{transition:background .3s,color .3s}
-body.dark{--paper:#121212;--card:#1d1d1d;--ink:#ece6d8;--mut:#a09886;--blue:#3d5ce0;--red:#ef5237;color-scheme:dark}
-body.dark header{background:#050505;color:#ece6d8}
-body.dark #q,body.dark .hbtn{background:#050505;color:#ece6d8;border-left-color:#ece6d8}
-body.dark #q:focus,body.dark .hbtn:hover{background:#1c1c1c}
+/* ---------- night mode: ink-black surfaces, cream text, black offset shadows ---------- */
+body.dark{--paper:#18181b;--card:#232327;--ink:#e8e2d4;--mut:#9c958a;--sh:#050506;--blue:#3b57d6;--red:#e2492f;--yel:#e8ae06;color-scheme:dark}
+body.dark .board{background:#050506;border-color:#050506}
+body.dark .c-ink,body.dark .b-id,body.dark .sec-t,body.dark .pane-item.sel,body.dark .seg button.on,body.dark .tmseg button.on,body.dark .tdtabs button.on,body.dark .tmpre button.on,body.dark .cvout div.src,body.dark .iontbl th,body.dark .pdbrk th,body.dark .pdx,body.dark .x,body.dark .exprow button.pri,body.dark .pdmw{background:#050506;color:#e8e2d4}
+body.dark .k-ng{background:#050506;color:#e8e2d4;border-color:#e8e2d4}
+body.dark header{background:#050506;color:#e8e2d4}
+body.dark #q,body.dark .hbtn{background:#050506;color:#e8e2d4;border-left-color:#3a3a40}
+body.dark #q:focus,body.dark .hbtn:hover{background:#1c1c20}
 body.dark .hbtn.on{background:var(--yel);color:#141414}
-body.dark .c-yel,body.dark .k-nm,body.dark .k-ae,body.dark .k-pt,body.dark .k-md,body.dark .k-ln,body.dark .k-an,body.dark .chap-h.app b,body.dark #exportbtn,body.dark .deco2{color:#141414}
-body.dark .body li:hover,body.dark .pane-item:hover{background:#262626;border-color:#3a3a3a}
+body.dark .lsearch button{background:#050506}
+body.dark .c-yel,body.dark .k-nm,body.dark .k-ae,body.dark .k-pt,body.dark .k-md,body.dark .k-ln,body.dark .k-an,body.dark .chap-h.app b,body.dark #exportbtn,body.dark .tmctl .go.pause{color:#141414}
+body.dark .k-tm{background:#2c2c32}
+body.dark .body li:hover,body.dark .pane-item:hover{background:#2a2a30;border-color:#3a3a40}
+body.dark .body li.mk{background:var(--yel);color:#141414;border-color:var(--yel)}
 body.dark .note,body.dark .soldis,body.dark .ans-box{background:#3a3212;color:#f3ead0}
-body.dark code{background:#2a2a2a}
+body.dark code{background:#2c2c32}
 body.dark .solbtn.done,body.dark .chk{background:#1f3a26}
 body.dark .solbtn.wrong{background:#43201a}
 body.dark .revnote,body.dark .expbox textarea{background:var(--card);color:var(--ink)}
-body.dark .card .cnum{-webkit-text-stroke-color:#333}
-body.dark .foot,body.dark .revbar,body.dark .row-body,body.dark .exrb{border-color:#3a3a3a}
-body.dark .solbody hr{border-top-color:#3a3a3a}
-body.dark .pane-item{border-bottom-color:#2e2e2e}
+body.dark .card .cnum{-webkit-text-stroke-color:#34343a}
+body.dark .foot,body.dark .revbar,body.dark .row-body{border-color:#34343a}
+body.dark .solbody hr{border-top-color:#34343a}
+body.dark .pane-item{border-bottom-color:#2e2e34}
 body.dark .dbtn:hover,body.dark .solbtn:hover,body.dark .present-btn:hover,body.dark .pdkeys button:hover{color:#141414}
 body.dark .fig{background:#fff}
 body.dark .tile .cov{background:rgba(255,255,255,.14)}
 body.dark .modal,body.dark .expwrap{background:rgba(0,0,0,.8)}
-body.dark .lkey i{background:var(--ink)}
+body.dark .kin .k2{border-color:#2c2c32}body.dark .kin .k4{opacity:.25}
 </style></head><body>
 <div class="kin" aria-hidden="true"><i class="k1"></i><i class="k2"></i><i class="k3"></i><i class="k4"></i><i class="k5"></i></div>
 
@@ -867,7 +808,7 @@ body.dark .lkey i{background:var(--ink)}
     <button class="lbtn" id="lbg" title="เปิด/ปิดพื้นหลังเคลื่อนไหว">◐</button>
     <button class="lbtn" id="ldark" title="โหมดกลางคืน / กลางวัน">🌙</button></div>
   <div class="board" id="board"></div>
-  <div class="lfoot">แตะบล็อกเพื่อเข้าบทนั้น · แถบใต้แต่ละบท <span class="lkey"><i></i><i></i><i></i></span> = จำนวนข้อ ง่าย · ปานกลาง · ยาก</div>
+  <div class="lfoot">แตะบล็อกเพื่อเข้าบทนั้น · แถบใต้แต่ละบล็อก = สัดส่วนข้อที่มีวิธีทำ</div>
 </div></section>
 
 <!-- ================= APP ================= -->
@@ -877,9 +818,6 @@ body.dark .lkey i{background:var(--ink)}
    <button class="home" id="home" title="กลับไปเลือกบท">⌂ <span>เลือกบท</span></button>
    <span class="title"><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>คลังข้อสอบเคมี <small>Chem Question Bank</small></span>
    <input id="q" placeholder="ค้นหาข้อความ / สูตร / Q-id…  ( / )">
-   <button class="hbtn" id="ptbtn" title="ตารางธาตุ + คำนวณ Mw">⚛ ตารางธาตุ</button>
-   <button class="hbtn" id="tdbtn" title="เครื่องมือ: ค่าคงที่ · แปลงหน่วย · ไอออน">🧰</button>
-   <button class="hbtn" id="exhbtn" title="จับเวลาทำข้อสอบ">⏱</button>
    <button class="hbtn" id="random">🎲 สุ่ม</button>
    <button class="hbtn" id="ftoggle">ตัวกรอง ▾</button>
  </div>
@@ -900,7 +838,6 @@ body.dark .lkey i{background:var(--ink)}
    <button class="btn" id="exportbtn" style="display:none">📥 ผลตรวจ</button>
    <button class="btn" id="bgbtn" title="เปิด/ปิดพื้นหลังเคลื่อนไหว">◐</button>
    <button class="btn" id="darkbtn" title="โหมดกลางคืน">🌙</button>
-   <button class="btn" id="cleanbtn" title="โหมดสอน: ซ่อนเครื่องหมายตรวจ / หมายเหตุ ตอนแชร์จอ">👁 โหมดสอน</button>
    <span class="volbox"><button class="sfxbtn" id="sfxbtn">🔊</button><input type="range" class="vol" min="0" max="100" aria-label="ระดับเสียง"></span>
    <span id="count"></span>
  </div></div>
@@ -947,7 +884,15 @@ body.dark .lkey i{background:var(--ink)}
   <div class="tdtabs" id="tdtabs"><button data-t="k" class="on">ค่าคงที่</button><button data-t="cv">แปลงหน่วย</button><button data-t="io">ไอออน</button></div>
   <div class="tdpane on" id="td-k"></div><div class="tdpane" id="td-cv"></div><div class="tdpane" id="td-io"></div>
 </aside>
-<div id="ex"><div class="exw" id="exw"></div></div>
+<button id="tmtab" title="จับเวลา">จับเวลา</button>
+<aside id="tm" aria-label="จับเวลา">
+  <div class="pdh"><b>⏱ จับเวลา</b><button class="pdx" id="tmx" title="ปิด">✕</button></div>
+  <div class="tmseg" id="tmseg"><button data-m="down" class="on">นับถอยหลัง</button><button data-m="up">นับขึ้น</button></div>
+  <div class="tmface" id="tmface"><div class="tmdig" id="tmdig">05:00</div><div class="tmbar tmcd"><i id="tmbar"></i></div></div>
+  <div class="tmcd"><div class="tmpre" id="tmpre"></div><div class="tmadj"><button data-a="-60">− 1 นาที</button><button data-a="-10">− 10 วิ</button><button data-a="10">+ 10 วิ</button><button data-a="60">+ 1 นาที</button></div></div>
+  <div class="tmctl"><button class="go" id="tmgo">▶ เริ่ม</button><button id="tmreset">↺ รีเซ็ต</button></div>
+  <p class="tdnote">เปิดทิ้งไว้ข้างโจทย์ได้ ปิดแผงแล้วเวลายังเดินต่อ (ดูเวลาที่แถบขวา)</p>
+</aside>
 <div id="pdscrim"></div>
 <aside id="pd" aria-label="ตารางธาตุ">
   <div class="pdh"><b>ตารางธาตุ</b><span class="pdq" id="pdq"></span><span class="pdhov" id="pdhov"></span><button class="pdx" id="pdx" title="ปิด (Esc)">✕</button></div>
@@ -1054,10 +999,6 @@ function setDark(on){document.body.classList.toggle("dark",on);ls.set("cqb_dark"
   $("#ldark").textContent=on?"☀":"🌙";$("#darkbtn").textContent=on?"☀":"🌙";}
 setDark(ls.get("cqb_dark","0")==="1");
 $("#ldark").onclick=$("#darkbtn").onclick=()=>{setDark(!document.body.classList.contains("dark"));SFX.play("toggle");};
-function setClean(on){document.body.classList.toggle("clean",on);ls.set("cqb_clean",on?"1":"0");$("#cleanbtn").classList.toggle("on",on);}
-setClean(ls.get("cqb_clean","0")==="1");
-$("#cleanbtn").onclick=()=>{setClean(!document.body.classList.contains("clean"));SFX.play("toggle");
-  if(document.body.classList.contains("inapp"))render();if($("#modal").classList.contains("show"))fillModal();};
 
 /* ---------- recently viewed questions (landing tile) ---------- */
 let RECENT=[];try{RECENT=JSON.parse(ls.get("cqb_recent","[]"))||[];}catch(e){RECENT=[];}
@@ -1148,7 +1089,7 @@ function revBar(q){
         placeholder="ผิดตรงไหน / คำตอบที่ถูกคืออะไร (ไม่ใส่ก็ได้)">${note}</textarea>
     </div>`;
 }
-function solLabel(q){if(document.body.classList.contains("clean"))return "ดูวิธีทำ →";const r=REV[q.id]||{};
+function solLabel(q){const r=REV[q.id]||{};
   return r.v==="ok" ? "✅ ดูวิธีทำ (ตรวจแล้ว)" : r.v==="bad" ? "❌ ดูวิธีทำ (ผิด / ต้องแก้)" : q.solFlag ? "⚠ ดูวิธีทำ (ไม่ฟันธง)" : "ดูวิธีทำ →";}
 /* Solution block — ALWAYS collapsed on render (attempt before seeing the working). */
 function solHtml(q){
@@ -1426,7 +1367,7 @@ document.addEventListener("keydown",e=>{
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&e.target.type!=="range";
   if(PD.isOpen()){if(e.key==="Escape")PD.close();return;}   // drawer open: keys stay inside it
   if(TD.isOpen()){if(e.key==="Escape")TD.close();return;}
-  if(EX.visible()){EX.key(e,typing);return;}
+  if(TM.isOpen()&&!typing){if(e.key==="Escape"){TM.close();return;}if(e.key===" "){e.preventDefault();TM.toggle();return;}}
   if($("#modal").classList.contains("show")){
     if(e.key==="Escape")closeModal();
     if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1);
@@ -1503,8 +1444,7 @@ const PD=(()=>{
     let prev;do{prev=nv;nv=nv.replace(/\(\)\d*|\[\]\d*/g,"");}while(nv!==prev);
     put(nv.replace(/^[·.*•]+|[·.*•]+$/g,""));return true;}
   // formulas in the question on screen -> one-tap chips + pulsing elements
-  function curQ(){if(EX.active())return EX.cur();
-    if($("#modal").classList.contains("show"))return filtered[mIdx];
+  function curQ(){if($("#modal").classList.contains("show"))return filtered[mIdx];
     if(!document.body.classList.contains("inapp"))return null;   // on the landing board there's no question on screen
     if(view==="poster")return filtered[pIdx];
     if(view==="pane"){const s=document.querySelector(".pane-item.sel");return s?filtered[+s.dataset.i]:null;}
@@ -1536,7 +1476,7 @@ const PD=(()=>{
   $("#pdtab").onclick=open;$("#pdx").onclick=close;$("#pdscrim").onclick=close;
   return{open,close,isOpen,parseF,load(v){open();put(v);}};
 })();
-$("#ptbtn").onclick=()=>PD.open();$("#mpt").onclick=()=>PD.open();
+$("#mpt").onclick=()=>PD.open();
 
 
 /* ================= TOOLS DRAWER: constants · unit converter · ions ================= */
@@ -1595,131 +1535,44 @@ const TD=(()=>{
   $("#tdtabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;SFX.play("click");
     $("#tdtabs").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
     document.querySelectorAll(".tdpane").forEach(p=>p.classList.toggle("on",p.id==="td-"+b.dataset.t));};
-  $("#tdtab").onclick=open;$("#tdbtn").onclick=open;$("#tdx").onclick=close;
+  $("#tdtab").onclick=open;$("#tdx").onclick=close;
   $("#pdscrim").onclick=()=>{PD.close();close();};
   return{open,close,isOpen};
 })();
 
-/* ================= TIMED PRACTICE ================= */
-const EX=(()=>{
-  const W=$("#exw"),box=$("#ex");
-  const LET={"ก":1,"ข":2,"ค":3,"ง":4,"จ":5,"A":1,"B":2,"C":3,"D":4,"E":5,"1":1,"2":2,"3":3,"4":4,"5":5};
-  const CHRE=/^\s*([ก-จA-E1-5])\)/;
-  const CHRE_HTML=/<li>\s*(?:<p>)?\s*([ก-จA-E1-5])\)/g;
-  const hasChoices=q=>((q.bodyHtml||"").match(CHRE_HTML)||[]).length>=2;
-  const keyOf=q=>{const t=(keyTxt(q)||q.solAnswer||"").replace(/<[^>]+>/g,"").replace(/[*_⚠️\s]/g," ").trim();
-    const m=t.match(/^([ก-จA-E1-5])(\)|\s|$)/);return m?{i:LET[m[1]],l:m[1]}:null;};
-  const strip=h=>(h||"").replace(/<[^>]+>/g,"").replace(/\s+/g," ").trim();
-  const mmss=s=>{s=Math.max(0,Math.round(s));return`${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;};
-  let cfg={ch:"",diff:"",n:10,per:1.5,only:true};try{Object.assign(cfg,JSON.parse(ls.get("cqb_ex","{}")));}catch(e){}
-  let st=null,timer=null,mode="off";
-  const saveCfg=()=>ls.set("cqb_ex",JSON.stringify(cfg));
-  function pool(){return DATA.questions.filter(q=>{
-    if(cfg.ch==="bio"){if(q.subject!=="bio")return false;}
-    else{if(q.subject==="bio"||q.subject==="applied")return false;if(cfg.ch&&q.ch!==cfg.ch)return false;}
-    if(cfg.diff&&q.diff!==cfg.diff)return false;
-    if(!hasChoices(q))return false;
-    if(cfg.only&&!keyOf(q))return false;return true;});}
-  function show(){box.classList.add("show");document.body.classList.add("exopen");box.scrollTop=0;}
-  function hide(){box.classList.remove("show");document.body.classList.remove("exopen");clearInterval(timer);st=null;mode="off";}
-  /* ---- setup ---- */
-  function setup(){mode="setup";clearInterval(timer);st=null;
-    const segs=(k,opts)=>`<div class="exseg" data-k="${k}">${opts.map(([v,l])=>`<button data-v="${v}" class="${String(cfg[k])===String(v)?"on":""}">${l}</button>`).join("")}</div>`;
-    let chOpts=`<option value="">ทุกบท (เคมี)</option>`+CHS.map(([k,n])=>DATA.counts[k]?`<option value="${k}"${cfg.ch===k?" selected":""}>${parseInt(k)}. ${n}</option>`:"").join("");
-    if(DATA.biocount)chOpts+=`<option value="bio"${cfg.ch==="bio"?" selected":""}>ชีววิทยา</option>`;
-    W.innerHTML=`<div class="exh"><h2><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>⏱ จับเวลาทำข้อสอบ</h2><span class="sp"></span><button class="exbtn ink" id="exclose">✕ ปิด</button></div>
-      <div class="exset">
-        <div class="exf"><label>บท</label><select id="exch">${chOpts}</select></div>
-        <div class="exf"><label>ระดับ</label>${segs("diff",[["","ทั้งหมด"],["easy","ง่าย"],["medium","กลาง"],["hard","ยาก"]])}</div>
-        <div class="exf"><label>จำนวนข้อ</label>${segs("n",[[5,"5"],[10,"10"],[20,"20"],[30,"30"]])}</div>
-        <div class="exf"><label>เวลาต่อข้อ</label>${segs("per",[[1,"1 นาที"],[1.5,"1.5"],[2,"2"],[3,"3"]])}</div>
-        <div class="exf" style="grid-column:1/-1"><label class="exchk"><input type="checkbox" id="exonly"${cfg.only?" checked":""}> เฉพาะข้อที่มีเฉลย — ตรวจคะแนนให้ได้ทุกข้อ</label></div>
-        <div class="exsum" id="exsum"></div>
-      </div>`;
-    const sum=()=>{const n=pool().length,take=Math.min(cfg.n,n);
-      $("#exsum").innerHTML=n?`<div>ตรงเงื่อนไข <b>${n}</b> ข้อ<br>สุ่มมา ${take} ข้อ · เวลารวม <b>${mmss(take*cfg.per*60)}</b></div><button class="exbtn pri go" id="exgo">เริ่ม →</button>`
-        :`<div>ไม่มีข้อที่ตรงเงื่อนไข ลองเปลี่ยนบทหรือระดับ</div><button class="exbtn pri go" id="exgo" disabled>เริ่ม →</button>`;};
-    sum();
-    W.querySelectorAll(".exseg").forEach(sg=>sg.onclick=e=>{const b=e.target.closest("button");if(!b)return;const k=sg.dataset.k;
-      cfg[k]=k==="diff"?b.dataset.v:+b.dataset.v;sg.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));SFX.play("click");saveCfg();sum();});
-    $("#exch").onchange=()=>{cfg.ch=$("#exch").value;SFX.play("click");saveCfg();sum();};
-    $("#exonly").onchange=()=>{cfg.only=$("#exonly").checked;SFX.play("toggle");saveCfg();sum();};
-    $("#exclose").onclick=()=>{SFX.play("close");hide();};
-    W.onclick=e=>{if(e.target.id==="exgo"&&!e.target.disabled)start();};}
-  /* ---- run ---- */
-  function start(qs){
-    if(!qs){const P=pool();for(let i=P.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[P[i],P[j]]=[P[j],P[i]];}qs=P.slice(0,cfg.n);}
-    if(!qs.length)return;W.onclick=null;
-    st={qs,ans:{},cur:0,dur:qs.length*cfg.per*60,t0:Date.now(),spent:qs.map(()=>0),mark:Date.now(),last:-1};mode="run";
-    W.innerHTML=`<div class="extop"><div class="exh"><span class="exclock" id="exclock"></span><span class="expos" id="expos"></span><span class="sp"></span>
-        <button class="exbtn" id="expt" title="ตารางธาตุ + Mw">⚛</button><button class="exbtn pri" id="exsubmit">ส่งคำตอบ</button><button class="exbtn ink" id="exquit" title="ออก">✕</button></div>
-        <div class="exbar" id="exbar"><i></i></div><div class="exdots" id="exdots">${qs.map((q,i)=>`<button data-i="${i}">${i+1}</button>`).join("")}</div></div>
-      <div id="exqwrap"></div>
-      <div class="exnav"><button class="exbtn" id="exprev">← ก่อนหน้า</button><button class="exbtn" id="exnext">ถัดไป →</button>
-        <span class="hint">← → เปลี่ยนข้อ · กด 1–5 เลือกตัวเลือก · Enter ข้อต่อไป</span></div>`;
-    $("#exdots").onclick=e=>{const b=e.target.closest("button");if(b)go(+b.dataset.i);};
-    $("#exprev").onclick=()=>go(st.cur-1);$("#exnext").onclick=()=>go(st.cur+1);
-    $("#expt").onclick=()=>PD.open();
-    $("#exsubmit").onclick=()=>{const left=st.qs.length-Object.keys(st.ans).length;
-      if(left&&!confirm(`ยังไม่ได้ตอบ ${left} ข้อ ส่งเลยไหม?`))return;finish(false);};
-    $("#exquit").onclick=quit;
-    $("#exqwrap").onclick=e=>{const li=e.target.closest(".body li[data-c]");if(!li)return;const q=st.qs[st.cur];
-      const on=!li.classList.contains("mk");$("#exqwrap").querySelectorAll("li.mk").forEach(x=>x.classList.remove("mk"));
-      if(on){li.classList.add("mk");st.ans[q.id]={c:+li.dataset.c,l:li.dataset.l};}else delete st.ans[q.id];
-      SFX.play(on?"mark":"unmark");dots();};
-    SFX.play("present");showQ(0,"");tick();timer=setInterval(tick,250);}
-  function logTime(){const now=Date.now();if(st.last>=0)st.spent[st.last]+=(now-st.mark)/1000;st.mark=now;}
-  function showQ(i,anim){logTime();st.cur=i;st.last=i;const q=st.qs[i];
-    $("#exqwrap").innerHTML=`<article class="exq ${anim}"><div class="pnum">${i+1}</div><div class="pmeta">${idBadge(q)}${chBadge(q)}${examBadge(q)}${diffBadge(q)}</div>
-      <div class="body">${q.bodyHtml}${figHtml(q)}</div></article>`;
-    $("#exqwrap").querySelectorAll(".body li").forEach(li=>{const m=li.textContent.match(CHRE);
-      if(m){li.dataset.c=LET[m[1]];li.dataset.l=m[1];const a=st.ans[q.id];if(a&&a.c===LET[m[1]])li.classList.add("mk");}else li.classList.add("nochoice");});
-    $("#expos").textContent=`ข้อ ${i+1} / ${st.qs.length}`;dots();window.scrollTo(0,0);box.scrollTop=0;}
-  function go(i){if(!st||i<0||i>=st.qs.length||i===st.cur)return;const d=i>st.cur?1:-1;SFX.play("swish",d);showQ(i,d>0?"inR":"inL");}
-  function dots(){$("#exdots").querySelectorAll("button").forEach((b,i)=>{b.classList.toggle("ans",!!st.ans[st.qs[i].id]);b.classList.toggle("cur",i===st.cur);});}
-  let lastBeep=-1;
-  function tick(){if(!st)return;const left=st.dur-(Date.now()-st.t0)/1000,c=$("#exclock");
-    c.textContent=mmss(left);c.classList.toggle("low",left<=60);c.classList.toggle("crit",left<=10);
-    $("#exbar").classList.toggle("low",left<=60);$("#exbar i").style.width=Math.max(0,left/st.dur*100)+"%";
-    const s=Math.ceil(left);if(left<=10&&left>0&&s!==lastBeep){lastBeep=s;SFX.play("tick");}
-    if(left<=0)finish(true);}
-  function quit(){if(!confirm("ออกจากการจับเวลา? คำตอบชุดนี้จะหายหมด"))return;SFX.play("close");hide();}
-  /* ---- results ---- */
-  function finish(timeUp){if(!st||mode!=="run")return;logTime();clearInterval(timer);mode="done";
-    const used=Math.min(st.dur,(Date.now()-st.t0)/1000);let ok=0,grad=0,answered=0;
-    const rows=st.qs.map((q,i)=>{const k=keyOf(q),a=st.ans[q.id];if(a)answered++;let cls="na",res="—";
-      if(k){grad++;if(a&&a.c===k.i){ok++;cls="ok";res="✓";}else{cls="bad";res=a?"✗":"–";}}
-      return`<div class="exrow ${cls}" data-i="${i}"><div class="exrh"><span class="id">${i+1}</span><span class="id">${q.id}</span><span class="snip">${strip(q.snippet)}</span>
-        <span class="v">${a?a.l:"—"}</span><span class="v">${k?k.l:"?"}</span><span class="t">${mmss(st.spent[i])}</span><span class="res">${res}</span></div><div class="exrb"></div></div>`;}).join("");
-    const pct=grad?Math.round(ok/grad*100):0;
-    W.innerHTML=`<div class="exh"><h2><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>ผลการทำข้อสอบ</h2><span class="sp"></span><button class="exbtn ink" id="exclose">✕ ปิด</button></div>
-      <div class="exscore"><div class="big">${ok}<small> / ${grad}</small></div><div class="st">${timeUp?`<span class="tu">⏰ หมดเวลา</span><br>`:""}
-        ถูก ${pct}% · ตอบ ${answered} จาก ${st.qs.length} ข้อ<br>ใช้เวลา ${mmss(used)} จาก ${mmss(st.dur)} · เฉลี่ยข้อละ ${mmss(used/st.qs.length)}
-        ${grad<st.qs.length?`<br><small>${st.qs.length-grad} ข้อไม่มีเฉลย จึงไม่นับคะแนน</small>`:""}</div></div>
-      <div class="exacts"><button class="exbtn pri" id="exagain">↻ ทำชุดเดิมอีกรอบ</button><button class="exbtn" id="exnew">🎲 สุ่มชุดใหม่</button><button class="exbtn" id="exset">⚙ ตั้งค่าใหม่</button></div>
-      <div class="exrhead"><span>#</span><span>ข้อ</span><span class="snip">โจทย์</span><span style="text-align:center">ตอบ</span><span style="text-align:center">เฉลย</span><span class="t" style="text-align:center">เวลา</span><span></span></div>
-      ${rows}<p class="tdnote">แตะแต่ละข้อเพื่อดูโจทย์ คำตอบของเรา (ทึบ) เฉลย (กรอบเขียว) และวิธีทำ</p>`;
-    const qs=st.qs,ans=st.ans;
-    W.querySelector("#exclose").onclick=()=>{SFX.play("close");hide();};
-    W.querySelector("#exagain").onclick=()=>start(qs);W.querySelector("#exnew").onclick=()=>start();W.querySelector("#exset").onclick=()=>{SFX.play("click");setup();};
-    W.querySelectorAll(".exrow").forEach(r=>r.querySelector(".exrh").onclick=()=>{const open=r.classList.toggle("open");SFX.play(open?"open":"close");
-      const rb=r.querySelector(".exrb");if(!open||rb.innerHTML)return;const q=qs[+r.dataset.i],k=keyOf(q),a=ans[q.id];
-      rb.innerHTML=`<div class="body">${q.bodyHtml}${figHtml(q)}</div>${hasSol(q)?`<div class="solbox">${q.solAnswer?`<div class="solans">ตอบ: ${q.solAnswer}</div>`:""}<div class="solbody">${q.solHtml||""}</div></div>`:`<p class="tdnote">ข้อนี้ยังไม่มีวิธีทำ</p>`}`;
-      rb.querySelectorAll(".body li").forEach(li=>{const m=li.textContent.match(CHRE);if(!m)return;const c=LET[m[1]];
-        if(a&&a.c===c)li.classList.add("pick");if(k&&k.i===c)li.classList.add("key");});});
-    SFX.play(timeUp?"bad":"ok");st=null;box.scrollTop=0;}
-  function open(){const pre=document.body.classList.contains("inapp")&&!["bio","applied"].includes($("#fsubj").value)?$("#fch").value:null;
-    if(pre!==null){cfg.ch=pre;}show();setup();SFX.play("open");}
-  function key(e,typing){
-    if(mode==="run"){if(typing)return;
-      if(e.key==="ArrowRight"||e.key==="Enter"){e.preventDefault();go(st.cur+1);}
-      else if(e.key==="ArrowLeft"){e.preventDefault();go(st.cur-1);}
-      else if(/^[1-5]$/.test(e.key)){const li=[...$("#exqwrap").querySelectorAll(".body li[data-c]")].find(x=>x.dataset.c===e.key);if(li)li.click();}
-      else if(e.key==="Escape")quit();return;}
-    if(e.key==="Escape"){SFX.play("close");hide();return;}
-    if(mode==="setup"&&e.key==="Enter"&&!typing){const g=$("#exgo");if(g&&!g.disabled)start();}}
-  $("#exhbtn").onclick=open;
-  return{open,key,visible:()=>box.classList.contains("show"),active:()=>mode==="run"&&!!st,cur:()=>st?st.qs[st.cur]:null};
+/* ================= SIMPLE TIMER (right panel) ================= */
+const TM=(()=>{
+  let mode="down",total=300,left=300,up=0,running=false,t0=0,base=0,iv=null,rang=false;
+  const fmt=x=>{x=Math.max(0,Math.round(x));const h=Math.floor(x/3600),m=Math.floor(x%3600/60),sec=x%60;
+    return(h?h+":"+String(m).padStart(2,"0"):String(m).padStart(2,"0"))+":"+String(sec).padStart(2,"0");};
+  const PRE=[1,3,5,10,15,30];
+  $("#tmpre").innerHTML=PRE.map(m=>`<button data-m="${m}">${m} นาที</button>`).join("");
+  function cur(){const el=running?(Date.now()-t0)/1000:0;return mode==="down"?Math.max(0,left-el):up+el;}
+  function draw(){const v=cur();$("#tmdig").textContent=fmt(mode==="down"?Math.ceil(v-1e-9):Math.floor(v));
+    $("#tmbar").style.width=(mode==="down"&&total?v/total*100:0)+"%";
+    $("#tmpre").querySelectorAll("button").forEach(b=>b.classList.toggle("on",mode==="down"&&+b.dataset.m*60===total));
+    const tab=$("#tmtab");tab.classList.toggle("run",running);tab.textContent=running?"⏱ "+$("#tmdig").textContent:"จับเวลา";
+    $("#tmgo").textContent=running?"⏸ พัก":"▶ เริ่ม";$("#tmgo").classList.toggle("pause",running);
+    if(running&&mode==="down"&&v<=0)ring();}
+  function ring(){running=false;clearInterval(iv);left=0;rang=true;$("#tmface").classList.remove("done");void $("#tmface").offsetWidth;$("#tmface").classList.add("done");
+    [0,380,760].forEach(d=>setTimeout(()=>SFX.play("ok"),d));draw();}
+  function start(){if(mode==="down"&&left<=0)left=total;rang=false;$("#tmface").classList.remove("done");
+    running=true;t0=Date.now();clearInterval(iv);iv=setInterval(draw,200);SFX.play("click");draw();}
+  function pause(){const el=(Date.now()-t0)/1000;if(mode==="down")left=Math.max(0,left-el);else up+=el;running=false;clearInterval(iv);SFX.play("click");draw();}
+  function reset(){running=false;clearInterval(iv);left=total;up=0;$("#tmface").classList.remove("done");SFX.play("unmark");draw();}
+  function setMode(m){if(running)pause();mode=m;document.getElementById("tm").classList.toggle("tm-up",m==="up");
+    $("#tmseg").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));SFX.play("toggle");draw();}
+  function setTotal(sec){if(running)return;total=Math.max(10,Math.min(5*3600,sec));left=total;$("#tmface").classList.remove("done");SFX.play("click");draw();}
+  const isOpen=()=>document.body.classList.contains("tmopen");
+  function open(){document.body.classList.add("tmopen");SFX.play("open");}
+  function close(){if(!isOpen())return;document.body.classList.remove("tmopen");SFX.play("close");}
+  $("#tmgo").onclick=()=>running?pause():start();$("#tmreset").onclick=reset;
+  $("#tmseg").onclick=e=>{const b=e.target.closest("button");if(b&&b.dataset.m!==mode)setMode(b.dataset.m);};
+  $("#tmpre").onclick=e=>{const b=e.target.closest("button");if(b)setTotal(+b.dataset.m*60);};
+  document.querySelector(".tmadj").onclick=e=>{const b=e.target.closest("button");if(b)setTotal(total+ +b.dataset.a);};
+  $("#tmtab").onclick=()=>isOpen()?close():open();$("#tmx").onclick=close;
+  draw();
+  return{open,close,isOpen,toggle:()=>running?pause():start()};
 })();
 
 /* ================= LANDING (grid board) ================= */
@@ -1735,17 +1588,12 @@ function buildBoard(){
   let i=1;
   h+=`<button class="tile c-ink" data-go="all" style="--i:${i++}"><span class="no">∀</span><span class="nm">ทุกบท</span><span class="ct">${Q.length} ข้อ · ทุกวิชา</span></button>`;
   h+=`<button class="tile c-yel" data-go="random" style="--i:${i++}"><span class="no">🎲</span><span class="nm">สุ่ม 1 ข้อ</span><span class="ct">จากทั้งคลัง</span></button>`;
-  h+=`<button class="tile c-blue" data-go="pt" style="--i:${i++}"><span class="no">⚛</span><span class="nm">ตารางธาตุ</span><span class="ct">+ คำนวณ Mw</span></button>`;
-  h+=`<button class="tile c-red" data-go="timer" style="--i:${i++}"><span class="no">⏱</span><span class="nm">จับเวลา</span><span class="ct">สุ่มชุดข้อสอบ · ตรวจคะแนน</span></button>`;
-  h+=`<button class="tile c-yel" data-go="tools" style="--i:${i++}"><span class="no">🧰</span><span class="nm">เครื่องมือ</span><span class="ct">ค่าคงที่ · แปลงหน่วย · ไอออน</span></button>`;
   CHS.forEach(([k,name],j)=>{
     const c=DATA.counts[k]||0;if(!c)return;
     const qs=chem.filter(q=>q.ch===k),cv=cov(qs);
-    const dc={easy:0,medium:0,hard:0};qs.forEach(q=>{if(q.diff in dc)dc[q.diff]++;});const ds=dc.easy+dc.medium+dc.hard;
-    const dbar=ds?`<span class="dbar" title="ง่าย ${dc.easy} · ปานกลาง ${dc.medium} · ยาก ${dc.hard}">${["easy","medium","hard"].map(d=>`<i style="flex:${dc[d]||.001}">${dc[d]/ds>=.13?`<b>${dc[d]}</b>`:""}</i>`).join("")}</span>`:"";
     h+=`<button class="tile ${PAL[j%PAL.length]} ${tileSize(c,max)}" data-go="ch" data-ch="${k}" style="--i:${i++}">
       <span class="no">${parseInt(k)}</span><span class="nm">${name}</span>
-      <span class="ct">${c} ข้อ${cv?` · วิธีทำ ${cv}%`:""}</span>${dbar}</button>`;
+      <span class="ct">${c} ข้อ${cv?` · วิธีทำ ${cv}%`:""}</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;
     if(j===4) h+=`<div class="tile deco1" style="--i:${i++}"></div>`;
     if(j===9) h+=`<div class="tile deco2" style="--i:${i++}"></div>`;
   });
@@ -1783,9 +1631,6 @@ function enterApp(x,y,fn){
 }
 $("#board").addEventListener("click",e=>{
   const t=e.target.closest("[data-go]");if(!t)return;
-  if(t.dataset.go==="pt"){PD.open();return;}   // periodic table opens over the landing, no app transition
-  if(t.dataset.go==="tools"){TD.open();return;}
-  if(t.dataset.go==="timer"){EX.open();return;}
   const r=t.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,g=t.dataset.go;
   SFX.play("tile");setTimeout(()=>SFX.play("whoosh"),70);
   enterApp(x,y,()=>{
