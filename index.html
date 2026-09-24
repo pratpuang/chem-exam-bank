@@ -803,7 +803,11 @@ function noteInput(e){
   else REV[qid]=Object.assign({}, REV[qid]||{}, {note:val});
   saveRev();
 }
-function markChoice(e){const li=e.target.closest(".body li");if(!li)return false;SFX.play(li.classList.toggle("mk")?"mark":"unmark");return true;}
+// one mark per question: marking a line clears any other mark in that question; tapping the marked one clears it
+function markChoice(e){const li=e.target.closest(".body li");if(!li)return false;
+  const on=!li.classList.contains("mk");
+  li.closest(".body").querySelectorAll("li.mk").forEach(x=>x.classList.remove("mk"));
+  if(on)li.classList.add("mk");SFX.play(on?"mark":"unmark");return true;}
 $("#root").addEventListener("click",e=>{
   if(solToggle(e)) return;
   if(e.target.closest("#pprev")){pstep(-1);return;}
