@@ -205,6 +205,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .poster{position:relative;z-index:2;background:var(--card);border:3px solid var(--ink);padding:26px 30px 22px 40px;overflow:hidden;min-height:420px}
 .poster:before{content:"";position:absolute;width:320px;height:320px;border-radius:50%;background:var(--blue);right:-150px;bottom:-170px;opacity:.95;z-index:0}
 .poster:after{content:"";position:absolute;left:0;top:0;width:14px;height:100%;background:var(--red);z-index:0}
+.poster.lv-medium:after{background:var(--yel)}.poster.lv-easy:after{background:var(--blue)}
 .poster>*{position:relative;z-index:1}
 .poster .pnum{position:absolute;right:20px;top:4px;font-size:7rem;font-weight:800;line-height:1;color:transparent;-webkit-text-stroke:3px var(--red);z-index:0;pointer-events:none;font-family:"Anuphan"}
 .poster .pnum.l4{font-size:4.8rem;top:10px}
@@ -256,6 +257,8 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .modal.show{display:flex}
 .sheet{background:var(--card);border:4px solid var(--ink);box-shadow:12px 12px 0 var(--red);max-width:960px;width:100%;max-height:92vh;overflow:auto;padding:30px 34px 26px 44px;position:relative;animation:pIn .4s cubic-bezier(.2,1.2,.4,1)}
 .sheet:before{content:"";position:absolute;left:0;top:0;bottom:0;width:16px;background:var(--red)}
+.sheet.lv-medium{box-shadow:12px 12px 0 var(--yel)}.sheet.lv-medium:before{background:var(--yel)}
+.sheet.lv-easy{box-shadow:12px 12px 0 var(--blue)}.sheet.lv-easy:before{background:var(--blue)}
 .sheet .mtop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding-right:50px}
 .sheet .body{font-size:1.38rem;line-height:1.85}
 .sheet .body li{padding:9px 14px;font-size:1.02em}
@@ -642,8 +645,9 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,on=ls.get("cqb_sfx","1")!=="0
     close:()=>tone(vary(640),.12,{vol:.11,slide:.48,slideT:.06,attack:.001,wet:.1}),
     ok:()=>{mallet(523,{vol:.08});bell(1046.5,1,{vol:.085,delay:.02});bell(1568,1.25,{vol:.075,delay:.11});},
     bad:()=>{tone(172,.34,{vol:.17,slide:.6,slideT:.22,lp:520,attack:.002,wet:.22});tone(115,.3,{vol:.08,delay:.025,lp:400});},
-    mark:()=>{noise(.028,{freq:vary(4600,.1),q:3,vol:.09});tone(vary(2300),.022,{vol:.035,type:"triangle",attack:.001});noise(.07,{freq:6500,q:.6,vol:.025,delay:.012});},
-    unmark:()=>tone(vary(900),.06,{vol:.05,type:"triangle",slide:.75,attack:.001}),
+    mark:i=>{const f=[523.25,587.33,659.25,783.99,880][((i|0)%5+5)%5];
+      thock({f:vary(230),vol:.13});mallet(f,{vol:.13,delay:.01});bell(f*2,.45,{vol:.028,delay:.035,index:1.1,wet:.35});},
+    unmark:()=>{thock({f:vary(170),vol:.09});tone(vary(620),.11,{vol:.06,slide:.62,slideT:.09,attack:.002,wet:.12});},
     dice:()=>{[0,.075,.14,.195,.24,.275].forEach((t,i)=>{noise(.032,{freq:vary(1900,.3),q:6,vol:.15-i*.012,delay:t});tone(vary(720,.25),.045,{vol:.05,type:"triangle",delay:t,attack:.001});});
       [1046.5,1318.5,1568].forEach((f,i)=>bell(f,.7,{vol:.055,delay:.4+i*.075}));},
     present:()=>{mallet(392);mallet(587,{delay:.075,vol:.12});bell(1175,.7,{vol:.035,delay:.16});},
@@ -830,7 +834,7 @@ function render(){
   tex(R);
 }
 /* ---- POSTER (one question at a time, deck) ---- */
-function posterHtml(q,i,anim){return `<article class="poster ${anim||""}" data-i="${i}">
+function posterHtml(q,i,anim){return `<article class="poster lv-${q.diff} ${anim||""}" data-i="${i}">
    <div class="pnum${qnum(q)>999?" l4":""}">${qnum(q)}</div>
    <div class="phead">${q.groupLabel}</div>
    <div class="pmeta">${idBadge(q)}${examBadge(q)}${diffBadge(q)}${typeBadge(q)}</div>
@@ -921,7 +925,7 @@ function fillModal(){
   ans.innerHTML=keyTxt(q)?`<b>เฉลยทางการ:</b> ${keyTxt(q)}`:q.solAnswer?`<b>ตอบ:</b> ${q.solAnswer}`:`ข้อนี้ไม่มีเฉลยทางการ และยังไม่มีวิธีทำ`;
   $("#msol").innerHTML=solHtml(q);tex($("#msol"));
   $("#mpos").textContent=`${mIdx+1} / ${filtered.length}`;
-  const sh=$("#modal .sheet");sh.style.animation="none";void sh.offsetWidth;sh.style.animation="";
+  const sh=$("#modal .sheet");sh.classList.remove("lv-easy","lv-medium","lv-hard");if(q.diff)sh.classList.add("lv-"+q.diff);sh.style.animation="none";void sh.offsetWidth;sh.style.animation="";
 }
 function step(d){mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal();SFX.play("swish",d);}
 
@@ -984,7 +988,7 @@ function noteInput(e){
 function markChoice(e){const li=e.target.closest(".body li");if(!li)return false;
   const on=!li.classList.contains("mk");
   li.closest(".body").querySelectorAll("li.mk").forEach(x=>x.classList.remove("mk"));
-  if(on)li.classList.add("mk");SFX.play(on?"mark":"unmark");return true;}
+  if(on)li.classList.add("mk");SFX.play(on?"mark":"unmark",[...li.parentElement.children].indexOf(li));return true;}
 $("#root").addEventListener("click",e=>{
   if(solToggle(e)) return;
   if(e.target.closest("#pprev")){pstep(-1);return;}
