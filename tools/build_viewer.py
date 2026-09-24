@@ -640,7 +640,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .sheet .mtop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding-right:50px}
 .sheet .body{font-size:1.38rem;line-height:1.85}
 /* save-as-image: an off-screen copy of the sheet (badges + question + choices), fixed width so every PNG matches */
-.shotwrap{position:fixed;left:0;top:0;box-sizing:border-box;z-index:-1;pointer-events:none;width:1100px;padding:28px 46px 46px 28px;background:var(--paper)}
+.shotwrap{position:fixed;left:0;top:0;box-sizing:border-box;opacity:0;z-index:-1;pointer-events:none;width:1100px;padding:28px 46px 46px 28px;background:var(--paper)}
 .shotsd{position:absolute}
 .sheet.shot{box-shadow:none;max-height:none;overflow:visible;animation:none!important;max-width:none;width:100%;padding:34px 40px 30px 54px}
 .sheet.shot .body{font-size:1.38rem}.sheet.shot .body img{max-width:100%;height:auto}.sheet.shot .mtop{padding-right:0}
@@ -1334,6 +1334,7 @@ function fillModal(){
   $("#msol").innerHTML=solHtml(q);tex($("#msol"));
   $("#mpos").textContent=`${mIdx+1} / ${filtered.length}`;
   const sh=$("#modal .sheet");sh.classList.remove("lv-easy","lv-medium","lv-hard");if(q.diff)sh.classList.add("lv-"+q.diff);sh.style.animation="none";void sh.offsetWidth;sh.style.animation="";
+  if(window.prepShot)prepShot(450);
 }
 function step(d){mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal();SFX.play("swish",d);}
 
@@ -1381,7 +1382,7 @@ $("#root").addEventListener("input",e=>{
   if(e.target.id==="pscrub"){pIdx=(+e.target.value)-1;fillPoster("");SFX.play("tick");return;}
 });
 $("#msol").addEventListener("click",solToggle);
-$("#mbody").addEventListener("click",markChoice);
+$("#mbody").addEventListener("click",e=>{if(markChoice(e)&&window.prepShot)prepShot(250);});
 
 $("#mx").onclick=closeModal;
 $("#modal").onclick=e=>{if(e.target.id==="modal")closeModal();};
@@ -1517,30 +1518,49 @@ let h2cP=null;
 function loadH2C(){return h2cP||(h2cP=new Promise((res,rej)=>{const sc=document.createElement("script");
   sc.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
   sc.onload=()=>res(window.html2canvas);sc.onerror=()=>{h2cP=null;rej(new Error("cdn"));};document.head.appendChild(sc);}));}
-async function saveShot(){const q=filtered[mIdx],b=$("#mshot");if(!q||b.disabled)return;
-  const lbl=b.textContent;b.disabled=true;b.textContent="กำลังสร้างรูป…";
-  try{const h2c=await loadH2C();
-    const wrap=document.createElement("div");wrap.className="shotwrap";
-    const sh=document.createElement("div");sh.className=$("#modal .sheet").className+" shot";
-    ["#mtop","#mbody"].forEach(sel=>sh.appendChild($(sel).cloneNode(true)));
-    sh.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));
-    const sd=document.createElement("div");sd.className="shotsd";wrap.appendChild(sd);
-    wrap.appendChild(sh);document.body.appendChild(wrap);
+function shotKey(){const q=filtered[mIdx];if(!q)return"";
+  return q.id+"|"+document.body.className+"|"+$("#mtop").innerHTML+"|"+$("#mbody").innerHTML;}
+async function renderShot(){const q=filtered[mIdx];const h2c=await loadH2C();
+  const wrap=document.createElement("div");wrap.className="shotwrap";
+  const sh=document.createElement("div");sh.className=$("#modal .sheet").className+" shot";
+  ["#mtop","#mbody"].forEach(sel=>sh.appendChild($(sel).cloneNode(true)));
+  sh.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));
+  const sd=document.createElement("div");sd.className="shotsd";wrap.appendChild(sd);
+  wrap.appendChild(sh);document.body.appendChild(wrap);
+  try{
     // html2canvas can't draw box-shadow, so the difficulty-coloured offset block is a real div behind the sheet
     sd.style.cssText=`left:${sh.offsetLeft+12}px;top:${sh.offsetTop+12}px;width:${sh.offsetWidth}px;height:${sh.offsetHeight}px;background:${q.diff==="easy"?"var(--blue)":q.diff==="medium"?"var(--yel)":"var(--red)"}`;
     if(document.fonts&&document.fonts.ready)await document.fonts.ready;
     // any figure in the question goes into the PNG too: wait until every image has loaded
     await Promise.all([...sh.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r;})));
-    const cv=await h2c(wrap,{scale:2,backgroundColor:getComputedStyle(wrap).backgroundColor,useCORS:true,logging:false});
-    const blob=await new Promise(r=>cv.toBlob(r,"image/png"));if(!blob)throw new Error("blob");
-    const name=`${q.id}.png`,file=new File([blob],name,{type:"image/png"});
-    if(matchMedia("(pointer:coarse)").matches&&navigator.canShare&&navigator.canShare({files:[file]})){
-      try{await navigator.share({files:[file]});}catch(e){}}
-    else{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
-      setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);}
-    SFX.play("ok");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1400);
-  }catch(e){b.textContent=lbl;alert("บันทึกรูปไม่ได้ — ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างรูป");}
-  finally{b.disabled=false;document.querySelectorAll(".shotwrap").forEach(x=>x.remove());}}
+    const cv=await h2c(wrap,{scale:2,backgroundColor:getComputedStyle(wrap).backgroundColor,useCORS:true,logging:false,
+      // copy only the capture box, not the whole page (list view is ~45k elements)
+      ignoreElements:el=>document.body.contains(el)&&el!==document.body&&!wrap.contains(el)&&!el.contains(wrap),
+      onclone:doc=>{const c=doc.querySelector(".shotwrap");if(c)c.style.opacity="1";}});
+    const blob=await new Promise(r=>cv.toBlob(r,"image/png"));if(!blob)throw new Error("blob");return blob;
+  }finally{wrap.remove();}}
+/* the PNG is made in the background while you look at the question, so the button only hands it over */
+let shot={key:"",blob:null,job:null},shotT=0;
+function prepShot(delay){clearTimeout(shotT);shotT=setTimeout(()=>{
+  if(!$("#modal").classList.contains("show"))return;const k=shotKey();
+  if(shot.key===k&&(shot.blob||shot.job))return;
+  const job=renderShot();shot={key:k,blob:null,job};
+  job.then(b=>{if(shot.job===job)shot.blob=b;},()=>{if(shot.job===job)shot={key:"",blob:null,job:null};});},delay);}
+function deliverShot(blob,name){const file=new File([blob],name,{type:"image/png"});
+  const dl=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1500);};
+  if(matchMedia("(pointer:coarse)").matches&&navigator.canShare&&navigator.canShare({files:[file]}))
+    return navigator.share({files:[file]}).catch(e=>{if(e&&e.name!=="AbortError")dl();});
+  dl();}
+async function saveShot(){const q=filtered[mIdx],b=$("#mshot");if(!q||b.disabled)return;
+  const lbl="💾 บันทึกเป็นรูป",k=shotKey(),name=`${q.id}.png`;
+  if(shot.key===k&&shot.blob){deliverShot(shot.blob,name);SFX.play("ok");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1200);return;}
+  b.disabled=true;b.textContent="กำลังสร้างรูป…";
+  try{if(!(shot.key===k&&shot.job)){const job=renderShot();shot={key:k,blob:null,job};}
+    const blob=await shot.job;shot.blob=blob;deliverShot(blob,name);
+    SFX.play("ok");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1200);
+  }catch(e){shot={key:"",blob:null,job:null};b.textContent=lbl;alert("บันทึกรูปไม่ได้ — ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างรูป");}
+  finally{b.disabled=false;}}
 $("#mshot").onclick=saveShot;
 
 
