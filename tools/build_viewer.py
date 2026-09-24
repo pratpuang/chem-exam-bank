@@ -6,6 +6,7 @@ prefers-reduced-motion). Features: 4 switchable layouts (poster deck / cards / l
 present mode, random pick, full filters incl. subject/exam/solution status, collapsed solutions with
 in-browser ✓/✗ review marks exported for tools/apply_review.py. No AI-disclaimer banner (personal use)."""
 import re, json, markdown, os
+from formulas import FORMULAS
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "question-bank.md")
@@ -372,6 +373,7 @@ data = {
  "counts": present, "examcount": examcount,
  "chemcount": chemcount, "biocount": biocount, "appcount": appcount,
  "biocounts": biocounts, "appcounts": appcounts,
+ "formulas": FORMULAS,
 }
 
 HTML = r"""<!doctype html><html lang="th"><head><meta charset="utf-8">
@@ -762,6 +764,40 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 .iontbl tr.io:hover td{background:var(--yel);color:#141414}
 .iontbl .f{font:700 1rem "JetBrains Mono",monospace;white-space:nowrap}
 .tdnote{font-size:.78rem;color:var(--mut);margin-top:10px}
+/* สูตร: formula sheet by chapter; the chapter on screen floats to the top */
+.fxbar{position:sticky;top:-14px;z-index:3;background:var(--paper);padding:10px 0 12px;margin:-6px 0 4px;border-bottom:3px solid var(--ink)}
+.fxbar input{width:100%;font:700 1.02rem "Anuphan",sans-serif;border:3px solid var(--ink);padding:8px 12px;background:var(--card);color:var(--ink);outline:none;box-shadow:4px 4px 0 var(--sh)}
+.fxbar input:focus{border-color:var(--blue)}
+.fxchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.fxchips button{min-width:38px;height:34px;border:3px solid var(--ink);background:var(--card);color:var(--ink);font:800 .95rem "JetBrains Mono",monospace;cursor:pointer;border-bottom:6px solid var(--c)}
+.fxchips button:hover{background:var(--c);color:#141414}
+.fxchips button.cur{background:var(--ink);color:var(--paper)}
+.fxchips button.dim{opacity:.3}
+.fsec{margin:20px 0 6px;scroll-margin-top:118px}
+.fsh{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.fno{flex:none;width:54px;height:54px;display:grid;place-items:center;background:var(--c);border:3px solid var(--ink);font:800 1.6rem "JetBrains Mono",monospace;color:#141414;box-shadow:4px 4px 0 var(--sh)}
+.fsh b{font-size:1.18rem;display:block;line-height:1.3}
+.fcur{display:inline-block;background:var(--red);color:#fff;font-size:.72rem;font-weight:800;padding:2px 9px;margin-top:4px}
+.fct{margin-left:auto;font-size:.8rem;color:var(--mut);white-space:nowrap}
+.fsec.cur{padding:12px 12px 14px;border:3px solid var(--ink);box-shadow:8px 8px 0 var(--c);background:color-mix(in srgb,var(--c) 7%,var(--paper))}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.fc{border:3px solid var(--ink);background:var(--card);box-shadow:4px 4px 0 var(--sh);display:flex;flex-direction:column;min-width:0}
+.fc .fm{padding:12px;border-bottom:3px solid var(--ink);background:color-mix(in srgb,var(--c) 16%,var(--card));font:600 1rem "JetBrains Mono",monospace;overflow-x:auto;min-height:78px;display:flex;align-items:center;justify-content:center;text-align:center}
+.fc .fm{flex-direction:column;gap:6px}.fc .fl{max-width:100%}
+.fc .fm .katex-display{margin:0;overflow:visible;padding:0}.fc .fm .katex{font-size:1.18em}
+@media(max-width:520px){.fc .fm .katex{font-size:1.02em}}
+.fc .fn{font-weight:800;padding:9px 12px 2px;font-size:1rem}
+.fc .fn i{font-style:normal;font-size:.68rem;border:2px solid var(--ink);padding:0 6px;margin-left:8px;vertical-align:2px;background:var(--yel);color:#141414;white-space:nowrap}
+.fc .fk{padding:2px 12px 11px;font-size:.86rem;color:var(--mut);line-height:1.55}
+.fc.wide{grid-column:1/-1;border-left:10px solid var(--c)}
+.fc.wide .fn{padding-top:10px}
+.fc ul{margin:6px 0 11px;padding:0 14px 0 30px;line-height:1.7;font-size:.93rem}
+.fc li::marker{color:var(--c)}
+.ftw{overflow-x:auto;margin:6px 12px 8px}
+.ftbl{width:100%;border-collapse:collapse;font-size:.9rem}
+.ftbl th{background:var(--ink);color:var(--paper);text-align:left;padding:5px 10px;font-size:.8rem;white-space:nowrap}
+.ftbl td{border-bottom:2px solid var(--ink);padding:5px 10px}
+.fxnone{padding:40px 10px;text-align:center;color:var(--mut);font-weight:700}
 
 /* ---------- simple timer: right-side panel ---------- */
 #tmtab{position:fixed;left:0;top:calc(28% + 256px);z-index:45;writing-mode:vertical-rl;background:var(--blue);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:block;transition:transform .2s}
@@ -824,7 +860,7 @@ body.dark{--paper:#18181b;--card:#232327;--ink:#e8e2d4;--mut:#9c958a;--sh:#05050
 body.dark .board{background:#050506;border-color:#050506}
 body.dark .d1{background:repeating-linear-gradient(45deg,var(--yel) 0 18px,#050506 18px 36px)}
 body.dark .d3{background:linear-gradient(var(--yel),var(--yel)) center/40% 40% no-repeat,#050506}
-body.dark .c-ink,body.dark .b-id,body.dark .sec-t,body.dark .pane-item.sel,body.dark .seg button.on,body.dark .tmseg button.on,body.dark .tdtabs button.on,body.dark .tmpre button.on,body.dark .cvout div.src,body.dark .iontbl th,body.dark .pdbrk th,body.dark .pdx,body.dark .x,body.dark .exprow button.pri,body.dark .pdmw{background:#050506;color:#e8e2d4}
+body.dark .c-ink,body.dark .b-id,body.dark .sec-t,body.dark .pane-item.sel,body.dark .seg button.on,body.dark .tmseg button.on,body.dark .tdtabs button.on,body.dark .tmpre button.on,body.dark .cvout div.src,body.dark .iontbl th,body.dark .ftbl th,body.dark .fxchips button.cur,body.dark .pdbrk th,body.dark .pdx,body.dark .x,body.dark .exprow button.pri,body.dark .pdmw{background:#050506;color:#e8e2d4}
 body.dark .k-ng{background:#050506;color:#e8e2d4;border-color:#e8e2d4}
 body.dark header{background:#050506;color:#e8e2d4}
 body.dark #q,body.dark .hbtn{background:#050506;color:#e8e2d4;border-left-color:#3a3a40}
@@ -909,7 +945,7 @@ body.dark .kin .k2{border-color:#2c2c32}body.dark .kin .k4{opacity:.25}
     <button id="mreveal" class="reveal">เฉลย / หมายเหตุ</button>
     <button id="mprev">◀ ก่อนหน้า</button>
     <button id="mnext">ถัดไป ▶</button>
-    <button id="mpt" title="ตารางธาตุ">⚛</button>
+    <button id="mpt" title="ตารางธาตุ">เปิดตารางธาตุ</button>
     <span class="mpos" id="mpos"></span>
   </div>
   <div class="foot" id="mfoot" style="margin-top:14px"></div>
@@ -931,11 +967,11 @@ body.dark .kin .k2{border-color:#2c2c32}body.dark .kin .k4{opacity:.25}
 </div></div>
 
 <button id="pdtab" title="ตารางธาตุ + คำนวณ Mw">ตารางธาตุ</button>
-<button id="tdtab" title="ค่าคงที่ · แปลงหน่วย · ไอออน">เครื่องมือ</button>
+<button id="tdtab" title="ค่าคงที่ · แปลงหน่วย · ไอออน · สูตร">เครื่องมือ</button>
 <aside id="td" aria-label="เครื่องมือ">
-  <div class="pdh"><b>🧰 เครื่องมือ</b><span class="pdhov">ค่าคงที่ · แปลงหน่วย · ไอออน</span><button class="pdx" id="tdx" title="ปิด (Esc)">✕</button></div>
-  <div class="tdtabs" id="tdtabs"><button data-t="k" class="on">ค่าคงที่</button><button data-t="cv">แปลงหน่วย</button><button data-t="io">ไอออน</button></div>
-  <div class="tdpane on" id="td-k"></div><div class="tdpane" id="td-cv"></div><div class="tdpane" id="td-io"></div>
+  <div class="pdh"><b>🧰 เครื่องมือ</b><span class="pdhov">ค่าคงที่ · แปลงหน่วย · ไอออน · สูตร</span><button class="pdx" id="tdx" title="ปิด (Esc)">✕</button></div>
+  <div class="tdtabs" id="tdtabs"><button data-t="k" class="on">ค่าคงที่</button><button data-t="cv">แปลงหน่วย</button><button data-t="io">ไอออน</button><button data-t="fx" id="fxtabb">สูตร</button></div>
+  <div class="tdpane on" id="td-k"></div><div class="tdpane" id="td-cv"></div><div class="tdpane" id="td-io"></div><div class="tdpane" id="td-fx"></div>
 </aside>
 <button id="tmtab" title="จับเวลา">จับเวลา</button>
 <div id="tmmini" aria-label="นาฬิกาจับเวลา"><div class="tmmd" id="tmmd" title="เปิดแผงจับเวลา">05:00</div><div class="tmmb"><i id="tmmbar"></i></div>
@@ -1545,7 +1581,7 @@ const PD=(()=>{
     if(k=="bk")put(inp.value.slice(0,-1));else if(k=="clr")put("");else put(inp.value+k);});
   $("#pdq").addEventListener("click",e=>{const b=e.target.closest("button");if(b){put(b.dataset.f);SFX.play("click");}});
   $("#pdtab").onclick=open;$("#pdx").onclick=close;$("#pdscrim").onclick=close;
-  return{open,close,isOpen,parseF,load(v){open();if(!mwOn)setMw(true);put(v);}};
+  return{open,close,isOpen,parseF,curQ,load(v){open();if(!mwOn)setMw(true);put(v);}};
 })();
 $("#mpt").onclick=()=>PD.open();
 
@@ -1600,8 +1636,57 @@ const TD=(()=>{
     $("#cvx").addEventListener("input",cvCalc);$("#cvu").onchange=()=>{unit=$("#cvu").value;SFX.play("click");cvCalc();};
     $("#td-io").onclick=e=>{const r=e.target.closest("tr.io");if(!r)return;close();setTimeout(()=>PD.load(r.dataset.f),120);};
     cvRender();built=true;}
+  /* ----- สูตร ----- */
+  const FX=DATA.formulas,FXK=Object.keys(FX).sort(),FXC=["var(--red)","var(--blue)","var(--yel)"];
+  const fcol=k=>FXC[(parseInt(k)-1)%3];
+  const esc=t=>String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  const plain=t=>String(t).replace(/<[^>]+>/g,"").toLowerCase();
+  // the chemistry chapter on screen: the open question first, else the chapter filter
+  function curCh(){const q=PD.curQ();
+    if(q)return q.subject!=="bio"&&q.subject!=="applied"&&FX[q.ch]?q.ch:null;
+    if(!document.body.classList.contains("inapp"))return null;
+    const sj=$("#fsubj").value,c=$("#fch").value;return(sj===""||sj==="chem")&&FX[c]?c:null;}
+  function fcard(c){const x=c.x?`<i>เพิ่มเติม</i>`:"",srch=esc(plain([c.n,c.key,c.note,c.tex||"",(c.lines||[]).join(" "),(c.rows||[]).flat().join(" ")].join(" ")));
+    if(c.k==="f")return `<div class="fc" data-s="${srch}"><div class="fm">${c.tex.split(/\\qquad/).map(t=>`<div class="fl" data-tex="${esc(t.trim())}">${esc(t.trim())}</div>`).join("")}</div>
+      <div class="fn">${c.n}${x}</div>${c.key||c.note?`<div class="fk">${[c.key,c.note].filter(Boolean).join("<br>")}</div>`:""}</div>`;
+    if(c.k==="t")return `<div class="fc wide" data-s="${srch}"><div class="fn">${c.n}${x}</div><div class="ftw"><table class="ftbl">
+      <tr>${c.head.map(h=>`<th>${h}</th>`).join("")}</tr>${c.rows.map(r=>`<tr>${r.map(d=>`<td>${d}</td>`).join("")}</tr>`).join("")}</table></div>
+      ${c.note?`<div class="fk">${c.note}</div>`:""}</div>`;
+    return `<div class="fc wide" data-s="${srch}"><div class="fn">${c.n}${x}</div><ul>${c.lines.map(l=>`<li>${l}</li>`).join("")}</ul>
+      ${c.note?`<div class="fk">${c.note}</div>`:""}</div>`;}
+  function fxTex(){if(!window.katex)return;
+    document.querySelectorAll("#td-fx .fl[data-tex]:not(.done)").forEach(el=>{
+      try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false,strict:false});el.classList.add("done");}catch(e){}});}
+  const texWas=window.texReady;window.texReady=()=>{texWas&&texWas();fxTex();};
+  let fxFor;
+  function fxRender(){const cur=curCh();
+    $("#fxtabb").textContent=cur?`สูตร · บท ${+cur}`:"สูตร";
+    if(fxFor===cur&&$("#fxlist"))return;fxFor=cur;
+    const order=cur?[cur,...FXK.filter(k=>k!==cur)]:FXK;
+    $("#td-fx").innerHTML=`<div class="fxbar"><input id="fxq" placeholder="ค้นหาสูตร เช่น pH · แก๊ส · Ka · ครึ่งชีวิต" autocomplete="off" spellcheck="false">
+      <div class="fxchips" id="fxchips">${FXK.map(k=>`<button data-j="${k}" class="${k===cur?"cur":""}" style="--c:${fcol(k)}" title="${DATA.chapters[k]}">${+k}</button>`).join("")}</div></div>
+      <div id="fxlist">${order.map(k=>`<section class="fsec${k===cur?" cur":""}" id="fx-${k}" style="--c:${fcol(k)}">
+        <div class="fsh"><span class="fno">${+k}</span><div><b>${DATA.chapters[k]}</b>${k===cur?`<span class="fcur">บทที่กำลังดูอยู่</span>`:""}</div>
+        <span class="fct">${FX[k].length} รายการ</span></div><div class="fgrid">${FX[k].map(fcard).join("")}</div></section>`).join("")}</div>
+      <div class="fxnone" id="fxnone" style="display:none">ไม่พบสูตรที่ค้นหา</div>
+      <p class="tdnote">แท็ก <b>เพิ่มเติม</b> = เกินหลักสูตรแกน ใช้ในสอวน. / ข้อสอบที่ยากขึ้น · ถ้าโจทย์กำหนดค่าคงที่ให้ ใช้ค่าตามโจทย์</p>`;
+    fxTex();
+    $("#fxq").addEventListener("input",fxFilter);
+    $("#fxchips").onclick=e=>{const b=e.target.closest("button");if(!b)return;SFX.play("click");
+      const sec=$("#fx-"+b.dataset.j);if(sec&&sec.style.display!=="none")sec.scrollIntoView({behavior:"smooth",block:"start"});};}
+  function fxFilter(){const t=$("#fxq").value.trim().toLowerCase();let any=false;
+    document.querySelectorAll("#fxlist .fsec").forEach(sec=>{let n=0;
+      sec.querySelectorAll(".fc").forEach(c=>{const on=!t||c.dataset.s.includes(t);c.style.display=on?"":"none";if(on)n++;});
+      const on=n>0||(!!t&&plain(DATA.chapters[sec.id.slice(3)]).includes(t));
+      if(on&&!n)sec.querySelectorAll(".fc").forEach(c=>c.style.display="");
+      sec.style.display=on?"":"none";any=any||on;
+      const chip=$(`#fxchips [data-j="${sec.id.slice(3)}"]`);chip&&chip.classList.toggle("dim",!on);});
+    $("#fxnone").style.display=any?"none":"";}
+
   const isOpen=()=>document.body.classList.contains("tdopen");
-  function open(){if(PD.isOpen())PD.close();if(!built)build();document.body.classList.add("tdopen");SFX.play("open");}
+  function open(){if(PD.isOpen())PD.close();if(!built)build();
+    const was=fxFor;fxRender();if(was!==fxFor)$("#td").scrollTop=0;
+    document.body.classList.add("tdopen");SFX.play("open");}
   function close(){if(!isOpen())return;document.body.classList.remove("tdopen");SFX.play("close");}
   $("#tdtabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;SFX.play("click");
     $("#tdtabs").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
