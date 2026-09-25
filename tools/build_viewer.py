@@ -689,7 +689,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .mink{position:relative}
 .mink canvas{position:absolute;left:0;top:0;z-index:2;pointer-events:none}
 #inkhl,#bhl{mix-blend-mode:multiply}body.dark #inkhl,body.dark #bhl{mix-blend-mode:screen}
-#modal.inking #inkpen,#modal.inking #bpen{pointer-events:auto;touch-action:none;cursor:crosshair}
+#modal.inking #inkpen,#modal.inking #bpen{pointer-events:auto;touch-action:pan-x pan-y;cursor:crosshair}
 #modal.inking,#modal .x,.inkbar{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #modal button{touch-action:manipulation}
 .sheet .x{z-index:3}.mctrl,#modal .solbtn{position:relative;z-index:3}
@@ -1537,7 +1537,7 @@ const INK=(()=>{
     commit({[k]:list(s).concat([{t:c.t,c:c.c,p:c.p}])},{[k]:list(s)});}
   const end=e=>{if(!cur||e.pointerId!==cur.id)return;if(e.type==="pointerup"&&cur.p)add(pts(e));finish();};
   SF.forEach(s=>{const cv=s.cvP;
-    cv.addEventListener("pointerdown",e=>{if(!on||!e.isPrimary)return;e.preventDefault();
+    cv.addEventListener("pointerdown",e=>{if(!on||!e.isPrimary||e.pointerType==="touch")return;e.preventDefault();   // finger scrolls; Pencil + mouse write
       if(cur)finish();   // a stroke whose pointerup never arrived must not block the next one
       const sel=getSelection();if(sel&&sel.rangeCount)sel.removeAllRanges();
       try{cv.setPointerCapture(e.pointerId);}catch(_){}box=cv.getBoundingClientRect();
@@ -1547,8 +1547,10 @@ const INK=(()=>{
     ["pointerup","pointercancel","lostpointercapture"].forEach(ev=>cv.addEventListener(ev,end));
     // iPad: a quick second tap is a double-tap to Safari (select text / zoom / callout), and cancelling the pointer
     // events doesn't stop that; cancelling the touch does. Mouse/desktop: no double-click select or context menu.
+    // finger touches are left alone so they scroll; only the Pencil's (touchType "stylus") are cancelled
+    const pen=e=>!e.changedTouches||[...e.changedTouches].some(t=>t.touchType==="stylus");
     ["touchstart","touchmove","dblclick","selectstart","contextmenu","gesturestart"].forEach(ev=>
-      cv.addEventListener(ev,e=>{if(on)e.preventDefault();},{passive:false}));});
+      cv.addEventListener(ev,e=>{if(on&&(!ev.startsWith("touch")||pen(e)))e.preventDefault();},{passive:false}));});
   function setOn(v){on=v;modal.classList.toggle("inking",v);bar.classList.toggle("show",v);
     const b=$("#inkw");b.classList.toggle("on",v);b.setAttribute("aria-pressed",v);}
   // split is a view, not a tool: it stays on when write mode goes off (the board just stops taking ink)
