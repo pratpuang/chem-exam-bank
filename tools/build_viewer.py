@@ -364,6 +364,23 @@ for q in questions:
 print("solutions loaded:", solcount["have"], "| flagged:", solcount["flag"],
       "| unchecked:", solcount["unchecked"])
 
+# ---------- chem sub-topics (concepts/subtopics.json) ----------
+# {"chapters":{"7":{"topics":[{id,th}],"q":{"Q-NNNN":topicId}}}} -- chapter keys have no leading zero, so they
+# are re-keyed "07" to match CHAPTERS. Optional: no file -> no topics -> the stats slide + sub-topic filter hide.
+SUBTOP = os.path.join(ROOT, "concepts", "subtopics.json")
+subtopics = {}
+if os.path.isfile(SUBTOP):
+    qtopic = {}
+    for k, v in json.load(open(SUBTOP, encoding="utf-8")).get("chapters", {}).items():
+        ck = "%02d" % int(k)
+        subtopics[ck] = v["topics"]
+        ids = {t["id"] for t in v["topics"]}
+        qtopic.update({qid: (ck, t) for qid, t in v.get("q", {}).items() if t in ids})
+    for q in questions:
+        ck, t = qtopic.get(q["id"], ("", ""))
+        q["topic"] = t if q["subject"] not in ("bio", "applied") and ck == q["ch"] else ""
+    print("sub-topics:", sum(1 for q in questions if q["topic"]), "/", chemcount, "chem questions tagged")
+
 data = {
  "questions": questions, "chapters": CHAPTERS, "solcount": solcount,
  "bioChapters": BIO_CHAPTERS, "appTopics": APP_TOPICS,
@@ -373,7 +390,7 @@ data = {
  "counts": present, "examcount": examcount,
  "chemcount": chemcount, "biocount": biocount, "appcount": appcount,
  "biocounts": biocounts, "appcounts": appcounts,
- "formulas": FORMULAS,
+ "formulas": FORMULAS, "subtopics": subtopics,
 }
 
 HTML = r"""<!doctype html><html lang="th"><head><meta charset="utf-8">
@@ -441,7 +458,9 @@ body.nobg .kin{display:none}
 .lbtn{border:3px solid var(--ink);background:var(--card);font-weight:700;padding:8px 14px;box-shadow:4px 4px 0 var(--sh);transition:transform .1s,box-shadow .1s;font-size:.88rem}
 .lbtn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--sh)}
 .lbtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--sh)}
-.board{display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:150px;grid-auto-flow:row;gap:6px;background:var(--ink);border:6px solid var(--ink)}
+/* --cols is the column count packBoard reads: the computed grid-template-columns also lists the implicit tracks
+   explicitly placed tiles create, so after a 6-col layout it kept reporting 6 on a 4- or 2-col screen (no repack) */
+.board{--cols:6;display:grid;grid-template-columns:repeat(var(--cols),1fr);grid-auto-rows:150px;grid-auto-flow:row;gap:6px;background:var(--ink);border:6px solid var(--ink)}
 .tile{position:relative;border:0;padding:14px 16px;text-align:left;overflow:hidden;display:flex;flex-direction:column;gap:4px;background:var(--card);animation:tileIn .6s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--i,0)*45ms);transition:transform .25s}
 @keyframes tileIn{from{opacity:0;transform:scale(.6) rotate(-6deg)}to{opacity:1;transform:none}}
 button.tile:hover{transform:scale(.965)}
@@ -480,8 +499,8 @@ button.tile:hover:after{opacity:1;transform:none}
 .sec-t{grid-column:1/-1;background:var(--ink);color:var(--paper);font-weight:800;letter-spacing:.2em;font-size:.72rem;padding:6px 14px;display:flex;align-items:center;animation:none}
 .board .sec-t{grid-row:span 1;height:auto}
 .lfoot{margin-top:14px;font-size:.8rem;color:var(--mut)}
-@media(max-width:900px){.board{grid-template-columns:repeat(4,1fr)}}
-@media(max-width:560px){.board{grid-template-columns:repeat(2,1fr);grid-auto-rows:130px}.tile.w2,.hero{grid-column:span 2}.lhead h1{font-size:1.8rem}.tile.big .no{font-size:3.2rem}}
+@media(max-width:900px){.board{--cols:4}}
+@media(max-width:560px){.board{--cols:2;grid-auto-rows:130px}.tile.w2,.hero{grid-column:span 2}.lhead h1{font-size:1.8rem}.tile.big .no{font-size:3.2rem}}
 
 /* circle reveal between landing and app */
 #app{display:none}
@@ -955,6 +974,50 @@ body.tmopen #tm{transform:none;visibility:visible;transition:transform .55s cubi
 .recent .rl button:hover{background:var(--ink);color:var(--paper)}
 .btn.on{background:var(--ink);color:var(--paper)}
 
+/* ---------- landing: chapter stats slide (chem chapter tile: .tface = the normal tile, .tback = its stats) ----------
+   Slid left (or ‹📊) the tile is re-packed 2 columns wide and as many rows as its stats need, and turns over. */
+.tile.st{padding:0;touch-action:pan-y;-webkit-user-select:none;user-select:none}
+.tile.st.c-red{--c:var(--red)}.tile.st.c-yel{--c:var(--yel)}.tile.st.c-blue,.tile.st.c-card,.tile.st.c-ink{--c:var(--blue)}
+.tface{position:absolute;inset:0;border:0;background:none;color:inherit;font:inherit;text-align:left;padding:14px 16px;display:flex;flex-direction:column;gap:4px;cursor:pointer}
+.tile.st:not(.open):hover{transform:scale(.965)}
+.tstat{position:absolute;right:8px;top:8px;z-index:1;border:2px solid currentColor;background:transparent;color:inherit;font:800 .78rem "Anuphan",sans-serif;padding:2px 6px;line-height:1.25;opacity:.75;transition:opacity .15s,transform .15s}
+.tstat:hover,.tstat:focus-visible{opacity:1;transform:translateX(-3px)}
+.tback{display:none;position:absolute;left:0;right:0;top:0;min-height:100%;flex-direction:column}
+.tile.st.open{cursor:default;z-index:2}
+.tile.st.open .tback{display:flex}
+.tile.st.open .tface,.tile.st.open .tstat{visibility:hidden}
+.sth{display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px}
+.sth .sn{font-size:2.3rem;font-weight:800;line-height:.9}
+.sth .snm{flex:1;min-width:0;font-weight:800;font-size:.98rem;line-height:1.2}
+.sth .snm small{display:block;font-weight:600;font-size:.76rem;opacity:.8}
+.tbx{flex:none;width:34px;height:34px;border:2px solid currentColor;background:transparent;color:inherit;font-weight:800;font-size:1rem}
+.tbx:hover{background:var(--ink);color:var(--paper)}
+.sbody{flex:1;background:var(--card);color:var(--ink);border-top:3px solid #141414;padding:9px 12px 12px;display:flex;flex-direction:column;gap:7px}
+body.dark .sbody{border-top-color:#050506}
+.scap{font-size:.7rem;font-weight:800;letter-spacing:.08em;color:var(--mut)}
+.pchips{display:flex;flex-wrap:wrap;gap:4px}
+.pchip{border:2px solid var(--ink);background:var(--card);color:var(--ink);font:700 .76rem "Anuphan",sans-serif;padding:2px 8px;cursor:pointer}
+.pchip.on{background:var(--ink);color:var(--paper)}
+.pchip.on:before{content:"✓ "}
+body.dark .pchip.on{background:var(--yel);color:#141414;border-color:var(--yel)}
+.sbars{display:flex;flex-direction:column;gap:3px}
+.sbar{position:relative;display:flex;align-items:center;gap:8px;height:23px;border:0;background:color-mix(in srgb,var(--ink) 7%,transparent);color:var(--ink);padding:0 8px;font:600 .8rem "Anuphan",sans-serif;text-align:left;cursor:pointer;overflow:hidden}
+.sbar:before{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--w);background:color-mix(in srgb,var(--c) 40%,var(--card));border-left:4px solid var(--c);transform-origin:left;animation:sgrow .5s cubic-bezier(.2,.9,.3,1) both;animation-delay:calc(var(--k)*28ms)}
+.sbar .sl{position:relative;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbar b{position:relative;font:800 .8rem "JetBrains Mono",monospace}
+.sbar:hover:not(:disabled),.sbar:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.sbar:disabled{opacity:.38;cursor:default}.sbar:disabled:before{display:none}
+@keyframes sgrow{from{transform:scaleX(0)}}
+.sdiff{display:flex;height:24px;border:2px solid var(--ink)}
+.sdiff i{display:flex;align-items:center;justify-content:center;min-width:26px;overflow:hidden;font:800 .76rem "JetBrains Mono",monospace;font-style:normal}
+.sdiff i+i{border-left:2px solid var(--ink)}
+.sd-easy{background:var(--blue);color:#fff}.sd-medium{background:var(--yel);color:#141414}.sd-hard{background:var(--red);color:#fff}
+.sdw{margin-top:auto;display:flex;flex-direction:column;gap:4px}
+.sleg{display:flex;gap:12px;flex-wrap:wrap}
+.snone{font-size:.8rem;color:var(--mut);font-weight:600}
+body[data-subj=bio] .lfst{display:none}
+@media(prefers-reduced-motion:reduce){.sbar:before{animation:none}}
+
 /* ---------- night mode: ink-black surfaces, cream text, black offset shadows ---------- */
 body.dark{--paper:#18181b;--card:#232327;--ink:#e8e2d4;--mut:#9c958a;--sh:#050506;--blue:#3b57d6;--red:#e2492f;--yel:#e8ae06;color-scheme:dark}
 body.dark .board{background:#050506;border-color:#050506}
@@ -1016,6 +1079,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
  <div class="bar2"><div class="in">
    <select id="fsubj"></select>
    <select id="fch"></select>
+   <select id="ftopic" hidden></select>
    <select id="fexam"></select>
    <select id="fyear"></select>
    <select id="fdiff"></select>
@@ -1111,6 +1175,7 @@ const DIFF_TH={easy:"ง่าย",medium:"ปานกลาง",hard:"ยา�
 const $=s=>document.querySelector(s);
 // chapter keys "10".."14" are integer-like, so JS object order puts them BEFORE "01".."09" -- sort explicitly
 const CHS=Object.entries(DATA.chapters).sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
+const ST=DATA.subtopics||{};   // chem sub-topics per chapter ("07": [{id,th}]); empty -> stats slide + topic filter off
 const ls={get:(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:v;}catch(e){return d;}},set:(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}},del:k=>{try{localStorage.removeItem(k);}catch(e){}}};
 let view = ls.get("cqb_view","poster");
 if(!["poster","cards","list","pane"].includes(view)) view="poster";
@@ -1265,7 +1330,14 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=ls.get("cqb_sfx"
     reset:()=>{[0,.04,.075,.105].forEach((t,i)=>wood(vary(1400-i*150,.02),{vol:.05,delay:t}));thock({f:150,vol:.08,delay:.14});},   // ratchet back to zero
     ring:()=>[0,.38,.76].forEach(t=>{bell(1319,.6,{vol:.07,delay:t,index:1.2});bell(1047,.8,{vol:.07,delay:t+.14,index:1.2});}),   // kitchen-timer ding-dong x3
     saved:()=>{noise(.02,{freq:2000,q:1.2,vol:.1});thock({f:220,vol:.08});noise(.025,{freq:1600,q:1.2,vol:.08,delay:.07});thock({f:180,vol:.07,delay:.07});
-      bell(1319,.5,{vol:.035,delay:.16});bell(1976,.6,{vol:.03,delay:.22});}   // shutter, then a 5th
+      bell(1319,.5,{vol:.035,delay:.16});bell(1976,.6,{vol:.03,delay:.22});},   // shutter, then a 5th
+    // ---- chapter stats tile: a card turned over (flick + two wood knocks a 5th apart, up to open, down to close),
+    //      paper chips are soft pops, a topic bar is a mallet pitched by its rank ----
+    statOpen:()=>{noise(.12,{freq:vary(1100,.08),sweep:2.2,q:.9,vol:.07,attack:.02});wood(vary(523,.015),{vol:.085,delay:.1});
+      wood(vary(784,.015),{vol:.07,delay:.16});glass(vary(1568,.01),{vol:.03,delay:.22,dur:.35});},
+    statClose:()=>{noise(.11,{freq:vary(1900,.08),sweep:.5,q:.9,vol:.065,attack:.02});wood(vary(784,.015),{vol:.075,delay:.09});wood(vary(523,.015),{vol:.08,delay:.15});},
+    chip:on=>{thock({f:vary(on?220:170),vol:.07});on?pop(vary(587,.02),{vol:.075,rise:1.5,dur:.06}):tone(vary(587,.02),.08,{vol:.05,slide:.68,slideT:.06,lp:1500,attack:.002});},
+    bar:i=>{mallet(note(392,Math.max(0,7-(i|0))),{vol:.11});noise(.03,{freq:2200,q:1.2,vol:.04});}
   };
   let lastTick=0,lastPrev=0;
   return {play(k,a){if(!on||vol===0)return;const n=Date.now();
@@ -1387,13 +1459,17 @@ function solHtml(q){
 
 /* One predicate for everything. `skip` leaves one filter out, so each dropdown can count what it WOULD
    show with every other filter applied -- that's how the selects stay in sync with each other. */
-function fstate(){return{t:$("#q").value.trim().toLowerCase(),subj:$("#fsubj").value,ch:$("#fch").value,
-  ex:$("#fexam").value,yr:$("#fyear").value,df:$("#fdiff").value,tp:$("#ftype").value,sl:$("#fsol").value};}
+// sub-topics exist only under one chem chapter; a topic left over from another chapter is dropped here, once
+const topicList=f=>(f.subj===""||f.subj==="chem")&&ST[f.ch]?ST[f.ch].map(t=>[t.id,t.th]):[];
+function fstate(){const f={t:$("#q").value.trim().toLowerCase(),subj:$("#fsubj").value,ch:$("#fch").value,
+  ex:$("#fexam").value,yr:$("#fyear").value,df:$("#fdiff").value,tp:$("#ftype").value,sl:$("#fsol").value},st=$("#ftopic").value;
+  f.st=topicList(f).some(t=>t[0]===st)?st:"";return f;}
 const subjOf=x=>x.subject==="bio"?"bio":x.subject==="applied"?"applied":"chem";
 const chOf=(x,subj)=>subj==="bio"?(x.bio.split(".")[0]||"?"):subj==="applied"?x.app:x.ch;
 function qMatch(x,f,skip){
   if(skip!=="subj"&&f.subj&&subjOf(x)!==f.subj) return false;
   if(skip!=="ch"&&f.ch&&chOf(x,f.subj)!==f.ch) return false;
+  if(f.st&&!["st","ch","subj"].includes(skip)&&x.topic!==f.st) return false;   // a topic lives under one chapter: it never narrows the chapter/subject lists
   if(skip!=="ex"&&f.ex&&!f.ex.split("+").includes(x.exam)) return false;   // "samanya+alevel" = either
   if(skip!=="yr"&&f.yr&&x.year!==f.yr) return false;
   if(skip!=="df"&&f.df&&x.diff!==f.df) return false;
@@ -1412,7 +1488,9 @@ function chList(subj){
 const FACETS=[
   ["#fsubj","subj",f=>[["chem","เคมี"],["bio","ชีววิทยา"],["applied","เคมีประยุกต์"]],x=>subjOf(x),()=>"ทุกวิชา",true],
   ["#fch","ch",f=>chList(f.subj),(x,f)=>chOf(x,f.subj),f=>f.subj==="bio"||f.subj==="applied"?"ทุกหัวข้อ":"ทุกบท"],
-  ["#fexam","ex",f=>[["samanya+alevel","9 วิชาสามัญ + A-Level"],...Object.keys(DATA.examcount||{}).map(k=>[k,(DATA.exams[k]||{label:k}).label])],x=>x.exam,()=>"ทุกสนามสอบ"],
+  ["#ftopic","st",f=>topicList(f),x=>x.topic||"",()=>"ทุกหัวข้อย่อย"],
+  ["#fexam","ex",f=>{const L=[["samanya+alevel","9 วิชาสามัญ + A-Level"],...Object.keys(DATA.examcount||{}).map(k=>[k,(DATA.exams[k]||{label:k}).label])];
+    return f.ex&&!L.some(o=>o[0]===f.ex)?[[f.ex,f.ex.split("+").map(k=>(DATA.exams[k]||{label:k}).label).join(" + ")],...L]:L;},x=>x.exam,()=>"ทุกสนามสอบ"],   // + any paper mix picked on a stats tile
   ["#fyear","yr",f=>DATA.years.map(y=>[y,"ปี "+y]),x=>x.year,()=>"ทุกปี"],
   ["#fdiff","df",f=>["easy","medium","hard"].map(d=>[d,DIFF_TH[d]]),x=>x.diff,()=>"ทุกระดับ"],
   ["#ftype","tp",f=>DATA.types.map(t=>[t,t]),x=>x.type,()=>"ทุกชนิด"]];
@@ -1425,6 +1503,7 @@ function syncFacets(f){
     const pool=DATA.questions.filter(x=>qMatch(x,f,key)),cnt={};
     pool.forEach(x=>{const k=keyOf(x,f);cnt[k]=(cnt[k]||0)+1;});
     fill($(sel),all(f)+(countAll?` (${pool.length})`:""),list(f).map(([v,l])=>[v,l,v.split("+").reduce((a,k)=>a+(cnt[k]||0),0)]));}
+  $("#ftopic").hidden=!topicList(f).length;
   if(SC.have){const pool=DATA.questions.filter(x=>qMatch(x,f,"sl"));
     fill($("#fsol"),"วิธีทำ: ทั้งหมด",SOLOPTS.map(([v,l])=>[v,l,pool.filter(x=>qMatch(x,{...f,sl:v},null)).length]));}}
 function apply(keepPos){
@@ -1684,9 +1763,9 @@ $("#layout").querySelectorAll("button").forEach(b=>{
     $("#layout").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.v===view));render();};
 });
 ["input","change"].forEach(ev=>{$("#q").addEventListener(ev,()=>apply());
-  ["#fch","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).addEventListener(ev,()=>apply()));});
+  ["#fch","#ftopic","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).addEventListener(ev,()=>apply()));});
 $("#fsubj").addEventListener("change",()=>{populateChapters($("#fsubj").value);apply();});
-["#fsubj","#fch","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach((s,i)=>$(s).addEventListener("change",()=>SFX.play("filter",i)));
+["#fsubj","#fch","#fexam","#fyear","#fdiff","#ftype","#fsol","#ftopic"].forEach((s,i)=>$(s).addEventListener("change",()=>SFX.play("filter",i)));
 $("#random").onclick=()=>{if(!filtered.length)return;SFX.play("dice");const i=Math.floor(Math.random()*filtered.length);setTimeout(()=>openModal(i),380);};
 $("#ftoggle").onclick=()=>{SFX.play($("#hdr").classList.toggle("fopen")?"unfold":"fold");};
 
@@ -1745,7 +1824,8 @@ document.addEventListener("keydown",e=>{
     return;
   }
   if(typing){if(e.key==="Escape")e.target.blur();return;}
-  if(!document.body.classList.contains("inapp")){if(e.key==="/"){e.preventDefault();$("#lq").focus();}else if(e.key==="m"||e.key==="M")toggleSfx();return;}
+  if(!document.body.classList.contains("inapp")){if(e.key==="/"){e.preventDefault();$("#lq").focus();}else if(e.key==="m"||e.key==="M")toggleSfx();
+    else if(e.key==="Escape")statSet($("#board .tile.st.open"),false);return;}
   if(e.key==="/"){e.preventDefault();$("#q").focus();return;}
   if(e.key==="m"||e.key==="M"){toggleSfx();return;}
   if(view==="poster"){
@@ -2135,10 +2215,13 @@ function subjTiles(){
   let h=`<button class="tile c-ink" data-go="all" style="--i:${i++}"><span class="no">∀</span><span class="nm">${bio?"ทุกหัวข้อ":"ทุกบท"}</span><span class="ct">${pool.length} ข้อ · ${name}</span></button>`;
   h+=`<button class="tile c-yel" data-go="random" style="--i:${i++}"><span class="no">🎲</span><span class="nm">สุ่ม 1 ข้อ</span><span class="ct">จาก${name}ทั้งหมด</span></button>`;
   groups.forEach(([k,gname,c],j)=>{if(!c)return;
-    const cv=cov(pool.filter(q=>chOf(q,SUBJ)===k));
-    h+=`<button class="tile ${P[j%P.length]} ${tileSize(c,max)}" data-go="ch" data-ch="${k}" style="--i:${i++}">
-      <span class="no">${parseInt(k)}</span><span class="nm">${gname}</span>
-      <span class="ct">${c} ข้อ${cv?` · วิธีทำ ${cv}%`:""}</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;
+    const cv=cov(pool.filter(q=>chOf(q,SUBJ)===k)),cls=`tile ${P[j%P.length]} ${tileSize(c,max)}`,n=parseInt(k),ii=i++;
+    const face=`<span class="no">${n}</span><span class="nm">${gname}</span>
+      <span class="ct">${c} ข้อ${cv?` · วิธีทำ ${cv}%`:""}</span><span class="cov"><i style="width:${cv}%"></i></span>`;
+    // chem chapters with sub-topics: a wrapper (no nested buttons) holding the tile face, the ‹📊 opener and the stats face
+    h+=!bio&&ST[k]?`<div class="${cls} st" data-ch="${k}" style="--i:${ii}"><button class="tface" data-go="ch" data-ch="${k}">${face}</button>
+      <button class="tstat" title="สถิติบทนี้ (หรือปัดบล็อกไปทางซ้าย)" aria-label="สถิติบท ${n}" aria-expanded="false">‹📊</button><div class="tback" role="region" aria-label="สถิติบท ${n}"></div></div>`
+      :`<button class="${cls}" data-go="ch" data-ch="${k}" style="--i:${ii}">${face}</button>`;
   });
   if(!bio&&DATA.appcount){const qs=DATA.questions.filter(q=>q.subject==="applied"),cv=cov(qs);
     h+=`<button class="tile c-red" data-go="applied" style="--i:${i++}"><span class="no">✦</span><span class="nm">เคมีประยุกต์</span><span class="ct">${DATA.appcount} ข้อ</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;}
@@ -2193,14 +2276,15 @@ $("#board").addEventListener("keydown",e=>{if(!e.target.closest(".hero")||SUBJS.
 /* Place tiles in order (same rule as CSS sparse auto-placement) at explicit cells, then fill
    every cell left empty -- a wide tile that doesn't fit at a row end leaves one -- with a filler. */
 let boardCols=0;
+const boardN=()=>parseInt(getComputedStyle($("#board")).getPropertyValue("--cols"))||6;
 function packBoard(){
   const B=$("#board");B.querySelectorAll(".tile.deco").forEach(x=>x.remove());
-  const cols=getComputedStyle(B).gridTemplateColumns.split(" ").filter(Boolean).length;boardCols=cols;
+  const cols=boardN();boardCols=cols;
   const occ=[],used=(r,c)=>occ[r]&&occ[r][c];
   const fits=(r,c,w,h)=>{if(c+w>cols)return false;for(let y=r;y<r+h;y++)for(let x=c;x<c+w;x++)if(used(y,x))return false;return true;};
   let r=0,c=0;
-  [...B.children].forEach(el=>{const cl=el.classList,big=cl.contains("hero")||cl.contains("big");
-    const w=cl.contains("full")?cols:Math.min(cols,big||cl.contains("w2")?2:1),h=big||cl.contains("h2")?2:1;
+  [...B.children].forEach(el=>{const cl=el.classList,op=cl.contains("open"),big=cl.contains("hero")||cl.contains("big")||op;
+    const w=cl.contains("full")?cols:Math.min(cols,big||cl.contains("w2")?2:1),h=op?(+el.dataset.rows||2):big||cl.contains("h2")?2:1;   // an open stats tile: as many rows as its stats need
     let pr=r,pc=c;while(!fits(pr,pc,w,h)){if(++pc>=cols){pc=0;pr++;}}
     for(let y=pr;y<pr+h;y++){occ[y]=occ[y]||[];for(let x=pc;x<pc+w;x++)occ[y][x]=1;}
     el.style.gridRow=`${pr+1} / span ${h}`;el.style.gridColumn=`${pc+1} / span ${w}`;
@@ -2211,7 +2295,81 @@ function packBoard(){
   B.insertAdjacentHTML("beforeend",f);
 }
 window.addEventListener("resize",()=>{if(document.body.classList.contains("inapp"))return;
-  const n=getComputedStyle($("#board")).gridTemplateColumns.split(" ").filter(Boolean).length;if(n!==boardCols)packBoard();});
+  const n=boardN(),o=$("#board .tile.st.open");
+  if(n!==boardCols||(o&&statRows(o)!=o.dataset.rows))repack();});
+
+/* ---- chapter stats: slide a chem chapter tile left (or ‹📊) -> it re-packs 2 columns wide and turns over to
+   its sub-topic bars + difficulty split; slide right / ✕ / Esc turns it back. One open at a time; the paper
+   chips are one global choice, remembered. A bar opens the app on that chapter + sub-topic + those papers. ---- */
+const PAPERS=[["posn","สอวน."],["pat2","PAT2"],["alevel","A-Level"],["samanya","9 วิชาสามัญ"]];
+let PSEL=[];try{PSEL=JSON.parse(ls.get("cqb_papers","[]"));}catch(e){}
+PSEL=PAPERS.map(p=>p[0]).filter(k=>Array.isArray(PSEL)&&PSEL.includes(k));if(!PSEL.length)PSEL=PAPERS.map(p=>p[0]);
+const examSel=()=>PSEL.length===PAPERS.length?"":PSEL.join("+");   // every paper on = no exam filter at all
+const RM=matchMedia("(prefers-reduced-motion:reduce)");
+function statBody(ch){
+  const qs=DATA.questions.filter(q=>subjOf(q)==="chem"&&q.ch===ch&&PSEL.includes(q.exam)),cnt={},df={easy:0,medium:0,hard:0};
+  qs.forEach(q=>{cnt[q.topic]=(cnt[q.topic]||0)+1;if(q.diff in df)df[q.diff]++;});
+  const tops=ST[ch].map(t=>[t.id,t.th,cnt[t.id]||0]).sort((a,b)=>b[2]-a[2]),max=Math.max(1,tops[0][2]),n=parseInt(ch);
+  return `<div class="sth"><span class="sn">${n}</span><span class="snm">${DATA.chapters[ch]}<small>${qs.length} ข้อ${PSEL.length<PAPERS.length?" · "+PSEL.map(k=>PAPERS.find(p=>p[0]===k)[1]).join(" + "):""}</small></span>
+    <button class="tbx" title="กลับ (Esc)" aria-label="ปิดสถิติบท ${n}">✕</button></div>
+  <div class="sbody"><div class="pchips" role="group" aria-label="สนามสอบ">${PAPERS.map(([k,l])=>{const on=PSEL.includes(k);
+      return `<button class="pchip${on?" on":""}" data-p="${k}" aria-pressed="${on}">${l}</button>`;}).join("")}</div>
+    <div class="scap">หัวข้อย่อย · แตะเพื่อดูข้อ</div>
+    <div class="sbars">${tops.map(([id,th,c],k)=>`<button class="sbar" data-go="topic" data-ch="${ch}" data-t="${id}" data-k="${k}" style="--w:${c/max*100}%;--k:${k}"${c?"":" disabled"} title="${th} · ${c} ข้อ"><span class="sl">${th}</span><b>${c}</b></button>`).join("")}</div>
+    <div class="sdw"><div class="scap">ความยาก</div>${qs.length?`<div class="sdiff">${["easy","medium","hard"].filter(d=>df[d]).map(d=>`<i class="sd-${d}" style="flex:${df[d]}" title="${DIFF_TH[d]} ${df[d]} ข้อ">${df[d]}</i>`).join("")}</div>
+      <div class="sleg">${["easy","medium","hard"].map(d=>`<span class="diff-txt de-${d}">${DIFF_TH[d]}</span>`).join("")}</div>`:`<div class="snone">ไม่มีข้อจากสนามที่เลือกในบทนี้</div>`}</div></div>`;}
+// rows the open tile needs at its current width: the stats face's natural height over one grid row (+ gap)
+function statRows(t){const b=t.querySelector(".tback"),cs=getComputedStyle($("#board")),rh=parseFloat(cs.gridAutoRows)||150,g=parseFloat(cs.rowGap)||6;
+  b.style.minHeight="0";const h=b.offsetHeight;b.style.minHeight="";return Math.max(2,Math.ceil((h+g)/(rh+g)));}
+function repack(){packBoard();const o=$("#board .tile.st.open");if(o){const r=statRows(o);if(r!=o.dataset.rows){o.dataset.rows=r;packBoard();}}}
+let stBusy=false;
+/* open/close with a card turn: the face being left folds edge-on (phase 1), then the board re-packs and every
+   tile FLIP-slides from where it was; the turned tile unfolds from its old spot + size. WAAPI, because the
+   tiles' tileIn fill would override an inline transform. tx = where a drag left the tile. */
+function statSet(t,open,tx=0){
+  if(!t||stBusy||t.classList.contains("open")===open)return;
+  const B=$("#board"),prev=open?B.querySelector(".tile.st.open"):null,turn=[t,prev].filter(Boolean);stBusy=true;
+  SFX.play(open?"statOpen":"statClose");
+  const go=()=>{
+    const kids=[...B.children].filter(el=>!el.classList.contains("deco")),F=new Map(kids.map(el=>[el,el.getBoundingClientRect()]));
+    if(prev){prev.classList.remove("open");prev.querySelector(".tstat").setAttribute("aria-expanded","false");}
+    t.classList.toggle("open",open);t.querySelector(".tstat").setAttribute("aria-expanded",open);
+    if(open)t.querySelector(".tback").innerHTML=statBody(t.dataset.ch);
+    repack();B.querySelectorAll(".tile.deco").forEach(d=>d.style.animationDelay=".12s");
+    if(!RM.matches)kids.forEach(el=>{const a=F.get(el),b=el.getBoundingClientRect(),E={duration:440,easing:"cubic-bezier(.2,.9,.3,1)"};
+      if(turn.includes(el)){const dx=a.left+a.width/2-b.left-b.width/2,dy=a.top+a.height/2-b.top-b.height/2;
+        el.animate([{transform:`perspective(1200px) translate(${dx}px,${dy}px) scale(${a.width/b.width},${a.height/b.height}) rotateY(${el===t&&open?90:-90}deg)`},
+          {transform:"perspective(1200px)"}],E);}
+      else if(Math.abs(a.left-b.left)+Math.abs(a.top-b.top)>.5)el.animate([{transform:`translate(${a.left-b.left}px,${a.top-b.top}px)`},{transform:"none"}],E);});
+    const f=open?t.querySelector(".tbx"):t.querySelector(".tstat");if(open||t.contains(document.activeElement)||document.activeElement===document.body)f.focus({preventScroll:true});
+    setTimeout(()=>{stBusy=false;if(open){const r=t.getBoundingClientRect();if(r.bottom>innerHeight||r.top<0)t.scrollIntoView({block:"nearest",behavior:RM.matches?"auto":"smooth"});}},RM.matches?0:460);};
+  if(RM.matches)return go();
+  // phase 1: fold what's showing edge-on -- leftward for open (the slide's direction), rightward for close
+  const fold=turn.map(el=>el.animate([{transform:`perspective(1200px) translateX(${el===t?tx:0}px)`},
+      {transform:`perspective(1200px) translateX(${el===t?tx:0}px) rotateY(${el===t&&open?-90:90}deg)`}],{duration:150,easing:"ease-in",fill:"forwards"}));
+  Promise.all(fold.map(a=>a.finished)).then(()=>{go();fold.forEach(a=>a.cancel());},()=>{stBusy=false;});   // phase 2 is already running when the fold lets go
+}
+function chipToggle(b){const k=b.dataset.p,on=PSEL.includes(k),t=b.closest(".tile");
+  if(on&&PSEL.length===1){SFX.play("bad");return;}   // never zero papers: the last one stays on
+  PSEL=PAPERS.map(p=>p[0]).filter(x=>x===k?!on:PSEL.includes(x));ls.set("cqb_papers",JSON.stringify(PSEL));SFX.play("chip",!on);
+  t.querySelector(".tback").innerHTML=statBody(t.dataset.ch);t.querySelector(`.pchip[data-p="${k}"]`).focus({preventScroll:true});}
+// slide: a clearly horizontal drag (>10px, more x than y) is taken over, a vertical one scrolls the page as usual
+// (touch-action:pan-y); released 30px+ the right way it turns the tile. The click a mouse drag ends with is eaten.
+let sdrag=null,sEat=0;
+$("#board").addEventListener("pointerdown",e=>{const t=e.target.closest(".tile.st");if(!t||e.button>0||stBusy)return;
+  sdrag={x:e.clientX,y:e.clientY,id:e.pointerId,t,on:false,dx:0};});
+$("#board").addEventListener("pointermove",e=>{const d=sdrag;if(!d||e.pointerId!==d.id)return;const dx=e.clientX-d.x,dy=e.clientY-d.y;
+  if(!d.on){if(Math.abs(dx)<10&&Math.abs(dy)<10)return;if(Math.abs(dy)>=Math.abs(dx)){sdrag=null;return;}
+    d.on=true;try{d.t.setPointerCapture(e.pointerId);}catch(_){}}
+  const way=d.t.classList.contains("open")?1:-1;d.dx=dx;d.t.style.translate=`${Math.round(dx*(dx*way>0?.35:.08))}px 0`;});   // the wrong way barely gives
+function sdragEnd(e){const d=sdrag;if(!d||e.pointerId!==d.id)return;sdrag=null;if(!d.on)return;sEat=Date.now()+350;
+  const open=d.t.classList.contains("open"),tx=parseFloat(d.t.style.translate)||0;d.t.style.translate="";
+  if(e.type==="pointerup"&&(open?d.dx>=30:d.dx<=-30))statSet(d.t,!open,tx);
+  else if(tx)d.t.animate([{translate:`${tx}px 0`},{translate:"0 0"}],{duration:220,easing:"cubic-bezier(.2,.9,.3,1)"});}
+$("#board").addEventListener("pointerup",sdragEnd);
+$("#board").addEventListener("pointercancel",sdragEnd);
+$("#board").addEventListener("click",e=>{if(Date.now()<sEat){e.stopPropagation();e.preventDefault();}},true);
+if(Object.keys(ST).length)$(".lfoot").insertAdjacentHTML("beforeend",`<span class="lfst"> · ปัดบล็อกบทไปทางซ้าย (หรือแตะ ‹📊) เพื่อดูสถิติหัวข้อย่อย</span>`);
 /* ---- search straight from the board: text / formula / Q-id ("38" or "q38" -> Q-0038) ---- */
 function lsNorm(v){v=v.trim();const m=v.match(/^(?:q-?)?0*(\d{1,4})$/i);
   if(m){const id="Q-"+m[1].padStart(4,"0");if(DATA.questions.some(x=>x.id===id))return id;}return v;}
@@ -2227,7 +2385,7 @@ $("#lq").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();l
 $("#lgo").onclick=lsGo;
 // ...then re-list every option: syncFacets drops options that had 0 hits under the LAST filter, so
 // without this a tile could set #fsubj="bio" on a select that no longer has a "bio" option
-function resetFilters(){$("#q").value="";$("#fsubj").value="";populateChapters("");["#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).value="");syncFacets(fstate());}
+function resetFilters(){$("#q").value="";$("#fsubj").value="";populateChapters("");["#ftopic","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).value="");syncFacets(fstate());}
 function enterApp(x,y,fn){
   const app=$("#app");app.style.setProperty("--x",x+"px");app.style.setProperty("--y",y+"px");
   fn();document.body.classList.add("inapp");app.classList.add("show","opening");window.scrollTo(0,0);
@@ -2236,15 +2394,20 @@ function enterApp(x,y,fn){
 $("#board").addEventListener("click",e=>{
   const hb=e.target.closest(".hnav button");
   if(hb){const k=+hb.dataset.d||0;goSubj(hb.dataset.s!=null?+hb.dataset.s:SUBJS.indexOf(SUBJ)+k,k);return;}
-  const t=e.target.closest("[data-go]");if(!t)return;
+  const sb=e.target.closest(".tstat,.tbx");if(sb){statSet(sb.closest(".tile"),sb.classList.contains("tstat"));return;}
+  const pc=e.target.closest(".pchip");if(pc){chipToggle(pc);return;}
+  const t=e.target.closest("[data-go]");if(!t||t.disabled)return;
   const r=t.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,g=t.dataset.go;
-  SFX.play("tile");setTimeout(()=>SFX.play("whoosh"),70);
+  SFX.play(g==="topic"?"bar":"tile",+t.dataset.k);setTimeout(()=>SFX.play("whoosh"),70);
   enterApp(x,y,()=>{
     resetFilters();
     if(g==="qid"){$("#q").value=t.dataset.q;}
     else{const s=g==="applied"?"applied":SUBJ;$("#fsubj").value=s;populateChapters(s);   // every other tile is scoped to the subject
       if(g==="ch")$("#fch").value=t.dataset.ch;
-      else if(g==="flag")$("#fsol").value=g;}
+      else if(g==="flag")$("#fsol").value=g;
+      else if(g==="topic"){$("#fch").value=t.dataset.ch;const ex=examSel();   // a stats bar: chapter + sub-topic + the chosen papers
+        if(ex){opt($("#fexam"),ex,ex);$("#fexam").value=ex;}
+        syncFacets(fstate());$("#ftopic").value=t.dataset.t;}}
     apply();
     if(g==="random"&&filtered.length){setTimeout(()=>SFX.play("dice"),250);setTimeout(()=>openModal(Math.floor(Math.random()*filtered.length)),650);}
   });
