@@ -41,6 +41,7 @@ EXAMS = {
  "onet":   ("O-NET",        "#16a34a"),
  "school": ("โรงเรียน",     "#d97706"),
  "unknown":("ยังไม่ระบุ",   "#64748b"),
+ "ex":     ("แบบฝึกหัด",    "#141414"),   # Prat's own exercises (worksheet-generator), not an exam paper
 }
 
 # ---------- superscript/subscript rendering (render-time only; source stays plain ASCII) ----------
@@ -387,6 +388,53 @@ if os.path.isfile(SUBTOP):
     print("sub-topics:", sum(1 for q in questions if q["topics"]), "/", chemcount, "chem questions tagged,",
           sum(1 for q in questions if len(q["topics"]) > 1), "multi-tagged")
 
+# ---------- Prat's own exercises: worksheet-generator/chapters/*.py, read AT BUILD TIME ----------
+# That folder stays the source of truth -- nothing is copied into question-bank.md. Each file defines
+# CHAPTER = {id, title, sections:[(title, [(ง่าย|กลาง|ยาก, question_text, box_mm, solution_html), ...])]}.
+# EX_MAP puts a worksheet chapter under a bank chapter (unknown id -> skipped with a warning); sub-topics come from
+# concepts/exercise-topics.json. They join `questions` as exam "ex" with Prat's worked solution as the solution, never
+# flagged. present / chemcount above were counted before this, so the landing tiles and hero stay exams-only.
+# No worksheet folder -> no exercises, the feature is simply absent.
+EX_DIR = os.path.join(os.path.dirname(ROOT), "worksheet-generator", "chapters")
+EX_MAP = {"mol": "05", "กรดเบส": "11"}
+EX_DIFF = {"ง่าย": "easy", "กลาง": "medium", "ยาก": "hard"}
+EX_TOP = os.path.join(ROOT, "concepts", "exercise-topics.json")
+_EX_ANS = re.compile(r"(?:<br>\s*)?<b>ตอบ\s*(.+?)</b>\s*$", re.S)   # a trailing "ตอบ ..." line -> the answer box
+exercises = []
+if os.path.isdir(EX_DIR):
+    extop = json.load(open(EX_TOP, encoding="utf-8")) if os.path.isfile(EX_TOP) else {}
+    for fn in sorted(os.listdir(EX_DIR)):
+        if not fn.endswith(".py"): continue
+        ns = {}   # own namespace: the chapter file only builds a dict
+        exec(compile(open(os.path.join(EX_DIR, fn), encoding="utf-8").read(), fn, "exec"), ns)
+        C = ns.get("CHAPTER") or {}
+        ck = EX_MAP.get(C.get("id"))
+        if not ck:
+            print("WARNING: exercise chapter", ascii(C.get("id")), "from", ascii(fn), "has no EX_MAP entry - skipped"); continue
+        ids, n = {t["id"] for t in subtopics.get(ck, [])}, 0
+        for sec, items in C.get("sections", []):
+            for diff, qtext, _box, sol in items:
+                n += 1
+                eid = "E-%s-%02d" % (C["id"], n)
+                ts = [t for t in dict.fromkeys(extop.get(eid, [])) if t in ids]
+                if not ts: print("WARNING: exercise", ascii(eid), "has no valid sub-topic")
+                m = _EX_ANS.search(sol)
+                exercises.append({
+                    "id": eid, "ch": ck, "chName": CHAPTERS[ck], "subject": "", "bio": "", "app": "",
+                    "groupKey": "ch-" + ck, "groupLabel": f"บทที่ {int(ck)} · {CHAPTERS[ck]}",
+                    "exam": "ex", "year": "", "ver": "", "diff": EX_DIFF.get(diff, ""), "type": "open",
+                    "bodyHtml": "<p>%s</p>" % _html.escape(qtext, quote=False),   # question is plain text, solution is HTML
+                    "snippet": _html.escape(qtext[:90], quote=False),
+                    "answer": "", "source": f"แบบฝึกหัด {C.get('title', '')} · {sec} · ข้อ {n}",
+                    "note": "", "figure": "", "search": " ".join((qtext, sec, "แบบฝึกหัด", C.get("title", ""))).lower(),
+                    "solHtml": sol[:m.start()] if m else sol, "solAnswer": m.group(1).strip() if m else "",
+                    "solFlag": False, "solChecked": True, "topics": ts,
+                })
+    questions += exercises
+    questions.sort(key=lambda q: (*_sortkey(q)[:2], q["exam"] == "ex", q["id"]))   # "E-" < "Q-": keep exams first per chapter
+    if exercises: examcount["ex"] = len(exercises)
+    print("exercises:", len(exercises), {k: sum(1 for e in exercises if e["ch"] == k) for k in sorted({e["ch"] for e in exercises})})
+
 data = {
  "questions": questions, "chapters": CHAPTERS, "solcount": solcount,
  "bioChapters": BIO_CHAPTERS, "appTopics": APP_TOPICS,
@@ -411,7 +459,7 @@ HTML = r"""<!doctype html><html lang="th"><head><meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700;800&family=Sarabun:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--line:#141414;--acc:#f2b705;--stbg:#fcebb8;--sxbg:#fef7e1;--sxbd:#8a8886}
+:root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--line:#141414;--acc:#f2b705;--stbg:#fcebb8;--sxbg:#fef7e1;--sxbd:#8a8886;--exg:rgba(20,20,20,.055)}
 /* registered as colors so a subject / night-mode swap can TRANSITION the tokens themselves: every
    var(--x) user fades together, without touching any element's own transition list */
 @property --paper{syntax:"<color>";inherits:true;initial-value:#efe9dc}
@@ -1038,8 +1086,20 @@ body.dark .pchip.on{background:var(--yel);color:#141414;border-color:var(--yel)}
 body[data-subj=bio] .lfst{display:none}
 @media(prefers-reduced-motion:reduce){.sbar:before{animation:none}}
 
+/* ---------- Prat's own exercises (exam "ex"): solid-ink ✎ badge, a faint exercise-book grid, and in place of the
+   difficulty strip a notebook binding: an ink band punched with square holes + a red margin rule. Plain var()/rgba and
+   linear gradients only -- html2canvas 1.4.1 (save-as-image) can't parse color-mix()/oklch()/color() and draws a sized
+   radial-gradient once instead of repeating it (round holes came out as one dot). --bw band, --hx hole x, --rx rule x, --ew total. */
+.b-ex{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:800}
+.poster.ex,.card.ex,.row.ex,.sheet.ex,.tile.ex{background-image:linear-gradient(var(--exg) 1px,transparent 1px),linear-gradient(90deg,var(--exg) 1px,transparent 1px);background-size:20px 20px}
+.poster.ex{--bw:14px;--hx:4px;--rx:19px;--ew:21px}.card.ex{--bw:10px;--hx:2px;--rx:14px;--ew:16px}.sheet.ex{--bw:16px;--hx:5px;--rx:21px;--ew:23px}.row.ex{--bw:10px;--hx:2px;--rx:13px;--ew:15px;position:relative;padding-left:15px}
+.poster.ex:after,.card.ex:before,.sheet.ex:before,.row.ex:before{content:"";position:absolute;left:0;top:0;bottom:0;height:auto;width:var(--ew);
+  background:linear-gradient(var(--paper) 6px,transparent 6px) var(--hx) 8px/6px 22px repeat-y,linear-gradient(var(--ink),var(--ink)) 0 0/var(--bw) 100% no-repeat,linear-gradient(var(--red),var(--red)) var(--rx) 0/2px 100% no-repeat}
+.sexb{border:2px solid var(--ink);background:var(--ink);color:var(--paper);font:800 .8rem "Anuphan",sans-serif;padding:5px 10px;text-align:left;cursor:pointer}
+.sexb:hover,.sexb:focus-visible{background:var(--yel);color:#141414}
+
 /* ---------- night mode: ink-black surfaces, cream text, black offset shadows ---------- */
-body.dark{--paper:#18181b;--card:#232327;--ink:#e8e2d4;--mut:#9c958a;--sh:#050506;--blue:#3b57d6;--red:#e2492f;--yel:#e8ae06;--stbg:#59491e;--sxbg:#363024;--sxbd:#86827e;color-scheme:dark}
+body.dark{--paper:#18181b;--card:#232327;--ink:#e8e2d4;--mut:#9c958a;--sh:#050506;--blue:#3b57d6;--red:#e2492f;--yel:#e8ae06;--stbg:#59491e;--sxbg:#363024;--sxbd:#86827e;--exg:rgba(232,226,212,.06);color-scheme:dark}
 body.dark .board{background:#050506;border-color:#050506}
 body.dark .d1{background:repeating-linear-gradient(45deg,var(--yel) 0 18px,#050506 18px 36px)}
 body.dark .d3{background:linear-gradient(var(--yel),var(--yel)) center/40% 40% no-repeat,#050506}
@@ -1071,7 +1131,7 @@ body.dark .kin .k2{border-color:#2c2c32}body.dark .kin .k4{opacity:.25}
 
 /* ---------- biology palette (colorhunt 063b00-266210-90b800-e1e100): same Bauhaus roles, warm greens ---------- */
 body[data-subj=bio]{--paper:#edeedb;--card:#fcfdf2;--mut:#5d634e;--red:#266210;--blue:#063b00;--yel:#e1e100;--acc:#90b800;--stbg:#e0ebb3;--sxbg:#f2f7dc;--sxbd:#888883}
-body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a08a;--sh:#040604;--red:#347a1a;--blue:#1a5410;--yel:#d4d400;--acc:#86ab00;--stbg:#3a4915;--sxbg:#283219;--sxbd:#828778}
+body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a08a;--sh:#040604;--red:#347a1a;--blue:#1a5410;--yel:#d4d400;--acc:#86ab00;--stbg:#3a4915;--sxbg:#283219;--sxbd:#828778;--exg:rgba(228,232,212,.06)}
 </style></head><body>
 <div class="kin" aria-hidden="true"><i class="k1"></i><i class="k2"></i><i class="k3"></i><i class="k4"></i><i class="k5"></i></div>
 
@@ -1201,6 +1261,10 @@ let view = ls.get("cqb_view","poster");
 if(!["poster","cards","list","pane"].includes(view)) view="poster";
 let filtered = [], pIdx = 0;
 const hasSol=q=>!!(q.solHtml||q.solAnswer);
+// Prat's own exercises (exam "ex"). The landing's chapter / ทุกบท / สุ่ม tiles open exams only: EXONLY is every
+// exam slug but "ex" joined with "+", which the exam filter already reads as "any of these"
+const isEx=q=>q.exam==="ex",exCls=q=>isEx(q)?" ex":"";
+const EXN=DATA.questions.filter(isEx).length,EXONLY=Object.keys(DATA.examcount||{}).filter(k=>k!=="ex").join("+");
 /* worked solutions carry LaTeX ($$\frac{...}$$); KaTeX loads deferred from the CDN, so typeset whatever
    is on screen now and again once it arrives. Without the CDN the raw text simply stays. */
 function tex(el){if(!el||!window.renderMathInElement)return;
@@ -1349,6 +1413,8 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=ls.get("cqb_sfx"
     pause:()=>{wood(vary(1175,.01),{vol:.07});wood(vary(784,.01),{vol:.08,delay:.07});},
     reset:()=>{[0,.04,.075,.105].forEach((t,i)=>wood(vary(1400-i*150,.02),{vol:.05,delay:t}));thock({f:150,vol:.08,delay:.14});},   // ratchet back to zero
     ring:()=>[0,.38,.76].forEach(t=>{bell(1319,.6,{vol:.07,delay:t,index:1.2});bell(1047,.8,{vol:.07,delay:t+.14,index:1.2});}),   // kitchen-timer ding-dong x3
+    exOpen:()=>{noise(.09,{freq:vary(3400,.08),sweep:1.3,q:1.6,vol:.05,attack:.01});noise(.07,{freq:vary(3000,.08),sweep:.8,q:1.6,vol:.045,attack:.01,delay:.1});
+      wood(vary(523,.015),{vol:.08,delay:.2});wood(vary(698,.015),{vol:.07,delay:.27});},   // exercise: pencil scribble, then two soft knocks up a 4th
     saved:()=>{noise(.02,{freq:2000,q:1.2,vol:.1});thock({f:220,vol:.08});noise(.025,{freq:1600,q:1.2,vol:.08,delay:.07});thock({f:180,vol:.07,delay:.07});
       bell(1319,.5,{vol:.035,delay:.16});bell(1976,.6,{vol:.03,delay:.22});},   // shutter, then a 5th
     // ---- chapter stats tile: a card turned over (flick + two wood knocks a 5th apart, up to open, down to close),
@@ -1443,7 +1509,8 @@ if(SC.have){
 }
 
 /* ---------- badges ---------- */
-function examBadge(q){const e=DATA.exams[q.exam]||{label:q.exam.toUpperCase(),color:"#64748b"};
+function examBadge(q){if(isEx(q))return `<span class="badge b-ex">✎ แบบฝึกหัด</span>`;
+  const e=DATA.exams[q.exam]||{label:q.exam.toUpperCase(),color:"#64748b"};
   return `<span class="badge b-exam"><i style="background:${e.color}"></i>${e.label} ${q.year}</span>`;}
 function diffBadge(q){return q.diff?`<span class="badge b-diff d-${q.diff}">${DIFF_TH[q.diff]||q.diff}</span>`:"";}
 function idBadge(q){return `<span class="badge b-id">${q.id}</span>`;}
@@ -1465,13 +1532,13 @@ function keyTxt(q){return (q.answer&&!NOKEY.test(q.answer))?q.answer:"";}
 function footHtml(q){const k=keyTxt(q);return `📄 ${q.source}${k?` &nbsp;·&nbsp; เฉลยทางการ: ${k}`:""}`;}
 function figHtml(q){return q.figure?`<img class="fig" src="${q.figure}" alt="${q.id} figure" loading="lazy">`:"";}
 function noteHtml(q){return q.note?`<div class="note">📌 ${q.note}</div>`:"";}
-const qnum=q=>parseInt(q.id.slice(2),10);
+const qnum=q=>parseInt(q.id.slice(q.id.lastIndexOf("-")+1),10);   // Q-0038 -> 38, E-mol-07 -> 7
 function chapH(q){const cls=q.subject==="bio"?" bio":q.subject==="applied"?" app":"";
   const n=q.subject==="bio"?(q.bio.split(".")[0]||"?"):q.subject==="applied"?"✦":(q.ch?parseInt(q.ch):"?");
   const nm=q.groupLabel.replace(/^บทที่ \d+ · /,"");
   return `<div class="chap-h${cls}"><b>${n}</b><span>${nm}</span></div>`;}
 
-function solLabel(q){return q.solFlag ? "⚠ ดูวิธีทำ (ไม่ฟันธง)" : "ดูวิธีทำ →";}
+function solLabel(q){return q.solFlag ? "⚠ ดูวิธีทำ (ไม่ฟันธง)" : isEx(q) ? "ดูเฉลย →" : "ดูวิธีทำ →";}
 /* Solution block — ALWAYS collapsed on render (attempt before seeing the working). */
 function solHtml(q){
   if(!hasSol(q)) return "";
@@ -1517,7 +1584,7 @@ const FACETS=[
   ["#fsubj","subj",f=>[["chem","เคมี"],["bio","ชีววิทยา"],["applied","เคมีประยุกต์"]],x=>subjOf(x),()=>"ทุกวิชา",true],
   ["#fch","ch",f=>chList(f.subj),(x,f)=>chOf(x,f.subj),f=>f.subj==="bio"||f.subj==="applied"?"ทุกหัวข้อ":"ทุกบท"],
   ["#ftopic","st",f=>topicList(f),x=>x.topics,()=>"ทุกหัวข้อย่อย"],   // a list: the question counts under each of its topics
-  ["#fexam","ex",f=>{const L=[["samanya+alevel","9 วิชาสามัญ + A-Level"],...Object.keys(DATA.examcount||{}).map(k=>[k,(DATA.exams[k]||{label:k}).label])];
+  ["#fexam","ex",f=>{const L=[["samanya+alevel","9 วิชาสามัญ + A-Level"],...(EXN?[[EXONLY,"ข้อสอบทุกสนาม"]]:[]),...Object.keys(DATA.examcount||{}).map(k=>[k,(DATA.exams[k]||{label:k}).label])];
     return f.ex&&!L.some(o=>o[0]===f.ex)?[[f.ex,f.ex.split("+").map(k=>(DATA.exams[k]||{label:k}).label).join(" + ")],...L]:L;},x=>x.exam,()=>"ทุกสนามสอบ"],   // + any paper mix picked on a stats tile
   ["#fyear","yr",f=>DATA.years.map(y=>[y,"ปี "+y]),x=>x.year,()=>"ทุกปี"],
   ["#fdiff","df",f=>["easy","medium","hard"].map(d=>[d,DIFF_TH[d]]),x=>x.diff,()=>"ทุกระดับ"],
@@ -1556,7 +1623,7 @@ function render(){
   tex(R);
 }
 /* ---- POSTER (one question at a time, deck) ---- */
-function posterHtml(q,i,anim){return `<article class="poster lv-${q.diff} ${anim||""}" data-i="${i}">
+function posterHtml(q,i,anim){return `<article class="poster lv-${q.diff}${exCls(q)} ${anim||""}" data-i="${i}">
    <div class="pnum${qnum(q)>999?" l4":""}">${qnum(q)}</div>
    <div class="phead">${q.groupLabel}</div>
    <div class="pmeta">${idBadge(q)}${topicBadge(q)}${examBadge(q)}${diffBadge(q)}${typeBadge(q)}</div>
@@ -1587,7 +1654,7 @@ function pstep(d){
   setTimeout(()=>{pIdx=(pIdx+d+filtered.length)%filtered.length;fillPoster(d>0?"inR":"inL");pBusy=false;},180);
 }
 /* ---- CARDS ---- */
-function cardHtml(q,idx){return `<div class="card lv-${q.diff}${idx<12?" anim":""}" data-i="${idx}" style="--i:${idx}">
+function cardHtml(q,idx){return `<div class="card lv-${q.diff}${exCls(q)}${idx<12?" anim":""}" data-i="${idx}" style="--i:${idx}">
    <span class="cnum">${qnum(q)}</span>
    <div class="card-top">${idBadge(q)}${chBadge(q)}${topicBadge(q)}${examBadge(q)}${diffBadge(q)}${typeBadge(q)}
      <button class="present-btn" data-i="${idx}">⤢ แสดง</button></div>
@@ -1607,7 +1674,7 @@ function renderList(R){
   let html="",lastG=null;
   filtered.forEach((q,i)=>{
     if(q.groupKey!==lastG){lastG=q.groupKey;html+=chapH(q);}
-    html+=`<div class="row" data-i="${i}">
+    html+=`<div class="row${exCls(q)}" data-i="${i}">
       <div class="row-h"><span class="chev">▸</span><span class="row-id">${q.id}</span>
         <span class="diff-txt de-${q.diff}">${DIFF_TH[q.diff]||""}</span>
         <span class="row-snip">${q.snippet||""}</span>${topicBadge(q,false,true)}${examBadge(q)}</div>
@@ -1635,7 +1702,7 @@ function paneShow(i){
 
 /* ---- present modal ---- */
 let mIdx=0;
-function openModal(i){mIdx=i;fillModal();$("#modal").classList.add("show");INK.open();SFX.play("present");}
+function openModal(i){mIdx=i;fillModal();$("#modal").classList.add("show");INK.open();SFX.play(isEx(filtered[i])?"exOpen":"present");}
 function closeModal(){if(!$("#modal").classList.contains("show"))return;$("#modal").classList.remove("show");INK.close();SFX.play("dismiss");
   dwell(view==="poster"&&document.body.classList.contains("inapp")?filtered[pIdx]:null);}
 function fillModal(){
@@ -1645,10 +1712,10 @@ function fillModal(){
   $("#mfoot").innerHTML=footHtml(q);
   const nb=$("#mnote");if(q.note){nb.style.display="block";nb.innerHTML="📌 "+q.note;}else nb.style.display="none";
   const ans=$("#mans");ans.classList.remove("show");
-  ans.innerHTML=keyTxt(q)?`<b>เฉลยทางการ:</b> ${keyTxt(q)}`:q.solAnswer?`<b>ตอบ:</b> ${q.solAnswer}`:`ข้อนี้ไม่มีเฉลยทางการ และยังไม่มีวิธีทำ`;
+  ans.innerHTML=keyTxt(q)?`<b>เฉลยทางการ:</b> ${keyTxt(q)}`:q.solAnswer?`<b>ตอบ:</b> ${q.solAnswer}`:isEx(q)?`เฉลยอยู่ในวิธีทำด้านล่าง ↓`:`ข้อนี้ไม่มีเฉลยทางการ และยังไม่มีวิธีทำ`;
   $("#msol").innerHTML=solHtml(q);tex($("#msol"));
   $("#mpos").textContent=`${mIdx+1} / ${filtered.length}`;
-  const sh=$("#modal .sheet");sh.classList.remove("lv-easy","lv-medium","lv-hard");if(q.diff)sh.classList.add("lv-"+q.diff);sh.style.animation="none";void sh.offsetWidth;sh.style.animation="";
+  const sh=$("#modal .sheet");sh.classList.remove("lv-easy","lv-medium","lv-hard");if(q.diff)sh.classList.add("lv-"+q.diff);sh.classList.toggle("ex",isEx(q));sh.style.animation="none";void sh.offsetWidth;sh.style.animation="";
   if(window.prepShot)prepShot(150);
   INK.refresh();
   // fetch the neighbours' figures now so ◀ / ▶ show them (and can save them) without waiting
@@ -2227,7 +2294,7 @@ function recentHtml(){
   return `<div class="tile c-card recent full" style="--i:0"><div class="rtop"><span class="rk">🕘 เพิ่งดู</span>${idBadge(q)}${chBadge(q)}${topicBadge(q)}${examBadge(q)}${diffBadge(q)}</div>
     <div class="rtx">${plainClip(q.bodyHtml,160).replace(/&/g,"&amp;").replace(/</g,"&lt;")}</div>
     <button class="rgo" data-go="qid" data-q="${q.id}">ทำต่อ →</button>
-    ${rq.length>1?`<div class="rl">${rq.slice(1,6).map(q=>`<button data-go="qid" data-q="${q.id}" title="${(q.snippet||"").replace(/<[^>]+>/g,"").replace(/"/g,"&quot;").slice(0,90)}">${q.id.slice(2)} · ${q.subject==="bio"?"ชีวะ":q.subject==="applied"?"ประยุกต์":"บท "+parseInt(q.ch)}</button>`).join("")}</div>`:""}</div>`;}
+    ${rq.length>1?`<div class="rl">${rq.slice(1,6).map(q=>`<button data-go="qid" data-q="${q.id}" title="${(q.snippet||"").replace(/<[^>]+>/g,"").replace(/"/g,"&quot;").slice(0,90)}">${isEx(q)?"✎"+qnum(q):q.id.slice(2)} · ${q.subject==="bio"?"ชีวะ":q.subject==="applied"?"ประยุกต์":"บท "+parseInt(q.ch)}</button>`).join("")}</div>`:""}</div>`;}
 function heroHtml(){
   const bio=DATA.questions.filter(q=>q.subject==="bio"),si=SUBJS.indexOf(SUBJ);
   const bex=[...new Set(bio.map(q=>(DATA.exams[q.exam]||{label:q.exam}).label))].join(" · ");
@@ -2239,11 +2306,12 @@ function heroHtml(){
     ${SUBJS.length>1?`<div class="hpanel"><b>${DATA.biocount}${ICON.bio}</b><span>ข้อสอบชีววิทยา<br>แยกตามหัวข้อ</span><small>${bex}${yr}<br>เลือกหัวข้อด้านข้าง หรือกด ทุกหัวข้อ</small></div>`:""}</div></div>`;}
 /* every tile that depends on the chosen subject (rebuilt on a switch; hero + recent stay put) */
 function subjTiles(){
-  const bio=SUBJ==="bio",pool=DATA.questions.filter(q=>subjOf(q)===SUBJ),name=bio?"ชีววิทยา":"เคมี";
+  const bio=SUBJ==="bio",pool=DATA.questions.filter(q=>subjOf(q)===SUBJ&&!isEx(q)),name=bio?"ชีววิทยา":"เคมี";   // tiles count exams only
   const groups=bio?Object.entries(DATA.bioChapters).map(([k,n])=>[k,n,DATA.biocounts[k]||0]):CHS.map(([k,n])=>[k,n,DATA.counts[k]||0]);
   const max=Math.max(...groups.map(g=>g[2])),P=bio?BPAL:PAL;let i=2;
   let h=`<button class="tile c-ink" data-go="all" style="--i:${i++}"><span class="no">∀</span><span class="nm">${bio?"ทุกหัวข้อ":"ทุกบท"}</span><span class="ct">${pool.length} ข้อ · ${name}</span></button>`;
   h+=`<button class="tile c-yel" data-go="random" style="--i:${i++}"><span class="no">🎲</span><span class="nm">สุ่ม 1 ข้อ</span><span class="ct">จาก${name}ทั้งหมด</span></button>`;
+  if(!bio&&EXN)h+=`<button class="tile c-card ex" data-go="ex" style="--i:${i++}"><span class="no">✎</span><span class="nm">แบบฝึกหัด</span><span class="ct">${EXN} ข้อ · มีเฉลยทุกข้อ</span></button>`;
   groups.forEach(([k,gname,c],j)=>{if(!c)return;
     const cv=cov(pool.filter(q=>chOf(q,SUBJ)===k)),cls=`tile ${P[j%P.length]} ${tileSize(c,max)}`,n=parseInt(k),ii=i++;
     const face=`<span class="no">${n}</span><span class="nm">${gname}</span>
@@ -2331,23 +2399,27 @@ window.addEventListener("resize",()=>{if(document.body.classList.contains("inapp
 /* ---- chapter stats: slide a chem chapter tile left or right (or ←/→ on it) -> it re-packs 2 columns wide and turns
    over to its sub-topic bars + difficulty split; slide either way / ←→ / ✕ / Esc turns it back. One open at a time; the paper
    chips are one global choice, remembered. A bar opens the app on that chapter + sub-topic + those papers. ---- */
-const PAPERS=[["posn","สอวน."],["pat2","PAT2"],["alevel","A-Level"],["samanya","9 วิชาสามัญ"]];
+// the 5th chip (แบบฝึกหัด) only decides whether a bar also opens the exercises: bars + difficulty always count exam papers (PX)
+const EXPAPERS=[["posn","สอวน."],["pat2","PAT2"],["alevel","A-Level"],["samanya","9 วิชาสามัญ"]],PAPERS=EXPAPERS.concat(EXN?[["ex","✎ แบบฝึกหัด"]]:[]);
 let PSEL=[];try{PSEL=JSON.parse(ls.get("cqb_papers","[]"));}catch(e){}
-PSEL=PAPERS.map(p=>p[0]).filter(k=>Array.isArray(PSEL)&&PSEL.includes(k));if(!PSEL.length)PSEL=PAPERS.map(p=>p[0]);
+PSEL=PAPERS.map(p=>p[0]).filter(k=>Array.isArray(PSEL)&&PSEL.includes(k));if(!PSEL.some(k=>k!=="ex"))PSEL=PAPERS.map(p=>p[0]);
+const PX=()=>PSEL.filter(k=>k!=="ex");
+const EXC={};DATA.questions.forEach(q=>{if(isEx(q))EXC[q.ch]=(EXC[q.ch]||0)+1;});   // exercises per chapter
 const examSel=()=>PSEL.length===PAPERS.length?"":PSEL.join("+");   // every paper on = no exam filter at all
 const RM=matchMedia("(prefers-reduced-motion:reduce)");
 function statBody(ch){
-  const qs=DATA.questions.filter(q=>subjOf(q)==="chem"&&q.ch===ch&&PSEL.includes(q.exam)),cnt={},df={easy:0,medium:0,hard:0};
+  const px=PX(),qs=DATA.questions.filter(q=>subjOf(q)==="chem"&&q.ch===ch&&px.includes(q.exam)),cnt={},df={easy:0,medium:0,hard:0};
   qs.forEach(q=>{q.topics.forEach(t=>cnt[t]=(cnt[t]||0)+1);if(q.diff in df)df[q.diff]++;});   // bars count every tag (can sum > qs.length); header + difficulty stay distinct
   const tops=ST[ch].map(t=>[t.id,t.th,cnt[t.id]||0]).sort((a,b)=>b[2]-a[2]),max=Math.max(1,tops[0][2]),n=parseInt(ch);
-  return `<div class="sth"><span class="sn">${n}</span><span class="snm">${DATA.chapters[ch]}<small>${qs.length} ข้อ${PSEL.length<PAPERS.length?" · "+PSEL.map(k=>PAPERS.find(p=>p[0]===k)[1]).join(" + "):""}</small></span>
+  return `<div class="sth"><span class="sn">${n}</span><span class="snm">${DATA.chapters[ch]}<small>${qs.length} ข้อ${px.length<EXPAPERS.length?" · "+px.map(k=>PAPERS.find(p=>p[0]===k)[1]).join(" + "):""}</small></span>
     <button class="tbx" title="กลับ (Esc)" aria-label="ปิดสถิติบท ${n}">✕</button></div>
   <div class="sbody"><div class="pchips" role="group" aria-label="สนามสอบ">${PAPERS.map(([k,l])=>{const on=PSEL.includes(k);
       return `<button class="pchip${on?" on":""}" data-p="${k}" aria-pressed="${on}">${l}</button>`;}).join("")}</div>
     <div class="scap">หัวข้อย่อย · แตะเพื่อดูข้อ</div>
     <div class="sbars">${tops.map(([id,th,c],k)=>`<button class="sbar" data-go="topic" data-ch="${ch}" data-t="${id}" data-k="${k}" style="--w:${c/max*100}%;--k:${k}"${c?"":" disabled"} title="${th} · ${c} ข้อ"><span class="sl">${th}</span><b>${c}</b></button>`).join("")}</div>
     <div class="sdw"><div class="scap">ความยาก</div>${qs.length?`<div class="sdiff">${["easy","medium","hard"].filter(d=>df[d]).map(d=>`<i class="sd-${d}" style="flex:${df[d]}" title="${DIFF_TH[d]} ${df[d]} ข้อ">${df[d]}</i>`).join("")}</div>
-      <div class="sleg">${["easy","medium","hard"].map(d=>`<span class="diff-txt de-${d}">${DIFF_TH[d]}</span>`).join("")}</div>`:`<div class="snone">ไม่มีข้อจากสนามที่เลือกในบทนี้</div>`}</div></div>`;}
+      <div class="sleg">${["easy","medium","hard"].map(d=>`<span class="diff-txt de-${d}">${DIFF_TH[d]}</span>`).join("")}</div>`:`<div class="snone">ไม่มีข้อจากสนามที่เลือกในบทนี้</div>`}</div>
+    ${EXC[ch]?`<button class="sexb" data-go="exch" data-ch="${ch}">✎ +${EXC[ch]} แบบฝึกหัด</button>`:""}</div>`;}
 // rows the open tile needs at its current width: the stats face's natural height over one grid row (+ gap)
 function statRows(t){const b=t.querySelector(".tback"),cs=getComputedStyle($("#board")),rh=parseFloat(cs.gridAutoRows)||150,g=parseFloat(cs.rowGap)||6;
   b.style.minHeight="0";const h=b.offsetHeight;b.style.minHeight="";return Math.max(2,Math.ceil((h+g)/(rh+g)));}
@@ -2381,7 +2453,7 @@ function statSet(t,open,tx=0,dir=open?-1:1){
   Promise.all(fold.map(a=>a.finished)).then(()=>{go();fold.forEach(a=>a.cancel());},()=>{stBusy=false;});   // phase 2 is already running when the fold lets go
 }
 function chipToggle(b){const k=b.dataset.p,on=PSEL.includes(k),t=b.closest(".tile");
-  if(on&&PSEL.length===1){SFX.play("bad");return;}   // never zero papers: the last one stays on
+  if(on&&k!=="ex"&&PX().length===1){SFX.play("bad");return;}   // never zero exam papers: the last one stays on
   PSEL=PAPERS.map(p=>p[0]).filter(x=>x===k?!on:PSEL.includes(x));ls.set("cqb_papers",JSON.stringify(PSEL));SFX.play("chip",!on);
   t.querySelector(".tback").innerHTML=statBody(t.dataset.ch);t.querySelector(`.pchip[data-p="${k}"]`).focus({preventScroll:true});}
 // slide: a clearly horizontal drag (>10px, more x than y) is taken over, a vertical one scrolls the page as usual
@@ -2435,12 +2507,13 @@ $("#board").addEventListener("click",e=>{
     enterApp(r.left+r.width/2,r.top+r.height/2,()=>{resetFilters();topicFilters(tb.dataset.ch,tb.dataset.st);apply();});return;}
   const t=e.target.closest("[data-go]");if(!t||t.disabled)return;
   const r=t.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,g=t.dataset.go;
-  SFX.play(g==="topic"?"bar":"tile",+t.dataset.k);setTimeout(()=>SFX.play("whoosh"),70);
+  SFX.play(g==="topic"?"bar":g==="ex"||g==="exch"?"exOpen":"tile",+t.dataset.k);setTimeout(()=>SFX.play("whoosh"),70);
   enterApp(x,y,()=>{
     resetFilters();
     if(g==="qid"){$("#q").value=t.dataset.q;}
     else{const s=g==="applied"?"applied":SUBJ;$("#fsubj").value=s;populateChapters(s);   // every other tile is scoped to the subject
-      if(g==="ch")$("#fch").value=t.dataset.ch;
+      if(EXN&&s==="chem"&&g!=="topic"){const ex=g==="ex"||g==="exch"?"ex":EXONLY;opt($("#fexam"),ex,ex);$("#fexam").value=ex;}   // ✎ tiles: exercises only; the rest: exams only
+      if(g==="ch"||g==="exch")$("#fch").value=t.dataset.ch;
       else if(g==="flag")$("#fsol").value=g;
       else if(g==="topic"){$("#fch").value=t.dataset.ch;const ex=examSel();   // a stats bar: chapter + sub-topic + the chosen papers
         if(ex){opt($("#fexam"),ex,ex);$("#fexam").value=ex;}
