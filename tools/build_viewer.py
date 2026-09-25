@@ -365,21 +365,27 @@ print("solutions loaded:", solcount["have"], "| flagged:", solcount["flag"],
       "| unchecked:", solcount["unchecked"])
 
 # ---------- chem sub-topics (concepts/subtopics.json) ----------
-# {"chapters":{"7":{"topics":[{id,th}],"q":{"Q-NNNN":topicId}}}} -- chapter keys have no leading zero, so they
-# are re-keyed "07" to match CHAPTERS. Optional: no file -> no topics -> the stats slide + sub-topic filter hide.
+# {"chapters":{"7":{"topics":[{id,th}],"q":{"Q-NNNN":[main, extra...]}}}} -- v2 lists the MAIN sub-topic first, then
+# up to 2 extras the question also needs; v1 files hold a bare "topicId" string (read as a 1-item list). Chapter keys
+# have no leading zero, so they are re-keyed "07" to match CHAPTERS. q["topics"] carries the list to the page; a
+# question counts under EVERY topic in it. Optional: no file -> no topics -> the stats slide + sub-topic filter hide.
 SUBTOP = os.path.join(ROOT, "concepts", "subtopics.json")
 subtopics = {}
+for q in questions: q["topics"] = []
 if os.path.isfile(SUBTOP):
     qtopic = {}
     for k, v in json.load(open(SUBTOP, encoding="utf-8")).get("chapters", {}).items():
         ck = "%02d" % int(k)
         subtopics[ck] = v["topics"]
         ids = {t["id"] for t in v["topics"]}
-        qtopic.update({qid: (ck, t) for qid, t in v.get("q", {}).items() if t in ids})
+        for qid, ts in v.get("q", {}).items():
+            ts = [t for t in dict.fromkeys([ts] if isinstance(ts, str) else ts) if t in ids]
+            if ts: qtopic[qid] = (ck, ts)
     for q in questions:
-        ck, t = qtopic.get(q["id"], ("", ""))
-        q["topic"] = t if q["subject"] not in ("bio", "applied") and ck == q["ch"] else ""
-    print("sub-topics:", sum(1 for q in questions if q["topic"]), "/", chemcount, "chem questions tagged")
+        ck, ts = qtopic.get(q["id"], ("", []))
+        if q["subject"] not in ("bio", "applied") and ck == q["ch"]: q["topics"] = ts
+    print("sub-topics:", sum(1 for q in questions if q["topics"]), "/", chemcount, "chem questions tagged,",
+          sum(1 for q in questions if len(q["topics"]) > 1), "multi-tagged")
 
 data = {
  "questions": questions, "chapters": CHAPTERS, "solcount": solcount,
@@ -566,6 +572,12 @@ main{max-width:1060px;margin:18px auto 60px;padding:0 14px}
 .b-st{background:color-mix(in srgb,var(--acc) 26%,var(--card));color:var(--ink);font-family:inherit;white-space:normal;text-align:left}
 button.b-st{cursor:pointer}button.b-st:hover{background:var(--acc);color:#141414}
 .row-h .b-st{display:block;flex:0 1 auto;min-width:0;max-width:30%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* one line in a list row */
+/* extra sub-topics (a question that also needs another skill): same badge, paler, so the main one leads */
+.b-st.b-sx{background:color-mix(in srgb,var(--acc) 9%,var(--card));border-color:color-mix(in srgb,var(--ink) 50%,var(--card));font-weight:600}
+.b-more{background:var(--card);color:var(--ink);border-style:dotted;font-family:"JetBrains Mono";cursor:pointer;flex:0 0 auto}
+.row-h .b-st.b-sx,.row-h.allst .b-more{display:none}   /* list row: main + "+N"; the chip unfolds the rest onto a wrapped line */
+.row-h.allst{flex-wrap:wrap}.row-h.allst .b-st.b-sx{display:block}.row-h.allst .b-st{max-width:100%}
+@media(max-width:480px){.row-h:has(.b-more){gap:6px}.row-h .b-more{padding:2px 5px}}   /* phone: the chip's room comes out of the gaps, not the main badge */
 .b-diff:before{content:"";display:inline-block;width:10px;height:10px}
 .d-easy:before{background:var(--blue);border-radius:50%}
 .d-medium:before{background:var(--yel)}
@@ -1436,9 +1448,12 @@ function examBadge(q){const e=DATA.exams[q.exam]||{label:q.exam.toUpperCase(),co
 function diffBadge(q){return q.diff?`<span class="badge b-diff d-${q.diff}">${DIFF_TH[q.diff]||q.diff}</span>`:"";}
 function idBadge(q){return `<span class="badge b-id">${q.id}</span>`;}
 function typeBadge(q){return q.type?`<span class="badge b-type">${q.type}</span>`:"";}
-// chem only (bio/applied never carry a topic); ids repeat across chapters, so look it up under the question's own
-function topicBadge(q,label){const t=q.topic&&(ST[q.ch]||[]).find(x=>x.id===q.topic);if(!t)return "";
-  return label?`<span class="badge b-st">${t.th}</span>`:`<button class="badge b-st" data-ch="${q.ch}" data-st="${t.id}" title="${t.th} · ดูทุกข้อในหัวข้อย่อยนี้">${t.th}</button>`;}
+// chem only (bio/applied never carry topics); ids repeat across chapters, so look them up under the question's own.
+// Main sub-topic first, extras (.b-sx) lighter. brief (list rows): extras hide behind a "+N" chip that shows them on tap
+function topicBadge(q,label,brief){const L=q.topics.map(id=>(ST[q.ch]||[]).find(x=>x.id===id)).filter(Boolean);if(!L.length)return "";
+  return L.map((t,k)=>{const c=`badge b-st${k?" b-sx":""}`;return label?`<span class="${c}">${t.th}</span>`
+    :`<button class="${c}" data-ch="${q.ch}" data-st="${t.id}" title="${t.th} · ดูทุกข้อในหัวข้อย่อยนี้">${t.th}</button>`;}).join("")
+    +(brief&&L.length>1?`<button class="badge b-more" title="${L.slice(1).map(t=>t.th).join(" · ")}" aria-label="หัวข้อย่อยอีก ${L.length-1}">+${L.length-1}</button>`:"");}
 // filters for chapter + sub-topic (a sub-topic badge or a stats bar); the caller resets the rest first
 function topicFilters(ch,t){$("#fsubj").value="chem";populateChapters("chem");$("#fch").value=ch;syncFacets(fstate());$("#ftopic").value=t;}
 function chBadge(q){
@@ -1482,7 +1497,7 @@ const chOf=(x,subj)=>subj==="bio"?(x.bio.split(".")[0]||"?"):subj==="applied"?x.
 function qMatch(x,f,skip){
   if(skip!=="subj"&&f.subj&&subjOf(x)!==f.subj) return false;
   if(skip!=="ch"&&f.ch&&chOf(x,f.subj)!==f.ch) return false;
-  if(f.st&&!["st","ch","subj"].includes(skip)&&x.topic!==f.st) return false;   // a topic lives under one chapter: it never narrows the chapter/subject lists
+  if(f.st&&!["st","ch","subj"].includes(skip)&&!x.topics.includes(f.st)) return false;   // anywhere in its list; a topic lives under one chapter: it never narrows the chapter/subject lists
   if(skip!=="ex"&&f.ex&&!f.ex.split("+").includes(x.exam)) return false;   // "samanya+alevel" = either
   if(skip!=="yr"&&f.yr&&x.year!==f.yr) return false;
   if(skip!=="df"&&f.df&&x.diff!==f.df) return false;
@@ -1501,7 +1516,7 @@ function chList(subj){
 const FACETS=[
   ["#fsubj","subj",f=>[["chem","เคมี"],["bio","ชีววิทยา"],["applied","เคมีประยุกต์"]],x=>subjOf(x),()=>"ทุกวิชา",true],
   ["#fch","ch",f=>chList(f.subj),(x,f)=>chOf(x,f.subj),f=>f.subj==="bio"||f.subj==="applied"?"ทุกหัวข้อ":"ทุกบท"],
-  ["#ftopic","st",f=>topicList(f),x=>x.topic||"",()=>"ทุกหัวข้อย่อย"],
+  ["#ftopic","st",f=>topicList(f),x=>x.topics,()=>"ทุกหัวข้อย่อย"],   // a list: the question counts under each of its topics
   ["#fexam","ex",f=>{const L=[["samanya+alevel","9 วิชาสามัญ + A-Level"],...Object.keys(DATA.examcount||{}).map(k=>[k,(DATA.exams[k]||{label:k}).label])];
     return f.ex&&!L.some(o=>o[0]===f.ex)?[[f.ex,f.ex.split("+").map(k=>(DATA.exams[k]||{label:k}).label).join(" + ")],...L]:L;},x=>x.exam,()=>"ทุกสนามสอบ"],   // + any paper mix picked on a stats tile
   ["#fyear","yr",f=>DATA.years.map(y=>[y,"ปี "+y]),x=>x.year,()=>"ทุกปี"],
@@ -1514,7 +1529,7 @@ function syncFacets(f){
     items.forEach(([v,l,c])=>{if(c||v===cur)opt(sel,v,`${l} (${c})`);});sel.value=cur;if(sel.value!==cur)sel.value="";};
   for(const[sel,key,list,keyOf,all,countAll]of FACETS){
     const pool=DATA.questions.filter(x=>qMatch(x,f,key)),cnt={};
-    pool.forEach(x=>{const k=keyOf(x,f);cnt[k]=(cnt[k]||0)+1;});
+    pool.forEach(x=>[].concat(keyOf(x,f)).forEach(k=>cnt[k]=(cnt[k]||0)+1));
     fill($(sel),all(f)+(countAll?` (${pool.length})`:""),list(f).map(([v,l])=>[v,l,v.split("+").reduce((a,k)=>a+(cnt[k]||0),0)]));}
   $("#ftopic").hidden=!topicList(f).length;
   if(SC.have){const pool=DATA.questions.filter(x=>qMatch(x,f,"sl"));
@@ -1595,7 +1610,7 @@ function renderList(R){
     html+=`<div class="row" data-i="${i}">
       <div class="row-h"><span class="chev">▸</span><span class="row-id">${q.id}</span>
         <span class="diff-txt de-${q.diff}">${DIFF_TH[q.diff]||""}</span>
-        <span class="row-snip">${q.snippet||""}</span>${topicBadge(q)}${examBadge(q)}</div>
+        <span class="row-snip">${q.snippet||""}</span>${topicBadge(q,false,true)}${examBadge(q)}</div>
       <div class="row-body"><div class="body">${q.bodyHtml}${figHtml(q)}</div>${noteHtml(q)}
         ${solHtml(q)}
         <div class="foot">${footHtml(q)}
@@ -1808,6 +1823,7 @@ $("#root").addEventListener("click",e=>{
   if(e.target.closest("#pnext")){pstep(1);return;}
   const p=e.target.closest(".present-btn");if(p){openModal(+p.dataset.i);return;}
   const tb=e.target.closest("button.b-st");if(tb){SFX.play("bar",0);resetFilters();topicFilters(tb.dataset.ch,tb.dataset.st);apply();window.scrollTo(0,0);return;}
+  const bm=e.target.closest(".b-more");if(bm){bm.closest(".row-h").classList.add("allst");SFX.play("select");return;}   // list row: show the extra sub-topics
   const item=e.target.closest(".pane-item");if(item){SFX.play("select");paneShow(+item.dataset.i);return;}
   const rh=e.target.closest(".row-h");if(rh){SFX.play(rh.parentElement.classList.toggle("open")?"unfold":"fold");return;}
   markChoice(e);
@@ -2322,7 +2338,7 @@ const examSel=()=>PSEL.length===PAPERS.length?"":PSEL.join("+");   // every pape
 const RM=matchMedia("(prefers-reduced-motion:reduce)");
 function statBody(ch){
   const qs=DATA.questions.filter(q=>subjOf(q)==="chem"&&q.ch===ch&&PSEL.includes(q.exam)),cnt={},df={easy:0,medium:0,hard:0};
-  qs.forEach(q=>{cnt[q.topic]=(cnt[q.topic]||0)+1;if(q.diff in df)df[q.diff]++;});
+  qs.forEach(q=>{q.topics.forEach(t=>cnt[t]=(cnt[t]||0)+1);if(q.diff in df)df[q.diff]++;});   // bars count every tag (can sum > qs.length); header + difficulty stay distinct
   const tops=ST[ch].map(t=>[t.id,t.th,cnt[t.id]||0]).sort((a,b)=>b[2]-a[2]),max=Math.max(1,tops[0][2]),n=parseInt(ch);
   return `<div class="sth"><span class="sn">${n}</span><span class="snm">${DATA.chapters[ch]}<small>${qs.length} ข้อ${PSEL.length<PAPERS.length?" · "+PSEL.map(k=>PAPERS.find(p=>p[0]===k)[1]).join(" + "):""}</small></span>
     <button class="tbx" title="กลับ (Esc)" aria-label="ปิดสถิติบท ${n}">✕</button></div>
