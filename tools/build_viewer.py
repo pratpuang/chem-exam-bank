@@ -392,8 +392,10 @@ if os.path.isfile(SUBTOP):
 # That folder stays the source of truth -- nothing is copied into question-bank.md. Each file defines
 # CHAPTER = {id, title, sections:[(title, [(ง่าย|กลาง|ยาก, question_text, box_mm, solution_html), ...])]}.
 # EX_MAP puts a worksheet chapter under a bank chapter (unknown id -> skipped with a warning); sub-topics come from
-# concepts/exercise-topics.json. They join `questions` as exam "ex" with Prat's worked solution as the solution, never
-# flagged. present / chemcount above were counted before this, so the landing tiles and hero stay exams-only.
+# concepts/exercise-topics.json. They join `questions` as exam "ex" with Prat's worked solution as the solution --
+# flagged ⚠ (solFlag + solPending, "not yet verified") while the file's leading # comment block contains "PENDING";
+# delete that line once the answers are checked and the next build shows them as verified.
+# present / chemcount above were counted before this, so the landing tiles and hero stay exams-only.
 # No worksheet folder -> no exercises, the feature is simply absent.
 EX_DIR = os.path.join(os.path.dirname(ROOT), "worksheet-generator", "chapters")
 EX_MAP = {"mol": "05", "กรดเบส": "11"}
@@ -405,8 +407,9 @@ if os.path.isdir(EX_DIR):
     extop = json.load(open(EX_TOP, encoding="utf-8")) if os.path.isfile(EX_TOP) else {}
     for fn in sorted(os.listdir(EX_DIR)):
         if not fn.endswith(".py"): continue
-        ns = {}   # own namespace: the chapter file only builds a dict
-        exec(compile(open(os.path.join(EX_DIR, fn), encoding="utf-8").read(), fn, "exec"), ns)
+        ns, src = {}, open(os.path.join(EX_DIR, fn), encoding="utf-8").read()   # own namespace: the file only builds a dict
+        exec(compile(src, fn, "exec"), ns)
+        pending = "PENDING" in re.match(r"(?:[ \t]*#.*\n)*", src).group()   # header comment says answers aren't verified
         C = ns.get("CHAPTER") or {}
         ck = EX_MAP.get(C.get("id"))
         if not ck:
@@ -428,12 +431,12 @@ if os.path.isdir(EX_DIR):
                     "answer": "", "source": f"แบบฝึกหัด {C.get('title', '')} · {sec} · ข้อ {n}",
                     "note": "", "figure": "", "search": " ".join((qtext, sec, "แบบฝึกหัด", C.get("title", ""))).lower(),
                     "solHtml": sol[:m.start()] if m else sol, "solAnswer": m.group(1).strip() if m else "",
-                    "solFlag": False, "solChecked": True, "topics": ts,
+                    "solFlag": pending, "solPending": pending, "solChecked": not pending, "topics": ts,
                 })
     questions += exercises
     questions.sort(key=lambda q: (*_sortkey(q)[:2], q["exam"] == "ex", q["id"]))   # "E-" < "Q-": keep exams first per chapter
     if exercises: examcount["ex"] = len(exercises)
-    print("exercises:", len(exercises), {k: sum(1 for e in exercises if e["ch"] == k) for k in sorted({e["ch"] for e in exercises})})
+    print("exercises:", len(exercises), "| unverified (PENDING):", sum(e["solPending"] for e in exercises), {k: sum(1 for e in exercises if e["ch"] == k) for k in sorted({e["ch"] for e in exercises})})
 
 data = {
  "questions": questions, "chapters": CHAPTERS, "solcount": solcount,
@@ -1086,15 +1089,14 @@ body.dark .pchip.on{background:var(--yel);color:#141414;border-color:var(--yel)}
 body[data-subj=bio] .lfst{display:none}
 @media(prefers-reduced-motion:reduce){.sbar:before{animation:none}}
 
-/* ---------- Prat's own exercises (exam "ex"): solid-ink ✎ badge, a faint exercise-book grid, and in place of the
-   difficulty strip a notebook binding: an ink band punched with square holes + a red margin rule. Plain var()/rgba and
-   linear gradients only -- html2canvas 1.4.1 (save-as-image) can't parse color-mix()/oklch()/color() and draws a sized
-   radial-gradient once instead of repeating it (round holes came out as one dot). --bw band, --hx hole x, --rx rule x, --ew total. */
+/* ---------- Prat's own exercises (exam "ex"): solid-ink ✎ badge, and in place of the difficulty strip a plain ink
+   strip (same --bw width as each view's strip). Question cards keep the plain card background like exams (Prat
+   2026-09-25: no grid, no punched holes); only the landing ✎ tile keeps the faint exercise-book grid. Plain var()/rgba
+   only -- html2canvas 1.4.1 (save-as-image) can't parse color-mix()/oklch()/color(). */
 .b-ex{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:800}
-.poster.ex,.card.ex,.row.ex,.sheet.ex,.tile.ex{background-image:linear-gradient(var(--exg) 1px,transparent 1px),linear-gradient(90deg,var(--exg) 1px,transparent 1px);background-size:20px 20px}
-.poster.ex{--bw:14px;--hx:4px;--rx:19px;--ew:21px}.card.ex{--bw:10px;--hx:2px;--rx:14px;--ew:16px}.sheet.ex{--bw:16px;--hx:5px;--rx:21px;--ew:23px}.row.ex{--bw:10px;--hx:2px;--rx:13px;--ew:15px;position:relative;padding-left:15px}
-.poster.ex:after,.card.ex:before,.sheet.ex:before,.row.ex:before{content:"";position:absolute;left:0;top:0;bottom:0;height:auto;width:var(--ew);
-  background:linear-gradient(var(--paper) 6px,transparent 6px) var(--hx) 8px/6px 22px repeat-y,linear-gradient(var(--ink),var(--ink)) 0 0/var(--bw) 100% no-repeat,linear-gradient(var(--red),var(--red)) var(--rx) 0/2px 100% no-repeat}
+.tile.ex{background-image:linear-gradient(var(--exg) 1px,transparent 1px),linear-gradient(90deg,var(--exg) 1px,transparent 1px);background-size:20px 20px}
+.poster.ex{--bw:14px}.card.ex{--bw:10px}.sheet.ex{--bw:16px}.row.ex{--bw:10px;position:relative;padding-left:15px}
+.poster.ex:after,.card.ex:before,.sheet.ex:before,.row.ex:before{content:"";position:absolute;left:0;top:0;bottom:0;height:auto;width:var(--bw);background:var(--ink)}
 .sexb{border:2px solid var(--ink);background:var(--ink);color:var(--paper);font:800 .8rem "Anuphan",sans-serif;padding:5px 10px;text-align:left;cursor:pointer}
 .sexb:hover,.sexb:focus-visible{background:var(--yel);color:#141414}
 
@@ -1538,7 +1540,7 @@ function chapH(q){const cls=q.subject==="bio"?" bio":q.subject==="applied"?" app
   const nm=q.groupLabel.replace(/^บทที่ \d+ · /,"");
   return `<div class="chap-h${cls}"><b>${n}</b><span>${nm}</span></div>`;}
 
-function solLabel(q){return q.solFlag ? "⚠ ดูวิธีทำ (ไม่ฟันธง)" : isEx(q) ? "ดูเฉลย →" : "ดูวิธีทำ →";}
+function solLabel(q){return q.solPending ? "⚠ ดูเฉลย (ยังไม่ได้ตรวจ)" : q.solFlag ? "⚠ ดูวิธีทำ (ไม่ฟันธง)" : isEx(q) ? "ดูเฉลย →" : "ดูวิธีทำ →";}
 /* Solution block — ALWAYS collapsed on render (attempt before seeing the working). */
 function solHtml(q){
   if(!hasSol(q)) return "";
@@ -1546,7 +1548,8 @@ function solHtml(q){
   const label = solLabel(q);
   return `<button class="solbtn${f}" data-sol="1" data-label="${label}">${label}</button>
     <div class="solwrap${f}"><div class="solin"><div class="solbox">
-      ${q.solFlag?`<div class="soldis">⚠ ข้อนี้ไม่ฟันธง — โจทย์กำกวมหรือตัวเลือกไม่ตรง อ่านเหตุผลในวิธีทำแล้วตัดสินเอง</div>`:""}
+      ${q.solPending?`<div class="soldis">⚠ เฉลยข้อนี้ยังไม่ได้ตรวจยืนยัน — อาจมีจุดผิด คิดตามทีละขั้นแล้วตัดสินเอง</div>`
+        :q.solFlag?`<div class="soldis">⚠ ข้อนี้ไม่ฟันธง — โจทย์กำกวมหรือตัวเลือกไม่ตรง อ่านเหตุผลในวิธีทำแล้วตัดสินเอง</div>`:""}
       ${q.solAnswer?`<div class="solans">ตอบ: ${q.solAnswer}</div>`:""}
       <div class="solbody">${q.solHtml}</div>
     </div></div></div>`;
