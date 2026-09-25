@@ -744,61 +744,147 @@ function tex(el){if(!el||!window.renderMathInElement)return;
   try{renderMathInElement(el,{delimiters:[{left:"$$",right:"$$",display:true},{left:"\\(",right:"\\)",display:false}],throwOnError:false,strict:false});}catch(e){}}
 window.texReady=()=>{tex($("#root"));tex($("#msol"));};
 
-/* ---------- sound fx: synthesized with Web Audio (no files to host), muteable, remembered ---------- */
-const SFX=(()=>{let ctx=null,master=null,verb=null,on=ls.get("cqb_sfx","1")!=="0",vol=Math.max(0,Math.min(100,parseInt(ls.get("cqb_vol","70"),10)||0));
+/* ---------- sound fx: synthesized with Web Audio (no files to host), muteable, remembered ----------
+   Each action family has its own voice, so the app reads by ear: paper flicks move between questions,
+   wood blocks and pops are toggles, marker taps are the pen, glass + bubbles are chem, plucked strings +
+   wood are bio. "Satisfying" rules: a crisp transient over a soft round body, warm low-mids (no square
+   waves; the chain lowpasses at 7.5k), fast clean decays, consonant intervals (5ths, 4ths, major 3rds)
+   rising for doing and falling for undoing. Every layer is pitch/velocity-varied a few % and many presets
+   pick between 2-3 voicings, so repeats never sound robotic. */
+const SFX=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=ls.get("cqb_sfx","1")!=="0",vol=Math.max(0,Math.min(100,parseInt(ls.get("cqb_vol","70"),10)||0));
   const gainFor=v=>Math.pow(v/100,1.6)*1.35;   // perceptual-ish curve: the slider feels even across its range
   /* signal chain: every voice -> master -> soft lowpass -> compressor -> out, plus a send into a small
-     generated-impulse room reverb. Voices are layered (low "body" + tiny transient) and pitch-varied
-     a few % per hit so repeats never sound robotic. */
+     generated-impulse room reverb. One shared 2 s noise buffer feeds every noise voice (random offset). */
   function ac(){
     if(!ctx){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;ctx=new A();
       const comp=ctx.createDynamicsCompressor();comp.threshold.value=-20;comp.knee.value=14;comp.ratio.value=4;comp.attack.value=.003;comp.release.value=.18;
-      const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=8500;
+      const lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=7500;
       master=ctx.createGain();master.gain.value=gainFor(vol);master.connect(lp);lp.connect(comp);comp.connect(ctx.destination);
       const len=Math.floor(ctx.sampleRate*1.2),ir=ctx.createBuffer(2,len,ctx.sampleRate);
       for(let c=0;c<2;c++){const d=ir.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3.4);}
-      const cv=ctx.createConvolver();cv.buffer=ir;verb=ctx.createGain();verb.gain.value=.9;verb.connect(cv);cv.connect(master);}
+      const cv=ctx.createConvolver();cv.buffer=ir;verb=ctx.createGain();verb.gain.value=.9;verb.connect(cv);cv.connect(master);
+      nbuf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);const nd=nbuf.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;}
     if(ctx.state==="suspended")ctx.resume();return ctx;}
-  const vary=(x,p=.03)=>x*(1+(Math.random()*2-1)*p);
+  const rnd=Math.random,pick=a=>a[Math.floor(rnd()*a.length)],vary=(x,p=.03)=>x*(1+(rnd()*2-1)*p);
+  const PENTA=[0,2,4,7,9],note=(root,i)=>{i|=0;return root*Math.pow(2,(PENTA[(i%5+5)%5]+12*Math.floor(i/5))/12);};   // major pentatonic: any mix of steps is consonant
   function route(g,wet){g.connect(master);if(wet){const s=ctx.createGain();s.gain.value=wet;g.connect(s);s.connect(verb);}}
-  function env(g,t,vol,a,dur){g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+dur);}
+  function env(g,t,v,a,dur){g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vary(v,.07),t+a);g.gain.exponentialRampToValueAtTime(.0001,t+dur);}
   function tone(f,dur,o={}){const c=ac();if(!c)return;const t=c.currentTime+(o.delay||0),os=c.createOscillator(),g=c.createGain();
     os.type=o.type||"sine";os.frequency.setValueAtTime(f,t);
     if(o.slide)os.frequency.exponentialRampToValueAtTime(Math.max(20,f*o.slide),t+(o.slideT||dur));
     let n=os;if(o.lp){const fl=c.createBiquadFilter();fl.type="lowpass";fl.frequency.value=o.lp;os.connect(fl);n=fl;}
     env(g,t,o.vol||.12,o.attack||.004,dur);n.connect(g);route(g,o.wet);os.start(t);os.stop(t+dur+.05);}
-  function noise(dur,o={}){const c=ac();if(!c)return;const t=c.currentTime+(o.delay||0),n=Math.max(1,Math.floor(c.sampleRate*dur)),
-    b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;
-    const src=c.createBufferSource();src.buffer=b;const f=c.createBiquadFilter();f.type=o.type||"bandpass";
+  function noise(dur,o={}){const c=ac();if(!c)return;const t=c.currentTime+(o.delay||0);dur=Math.min(dur,1);
+    const src=c.createBufferSource();src.buffer=nbuf;const f=c.createBiquadFilter();f.type=o.type||"bandpass";
     f.frequency.setValueAtTime(o.freq||1800,t);if(o.sweep)f.frequency.exponentialRampToValueAtTime((o.freq||1800)*o.sweep,t+dur);f.Q.value=o.q||.8;
-    const g=c.createGain();env(g,t,o.vol||.1,o.attack||.002,dur);src.connect(f);f.connect(g);route(g,o.wet);src.start(t);src.stop(t+dur+.05);}
+    const g=c.createGain();env(g,t,o.vol||.1,o.attack||.002,dur);src.connect(f);f.connect(g);route(g,o.wet);src.start(t,rnd()*(2-dur-.1));src.stop(t+dur+.05);}
   function bell(f,dur,o={}){const c=ac();if(!c)return;const t=c.currentTime+(o.delay||0),car=c.createOscillator(),mod=c.createOscillator(),mg=c.createGain(),g=c.createGain();
     car.frequency.value=f;mod.frequency.value=f*(o.ratio||3.5);mg.gain.setValueAtTime(f*(o.index||1.6),t);mg.gain.exponentialRampToValueAtTime(1,t+dur);
     mod.connect(mg);mg.connect(car.frequency);env(g,t,o.vol||.08,.003,dur);car.connect(g);route(g,o.wet==null?.5:o.wet);
     car.start(t);mod.start(t);car.stop(t+dur+.05);mod.stop(t+dur+.05);}
+  // Karplus-Strong plucked string: a burst of softened noise circulating in a tiny averaging delay line
+  function pluck(f,dur,o={}){const c=ac();if(!c)return;const sr=c.sampleRate,n=Math.floor(sr*dur),N=Math.max(2,Math.round(sr/f)),
+      b=c.createBuffer(1,n,sr),d=b.getChannelData(0),ring=new Float32Array(N),br=o.bright||.15,damp=o.damp||.996;
+    let lp=0,mx=1e-6;for(let i=0;i<N;i++){lp+=br*((rnd()*2-1)-lp);ring[i]=lp;mx=Math.max(mx,Math.abs(lp));}   // lowpassed pluck = warm, not twangy
+    for(let i=0;i<N;i++)ring[i]/=mx;   // normalised so every pluck lands at the same level
+    for(let i=0,p=0;i<n;i++){const q=p+1===N?0:p+1,y=ring[p];d[i]=y;ring[p]=damp*.5*(y+ring[q]);p=q;}
+    const t=c.currentTime+(o.delay||0),src=c.createBufferSource(),g=c.createGain();src.buffer=b;
+    const v=vary(o.vol||.3,.07);g.gain.setValueAtTime(v,t);g.gain.setValueAtTime(v,t+dur*.7);g.gain.linearRampToValueAtTime(0,t+dur);
+    src.connect(g);route(g,o.wet==null?.15:o.wet);src.start(t);}
+  // ---- instruments built from those voices ----
   function mallet(f,o={}){const v=o.vol||.14;tone(f,.42,{vol:v,wet:.25,delay:o.delay,attack:.002});tone(f*3.98,.07,{vol:v*.22,delay:o.delay,attack:.001});noise(.012,{vol:v*.3,freq:3000,q:1,delay:o.delay});}
   function thock(o={}){const v=o.vol||.15,d=o.delay||0;
     tone(vary(o.f||190),.1,{vol:v,slide:.5,slideT:.07,attack:.001,delay:d,lp:1400});
-    noise(.016,{vol:v*.55,freq:vary(3600,.1),q:1.3,delay:d});}
+    noise(.016,{vol:v*.55,freq:vary(o.nf||3000,.1),q:1.3,delay:d});}
+  function wood(f,o={}){const v=o.vol||.1,d=o.delay||0;   // wood block: short pitched knock + one inharmonic partial + contact click
+    tone(f,.08,{vol:v,slide:.93,slideT:.05,attack:.001,delay:d,wet:o.wet});tone(f*2.72,.03,{vol:v*.25,attack:.001,delay:d});
+    noise(.008,{vol:v*.35,freq:Math.min(f*3,4200),q:2.5,delay:d});}
+  function pop(f,o={}){const T=o.dur||.07;tone(f,T,{vol:o.vol||.1,slide:o.rise||1.8,slideT:T*.8,attack:.002,delay:o.delay,wet:o.wet==null?.12:o.wet});}   // bubble: a sine whose pitch rises as it dies
+  function glass(f,o={}){const v=o.vol||.06,d=o.delay||0,T=o.dur||.5;   // struck glass: partials at wine-glass ratios
+    tone(f,T,{vol:v,delay:d,attack:.002,wet:.4});tone(f*2.32,T*.5,{vol:v*.3,delay:d,attack:.001,wet:.4});tone(f*4.25,T*.22,{vol:v*.1,delay:d,attack:.001});}
+  function paper(dir,o={}){const v=o.vol||.1,t=o.delay||0,fwd=dir>0;
+    noise(.07,{freq:vary(fwd?2300:1500,.08),sweep:fwd?1.6:.62,q:1.2,vol:v*.5,attack:.004,delay:t});           // the edge leaving your thumb
+    noise(.16,{freq:vary(fwd?700:1900,.08),sweep:fwd?2.6:.4,q:.8,vol:v,attack:.05,delay:t+.02,wet:.12});      // air as the page turns
+    thock({f:vary(125),vol:v*.75,nf:1800,delay:t+.15});}                                                     // ...and it lands
+  function arp(fs,gap,fn){fs.forEach((f,i)=>fn(f,i*gap,i));}
   const P={
-    click:()=>thock({f:240,vol:.1}),
-    preview:()=>thock({f:210,vol:.14}),
+    // ---- generic / feedback ----
+    preview:()=>thock({f:150+vol*2.2,vol:.13}),                     // volume slider: the knock climbs with the level
+    tick:()=>tone(vary(1700,.03),.02,{vol:.035,type:"triangle",lp:3000,attack:.001}),   // scrubber detent
+    bad:()=>{wood(vary(330,.02),{vol:.08});wood(vary(262,.02),{vol:.085,delay:.1});tone(131,.22,{vol:.05,lp:400,delay:.1});},   // "uh-uh": two knocks falling a 3rd
+    empty:()=>{pop(vary(520),{vol:.05,rise:.55,dur:.12});pop(vary(390),{vol:.05,rise:.55,dur:.16,delay:.13});tone(98,.3,{vol:.04,lp:300,delay:.13,wet:.2});},   // no results: a deflating double plop
+    // ---- navigation ----
+    flip:d=>paper(d>0?1:-1),                                          // next / prev question
+    view:i=>{const f=note(330,i);wood(vary(f*1.5,.015),{vol:.09});wood(vary(f,.015),{vol:.11,delay:.055});},   // slider moving over: two clacks, pitch = which view
+    tab:i=>{noise(.014,{freq:2200,q:1.4,vol:.09});wood(vary(note(587,i),.015),{vol:.12,delay:.008});},       // card tab: paper tick + pitched knock
     tile:()=>{mallet(vary(523,.015));mallet(vary(784,.015),{delay:.065,vol:.12});},
     whoosh:()=>{noise(.62,{freq:260,sweep:9,q:.7,vol:.12,attack:.26,wet:.35});tone(95,.45,{vol:.16,slide:.65,delay:.42,lp:320,attack:.01,wet:.2});},
-    swish:d=>{noise(.26,{freq:d>0?650:2700,sweep:d>0?4.2:.28,q:.9,vol:.11,attack:.07,wet:.12});thock({f:140,vol:.11,delay:.18});},
-    open:()=>{tone(vary(360),.13,{vol:.15,slide:2.3,slideT:.045,attack:.001,wet:.18});noise(.02,{vol:.04,freq:2600,q:2});},
-    close:()=>tone(vary(640),.12,{vol:.11,slide:.48,slideT:.06,attack:.001,wet:.1}),
-    ok:()=>{mallet(523,{vol:.08});bell(1046.5,1,{vol:.085,delay:.02});bell(1568,1.25,{vol:.075,delay:.11});},
-    bad:()=>{tone(172,.34,{vol:.17,slide:.6,slideT:.22,lp:520,attack:.002,wet:.22});tone(115,.3,{vol:.08,delay:.025,lp:400});},
-    mark:i=>{const f=[523.25,587.33,659.25,783.99,880][((i|0)%5+5)%5];
-      thock({f:vary(230),vol:.13});mallet(f,{vol:.13,delay:.01});bell(f*2,.45,{vol:.028,delay:.035,index:1.1,wet:.35});},
+    home:()=>{const[a,b]=pick([[587,392],[659,440],[523,349]]);noise(.38,{freq:2600,sweep:.18,q:.7,vol:.09,attack:.05,wet:.3});
+      mallet(vary(a,.01),{delay:.22,vol:.1});mallet(vary(b,.01),{delay:.3,vol:.1});},   // back out: air falling + a 5th resolving down
+    // ---- subject swipe on the landing: chem = glass + bubbles, bio = plucked string + wood + leaves ----
+    chem:d=>{const up=d>=0;[0,.05,.1,.16].forEach((t,i)=>pop(vary(up?420+i*120:780-i*120,.08),{vol:.085,delay:t+rnd()*.02,dur:.06}));
+      glass(vary(up?1319:1175,.01),{vol:.05,delay:.2});noise(.25,{freq:up?700:2200,sweep:up?3:.33,q:.8,vol:.05,attack:.08,wet:.2});},
+    bio:d=>{const[a,b]=d>=0?[196,294]:[294,196];pluck(vary(a,.01),.6,{vol:.1});pluck(vary(b,.01),.7,{vol:.085,delay:.09});
+      wood(vary(d>=0?392:330,.02),{vol:.05});noise(.24,{type:"lowpass",freq:900,q:.5,vol:.06,attack:.07,wet:.15});},
+    // ---- filters and picking things ----
+    filter:i=>{noise(.01,{vol:.05,freq:2400,q:3});noise(.01,{vol:.04,freq:2600,q:3,delay:.03});   // dial detent, then a blip per filter
+      tone(vary(note(523,i),.01),.09,{vol:.09,type:"triangle",lp:1800,slide:1.12,slideT:.02,attack:.002,delay:.02,wet:.12});thock({f:vary(180),vol:.06});},
+    select:()=>{pop(vary(pick([440,523,587]),.02),{vol:.13,rise:1.5,dur:.06});thock({f:vary(210),vol:.08});},   // soft pop
+    unfold:()=>{noise(.09,{freq:900,sweep:2.2,q:.8,vol:.06,attack:.03});pluck(vary(392,.01),.3,{vol:.07,bright:.2});pluck(vary(523,.01),.35,{vol:.065,bright:.2,delay:.05});},
+    fold:()=>{noise(.08,{freq:1800,sweep:.45,q:.8,vol:.05,attack:.02});pluck(vary(523,.01),.25,{vol:.07,bright:.2});pluck(vary(392,.01),.3,{vol:.07,bright:.2,delay:.05});},
+    key:k=>{const low=k==="bk"||k==="clr";tone(vary(low?250:330,.03),.035,{vol:.09,type:"triangle",lp:1200,attack:.001});thock({f:vary(low?150:185),vol:.1,nf:2600});},
+    // ---- toggles: up = a pop rising a 5th, down = a plop falling one ----
+    on:()=>{thock({f:vary(210),vol:.1});pop(vary(440,.02),{vol:.07,rise:1.5,dur:.06});pop(vary(660,.02),{vol:.075,rise:1.3,dur:.07,delay:.05});},
+    off:()=>{thock({f:vary(170),vol:.09});tone(vary(660,.02),.08,{vol:.06,slide:.68,slideT:.06,lp:1500,attack:.002});tone(vary(440,.02),.09,{vol:.055,slide:.7,lp:1100,delay:.05,attack:.002});},
+    // ---- present mode ----
+    present:()=>{const c=pick([[392,494,587],[349,440,523],[440,554,659]]);noise(.26,{type:"lowpass",freq:400,sweep:5,q:.6,vol:.07,attack:.12,wet:.3});
+      arp(c,.07,(f,t)=>mallet(vary(f,.01),{delay:.05+t,vol:.11}));bell(c[2]*2,.7,{vol:.03,delay:.24,index:1.1});},
+    dismiss:()=>{noise(.2,{type:"lowpass",freq:2200,sweep:.25,q:.6,vol:.07,attack:.04,wet:.2});mallet(vary(587,.01),{vol:.08});mallet(vary(392,.01),{vol:.08,delay:.07});},
+    dice:()=>{let t=0;const n=5+(rnd()*3|0);   // clatter whose gaps widen as it settles, then the landing
+      for(let i=0;i<n;i++){t+=.018+rnd()*.014+i*.004;const f=vary(1500,.35);
+        noise(.02,{freq:f,q:7,vol:.14-i*.008,delay:t});tone(vary(f*.5,.1),.035,{vol:.035,type:"triangle",lp:2200,delay:t,attack:.001});}
+      thock({f:vary(160),vol:.12,delay:t+.05});},
+    // ---- answering ----
+    mark:i=>{const f=note(523,i);noise(.05,{freq:2000,sweep:1.5,q:1.1,vol:.045,attack:.01});   // marker circling it, then its note
+      thock({f:vary(230),vol:.09,delay:.03});mallet(f,{vol:.1,delay:.035});bell(f*2,.45,{vol:.026,delay:.06,index:1.1,wet:.35});},
     unmark:()=>{thock({f:vary(170),vol:.09});tone(vary(620),.11,{vol:.06,slide:.62,slideT:.09,attack:.002,wet:.12});},
-    dice:()=>{[0,.075,.14,.195,.24,.275].forEach((t,i)=>{noise(.032,{freq:vary(1900,.3),q:6,vol:.15-i*.012,delay:t});tone(vary(720,.25),.045,{vol:.05,type:"triangle",delay:t,attack:.001});});
-      [1046.5,1318.5,1568].forEach((f,i)=>bell(f,.7,{vol:.055,delay:.4+i*.075}));},
-    present:()=>{mallet(392);mallet(587,{delay:.075,vol:.12});bell(1175,.7,{vol:.035,delay:.16});},
-    home:()=>{noise(.42,{freq:2800,sweep:.14,q:.7,vol:.1,attack:.05,wet:.3});mallet(440,{delay:.24,vol:.1});mallet(330,{delay:.32,vol:.1});},
-    toggle:()=>{thock({f:300,vol:.08});thock({f:430,vol:.07,delay:.06});},
-    tick:()=>tone(vary(2400,.02),.016,{vol:.02,type:"triangle",attack:.001})
+    reveal:()=>{const c=pick([[784,988,1175,1568],[698,880,1047,1397],[784,1047,1175,1568]]);   // rising 4-note resolve on celesta
+      noise(.12,{freq:1200,sweep:2,q:.8,vol:.04,attack:.03});arp(c,.06,(f,t,i)=>bell(vary(f,.005),.55+i*.1,{vol:.05,delay:t,ratio:1,index:.9,wet:.45}));
+      tone(c[0]/2,.5,{vol:.06,delay:.18,wet:.3});},
+    conceal:()=>{bell(vary(1175,.01),.3,{vol:.04,ratio:1,index:.7,wet:.3});bell(vary(784,.01),.35,{vol:.045,ratio:1,index:.7,delay:.06,wet:.3});},
+    search:()=>{const f=vary(pick([880,988]),.01);[0,.13,.26].forEach((t,i)=>bell(f,.5,{vol:.12*Math.pow(.45,i),ratio:1,index:.5,delay:t,wet:.4}));   // sonar ping + echoes
+      pop(vary(330),{vol:.1,rise:2,dur:.08});},
+    // ---- poster-pen ----
+    penOn:()=>{noise(.03,{type:"lowpass",freq:1200,q:.7,vol:.08});pop(vary(360),{vol:.11,rise:2,dur:.07,delay:.02});tone(vary(740),.07,{vol:.035,delay:.06,wet:.15});},   // uncap
+    penOff:()=>{thock({f:vary(260),vol:.1});noise(.01,{freq:2800,q:3,vol:.05,delay:.028});thock({f:vary(190),vol:.06,delay:.03});},   // cap clicks back on
+    tool:t=>{if(t==="hl"){noise(.07,{freq:1300,sweep:1.6,q:.9,vol:.15,attack:.015});thock({f:170,vol:.09});}   // fat felt swipe
+      else if(t==="er"){tone(vary(240),.07,{vol:.15,slide:.7,lp:900});noise(.03,{type:"lowpass",freq:700,vol:.08});}   // rubber thup
+      else{const k=+t||0;noise(.018,{freq:vary(1900+k*300,.05),q:1.5,vol:.12});thock({f:vary(200+k*30),vol:.11,nf:2200});}},   // marker tap, per colour
+    undo:()=>{tone(vary(880),.09,{vol:.07,slide:.55,slideT:.08,type:"triangle",lp:2000,attack:.002});thock({f:180,vol:.06,delay:.085});},   // tape rewind blip
+    clear:()=>{noise(.2,{freq:1800,sweep:.5,q:.9,vol:.09,attack:.04,wet:.1});noise(.18,{freq:900,sweep:.6,q:.7,vol:.05,attack:.05,delay:.05});thock({f:140,vol:.08,delay:.2});},   // eraser across paper
+    wipe:()=>{noise(.45,{freq:2400,sweep:.2,q:.7,vol:.1,attack:.08,wet:.25});tone(520,.4,{vol:.05,slide:.5,lp:1200,attack:.05,wet:.2});
+      thock({f:110,vol:.12,delay:.42});bell(262,.8,{vol:.03,delay:.44,ratio:1,index:.4});},   // clean slate
+    splitOn:()=>{noise(.14,{freq:600,sweep:2.5,q:1,vol:.07,attack:.05});wood(vary(660,.015),{vol:.09,delay:.13});wood(vary(990,.015),{vol:.06,delay:.16});},   // panel slides open, latches
+    splitOff:()=>{noise(.14,{freq:1500,sweep:.4,q:1,vol:.07,attack:.05});wood(vary(495,.015),{vol:.09,delay:.13});wood(vary(330,.015),{vol:.07,delay:.16});},
+    snap:()=>{wood(vary(880,.03),{vol:.07});thock({f:vary(200),vol:.07,delay:.012});},   // divider dropped
+    // ---- side drawers: a soft slide + landing, tinted per drawer ----
+    drawer:w=>{noise(.16,{type:"lowpass",freq:500,sweep:4,q:.7,vol:.08,attack:.07,wet:.15});thock({f:vary(150),vol:.09,delay:.14});
+      if(w==="pd")glass(vary(1568,.01),{vol:.04,delay:.15,dur:.4});
+      else if(w==="td")pluck(vary(392,.01),.4,{vol:.06,delay:.13});
+      else if(w==="vs"){tone(vary(523),.3,{vol:.05,slide:1.5,slideT:.25,delay:.12,wet:.35});tone(vary(784),.3,{vol:.04,slide:1.5,slideT:.25,delay:.16,wet:.35});}   // swirl for the 3D model
+      else if(w==="tm"){wood(1175,{vol:.06,delay:.14});wood(880,{vol:.06,delay:.26});}},   // tick-tock
+    undrawer:()=>{noise(.13,{type:"lowpass",freq:1800,sweep:.3,q:.7,vol:.07,attack:.03});thock({f:vary(130),vol:.09,delay:.1});},
+    // ---- periodic table: glass blips pitched by atomic number ----
+    element:z=>glass(note(523,((z|0)-1)%12),{vol:.07,dur:.25}),
+    add:z=>{const f=note(523,((z|0)-1)%12);glass(f,{vol:.06,dur:.25});pop(f*.75,{vol:.06,rise:1.5,dur:.05,delay:.04});},
+    remove:()=>{pop(vary(620),{vol:.1,rise:.6,dur:.09});thock({f:vary(160),vol:.07});},
+    // ---- timer ----
+    start:()=>{wood(vary(784,.01),{vol:.09});wood(vary(1175,.01),{vol:.08,delay:.07});},
+    pause:()=>{wood(vary(1175,.01),{vol:.07});wood(vary(784,.01),{vol:.08,delay:.07});},
+    reset:()=>{[0,.04,.075,.105].forEach((t,i)=>wood(vary(1400-i*150,.02),{vol:.05,delay:t}));thock({f:150,vol:.08,delay:.14});},   // ratchet back to zero
+    ring:()=>[0,.38,.76].forEach(t=>{bell(1319,.6,{vol:.07,delay:t,index:1.2});bell(1047,.8,{vol:.07,delay:t+.14,index:1.2});}),   // kitchen-timer ding-dong x3
+    saved:()=>{noise(.02,{freq:2000,q:1.2,vol:.1});thock({f:220,vol:.08});noise(.025,{freq:1600,q:1.2,vol:.08,delay:.07});thock({f:180,vol:.07,delay:.07});
+      bell(1319,.5,{vol:.035,delay:.16});bell(1976,.6,{vol:.03,delay:.22});}   // shutter, then a 5th
   };
   let lastTick=0,lastPrev=0;
   return {play(k,a){if(!on||vol===0)return;const n=Date.now();
@@ -813,7 +899,7 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,on=ls.get("cqb_sfx","1")!=="0
 function syncSfxBtns(){const v=SFX.vol,live=SFX.on&&v>0,ic=!live?"🔇":v<34?"🔈":v<67?"🔉":"🔊";
   document.querySelectorAll(".sfxbtn").forEach(b=>{b.textContent=ic;b.title=SFX.on?"ปิดเสียง (M)":"เปิดเสียง (M)";});
   document.querySelectorAll(".vol").forEach(r=>{r.value=v;r.classList.toggle("off",!SFX.on);r.title=`ระดับเสียง ${v}%`;});}
-function toggleSfx(){SFX.set(!SFX.on);syncSfxBtns();SFX.play("toggle");}
+function toggleSfx(){SFX.set(!SFX.on);syncSfxBtns();SFX.play("on");}
 document.querySelectorAll(".sfxbtn").forEach(b=>b.onclick=toggleSfx);
 document.querySelectorAll(".vol").forEach(r=>r.addEventListener("input",()=>{
   if(!SFX.on)SFX.set(true);                       // dragging the slider un-mutes
@@ -823,13 +909,13 @@ syncSfxBtns();
 /* ---------- background toggle ---------- */
 function setBg(on){document.body.classList.toggle("nobg",!on);ls.set("cqb_bg",on?"1":"0");}
 setBg(ls.get("cqb_bg","1")!=="0");
-$("#lbg").onclick=$("#bgbtn").onclick=()=>{setBg(document.body.classList.contains("nobg"));SFX.play("toggle");};
+$("#lbg").onclick=$("#bgbtn").onclick=()=>{setBg(document.body.classList.contains("nobg"));SFX.play(document.body.classList.contains("nobg")?"off":"on");};
 
 /* ---------- night mode + teaching (screen-share) mode ---------- */
 function setDark(on){document.body.classList.toggle("dark",on);ls.set("cqb_dark",on?"1":"0");
   $("#ldark").textContent=on?"☀":"🌙";$("#darkbtn").textContent=on?"☀":"🌙";}
 setDark(ls.get("cqb_dark","0")==="1");
-$("#ldark").onclick=$("#darkbtn").onclick=()=>{setDark(!document.body.classList.contains("dark"));SFX.play("toggle");};
+$("#ldark").onclick=$("#darkbtn").onclick=()=>{setDark(!document.body.classList.contains("dark"));SFX.play(document.body.classList.contains("dark")?"on":"off");};
 
 /* ---------- recently viewed questions (landing tile) ---------- */
 let RECENT=[];try{RECENT=JSON.parse(ls.get("cqb_recent","[]"))||[];}catch(e){RECENT=[];}
@@ -962,13 +1048,13 @@ function syncFacets(f){
     fill($("#fsol"),"วิธีทำ: ทั้งหมด",SOLOPTS.map(([v,l])=>[v,l,pool.filter(x=>qMatch(x,{...f,sl:v},null)).length]));}}
 function apply(keepPos){
   let f=fstate();syncFacets(f);f=fstate();   // a select can fall back to "all" when its value vanished
-  filtered=DATA.questions.filter(x=>qMatch(x,f));
+  const had=filtered.length;filtered=DATA.questions.filter(x=>qMatch(x,f));
   // palette follows the subject on screen: the subject filter, else a result set that's all one subject
   const bioN=filtered.filter(x=>x.subject==="bio").length;
   setSubj(f.subj?(f.subj==="bio"?"bio":"chem"):!filtered.length?SUBJ:bioN===filtered.length?"bio":bioN?SUBJ:"chem");
   if(!keepPos) pIdx=0;
   $("#count").textContent=`${filtered.length} / ${DATA.questions.length} ข้อ`;
-  render();
+  render();if(had&&!filtered.length)SFX.play("empty");   // only on the step INTO no results, not every keystroke there
   const id=$("#q").value.trim().toUpperCase();if(/^Q-\d{4}$/.test(id))seen(filtered.find(x=>x.id===id));
 }
 
@@ -1009,7 +1095,7 @@ function pstep(d){
   if(view!=="poster"||!filtered.length||pBusy) return;
   const p=$("#deck .poster");pBusy=true;
   if(p) p.classList.add(d>0?"outL":"outR");
-  SFX.play("swish",d);
+  SFX.play("flip",d);
   setTimeout(()=>{pIdx=(pIdx+d+filtered.length)%filtered.length;fillPoster(d>0?"inR":"inL");pBusy=false;},180);
 }
 /* ---- CARDS ---- */
@@ -1062,7 +1148,7 @@ function paneShow(i){
 /* ---- present modal ---- */
 let mIdx=0;
 function openModal(i){mIdx=i;fillModal();$("#modal").classList.add("show");INK.open();SFX.play("present");}
-function closeModal(){if(!$("#modal").classList.contains("show"))return;$("#modal").classList.remove("show");INK.close();SFX.play("close");
+function closeModal(){if(!$("#modal").classList.contains("show"))return;$("#modal").classList.remove("show");INK.close();SFX.play("dismiss");
   dwell(view==="poster"&&document.body.classList.contains("inapp")?filtered[pIdx]:null);}
 function fillModal(){
   const q=filtered[mIdx];dwell(q);
@@ -1080,7 +1166,7 @@ function fillModal(){
   // fetch the neighbours' figures now so ◀ / ▶ show them (and can save them) without waiting
   [1,-1].forEach(d=>{const n=filtered[(mIdx+d+filtered.length)%filtered.length];if(n&&n.figure)(new Image()).src=n.figure;});
 }
-function step(d){mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal();SFX.play("swish",d);}
+function step(d){mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal();SFX.play("flip",d);}
 
 /* ---- poster-pen: ink over the present sheet, and over the split-mode scratch board ----
    Question ink is stored normalised to #mbody (the question itself, not the viewport or the growing sheet), so a
@@ -1180,16 +1266,15 @@ const INK=(()=>{
     const b=$("#inksplit");b.classList.toggle("sel",v);b.setAttribute("aria-pressed",v);}
   function mark(){bar.querySelectorAll("[data-c]").forEach(b=>b.classList.toggle("sel",tool==="pen"&&+b.dataset.c===col));
     bar.querySelectorAll("[data-t]").forEach(b=>b.classList.toggle("sel",tool===b.dataset.t));}
-  $("#inkw").addEventListener("click",e=>{e.currentTarget.blur();if(!cur){setOn(!on);SFX.play("toggle");}});
+  $("#inkw").addEventListener("click",e=>{e.currentTarget.blur();if(!cur){setOn(!on);SFX.play(on?"penOn":"penOff");}});
   bar.addEventListener("click",e=>{const b=e.target.closest("button");if(!b||cur)return;b.blur();
-    if(b.dataset.c||b.dataset.t){tool=b.dataset.t||"pen";if(b.dataset.c)col=+b.dataset.c;mark();}
-    else if(b.id==="inksplit"){setSplit(!split);SFX.play("toggle");return;}
-    else if(b.id==="inkundo"){const h=hist[qid()];if(!h||!h.length)return;const p=h.pop();for(const k in p)put(k,p[k]);save();frame(3);}
+    if(b.dataset.c||b.dataset.t){tool=b.dataset.t||"pen";if(b.dataset.c)col=+b.dataset.c;mark();SFX.play("tool",b.dataset.t||col);}
+    else if(b.id==="inksplit"){setSplit(!split);SFX.play(split?"splitOn":"splitOff");return;}
+    else if(b.id==="inkundo"){const h=hist[qid()];if(!h||!h.length)return;const p=h.pop();for(const k in p)put(k,p[k]);save();frame(3);SFX.play("undo");}
     // 🧹 clears what you can see: the question, plus the board while it's on screen (one undo step)
     else if(b.id==="inkclr"){const a={q:[]},p={q:list(SQ)};if(split){a.b=[];p.b=list(SB);}
-      if(!p.q.length&&!(p.b&&p.b.length))return;commit(a,p);}
-    else if(b.id==="inkwipe"){if(!confirm("ล้างหมึกทั้งหมด? (ทุกข้อ)"))return;S={d:today(),q:{},b:{}};Object.keys(hist).forEach(k=>delete hist[k]);ls.del(K);frame(3);}
-    SFX.play("click");});
+      if(!p.q.length&&!(p.b&&p.b.length))return;commit(a,p);SFX.play("clear");}
+    else if(b.id==="inkwipe"){if(!confirm("ล้างหมึกทั้งหมด? (ทุกข้อ)"))return;S={d:today(),q:{},b:{}};Object.keys(hist).forEach(k=>delete hist[k]);ls.del(K);frame(3);SFX.play("wipe");}});
   // divider: the question's share of the space beside the 28px bar, remembered per orientation
   const DK="cqb_split",div=$("#mdiv");let SR={},drag=null;
   try{SR=JSON.parse(ls.get(DK,"{}"))||{};}catch(e){}
@@ -1203,26 +1288,26 @@ const INK=(()=>{
   div.addEventListener("pointerdown",e=>{if(!split)return;e.preventDefault();drag=e.pointerId;try{div.setPointerCapture(e.pointerId);}catch(_){}});
   div.addEventListener("pointermove",e=>{if(e.pointerId!==drag)return;const z=span();
     SR[z.P?"p":"l"]=+(lay((z.P?e.clientY:e.clientX)-z.a-14)/z.n).toFixed(4);});
-  ["pointerup","pointercancel","lostpointercapture"].forEach(ev=>div.addEventListener(ev,e=>{if(e.pointerId!==drag)return;drag=null;ls.set(DK,JSON.stringify(SR));}));
+  ["pointerup","pointercancel","lostpointercapture"].forEach(ev=>div.addEventListener(ev,e=>{if(e.pointerId!==drag)return;drag=null;ls.set(DK,JSON.stringify(SR));SFX.play("snap");}));
   new MutationObserver(()=>{if(shown())frame(3);}).observe(document.body,{attributes:true,attributeFilter:["class","data-subj"]});
   if(window.ResizeObserver){const ro=new ResizeObserver(sizeAll);[SQ.wrap,body,SB.wrap].forEach(el=>ro.observe(el));}
   addEventListener("resize",()=>{lay();sizeAll();});
   return{open(){load();setOn(false);sizeAll();},close(){cur=null;setOn(false);setSplit(false);},
-         refresh(){if(!shown())return;cur=null;load();sizeAll();},toggle(){setOn(!on);SFX.play("toggle");}};
+         refresh(){if(!shown())return;cur=null;load();sizeAll();},toggle(){setOn(!on);SFX.play(on?"penOn":"penOff");}};
 })();
 
 /* ---- view switch ---- */
 $("#layout").querySelectorAll("button").forEach(b=>{
   b.classList.toggle("on",b.dataset.v===view);
-  b.onclick=()=>{view=b.dataset.v;ls.set("cqb_view",view);SFX.play("toggle");
+  b.onclick=()=>{view=b.dataset.v;ls.set("cqb_view",view);SFX.play("view",[...b.parentElement.children].indexOf(b));
     $("#layout").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x.dataset.v===view));render();};
 });
 ["input","change"].forEach(ev=>{$("#q").addEventListener(ev,()=>apply());
   ["#fch","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).addEventListener(ev,()=>apply()));});
 $("#fsubj").addEventListener("change",()=>{populateChapters($("#fsubj").value);apply();});
-["#fsubj","#fch","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).addEventListener("change",()=>SFX.play("click")));
+["#fsubj","#fch","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach((s,i)=>$(s).addEventListener("change",()=>SFX.play("filter",i)));
 $("#random").onclick=()=>{if(!filtered.length)return;SFX.play("dice");const i=Math.floor(Math.random()*filtered.length);setTimeout(()=>openModal(i),380);};
-$("#ftoggle").onclick=()=>{$("#hdr").classList.toggle("fopen");SFX.play("click");};
+$("#ftoggle").onclick=()=>{SFX.play($("#hdr").classList.toggle("fopen")?"unfold":"fold");};
 
 /* the question a click landed in: the modal's, else the nearest [data-i] (poster / card / row) */
 const qAt=el=>el.closest("#modal")?filtered[mIdx]:(el=el.closest("[data-i]"))&&filtered[+el.dataset.i];
@@ -1234,7 +1319,7 @@ function solToggle(e){
   const w=b.nextElementSibling;
   if(w && w.classList.contains("solwrap")){
     const open=w.classList.toggle("show");
-    SFX.play(open?"open":"close");if(open)seen(qAt(b));
+    SFX.play(open?"reveal":"conceal");if(open)seen(qAt(b));
     b.textContent = open ? "ซ่อนวิธีทำ ↑" : (b.dataset.label || "ดูวิธีทำ →");
   }
   return true;
@@ -1249,8 +1334,8 @@ $("#root").addEventListener("click",e=>{
   if(e.target.closest("#pprev")){pstep(-1);return;}
   if(e.target.closest("#pnext")){pstep(1);return;}
   const p=e.target.closest(".present-btn");if(p){openModal(+p.dataset.i);return;}
-  const item=e.target.closest(".pane-item");if(item){SFX.play("click");paneShow(+item.dataset.i);return;}
-  const rh=e.target.closest(".row-h");if(rh){SFX.play(rh.parentElement.classList.toggle("open")?"open":"close");return;}
+  const item=e.target.closest(".pane-item");if(item){SFX.play("select");paneShow(+item.dataset.i);return;}
+  const rh=e.target.closest(".row-h");if(rh){SFX.play(rh.parentElement.classList.toggle("open")?"unfold":"fold");return;}
   markChoice(e);
 });
 $("#root").addEventListener("input",e=>{
@@ -1261,7 +1346,7 @@ $("#mbody").addEventListener("click",e=>{if(markChoice(e)&&window.prepShot)prepS
 
 $("#mx").onclick=closeModal;
 $("#modal").onclick=e=>{if(e.target.id==="modal")closeModal();};
-$("#mreveal").onclick=()=>{const open=$("#mans").classList.toggle("show");SFX.play(open?"open":"close");if(open)seen(filtered[mIdx]);};
+$("#mreveal").onclick=()=>{const open=$("#mans").classList.toggle("show");SFX.play(open?"reveal":"conceal");if(open)seen(filtered[mIdx]);};
 $("#mprev").onclick=()=>step(-1);$("#mnext").onclick=()=>step(1);
 
 /* ---- keyboard ---- */
@@ -1368,23 +1453,23 @@ const PD=(()=>{
     const zs=new Set();out.forEach(f=>Object.keys(parseF(f)).forEach(k=>zs.add(SYM[k].z)));
     zs.forEach(z=>{const t=G.querySelector(`.pde[data-z="${z}"]`);if(t)t.classList.add("inq");});}
   const isOpen=()=>document.body.classList.contains("pdopen");
-  function open(){if(TD.isOpen())TD.close();if(!built)build();refreshQ();document.body.classList.add("pdopen");SFX.play("open");}
-  function close(){if(!isOpen())return;document.body.classList.remove("pdopen");SFX.play("close");}
+  function open(){if(TD.isOpen())TD.close();if(!built)build();refreshQ();document.body.classList.add("pdopen");SFX.play("drawer","pd");}
+  function close(){if(!isOpen())return;document.body.classList.remove("pdopen");SFX.play("undrawer");}
   // Mw on: a tap adds the element to the formula. Mw off: a tap only shows it in the big tile.
   let mwOn=ls.get("cqb_mw2","0")==="1";   // off by default; new key so the old saved "on" does not stick
   function setMw(on){mwOn=on;ls.set("cqb_mw2",on?"1":"0");$("#pd").classList.toggle("nomw",!on);
     $("#pdmwt").classList.toggle("on",on);$("#pdmwt").textContent=on?"🧮 คิด Mw: เปิด":"🧮 คิด Mw: ปิด";}
   setMw(mwOn);
-  $("#pdmwt").onclick=()=>{setMw(!mwOn);SFX.play("toggle");};
+  $("#pdmwt").onclick=()=>{setMw(!mwOn);SFX.play(mwOn?"on":"off");};
   G.addEventListener("click",e=>{const t=e.target.closest(".pde");if(!t)return;const el=BY[t.dataset.z];
-    if(mwOn){addSym(el.s);SFX.play("tick");}else SFX.play("click");big(el);flash(el.z);});
+    if(mwOn)addSym(el.s);SFX.play(mwOn?"add":"element",el.z);big(el);flash(el.z);});
   G.addEventListener("contextmenu",e=>{const t=e.target.closest(".pde");if(!t||!mwOn)return;e.preventDefault();const el=BY[t.dataset.z];big(el);
-    if(decSym(el.s)){flash(el.z);SFX.play("unmark");}else SFX.play("bad");});
+    if(decSym(el.s)){flash(el.z);SFX.play("remove");}else SFX.play("bad");});
   G.addEventListener("mouseover",e=>{const t=e.target.closest(".pde");if(t){const el=BY[t.dataset.z];$("#pdhov").textContent=`${el.s} · ${el.n} · Z ${el.z} · ${fm(el)}`;}});
   inp.addEventListener("input",update);
-  $("#pdkeys").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.k;SFX.play("click");
+  $("#pdkeys").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.k;SFX.play("key",k);
     if(k=="bk")put(inp.value.slice(0,-1));else if(k=="clr")put("");else put(inp.value+k);});
-  $("#pdq").addEventListener("click",e=>{const b=e.target.closest("button");if(b){put(b.dataset.f);SFX.play("click");}});
+  $("#pdq").addEventListener("click",e=>{const b=e.target.closest("button");if(b){put(b.dataset.f);SFX.play("select");}});
   $("#pdtab").onclick=open;$("#pdx").onclick=close;$("#pdscrim").onclick=close;
   return{open,close,isOpen,parseF,curQ,load(v){open();if(!mwOn)setMw(true);put(v);}};
 })();
@@ -1437,11 +1522,11 @@ function deliverShot(blob,name){const file=new File([blob],name,{type:blob.type}
   dl();}
 async function saveShot(){const q=filtered[mIdx],b=$("#mshot");if(!q||b.disabled)return;
   const lbl="💾 บันทึกเป็นรูป",k=shotKey();const nm=b=>`${q.id}.${b.type==="image/jpeg"?"jpg":"png"}`;
-  if(shot.key===k&&shot.blob){deliverShot(shot.blob,nm(shot.blob));SFX.play("ok");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1200);return;}
+  if(shot.key===k&&shot.blob){deliverShot(shot.blob,nm(shot.blob));SFX.play("saved");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1200);return;}
   b.disabled=true;b.textContent="กำลังสร้างรูป…";
   try{if(!(shot.key===k&&shot.job)){const job=renderShot();shot={key:k,blob:null,job};}
     const blob=await shot.job;shot.blob=blob;deliverShot(blob,nm(blob));
-    SFX.play("ok");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1200);
+    SFX.play("saved");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1200);
   }catch(e){shot={key:"",blob:null,job:null};b.textContent=lbl;alert("บันทึกรูปไม่ได้ — ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างรูป");}
   finally{b.disabled=false;}}
 $("#mshot").onclick=saveShot;
@@ -1495,8 +1580,8 @@ const TD=(()=>{
       list.forEach(([f,ch,n])=>{rows+=`<tr class="io" data-f="${f}"><td class="f">${sub(f)}<sup>${ch}</sup></td><td>${n}</td><td class="f">${ch}</td></tr>`;});});
     $("#td-io").innerHTML=`<table class="iontbl"><tr><th>ไอออน</th><th>ชื่อ</th><th>ประจุ</th></tr>${rows}</table>
       <p class="tdnote">แตะไอออนเพื่อส่งสูตรไปคิด Mw ในตารางธาตุ</p>`;
-    $("#cvcat").onclick=e=>{const b=e.target.closest("button");if(!b)return;cat=b.dataset.c;unit=Object.keys(CV[cat].u)[0];SFX.play("click");cvRender();};
-    $("#cvx").addEventListener("input",cvCalc);$("#cvu").onchange=()=>{unit=$("#cvu").value;SFX.play("click");cvCalc();};
+    $("#cvcat").onclick=e=>{const b=e.target.closest("button");if(!b)return;cat=b.dataset.c;unit=Object.keys(CV[cat].u)[0];SFX.play("select");cvRender();};
+    $("#cvx").addEventListener("input",cvCalc);$("#cvu").onchange=()=>{unit=$("#cvu").value;SFX.play("select");cvCalc();};
     $("#td-io").onclick=e=>{const r=e.target.closest("tr.io");if(!r)return;close();setTimeout(()=>PD.load(r.dataset.f),120);};
     cvRender();built=true;}
   /* ----- สูตร ----- */
@@ -1547,7 +1632,7 @@ const TD=(()=>{
       <p class="tdnote">แท็ก <b>เพิ่มเติม</b> = เกินหลักสูตรแกน ใช้ในสอวน. / ข้อสอบที่ยากขึ้น · ถ้าโจทย์กำหนดค่าคงที่ให้ ใช้ค่าตามโจทย์</p>`;
     fxTex();fxFit();
     $("#fxq").addEventListener("input",fxFilter);
-    $("#fxchips").onclick=e=>{const b=e.target.closest("button");if(!b)return;SFX.play("click");
+    $("#fxchips").onclick=e=>{const b=e.target.closest("button");if(!b)return;SFX.play("select");
       const sec=$("#fx-"+b.dataset.j);if(sec&&sec.style.display!=="none")sec.scrollIntoView({behavior:"smooth",block:"start"});};}
   function fxFilter(){const t=$("#fxq").value.trim().toLowerCase();let any=false;
     document.querySelectorAll("#fxlist .fsec").forEach(sec=>{let n=0;
@@ -1561,9 +1646,9 @@ const TD=(()=>{
   const isOpen=()=>document.body.classList.contains("tdopen");
   function open(){if(PD.isOpen())PD.close();if(!built)build();
     const was=fxFor;fxRender();if(was!==fxFor)$("#td").scrollTop=0;
-    document.body.classList.add("tdopen");fxFit();SFX.play("open");}
-  function close(){if(!isOpen())return;document.body.classList.remove("tdopen");SFX.play("close");}
-  $("#tdtabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;SFX.play("click");
+    document.body.classList.add("tdopen");fxFit();SFX.play("drawer","td");}
+  function close(){if(!isOpen())return;document.body.classList.remove("tdopen");SFX.play("undrawer");}
+  $("#tdtabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;SFX.play("tab",[...b.parentElement.children].indexOf(b));
     $("#tdtabs").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
     document.querySelectorAll(".tdpane").forEach(p=>p.classList.toggle("on",p.id==="td-"+b.dataset.t));fxFit();};
   $("#tdtab").onclick=open;$("#tdx").onclick=close;
@@ -1576,8 +1661,8 @@ const VS=(()=>{
   const isOpen=()=>document.body.classList.contains("vsopen");
   function open(){if(PD.isOpen())PD.close();if(TD.isOpen())TD.close();
     const f=$("#vsf");if(!f.src)f.src="vsepr.html?embed=1";
-    document.body.classList.add("vsopen");SFX.play("open");}
-  function close(){if(!isOpen())return;document.body.classList.remove("vsopen");SFX.play("close");}
+    document.body.classList.add("vsopen");SFX.play("drawer","vs");}
+  function close(){if(!isOpen())return;document.body.classList.remove("vsopen");SFX.play("undrawer");}
   $("#vstab").onclick=()=>isOpen()?close():open();$("#vsx").onclick=close;
   $("#pdscrim").addEventListener("click",close);
   // Esc pressed inside the 3D view closes the drawer too
@@ -1603,17 +1688,17 @@ const TM=(()=>{
     if(running&&mode==="down"&&v<=0)ring();}
   function ring(){running=false;clearInterval(iv);left=0;rang=true;$("#tmface").classList.remove("done");void $("#tmface").offsetWidth;$("#tmface").classList.add("done");
     $("#tmmini").classList.remove("done");void $("#tmmini").offsetWidth;$("#tmmini").classList.add("done");
-    [0,380,760].forEach(d=>setTimeout(()=>SFX.play("ok"),d));draw();}
+    SFX.play("ring");draw();}
   function start(){if(mode==="down"&&left<=0)left=total;rang=false;$("#tmface").classList.remove("done");$("#tmmini").classList.remove("done");
-    running=true;t0=Date.now();clearInterval(iv);iv=setInterval(draw,200);SFX.play("click");draw();}
-  function pause(){const el=(Date.now()-t0)/1000;if(mode==="down")left=Math.max(0,left-el);else up+=el;running=false;clearInterval(iv);SFX.play("click");draw();}
-  function reset(){running=false;clearInterval(iv);left=total;up=0;$("#tmface").classList.remove("done");$("#tmmini").classList.remove("done");SFX.play("unmark");draw();}
+    running=true;t0=Date.now();clearInterval(iv);iv=setInterval(draw,200);SFX.play("start");draw();}
+  function pause(){const el=(Date.now()-t0)/1000;if(mode==="down")left=Math.max(0,left-el);else up+=el;running=false;clearInterval(iv);SFX.play("pause");draw();}
+  function reset(){running=false;clearInterval(iv);left=total;up=0;$("#tmface").classList.remove("done");$("#tmmini").classList.remove("done");SFX.play("reset");draw();}
   function setMode(m){if(running)pause();mode=m;document.getElementById("tm").classList.toggle("tm-up",m==="up");
-    $("#tmseg").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));SFX.play("toggle");draw();}
-  function setTotal(sec){if(running)return;total=Math.max(10,Math.min(5*3600,sec));left=total;$("#tmface").classList.remove("done");SFX.play("click");draw();}
+    $("#tmseg").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));SFX.play("tab",m==="up"?1:0);draw();}
+  function setTotal(sec){if(running)return;total=Math.max(10,Math.min(5*3600,sec));left=total;$("#tmface").classList.remove("done");SFX.play("key");draw();}
   const isOpen=()=>document.body.classList.contains("tmopen");
-  function open(){document.body.classList.add("tmopen");SFX.play("open");}
-  function close(){if(!isOpen())return;document.body.classList.remove("tmopen");SFX.play("close");}
+  function open(){document.body.classList.add("tmopen");SFX.play("drawer","tm");}
+  function close(){if(!isOpen())return;document.body.classList.remove("tmopen");SFX.play("undrawer");}
   $("#tmgo").onclick=()=>running?pause():start();$("#tmreset").onclick=reset;
   $("#tmseg").onclick=e=>{const b=e.target.closest("button");if(b&&b.dataset.m!==mode)setMode(b.dataset.m);};
   $("#tmpre").onclick=e=>{const b=e.target.closest("button");if(b)setTotal(+b.dataset.m*60);};
@@ -1622,8 +1707,8 @@ const TM=(()=>{
   // corner widget: a bigger always-visible clock, switched from the panel, remembered
   function setMini(on){$("#tmmini").classList.toggle("show",on);$("#tmfull").classList.toggle("on",on);
     $("#tmfull").textContent=on?"✓ นาฬิกามุมจอ (กดเพื่อซ่อน)":"⧉ แสดงนาฬิกามุมจอ";ls.set("cqb_tmmini",on?"1":"0");}
-  $("#tmfull").onclick=()=>{setMini(!$("#tmmini").classList.contains("show"));SFX.play("toggle");};
-  $("#tmmx").onclick=()=>{setMini(false);SFX.play("close");};
+  $("#tmfull").onclick=()=>{setMini(!$("#tmmini").classList.contains("show"));SFX.play($("#tmmini").classList.contains("show")?"on":"off");};
+  $("#tmmx").onclick=()=>{setMini(false);SFX.play("off");};
   $("#tmmgo").onclick=()=>running?pause():start();$("#tmmreset").onclick=reset;$("#tmmd").onclick=()=>isOpen()?close():open();
   setMini(ls.get("cqb_tmmini","0")==="1");
   draw();
@@ -1701,7 +1786,7 @@ function goSubj(ti,d,px=0){
   heroPlace(tr,si,ti,d,px,false);void tr.offsetWidth;          // line the target up on the side we're heading to...
   heroPlace(tr,ti,si,-d,0,true);setSubj(SUBJS[ti]);            // ...then slide both
   hero.querySelectorAll(".hdot").forEach((b,k)=>b.classList.toggle("on",k===ti));
-  SFX.play("swish",d);
+  SFX.play(SUBJ,d);   // "chem" / "bio": each subject has its own timbre
   [...B.children].forEach(el=>{if(!el.matches(".hero,.recent"))el.remove();});
   B.insertAdjacentHTML("beforeend",subjTiles());packBoard();
 }
@@ -1752,8 +1837,8 @@ function lsNorm(v){v=v.trim();const m=v.match(/^(?:q-?)?0*(\d{1,4})$/i);
 function lsCount(v){const t=v.trim().toLowerCase();if(!t)return -1;return DATA.questions.filter(x=>x.search.includes(t)||x.id.toLowerCase().includes(t)).length;}
 function lsGo(){
   const v=lsNorm($("#lq").value),n=lsCount(v),box=$("#lsearch");if(n<0)return;
-  if(!n){SFX.play("bad");box.classList.remove("shake");void box.offsetWidth;box.classList.add("shake");return;}
-  const r=box.getBoundingClientRect();SFX.play("tile");setTimeout(()=>SFX.play("whoosh"),70);
+  if(!n){SFX.play("empty");box.classList.remove("shake");void box.offsetWidth;box.classList.add("shake");return;}
+  const r=box.getBoundingClientRect();SFX.play("search");setTimeout(()=>SFX.play("whoosh"),70);
   enterApp(r.left+r.width/2,r.top+r.height/2,()=>{resetFilters();$("#q").value=v;apply();});
   $("#lq").value="";$("#lct").textContent="";$("#lq").blur();}
 $("#lq").addEventListener("input",()=>{const v=lsNorm($("#lq").value),n=lsCount(v);$("#lct").textContent=n<0?"":v!==$("#lq").value.trim()?v:`${n} ข้อ`;});
