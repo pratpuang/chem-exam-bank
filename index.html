@@ -314,15 +314,21 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .sheet .fig{max-height:52vh;width:auto}
 .sheet .solbody{font-size:1.05rem}
 .x{position:absolute;top:14px;right:16px;border:3px solid var(--ink);background:var(--ink);color:var(--paper);width:42px;height:42px;font-size:1.1rem;font-weight:800}
-.mctrl{display:flex;gap:10px;align-items:center;margin-top:20px;flex-wrap:wrap}
-.mctrl button{padding:10px 18px;border:3px solid var(--ink);background:var(--card);font-size:1rem;font-weight:800;box-shadow:4px 4px 0 var(--sh)}
+/* present bottom row: three equal cells, one height (the tallest label sets it), labels centred */
+.mctrl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:20px}
+.mctrl button{min-height:50px;padding:8px 10px;border:3px solid var(--ink);background:var(--card);font-size:1rem;font-weight:800;line-height:1.25;box-shadow:4px 4px 0 var(--sh);display:flex;flex-wrap:wrap;align-content:center;justify-content:center;text-align:center}   /* each .nw word group is a flex item: lines break only between them */
+.mctrl .reveal.flag{border-style:dashed}.nw{white-space:nowrap}
+.mfrow{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:.8rem;color:var(--mut)}
+.mhint{transition:opacity .6s}.mhint.gone{opacity:0}body.swiped .mhint{display:none}
+.mhint .hf{display:none}@media (hover:hover) and (pointer:fine){.mhint .hc{display:none}.mhint .hf{display:inline}}
+.sheet.inR{animation:pInR .32s cubic-bezier(.2,1.1,.4,1)}.sheet.inL{animation:pInL .32s cubic-bezier(.2,1.1,.4,1)}
+.sheet.outL{animation:pOutL .18s ease-in forwards}.sheet.outR{animation:pOutR .18s ease-in forwards}
 .mctrl button:active{transform:translate(4px,4px);box-shadow:none}
 .reveal{background:var(--blue)!important;color:#fff}
-.ans-box{margin-top:16px;padding:12px 18px;background:#fff4cc;border:3px solid var(--ink);font-size:1.1rem;display:none}
-.ans-box.show{display:block}
-.mpos{margin-left:auto;font-family:"JetBrains Mono";font-weight:700}
+.solnone{color:var(--mut)}
+.mpos{margin-left:auto;font-family:"JetBrains Mono";font-weight:700;color:var(--ink)}
 /* poster-pen: two canvases over the sheet's content (highlighter under pen); inert until write mode (✎ beside ✕, or P)
-   is on. The controls (✕ ✎, ◀ ▶ row, ดูวิธีทำ) sit above them so they stay clickable while writing. The tool bar
+   is on. The controls (✕ ✎ and the bottom button row) sit above them so they stay clickable while writing. The tool bar
    floats in the modal's bottom padding, which is always reserved, so showing/hiding it never moves the question.
    While writing nothing in the modal is selectable: iPad double-tap otherwise grabs the nearest text (it took ✎). */
 .modal{flex-direction:column;padding-bottom:84px}
@@ -367,7 +373,8 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .exprow button{border:2px solid var(--ink);background:var(--card);padding:7px 13px;font-size:.84rem;font-weight:700;box-shadow:3px 3px 0 var(--sh)}
 .exprow button.pri{background:var(--ink);color:var(--paper)}
 .exprow button.dan{color:var(--red)}
-@media(max-width:640px){.poster{padding:20px 16px 18px 26px}.poster .pnum{font-size:4.2rem}.poster .body,.poster .solbox{max-width:100%}.poster .phead,.poster .pmeta{max-width:78%}.sheet{padding:22px 16px 18px 28px}.sheet .body{font-size:1.15rem}}
+@media(max-width:640px){.mctrl{gap:8px}.mctrl button{font-size:.9rem;padding:6px 6px}
+  .poster{padding:20px 16px 18px 26px}.poster .pnum{font-size:4.2rem}.poster .body,.poster .solbox{max-width:100%}.poster .phead,.poster .pmeta{max-width:78%}.sheet{padding:22px 16px 18px 28px}.sheet .body{font-size:1.15rem}}
 
 .katex-display{overflow-x:auto;overflow-y:hidden;padding:4px 0;margin:.6em 0}
 .katex{font-size:1.08em}
@@ -717,7 +724,7 @@ body.dark .c-yel,body.dark .k-nm,body.dark .k-ae,body.dark .k-pt,body.dark .k-md
 body.dark .k-tm{--kb:#2c2c32}
 body.dark .body li:hover,body.dark .pane-item:hover{background:#2a2a30;border-color:#3a3a40}
 body.dark .body li.mk{background:var(--yel);color:#141414;border-color:var(--yel)}
-body.dark .note,body.dark .soldis,body.dark .ans-box{background:#3a3212;color:#f3ead0}
+body.dark .note,body.dark .soldis{background:#3a3212;color:#f3ead0}
 body.dark code{background:#2c2c32}
 body.dark .solbtn.done,body.dark .chk{background:#1f3a26}
 body.dark .solbtn.wrong{background:#43201a}
@@ -789,19 +796,15 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
   <div class="mink" id="mink">
   <div class="mtop" id="mtop"></div>
   <div class="body" id="mbody"></div>
-  <div class="note" id="mnote" style="display:none"></div>
-  <div class="ans-box" id="mans"></div>
   <div id="msol"></div>
   <canvas id="inkhl"></canvas><canvas id="inkpen"></canvas>
   </div>
   <div class="mctrl">
-    <button id="mreveal" class="reveal">เฉลย / หมายเหตุ</button>
-    <button id="mprev">◀ ก่อนหน้า</button>
-    <button id="mnext">ถัดไป ▶</button>
-    <button id="mpt" title="ตารางธาตุ">เปิดตารางธาตุ</button>
-    <button id="mshot" title="บันทึกโจทย์ข้อนี้เป็นไฟล์ PNG">💾 บันทึกเป็นรูป</button>
-    <span class="mpos" id="mpos"></span>
+    <button id="mreveal" class="reveal" aria-expanded="false">เฉลย</button>
+    <button id="mpt" title="ตารางธาตุ"><span class="nw">เปิด</span><wbr><span class="nw">ตารางธาตุ</span></button>
+    <button id="mshot" title="บันทึกโจทย์ข้อนี้เป็นไฟล์ PNG"><span class="nw">💾 บันทึก</span><wbr><span class="nw">เป็นรูป</span></button>
   </div>
+  <div class="mfrow"><span class="mhint" id="mhint"><span class="hc">‹ ปัดซ้าย/ขวาเพื่อเปลี่ยนข้อ ›</span><span class="hf">← → เปลี่ยนข้อ</span></span><span class="mpos" id="mpos"></span></div>
   <div class="foot" id="mfoot" style="margin-top:14px"></div>
 </div>
 <div class="mdiv" id="mdiv" role="separator" aria-label="ลากเพื่อปรับขนาด"></div>
@@ -1151,7 +1154,7 @@ function chBadge(q){
   return `<span class="badge b-ch">บท ${parseInt(q.ch)}. ${q.chName}</span>`;}
 const NOKEY=/no key/i;
 function keyTxt(q){return (q.answer&&!NOKEY.test(q.answer))?q.answer:"";}
-function footHtml(q){const k=keyTxt(q);return `📄 ${q.source}${k?` &nbsp;·&nbsp; เฉลยทางการ: ${k}`:""}`;}
+function footHtml(q){return `📄 ${q.source}`;}   // the official key lives behind the เฉลย button now
 function figHtml(q){return q.figure?`<img class="fig" src="${q.figure}" alt="${q.id} figure" loading="lazy">`:"";}
 function noteHtml(q){return q.note?`<div class="note">📌 ${q.note}</div>`:"";}
 const qnum=q=>parseInt(q.id.slice(q.id.lastIndexOf("-")+1),10);   // Q-0038 -> 38, E-mol-07 -> 7
@@ -1160,19 +1163,24 @@ function chapH(q){const cls=q.subject==="bio"?" bio":q.subject==="applied"?" app
   const nm=q.groupLabel.replace(/^บทที่ \d+ · /,"");
   return `<div class="chap-h${cls}"><b>${n}</b><span>${nm}</span></div>`;}
 
-function solLabel(q){return q.solPending ? "⚠ ดูเฉลย (ยังไม่ได้ตรวจ)" : q.solFlag ? "⚠ ดูวิธีทำ (ไม่ฟันธง)" : isEx(q) ? "ดูเฉลย →" : "ดูวิธีทำ →";}
-/* Solution block — ALWAYS collapsed on render (attempt before seeing the working). */
+/* ONE reveal per question: answer line (official key, else the worked answer), then the worked solution, then the 📌 note;
+   a missing section is left out and the label names what's inside. ⚠ = pending / flagged working. */
+const ansTxt=q=>keyTxt(q)?`เฉลยทางการ: ${keyTxt(q)}`:q.solAnswer?`ตอบ: ${q.solAnswer}`:"";
+const hasRev=q=>!!(ansTxt(q)||q.solHtml||q.note);
+function revName(q){const a=!!ansTxt(q),w=!!q.solHtml;
+  return (q.solPending||q.solFlag?"⚠ ":"")+(a&&w?"เฉลย + วิธีทำ":a||isEx(q)&&w?"เฉลย":w?"วิธีทำ":q.note?"หมายเหตุ":"เฉลย");}
+function solLabel(q){return revName(q)+(q.solPending?" (ยังไม่ได้ตรวจ)":q.solFlag?" (ไม่ฟันธง)":"")+" →";}
+function revBox(q){const a=ansTxt(q);
+  return `<div class="solbox">${q.solPending?`<div class="soldis">⚠ เฉลยข้อนี้ยังไม่ได้ตรวจยืนยัน — อาจมีจุดผิด คิดตามทีละขั้นแล้วตัดสินเอง</div>`
+      :q.solFlag?`<div class="soldis">⚠ ข้อนี้ไม่ฟันธง — โจทย์กำกวมหรือตัวเลือกไม่ตรง อ่านเหตุผลในวิธีทำแล้วตัดสินเอง</div>`:""}
+    ${a?`<div class="solans">${a}</div>`:""}${q.solHtml?`<div class="solbody">${q.solHtml}</div>`:""}${noteHtml(q)}
+    ${hasRev(q)?"":`<div class="solnone">ข้อนี้ไม่มีเฉลยทางการ และยังไม่มีวิธีทำ</div>`}</div>`;}
+const revWrap=q=>`<div class="solwrap${q.solFlag?" flag":""}"><div class="solin">${revBox(q)}</div></div>`;
+/* collapsed on render (attempt before seeing the working) */
 function solHtml(q){
-  if(!hasSol(q)) return "";
-  const f = q.solFlag ? " flag" : "";
+  if(!hasRev(q)) return "";
   const label = solLabel(q);
-  return `<button class="solbtn${f}" data-sol="1" data-label="${label}">${label}</button>
-    <div class="solwrap${f}"><div class="solin"><div class="solbox">
-      ${q.solPending?`<div class="soldis">⚠ เฉลยข้อนี้ยังไม่ได้ตรวจยืนยัน — อาจมีจุดผิด คิดตามทีละขั้นแล้วตัดสินเอง</div>`
-        :q.solFlag?`<div class="soldis">⚠ ข้อนี้ไม่ฟันธง — โจทย์กำกวมหรือตัวเลือกไม่ตรง อ่านเหตุผลในวิธีทำแล้วตัดสินเอง</div>`:""}
-      ${q.solAnswer?`<div class="solans">ตอบ: ${q.solAnswer}</div>`:""}
-      <div class="solbody">${q.solHtml}</div>
-    </div></div></div>`;
+  return `<button class="solbtn${q.solFlag||q.solPending?" flag":""}" data-sol="1" data-label="${label}" data-name="${revName(q)}">${label}</button>${revWrap(q)}`;
 }
 
 /* One predicate for everything. `skip` leaves one filter out, so each dropdown can count what it WOULD
@@ -1250,7 +1258,7 @@ function posterHtml(q,i,anim){return `<article class="poster lv-${q.diff}${exCls
    <div class="pnum${qnum(q)>999?" l4":""}">${qnum(q)}</div>
    <div class="phead">${q.groupLabel}</div>
    <div class="pmeta">${idBadge(q)}${topicBadge(q)}${examBadge(q)}${diffBadge(q)}${typeBadge(q)}</div>
-   <div class="body">${q.bodyHtml}${figHtml(q)}</div>${noteHtml(q)}
+   <div class="body">${q.bodyHtml}${figHtml(q)}</div>
    ${solHtml(q)}
    <div class="foot">${footHtml(q)}<button class="present-btn" data-i="${i}">⤢ แสดงให้นักเรียน</button></div></article>`;}
 function renderPoster(R){
@@ -1258,7 +1266,7 @@ function renderPoster(R){
   R.innerHTML=`<div class="deckbar"><button class="dbtn" id="pprev" title="ก่อนหน้า (←)">←</button>
     <input type="range" id="pscrub" min="1" max="${filtered.length}" value="${pIdx+1}" aria-label="เลื่อนไปข้อ">
     <span id="ppos"></span><button class="dbtn" id="pnext" title="ถัดไป (→)">→</button>
-    <span class="deckhint">← → เปลี่ยนข้อ · Enter เปิดวิธีทำ · ลากแถบเพื่อกระโดด · แตะตัวเลือกเพื่อวงไว้</span></div>
+    <span class="deckhint">← → เปลี่ยนข้อ · Enter เปิดเฉลย · ลากแถบเพื่อกระโดด · แตะตัวเลือกเพื่อวงไว้</span></div>
     <div class="deck" id="deck"></div>`;
   fillPoster("enter");
 }
@@ -1281,7 +1289,7 @@ function cardHtml(q,idx){return `<div class="card lv-${q.diff}${exCls(q)}${idx<1
    <span class="cnum">${qnum(q)}</span>
    <div class="card-top">${idBadge(q)}${chBadge(q)}${topicBadge(q)}${examBadge(q)}${diffBadge(q)}${typeBadge(q)}
      <button class="present-btn" data-i="${idx}">⤢ แสดง</button></div>
-   <div class="body">${q.bodyHtml}${figHtml(q)}</div>${noteHtml(q)}
+   <div class="body">${q.bodyHtml}${figHtml(q)}</div>
    ${solHtml(q)}
    <div class="foot">${footHtml(q)}</div></div>`;}
 function renderCards(R){
@@ -1301,7 +1309,7 @@ function renderList(R){
       <div class="row-h"><span class="chev">▸</span><span class="row-id">${q.id}</span>
         <span class="diff-txt de-${q.diff}">${DIFF_TH[q.diff]||""}</span>
         <span class="row-snip">${q.snippet||""}</span>${topicBadge(q,false,true)}${examBadge(q)}</div>
-      <div class="row-body"><div class="body">${q.bodyHtml}${figHtml(q)}</div>${noteHtml(q)}
+      <div class="row-body"><div class="body">${q.bodyHtml}${figHtml(q)}</div>
         ${solHtml(q)}
         <div class="foot">${footHtml(q)}
         <button class="present-btn" data-i="${i}">⤢ แสดงให้นักเรียน</button></div></div></div>`;
@@ -1328,23 +1336,40 @@ let mIdx=0;
 function openModal(i){mIdx=i;fillModal();$("#modal").classList.add("show");INK.open();SFX.play(isEx(filtered[i])?"exOpen":"present");}
 function closeModal(){if(!$("#modal").classList.contains("show"))return;$("#modal").classList.remove("show");INK.close();SFX.play("dismiss");
   dwell(view==="poster"&&document.body.classList.contains("inapp")?filtered[pIdx]:null);}
-function fillModal(){
+function fillModal(anim){
   const q=filtered[mIdx];dwell(q);
   $("#mtop").innerHTML=`${idBadge(q)}${chBadge(q)}${topicBadge(q,true)}${examBadge(q)}${diffBadge(q)}`;
   $("#mbody").innerHTML=q.bodyHtml+figHtml(q).replace(' loading="lazy"','');
   $("#mfoot").innerHTML=footHtml(q);
-  const nb=$("#mnote");if(q.note){nb.style.display="block";nb.innerHTML="📌 "+q.note;}else nb.style.display="none";
-  const ans=$("#mans");ans.classList.remove("show");
-  ans.innerHTML=keyTxt(q)?`<b>เฉลยทางการ:</b> ${keyTxt(q)}`:q.solAnswer?`<b>ตอบ:</b> ${q.solAnswer}`:isEx(q)?`เฉลยอยู่ในวิธีทำด้านล่าง ↓`:`ข้อนี้ไม่มีเฉลยทางการ และยังไม่มีวิธีทำ`;
-  $("#msol").innerHTML=solHtml(q);tex($("#msol"));
+  const rb=$("#mreveal");rb.innerHTML=`<span class="nw">${revName(q).replace(" + ",'&nbsp;</span><span class="nw">+ ')}</span>`;rb.classList.toggle("flag",!!(q.solFlag||q.solPending));rb.setAttribute("aria-expanded","false");   // label wraps only between its words
+  $("#msol").innerHTML=revWrap(q);tex($("#msol"));
   $("#mpos").textContent=`${mIdx+1} / ${filtered.length}`;
-  const sh=$("#modal .sheet");sh.classList.remove("lv-easy","lv-medium","lv-hard");if(q.diff)sh.classList.add("lv-"+q.diff);sh.classList.toggle("ex",isEx(q));sh.style.animation="none";void sh.offsetWidth;sh.style.animation="";
+  const sh=$("#modal .sheet");sh.classList.remove("lv-easy","lv-medium","lv-hard");if(q.diff)sh.classList.add("lv-"+q.diff);sh.classList.toggle("ex",isEx(q));sh.classList.remove("inR","inL","outL","outR");sh.style.animation="none";void sh.offsetWidth;if(anim)sh.classList.add(anim);sh.style.animation="";
   if(window.prepShot)prepShot(150);
   INK.refresh();
   // fetch the neighbours' figures now so ◀ / ▶ show them (and can save them) without waiting
   [1,-1].forEach(d=>{const n=filtered[(mIdx+d+filtered.length)%filtered.length];if(n&&n.figure)(new Image()).src=n.figure;});
 }
-function step(d){mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal();SFX.play("flip",d);}
+// ← / → and a finger swipe: the card slides out the way it was pushed and the next one comes in from the other side
+let mBusy=false;
+function step(d){if(mBusy||!filtered.length)return;mBusy=true;SFX.play("flip",d);usedNav();
+  $("#modal .sheet").classList.add(d>0?"outL":"outR");
+  setTimeout(()=>{mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal(d>0?"inR":"inL");mBusy=false;},170);}
+function usedNav(){if(document.body.classList.contains("swiped"))return;ls.set("cqb_swiped","1");$("#mhint").classList.add("gone");
+  setTimeout(()=>document.body.classList.add("swiped"),650);}
+if(ls.get("cqb_swiped","")==="1")document.body.classList.add("swiped");
+/* swipe = one FINGER moving mostly sideways >= 50px on the question card. Pencil (touchType "stylus") writes and never
+   navigates; the split board and its divider sit outside .sheet; a wide equation that scrolls sideways keeps its own pan.
+   Touch events, not pointer events: the browser's vertical scroll cancels pointers but still delivers touchend. */
+(()=>{const sh=$("#modal .sheet");let s0=null,pen=false;
+  sh.addEventListener("pointerdown",e=>{pen=e.pointerType==="pen";},true);   // Pencil/stylus where Touch has no touchType (non-Safari)
+  sh.addEventListener("touchstart",e=>{s0=null;const t=e.touches[0];if(e.touches.length!==1||pen||t.touchType==="stylus")return;
+    for(let el=e.target;el&&el!==sh;el=el.parentElement)if(el.scrollWidth>el.clientWidth+1&&/auto|scroll/.test(getComputedStyle(el).overflowX))return;
+    s0={x:t.clientX,y:t.clientY};},{passive:true});
+  sh.addEventListener("touchmove",e=>{if(e.touches.length!==1)s0=null;},{passive:true});
+  sh.addEventListener("touchcancel",()=>{s0=null;});
+  sh.addEventListener("touchend",e=>{if(!s0)return;const t=e.changedTouches[0],dx=t.clientX-s0.x,dy=t.clientY-s0.y;s0=null;
+    if(Math.abs(dx)>=50&&Math.abs(dx)>Math.abs(dy)*1.5)step(dx<0?1:-1);},{passive:true});})();
 
 /* ---- poster-pen: ink over the present sheet, and over the split-mode scratch board ----
    Question ink is stored normalised to #mbody (the question itself, not the viewport or the growing sheet), so a
@@ -1498,7 +1523,7 @@ function solToggle(e){
   if(w && w.classList.contains("solwrap")){
     const open=w.classList.toggle("show");
     SFX.play(open?"reveal":"conceal");if(open)seen(qAt(b));
-    b.textContent = open ? "ซ่อนวิธีทำ ↑" : (b.dataset.label || "ดูวิธีทำ →");
+    b.textContent = open ? "ซ่อน"+b.dataset.name.replace("⚠ ","")+" ↑" : b.dataset.label;
   }
   return true;
 }
@@ -1521,13 +1546,12 @@ $("#root").addEventListener("click",e=>{
 $("#root").addEventListener("input",e=>{
   if(e.target.id==="pscrub"){pIdx=(+e.target.value)-1;fillPoster("");SFX.play("tick");return;}
 });
-$("#msol").addEventListener("click",solToggle);
 $("#mbody").addEventListener("click",e=>{if(markChoice(e)&&window.prepShot)prepShot(250);});
 
 $("#mx").onclick=closeModal;
 $("#modal").onclick=e=>{if(e.target.id==="modal")closeModal();};
-$("#mreveal").onclick=()=>{const open=$("#mans").classList.toggle("show");SFX.play(open?"reveal":"conceal");if(open)seen(filtered[mIdx]);};
-$("#mprev").onclick=()=>step(-1);$("#mnext").onclick=()=>step(1);
+$("#mreveal").onclick=()=>{const w=$("#msol .solwrap");if(!w)return;const open=w.classList.toggle("show");$("#mreveal").setAttribute("aria-expanded",open);
+  SFX.play(open?"reveal":"conceal");if(open)seen(filtered[mIdx]);};
 
 /* ---- keyboard ---- */
 document.addEventListener("keydown",e=>{
@@ -1540,6 +1564,7 @@ document.addEventListener("keydown",e=>{
   if($("#modal").classList.contains("show")){
     if(e.key==="Escape")closeModal();
     if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1);
+    if(e.key==="Enter"&&!e.target.closest("button")){e.preventDefault();$("#mreveal").click();}
     if((e.key==="p"||e.key==="P")&&!e.ctrlKey&&!e.metaKey&&!e.altKey)INK.toggle();
     return;
   }
@@ -1743,13 +1768,13 @@ function deliverShot(blob,name){const file=new File([blob],name,{type:blob.type}
     return navigator.share({files:[file]}).catch(e=>{if(e&&e.name!=="AbortError")dl();});
   dl();}
 async function saveShot(){const q=filtered[mIdx],b=$("#mshot");if(!q||b.disabled)return;
-  const lbl="💾 บันทึกเป็นรูป",k=shotKey();const nm=b=>`${q.id}.${b.type==="image/jpeg"?"jpg":"png"}`;
-  if(shot.key===k&&shot.blob){deliverShot(shot.blob,nm(shot.blob));SFX.play("saved");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1200);return;}
+  const lbl='<span class="nw">💾 บันทึก</span><wbr><span class="nw">เป็นรูป</span>',k=shotKey();const nm=b=>`${q.id}.${b.type==="image/jpeg"?"jpg":"png"}`;
+  if(shot.key===k&&shot.blob){deliverShot(shot.blob,nm(shot.blob));SFX.play("saved");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.innerHTML=lbl;},1200);return;}
   b.disabled=true;b.textContent="กำลังสร้างรูป…";
   try{if(!(shot.key===k&&shot.job)){const job=renderShot();shot={key:k,blob:null,job};}
     const blob=await shot.job;shot.blob=blob;deliverShot(blob,nm(blob));
-    SFX.play("saved");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1200);
-  }catch(e){shot={key:"",blob:null,job:null};b.textContent=lbl;console.error(e);alert(e&&e.cdn?"บันทึกรูปไม่ได้ — ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างรูป":"บันทึกรูปไม่ได้ — สร้างรูปข้อนี้ไม่สำเร็จ ลองอีกครั้ง");}
+    SFX.play("saved");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.innerHTML=lbl;},1200);
+  }catch(e){shot={key:"",blob:null,job:null};b.innerHTML=lbl;console.error(e);alert(e&&e.cdn?"บันทึกรูปไม่ได้ — ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างรูป":"บันทึกรูปไม่ได้ — สร้างรูปข้อนี้ไม่สำเร็จ ลองอีกครั้ง");}
   finally{b.disabled=false;}}
 $("#mshot").onclick=saveShot;
 // fetch the image maker quietly once the site has settled, so the first save doesn't wait on the CDN
