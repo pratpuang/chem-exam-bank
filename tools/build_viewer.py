@@ -662,7 +662,8 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .sheet:before{content:"";position:absolute;left:0;top:0;bottom:0;width:16px;background:var(--red)}
 .sheet.lv-medium{box-shadow:12px 12px 0 var(--yel)}.sheet.lv-medium:before{background:var(--yel)}
 .sheet.lv-easy{box-shadow:12px 12px 0 var(--blue)}.sheet.lv-easy:before{background:var(--blue)}
-.sheet .mtop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding-right:50px}
+.sheet .mtop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding-right:104px}
+.sheet .mtop .badge{white-space:normal}   /* a long chapter name wraps instead of running under ✎ ✕ on a phone */
 .sheet .body{font-size:1.38rem;line-height:1.85}
 /* save-as-image: an off-screen copy of the sheet (badges + question + choices), fixed width so every PNG matches */
 .shotwrap{position:fixed;left:0;top:0;box-sizing:border-box;opacity:0;z-index:-1;pointer-events:none;width:1100px;padding:28px 46px 46px 28px;background:var(--paper)}
@@ -680,20 +681,25 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .ans-box{margin-top:16px;padding:12px 18px;background:#fff4cc;border:3px solid var(--ink);font-size:1.1rem;display:none}
 .ans-box.show{display:block}
 .mpos{margin-left:auto;font-family:"JetBrains Mono";font-weight:700}
-/* poster-pen: two canvases over the sheet's content (highlighter under pen); inert until write mode is on.
-   The controls (✕, ◀ ▶ row, ดูวิธีทำ) sit above them so they stay clickable while writing. */
-.modal{flex-direction:column;gap:18px}
+/* poster-pen: two canvases over the sheet's content (highlighter under pen); inert until write mode (✎ beside ✕, or P)
+   is on. The controls (✕ ✎, ◀ ▶ row, ดูวิธีทำ) sit above them so they stay clickable while writing. The tool bar
+   floats in the modal's bottom padding, which is always reserved, so showing/hiding it never moves the question.
+   While writing nothing in the modal is selectable: iPad double-tap otherwise grabs the nearest text (it took ✎). */
+.modal{flex-direction:column;padding-bottom:84px}
 .mink{position:relative}
 .mink canvas{position:absolute;left:0;top:0;z-index:2;pointer-events:none}
 #inkhl{mix-blend-mode:multiply}body.dark #inkhl{mix-blend-mode:screen}
-.sheet.inking #inkpen{pointer-events:auto;touch-action:none;cursor:crosshair}
-.sheet.inking{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#modal.inking #inkpen{pointer-events:auto;touch-action:none;cursor:crosshair}
+#modal.inking,#modal .x,.inkbar{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#modal button{touch-action:manipulation}
 .sheet .x{z-index:3}.mctrl,#modal .solbtn{position:relative;z-index:3}
-.inkbar{flex-shrink:0;display:flex;gap:4px;flex-wrap:wrap;justify-content:center;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:5px}
+.sheet .inkw{right:66px;background:var(--card);color:var(--ink);font-size:1.3rem;transition:background .15s,color .15s}
+.sheet .inkw.on{background:var(--yel);color:#141414}
+.inkbar{position:absolute;left:50%;bottom:18px;display:flex;gap:3px;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:4px;
+  opacity:0;visibility:hidden;pointer-events:none;transform:translate(-50%,14px);transition:opacity .2s,transform .2s,visibility 0s .2s}
+.inkbar.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0);transition:opacity .2s,transform .2s}
 .inkbar button{width:32px;height:32px;padding:0;border:2px solid var(--ink);background:var(--card);color:var(--ink);font-size:1rem;display:grid;place-items:center}
 .inkbar button.sel{background:var(--yel);color:#141414}
-.inkbar #inkw{font-weight:800;font-size:1.15rem}
-.inkbar #inkw.on{background:var(--ink);color:var(--card);transform:translate(2px,2px)}
 .inkbar .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--ink)}
 /* ---------- export modal ---------- */
 .expwrap{position:fixed;inset:0;background:rgba(20,20,20,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
@@ -1017,6 +1023,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 
 <div class="modal" id="modal"><div class="sheet">
   <button class="x" id="mx">✕</button>
+  <button class="x inkw" id="inkw" title="โหมดเขียน (P)" aria-pressed="false">✎</button>
   <div class="mink" id="mink">
   <div class="mtop" id="mtop"></div>
   <div class="body" id="mbody"></div>
@@ -1036,7 +1043,6 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
   <div class="foot" id="mfoot" style="margin-top:14px"></div>
 </div>
 <div class="inkbar" id="inkbar">
-  <button id="inkw" title="โหมดเขียน (P)" aria-pressed="false">✎</button>
   <button data-c="0" class="sel" title="ปากกาดำ"><span class="dot" style="background:var(--ink)"></span></button>
   <button data-c="1" title="ปากกาแดง"><span class="dot" style="background:var(--red)"></span></button>
   <button data-c="2" title="ปากกาน้ำเงิน"><span class="dot" style="background:var(--blue)"></span></button>
@@ -1441,7 +1447,7 @@ function step(d){mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal();SFX.p
    rotated iPad / resized window / opened solution keeps the ink on the same words. One store per local day
    in localStorage: {d:"Y-M-D", q:{"Q-0751":[{t:"p"|"h", c:0-2, p:[x,y,x,y,...]}]}}; another day's store is wiped. */
 const INK=(()=>{
-  const K="cqb_ink",sheet=$("#modal .sheet"),wrap=$("#mink"),body=$("#mbody"),bar=$("#inkbar"),
+  const K="cqb_ink",wrap=$("#mink"),body=$("#mbody"),bar=$("#inkbar"),
     cvH=$("#inkhl"),cvP=$("#inkpen"),xH=cvH.getContext("2d"),xP=cvP.getContext("2d"),hist={};
   let S=null,on=false,tool="pen",col=0,cur=null,box=null,ox=0,oy=0,bw=1,bh=1,raf=0,dirty=0;
   const shown=()=>$("#modal").classList.contains("show");
@@ -1464,9 +1470,10 @@ const INK=(()=>{
     if(n<6){x.lineTo(X(n-2)+.01,Y(n-2));return;}
     for(let i=2;i<n-2;i+=2)x.quadraticCurveTo(X(i),Y(i),(X(i)+X(i+2))/2,(Y(i)+Y(i+2))/2);
     x.lineTo(X(n-2),Y(n-2));}
-  // colours are read at draw time, so the chem/bio palette and dark mode recolour existing ink
+  // colours are read at draw time, so the chem/bio palette and dark mode recolour existing ink.
+  // The live stroke is drawn with its tail running to the pen tip; pointerup stores that same tip, so nothing jumps.
   function draw(m){const st=getComputedStyle(cvP),C=["--ink","--red","--blue","--yel"].map(v=>st.getPropertyValue(v).trim()),
-      a=cur&&cur.p?list().concat([cur]):list();
+      a=cur&&cur.p?list().concat([{t:cur.t,c:cur.c,p:cur.p.concat(tail(cur))}]):list();
     if(m&1){xH.clearRect(0,0,cvH.width,cvH.height);xH.save();xH.globalAlpha=.38;
       xH.globalCompositeOperation=document.body.classList.contains("dark")?"screen":"multiply";
       xH.strokeStyle=C[3];xH.lineWidth=22;xH.lineCap="butt";xH.lineJoin="round";
@@ -1475,9 +1482,19 @@ const INK=(()=>{
       a.forEach(s=>{if(s.t==="p"){xP.strokeStyle=C[s.c]||C[0];path(xP,s.p);xP.stroke();}});}}
   function frame(m){dirty|=m;if(!raf)raf=requestAnimationFrame(()=>{raf=0;const d=dirty;dirty=0;draw(d);});}
   const R4=v=>Math.round(v*1e4)/1e4;
+  // every pointer sample (coalesced: the pencil's full rate), in px relative to #mbody
   function pts(e){const ev=e.getCoalescedEvents&&e.getCoalescedEvents();
-    return(ev&&ev.length?ev:[e]).map(v=>[(v.clientX-box.left-ox)/bw,(v.clientY-box.top-oy)/bh]);}
-  function add(P){const p=cur.p;P.forEach(([x,y])=>{x=R4(x);y=R4(y);const n=p.length;if(!n||p[n-2]!==x||p[n-1]!==y)p.push(x,y);});frame(cur.t==="h"?1:2);}
+    return(ev&&ev.length?ev:[e]).map(v=>[v.clientX-box.left-ox,v.clientY-box.top-oy]);}
+  // stabiliser: each sample pulls the pen point part-way toward it, more when the hand moves fast, so tremor and
+  // pixel steps are ironed out without slow lag; points closer than 1.5px to the last kept one are dropped
+  function add(P){const f=cur.f;P.forEach(([x,y])=>{cur.tip=[x,y];
+      if(!f.length){f.push(x,y);keep(x,y);return;}
+      const dx=x-f[0],dy=y-f[1],a=Math.min(1,.3+Math.hypot(dx,dy)/16);f[0]+=dx*a;f[1]+=dy*a;
+      if(Math.hypot(f[0]-cur.k[0],f[1]-cur.k[1])>=1.5)keep(f[0],f[1]);});
+    frame(cur.t==="h"?1:2);}
+  function keep(x,y){cur.k=[x,y];cur.p.push(R4(x/bw),R4(y/bh));}
+  // the unsmoothed pen tip closes the stroke, so it ends exactly where the pen lifted
+  function tail(c){const p=c.p,n=p.length,x=R4(c.tip[0]/bw),y=R4(c.tip[1]/bh);return p[n-2]===x&&p[n-1]===y?[]:[x,y];}
   // eraser: drops every whole stroke passing within reach (distance to each segment, in px)
   function near(p,X,Y,r){let ax=p[0]*bw,ay=p[1]*bh;if(Math.hypot(X-ax,Y-ay)<r)return true;
     for(let i=2;i<p.length;i+=2){const bx=p[i]*bw,by=p[i+1]*bh,dx=bx-ax,dy=by-ay,L=dx*dx+dy*dy,
@@ -1485,21 +1502,31 @@ const INK=(()=>{
       if(Math.hypot(X-ax-t*dx,Y-ay-t*dy)<r)return true;ax=bx;ay=by;}return false;}
   function erase(P){const a=list(),k=a.filter(s=>!P.some(([x,y])=>near(s.p,x*bw,y*bh,s.t==="h"?24:14)));
     if(k.length!==a.length){put(k);cur.chg=1;frame(3);}}
-  cvP.addEventListener("pointerdown",e=>{if(!on||cur||!e.isPrimary)return;e.preventDefault();
+  const nx=P=>P.map(([x,y])=>[x/bw,y/bh]);
+  cvP.addEventListener("pointerdown",e=>{if(!on||!e.isPrimary)return;e.preventDefault();
+    if(cur)finish();   // a stroke whose pointerup never arrived must not block the next one
+    const sel=getSelection();if(sel&&sel.rangeCount)sel.removeAllRanges();
     try{cvP.setPointerCapture(e.pointerId);}catch(_){}box=cvP.getBoundingClientRect();
-    if(tool==="er"){cur={id:e.pointerId,before:list()};erase(pts(e));return;}
-    cur={id:e.pointerId,t:tool==="hl"?"h":"p",c:col,p:[]};add(pts(e));});
-  cvP.addEventListener("pointermove",e=>{if(cur&&e.pointerId===cur.id){const P=pts(e);cur.p?add(P):erase(P);}});
-  const end=e=>{if(!cur||e.pointerId!==cur.id)return;const c=cur;cur=null;
+    if(tool==="er"){cur={id:e.pointerId,before:list()};erase(nx(pts(e)));return;}
+    cur={id:e.pointerId,t:tool==="hl"?"h":"p",c:col,p:[],f:[],k:null,tip:null};add(pts(e));});
+  cvP.addEventListener("pointermove",e=>{if(cur&&e.pointerId===cur.id){const P=pts(e);cur.p?add(P):erase(nx(P));}});
+  function finish(){const c=cur;cur=null;
     if(!c.p){if(c.chg)commit(list(),c.before);return;}   // a whole erase gesture = one undo step
-    if(c.p.length)commit(list().concat([{t:c.t,c:c.c,p:c.p}]),list());};
-  ["pointerup","pointercancel"].forEach(ev=>cvP.addEventListener(ev,end));
-  function setOn(v){on=v;sheet.classList.toggle("inking",v);const b=$("#inkw");b.classList.toggle("on",v);b.setAttribute("aria-pressed",v);}
+    c.p.push(...tail(c));
+    commit(list().concat([{t:c.t,c:c.c,p:c.p}]),list());}
+  const end=e=>{if(!cur||e.pointerId!==cur.id)return;if(e.type==="pointerup"&&cur.p)add(pts(e));finish();};
+  ["pointerup","pointercancel","lostpointercapture"].forEach(ev=>cvP.addEventListener(ev,end));
+  // iPad: a quick second tap is a double-tap to Safari (select text / zoom / callout), and cancelling the pointer
+  // events doesn't stop that; cancelling the touch does. Mouse/desktop: no double-click select or context menu.
+  ["touchstart","touchmove","dblclick","selectstart","contextmenu","gesturestart"].forEach(ev=>
+    cvP.addEventListener(ev,e=>{if(on)e.preventDefault();},{passive:false}));
+  function setOn(v){on=v;$("#modal").classList.toggle("inking",v);bar.classList.toggle("show",v);
+    const b=$("#inkw");b.classList.toggle("on",v);b.setAttribute("aria-pressed",v);}
   function mark(){bar.querySelectorAll("[data-c]").forEach(b=>b.classList.toggle("sel",tool==="pen"&&+b.dataset.c===col));
     bar.querySelectorAll("[data-t]").forEach(b=>b.classList.toggle("sel",tool===b.dataset.t));}
-  bar.addEventListener("click",e=>{const b=e.target.closest("button");if(!b||cur)return;
-    if(b.id==="inkw"){setOn(!on);SFX.play("toggle");return;}
-    if(b.dataset.c||b.dataset.t){tool=b.dataset.t||"pen";if(b.dataset.c)col=+b.dataset.c;mark();setOn(true);}
+  $("#inkw").addEventListener("click",e=>{e.currentTarget.blur();if(!cur){setOn(!on);SFX.play("toggle");}});
+  bar.addEventListener("click",e=>{const b=e.target.closest("button");if(!b||cur)return;b.blur();
+    if(b.dataset.c||b.dataset.t){tool=b.dataset.t||"pen";if(b.dataset.c)col=+b.dataset.c;mark();}
     else if(b.id==="inkundo"){const h=hist[qid()];if(!h||!h.length)return;put(h.pop());save();frame(3);}
     else if(b.id==="inkclr"){if(!list().length)return;commit([],list());}
     else if(b.id==="inkwipe"){if(!confirm("ล้างหมึกทั้งหมด? (ทุกข้อ)"))return;S={d:today(),q:{}};Object.keys(hist).forEach(k=>delete hist[k]);ls.del(K);frame(3);}
