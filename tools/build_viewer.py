@@ -459,8 +459,8 @@ button.tile:hover:after{opacity:1;transform:none}
 .hero{grid-column:span 2;grid-row:span 2;background:var(--card);cursor:default;padding:0;touch-action:pan-y;user-select:none;-webkit-user-select:none;outline-offset:-5px}
 .hero:focus-visible{outline:3px solid var(--red)}
 /* subject selector: a 2-panel track slid by translateX; the drag follows the finger, release snaps */
-.htrack{display:flex;height:100%;transition:transform .45s cubic-bezier(.2,.9,.3,1)}
-.hpanel{flex:0 0 100%;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;padding:14px 16px}
+.htrack{position:relative;height:100%}
+.hpanel{position:absolute;inset:0;transition:transform .45s cubic-bezier(.2,.9,.3,1);display:flex;flex-direction:column;justify-content:flex-end;gap:4px;padding:14px 16px}
 .hero b{font-size:4.6rem;font-weight:800;line-height:.9;color:var(--red);display:flex;align-items:center;gap:.14em}
 .hero b .sic{width:.8em;height:.8em;color:var(--ink)}   /* subject icon beside the count: ink body + accent in var(--red) */
 .hero span{font-size:1.5rem;font-weight:800;line-height:1.15}
@@ -471,8 +471,7 @@ button.tile:hover:after{opacity:1;transform:none}
 .hnav .hdot.on{background:var(--ink);color:var(--paper)}
 .hnav .hdot{display:inline-flex;align-items:center;gap:5px}.hnav .hdot .sic{width:18px;height:18px}
 .sic{flex:none;display:block}
-.hnav button:disabled{opacity:.3;cursor:default}
-@media(prefers-reduced-motion:reduce){.htrack{transition:none}}
+@media(prefers-reduced-motion:reduce){.hpanel{transition:none}}
 .tile.deco{cursor:default}
 .d0{background:radial-gradient(circle at 100% 100%,var(--blue) 0 58%,transparent 59%),var(--paper)}
 .d1{background:repeating-linear-gradient(45deg,var(--yel) 0 18px,var(--ink) 18px 36px)}
@@ -960,7 +959,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 
 <!-- ================= LANDING ================= -->
 <section id="landing"><div class="lwrap">
-  <div class="lhead"><h1><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>คลังข้อสอบเคมี</h1>
+  <div class="lhead"><h1><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span><span class="tn">คลังข้อสอบเคมี</span></h1>
     <p id="lsub"></p>
     <div class="lsearch" id="lsearch"><input id="lq" placeholder="ค้นหา · สูตร · Q-id  ( / )" autocomplete="off" spellcheck="false"><span class="lct" id="lct"></span><button id="lgo" title="ค้นหา (Enter)">→</button></div>
     <span class="volbox lvol"><button class="sfxbtn" id="lsfx">🔊</button><input type="range" class="vol" min="0" max="100" aria-label="ระดับเสียง"></span>
@@ -975,7 +974,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 <header id="hdr">
  <div class="bar1">
    <button class="home" id="home" title="กลับไปเลือกบท">⌂ <span>เลือกบท</span></button>
-   <span class="title"><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>คลังข้อสอบเคมี <small>Chem Question Bank</small></span>
+   <span class="title"><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span><span class="tn">คลังข้อสอบเคมี</span> <small class="tne">Chem Question Bank</small></span>
    <input id="q" placeholder="ค้นหาข้อความ / สูตร / Q-id…  ( / )">
    <button class="hbtn" id="random">🎲 สุ่ม</button>
    <button class="hbtn" id="ftoggle">ตัวกรอง ▾</button>
@@ -1162,12 +1161,20 @@ $("#ldark").onclick=$("#darkbtn").onclick=()=>{setDark(!document.body.classList.
 /* ---------- recently viewed questions (landing tile) ---------- */
 let RECENT=[];try{RECENT=JSON.parse(ls.get("cqb_recent","[]"))||[];}catch(e){RECENT=[];}
 function seen(q){if(!q)return;RECENT=[q.id,...RECENT.filter(x=>x!==q.id)].slice(0,8);ls.set("cqb_recent",JSON.stringify(RECENT));}
+// merely displaying a question doesn't count: a single-question view (poster / pane / present) counts it only
+// after ~8 s on screen; choosing a choice, opening a solution or jumping to a Q-id counts it at once
+let dwellT=0;
+function dwell(q){clearTimeout(dwellT);dwellT=q?setTimeout(()=>{if(!document.hidden)seen(q);},8000):0;}
 
 /* ---------- subject (เคมี / ชีววิทยา): drives the landing board AND the whole-app palette ---------- */
 const SUBJS=DATA.biocount?["chem","bio"]:["chem"];
 let SUBJ=ls.get("cqb_subj","chem");if(!SUBJS.includes(SUBJ))SUBJ="chem";
-document.body.dataset.subj=SUBJ;
-function setSubj(s){if(s===SUBJ||!SUBJS.includes(s))return false;SUBJ=s;ls.set("cqb_subj",s);document.body.dataset.subj=s;return true;}
+// palette + every title (landing h1, app bar, tab) follow the subject
+function showSubj(){const[th,en]=SUBJ==="bio"?["ชีววิทยา","Biology"]:["เคมี","Chem"];document.body.dataset.subj=SUBJ;
+  document.querySelectorAll(".tn").forEach(x=>x.textContent="คลังข้อสอบ"+th);$(".tne").textContent=en+" Question Bank";
+  document.title=`คลังข้อสอบ${th} · ${en} Question Bank`;}
+showSubj();
+function setSubj(s){if(s===SUBJ||!SUBJS.includes(s))return false;SUBJ=s;ls.set("cqb_subj",s);showSubj();return true;}
 
 /* ---------- filters ---------- */
 function opt(sel,val,label){const o=document.createElement("option");o.value=val;o.textContent=label;sel.appendChild(o);}
@@ -1289,10 +1296,11 @@ function apply(keepPos){
   if(!keepPos) pIdx=0;
   $("#count").textContent=`${filtered.length} / ${DATA.questions.length} ข้อ`;
   render();
+  const id=$("#q").value.trim().toUpperCase();if(/^Q-\d{4}$/.test(id))seen(filtered.find(x=>x.id===id));
 }
 
 function render(){
-  const R=$("#root");
+  const R=$("#root");dwell(null);
   if(!filtered.length){R.innerHTML='<div class="empty">ไม่พบข้อสอบที่ตรงกับเงื่อนไข</div>';return;}
   if(view==="poster") renderPoster(R);
   else if(view==="cards") renderCards(R);
@@ -1318,7 +1326,7 @@ function renderPoster(R){
   fillPoster("enter");
 }
 function fillPoster(anim){
-  const q=filtered[pIdx];if(!q)return;seen(q);
+  const q=filtered[pIdx];if(!q)return;dwell(q);
   $("#deck").innerHTML=posterHtml(q,pIdx,anim);tex($("#deck"));
   $("#ppos").textContent=`${pIdx+1} / ${filtered.length}`;
   $("#pscrub").value=pIdx+1;
@@ -1332,7 +1340,7 @@ function pstep(d){
   setTimeout(()=>{pIdx=(pIdx+d+filtered.length)%filtered.length;fillPoster(d>0?"inR":"inL");pBusy=false;},180);
 }
 /* ---- CARDS ---- */
-function cardHtml(q,idx){return `<div class="card lv-${q.diff}${idx<12?" anim":""}" style="--i:${idx}">
+function cardHtml(q,idx){return `<div class="card lv-${q.diff}${idx<12?" anim":""}" data-i="${idx}" style="--i:${idx}">
    <span class="cnum">${qnum(q)}</span>
    <div class="card-top">${idBadge(q)}${chBadge(q)}${examBadge(q)}${diffBadge(q)}${typeBadge(q)}
      <button class="present-btn" data-i="${idx}">⤢ แสดง</button></div>
@@ -1375,15 +1383,16 @@ function renderPane(R){
 function paneShow(i){
   if(window.innerWidth<=820){openModal(i);return;}
   document.querySelectorAll(".pane-item").forEach(el=>el.classList.toggle("sel",el.dataset.i==i));
-  $("#detail").innerHTML=posterHtml(filtered[i],i,"enter");seen(filtered[i]);tex($("#detail"));
+  $("#detail").innerHTML=posterHtml(filtered[i],i,"enter");dwell(filtered[i]);tex($("#detail"));
 }
 
 /* ---- present modal ---- */
 let mIdx=0;
 function openModal(i){mIdx=i;fillModal();$("#modal").classList.add("show");SFX.play("present");}
-function closeModal(){if(!$("#modal").classList.contains("show"))return;$("#modal").classList.remove("show");SFX.play("close");}
+function closeModal(){if(!$("#modal").classList.contains("show"))return;$("#modal").classList.remove("show");SFX.play("close");
+  dwell(view==="poster"&&document.body.classList.contains("inapp")?filtered[pIdx]:null);}
 function fillModal(){
-  const q=filtered[mIdx];seen(q);
+  const q=filtered[mIdx];dwell(q);
   $("#mtop").innerHTML=`${idBadge(q)}${chBadge(q)}${examBadge(q)}${diffBadge(q)}`;
   $("#mbody").innerHTML=q.bodyHtml+figHtml(q).replace(' loading="lazy"','');
   $("#mfoot").innerHTML=footHtml(q);
@@ -1412,6 +1421,8 @@ $("#fsubj").addEventListener("change",()=>{populateChapters($("#fsubj").value);a
 $("#random").onclick=()=>{if(!filtered.length)return;SFX.play("dice");const i=Math.floor(Math.random()*filtered.length);setTimeout(()=>openModal(i),380);};
 $("#ftoggle").onclick=()=>{$("#hdr").classList.toggle("fopen");SFX.play("click");};
 
+/* the question a click landed in: the modal's, else the nearest [data-i] (poster / card / row) */
+const qAt=el=>el.closest("#modal")?filtered[mIdx]:(el=el.closest("[data-i]"))&&filtered[+el.dataset.i];
 /* ---- solution toggle (delegated: every view + the modal) ---- */
 function solToggle(e){
   const b=e.target.closest(".solbtn");
@@ -1420,7 +1431,7 @@ function solToggle(e){
   const w=b.nextElementSibling;
   if(w && w.classList.contains("solwrap")){
     const open=w.classList.toggle("show");
-    SFX.play(open?"open":"close");
+    SFX.play(open?"open":"close");if(open)seen(qAt(b));
     b.textContent = open ? "ซ่อนวิธีทำ ↑" : (b.dataset.label || "ดูวิธีทำ →");
   }
   return true;
@@ -1429,7 +1440,7 @@ function solToggle(e){
 function markChoice(e){const li=e.target.closest(".body li");if(!li)return false;
   const on=!li.classList.contains("mk");
   li.closest(".body").querySelectorAll("li.mk").forEach(x=>x.classList.remove("mk"));
-  if(on)li.classList.add("mk");SFX.play(on?"mark":"unmark",[...li.parentElement.children].indexOf(li));return true;}
+  if(on){li.classList.add("mk");seen(qAt(li));}SFX.play(on?"mark":"unmark",[...li.parentElement.children].indexOf(li));return true;}
 $("#root").addEventListener("click",e=>{
   if(solToggle(e)) return;
   if(e.target.closest("#pprev")){pstep(-1);return;}
@@ -1447,7 +1458,7 @@ $("#mbody").addEventListener("click",e=>{if(markChoice(e)&&window.prepShot)prepS
 
 $("#mx").onclick=closeModal;
 $("#modal").onclick=e=>{if(e.target.id==="modal")closeModal();};
-$("#mreveal").onclick=()=>SFX.play($("#mans").classList.toggle("show")?"open":"close");
+$("#mreveal").onclick=()=>{const open=$("#mans").classList.toggle("show");SFX.play(open?"open":"close");if(open)seen(filtered[mIdx]);};
 $("#mprev").onclick=()=>step(-1);$("#mnext").onclick=()=>step(1);
 
 /* ---- keyboard ---- */
@@ -1842,8 +1853,8 @@ function heroHtml(){
   const bex=[...new Set(bio.map(q=>(DATA.exams[q.exam]||{label:q.exam}).label))].join(" · ");
   const yrs=bio.map(q=>q.year).filter(Boolean).sort(),yr=yrs.length?` ปี ${yrs[0]}${yrs[0]!==yrs[yrs.length-1]?"–"+yrs[yrs.length-1]:""}`:"";
   const nav=SUBJS.length<2?"":`<div class="hnav"><button class="hdot${si===0?" on":""}" data-s="0">${ICON.chem}เคมี</button><button class="hdot${si===1?" on":""}" data-s="1">${ICON.bio}ชีววิทยา</button>
-    <button class="harr hsp" data-d="-1" title="วิชาก่อนหน้า (←)"${si===0?" disabled":""}>‹</button><button class="harr" data-d="1" title="วิชาถัดไป (→)"${si===1?" disabled":""}>›</button></div>`;
-  return `<div class="tile hero" tabindex="0" aria-label="เลือกวิชา · ปัดหรือกด ← →">${nav}<div class="htrack" style="transform:translateX(${-si*100}%)">
+    <button class="harr hsp" data-d="-1" title="วิชาก่อนหน้า (←)">‹</button><button class="harr" data-d="1" title="วิชาถัดไป (→)">›</button></div>`;
+  return `<div class="tile hero" tabindex="0" aria-label="เลือกวิชา · ปัดหรือกด ← →">${nav}<div class="htrack">
     <div class="hpanel"><b>${DATA.chemcount}${ICON.chem}</b><span>ข้อสอบเคมี<br>แยกตามบท</span><small>สอวน. · PAT2 · A-Level · 9 วิชาสามัญ<br>เลือกบทด้านข้าง หรือกด ทุกบท</small></div>
     ${SUBJS.length>1?`<div class="hpanel"><b>${DATA.biocount}${ICON.bio}</b><span>ข้อสอบชีววิทยา<br>แยกตามหัวข้อ</span><small>${bex}${yr}<br>เลือกหัวข้อด้านข้าง หรือกด ทุกหัวข้อ</small></div>`:""}</div></div>`;}
 /* every tile that depends on the chosen subject (rebuilt on a switch; hero + recent stay put) */
@@ -1869,16 +1880,25 @@ function buildBoard(){
   $("#lsub").textContent=`${Q.length} ข้อ · ${Object.keys(DATA.examcount).length} สนามสอบ · มีวิธีทำ ${SC.have} ข้อ`;
   $("#board").classList.toggle("hasrec",!!rec);
   $("#board").innerHTML=rec+heroHtml()+subjTiles();packBoard();
+  const si=SUBJS.indexOf(SUBJ);heroPlace($("#board .htrack"),si,(si+1)%SUBJS.length,1,0,false);
 }
-/* switch subject from the landing: slide the hero, swap palette, rebuild only the subject tiles */
-function goSubj(idx){
-  const B=$("#board"),hero=B.querySelector(".hero"),tr=hero.querySelector(".htrack"),s=SUBJS[idx];
-  tr.style.transition="";
-  if(!s||!setSubj(s)){tr.style.transform=`translateX(${-SUBJS.indexOf(SUBJ)*100}%)`;return;}   // edge / same: snap back
-  tr.style.transform=`translateX(${-idx*100}%)`;
-  hero.querySelectorAll(".hdot").forEach((b,k)=>b.classList.toggle("on",k===idx));
-  hero.querySelectorAll(".harr").forEach(b=>b.disabled=(+b.dataset.d<0?idx===0:idx===SUBJS.length-1));
-  SFX.play("swish",idx?1:-1);
+/* endless hero carousel: each panel carries its own offset -- the current one at 0 (+ drag px), the one
+   we're heading to right beside it on that side, the rest hidden -- so the ring wraps for any N subjects
+   (index mod N) and a wrap still slides the way you swiped instead of rewinding across the track */
+function heroPlace(tr,cur,nb,side,px,anim){
+  [...tr.children].forEach((p,k)=>{p.style.transition=anim?"":"none";
+    p.style.transform=`translateX(calc(${k===cur?0:k===nb?side*100:0}% + ${px}px))`;
+    p.style.visibility=k===cur||k===nb?"":"hidden";});}
+/* switch subject from the landing: slide the hero, swap palette, rebuild only the subject tiles.
+   d = travel direction (+1 = next comes in from the right); px = where a drag left the panels */
+function goSubj(ti,d,px=0){
+  const B=$("#board"),hero=B.querySelector(".hero"),tr=hero.querySelector(".htrack"),N=SUBJS.length,si=SUBJS.indexOf(SUBJ);
+  ti=(ti%N+N)%N;d=d||(ti>si?1:-1);
+  if(ti===si){heroPlace(tr,si,(si+d+N)%N,d,0,true);return;}   // same subject / short drag: snap back
+  heroPlace(tr,si,ti,d,px,false);void tr.offsetWidth;          // line the target up on the side we're heading to...
+  heroPlace(tr,ti,si,-d,0,true);setSubj(SUBJS[ti]);            // ...then slide both
+  hero.querySelectorAll(".hdot").forEach((b,k)=>b.classList.toggle("on",k===ti));
+  SFX.play("swish",d);
   [...B.children].forEach(el=>{if(!el.matches(".hero,.recent"))el.remove();});
   B.insertAdjacentHTML("beforeend",subjTiles());packBoard();
 }
@@ -1891,16 +1911,16 @@ $("#board").addEventListener("pointerdown",e=>{const h=e.target.closest(".hero")
 $("#board").addEventListener("pointermove",e=>{const d=hdrag;if(!d||e.pointerId!==d.id)return;
   const dx=e.clientX-d.x,dy=e.clientY-d.y,si=SUBJS.indexOf(SUBJ);
   if(!d.on){if(Math.abs(dx)<10&&Math.abs(dy)<10)return;if(Math.abs(dy)>=Math.abs(dx)){hdrag=null;return;}
-    d.on=true;d.tr.style.transition="none";try{d.h.setPointerCapture(e.pointerId);}catch(_){}}
-  d.dx=(si===0&&dx>0)||(si===SUBJS.length-1&&dx<0)?dx*.3:dx;   // rubber-band past the ends
-  d.tr.style.transform=`translateX(calc(${-si*100}% + ${d.dx}px))`;});
+    d.on=true;try{d.h.setPointerCapture(e.pointerId);}catch(_){}}
+  d.dx=dx;d.side=dx<0?1:-1;   // dragging left pulls the next subject in from the right, and vice versa
+  heroPlace(d.tr,si,(si+d.side+SUBJS.length)%SUBJS.length,d.side,dx,false);});
 function hdragEnd(e){const d=hdrag;if(!d||e.pointerId!==d.id)return;hdrag=null;if(!d.on)return;
   const si=SUBJS.indexOf(SUBJ),go=e.type==="pointerup"&&Math.abs(d.dx)>Math.max(40,d.h.offsetWidth*.18);
-  goSubj(go?si+(d.dx<0?1:-1):si);}
+  goSubj(go?si+d.side:si,d.side,d.dx);}
 $("#board").addEventListener("pointerup",hdragEnd);
 $("#board").addEventListener("pointercancel",hdragEnd);
 $("#board").addEventListener("keydown",e=>{if(!e.target.closest(".hero")||SUBJS.length<2)return;
-  if(e.key==="ArrowLeft"||e.key==="ArrowRight"){e.preventDefault();goSubj(SUBJS.indexOf(SUBJ)+(e.key==="ArrowRight"?1:-1));}});
+  if(e.key==="ArrowLeft"||e.key==="ArrowRight"){e.preventDefault();const k=e.key==="ArrowRight"?1:-1;goSubj(SUBJS.indexOf(SUBJ)+k,k);}});
 /* Place tiles in order (same rule as CSS sparse auto-placement) at explicit cells, then fill
    every cell left empty -- a wide tile that doesn't fit at a row end leaves one -- with a filler. */
 let boardCols=0;
@@ -1946,7 +1966,7 @@ function enterApp(x,y,fn){
 }
 $("#board").addEventListener("click",e=>{
   const hb=e.target.closest(".hnav button");
-  if(hb){goSubj(hb.dataset.s!=null?+hb.dataset.s:SUBJS.indexOf(SUBJ)+(+hb.dataset.d));return;}
+  if(hb){const k=+hb.dataset.d||0;goSubj(hb.dataset.s!=null?+hb.dataset.s:SUBJS.indexOf(SUBJ)+k,k);return;}
   const t=e.target.closest("[data-go]");if(!t)return;
   const r=t.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,g=t.dataset.go;
   SFX.play("tile");setTimeout(()=>SFX.play("whoosh"),70);
@@ -1960,7 +1980,7 @@ $("#board").addEventListener("click",e=>{
     if(g==="random"&&filtered.length){setTimeout(()=>SFX.play("dice"),250);setTimeout(()=>openModal(Math.floor(Math.random()*filtered.length)),650);}
   });
 });
-$("#home").onclick=()=>{SFX.play("home");document.body.classList.remove("inapp");$("#app").classList.remove("show");window.scrollTo(0,0);buildBoard();};
+$("#home").onclick=()=>{SFX.play("home");dwell(null);document.body.classList.remove("inapp");$("#app").classList.remove("show");window.scrollTo(0,0);buildBoard();};
 buildBoard();
 </script></body></html>"""
 
