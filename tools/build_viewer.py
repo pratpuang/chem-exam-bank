@@ -402,7 +402,7 @@ EX_MAP = {"mol": "05", "กรดเบส": "11"}
 EX_DIFF = {"ง่าย": "easy", "กลาง": "medium", "ยาก": "hard"}
 EX_TOP = os.path.join(ROOT, "concepts", "exercise-topics.json")
 _EX_ANS = re.compile(r"(?:<br>\s*)?<b>ตอบ\s*(.+?)</b>\s*$", re.S)   # a trailing "ตอบ ..." line -> the answer box
-exercises = []
+exercises, extitles = [], {}   # extitles: bank chapter -> worksheet title(s), for the ✎ tile's back face
 if os.path.isdir(EX_DIR):
     extop = json.load(open(EX_TOP, encoding="utf-8")) if os.path.isfile(EX_TOP) else {}
     for fn in sorted(os.listdir(EX_DIR)):
@@ -415,6 +415,7 @@ if os.path.isdir(EX_DIR):
         if not ck:
             print("WARNING: exercise chapter", ascii(C.get("id")), "from", ascii(fn), "has no EX_MAP entry - skipped"); continue
         ids, n = {t["id"] for t in subtopics.get(ck, [])}, 0
+        extitles[ck] = " + ".join(filter(None, (extitles.get(ck), C.get("title", ""))))
         for sec, items in C.get("sections", []):
             for diff, qtext, _box, sol in items:
                 n += 1
@@ -444,7 +445,7 @@ data = {
  "exams": {k:{"label":v[0],"color":v[1]} for k,v in EXAMS.items()},
  "years": sorted({q["year"] for q in questions if q["year"]}),
  "types": sorted({q["type"] for q in questions if q["type"]}),
- "counts": present, "examcount": examcount,
+ "counts": present, "examcount": examcount, "exTitles": extitles,
  "chemcount": chemcount, "biocount": biocount, "appcount": appcount,
  "biocounts": biocounts, "appcounts": appcounts,
  "formulas": FORMULAS, "subtopics": subtopics,
@@ -1190,6 +1191,18 @@ body[data-subj=bio] .lfst{display:none}
 .poster.ex:after,.card.ex:before,.sheet.ex:before,.row.ex:before{content:"";position:absolute;left:0;top:0;bottom:0;height:auto;width:var(--bw);background:var(--ink)}
 .sexb{border:2px solid var(--ink);background:var(--ink);color:var(--paper);font:800 .8rem "Anuphan",sans-serif;padding:5px 10px;text-align:left;cursor:pointer}
 .sexb:hover,.sexb:focus-visible{background:var(--yel);color:#141414}
+/* the ✎ tile slides over like a chapter stats tile; its back lists the exercise chapters (tap a row = that chapter's exercises) */
+.exrows{display:flex;flex-direction:column;gap:5px}
+.exr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:10px;row-gap:5px;align-items:center;border:2px solid var(--ink);background:var(--card);color:var(--ink);padding:6px 10px;font:inherit;text-align:left;cursor:pointer}
+.exr:hover,.exr:focus-visible{background:var(--yel);color:#141414;outline:0}
+.exn{grid-row:span 2;font-size:1.7rem;font-weight:800;line-height:.9;text-align:center}
+.exn small{display:block;font-size:.62rem;letter-spacing:.06em}
+.ext{display:flex;align-items:center;gap:6px;min-width:0;font-weight:700;font-size:.9rem}
+.ext span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exw{flex:none;font-size:.66rem;font-weight:800;font-style:normal;padding:0 5px;background:var(--yel);color:#141414;border:2px solid #141414}
+.exr b{font:800 .8rem "JetBrains Mono",monospace}
+.exbar{grid-column:2 / 4;display:flex;height:10px;border:2px solid var(--ink)}
+.exbar i+i{border-left:2px solid var(--ink)}
 
 /* ---------- night mode: ink-black surfaces, cream text, black offset shadows ---------- */
 body.dark{--paper:#18181b;--card:#232327;--ink:#e8e2d4;--mut:#9c958a;--sh:#050506;--blue:#3b57d6;--red:#e2492f;--yel:#e8ae06;--stbg:#59491e;--sxbg:#363024;--sxbd:#86827e;--exg:rgba(232,226,212,.06);color-scheme:dark}
@@ -2503,7 +2516,8 @@ function subjTiles(){
   const max=Math.max(...groups.map(g=>g[2])),P=bio?BPAL:PAL;let i=2;
   let h=`<button class="tile c-ink" data-go="all" style="--i:${i++}"><span class="no">∀</span><span class="nm">${bio?"ทุกหัวข้อ":"ทุกบท"}</span><span class="ct">${pool.length} ข้อ · ${name}</span></button>`;
   h+=`<button class="tile c-yel" data-go="random" style="--i:${i++}"><span class="no">🎲</span><span class="nm">สุ่ม 1 ข้อ</span><span class="ct">จาก${name}ทั้งหมด</span></button>`;
-  if(!bio&&EXN)h+=`<button class="tile c-card ex" data-go="ex" style="--i:${i++}"><span class="no">✎</span><span class="nm">แบบฝึกหัด</span><span class="ct">${EXN} ข้อ · มีเฉลยทุกข้อ</span></button>`;
+  if(!bio&&EXN)h+=`<div class="tile c-card ex st" data-ch="ex" style="--i:${i++}"><button class="tface" data-go="ex" aria-keyshortcuts="ArrowLeft ArrowRight"><span class="no">✎</span><span class="nm">แบบฝึกหัด</span><span class="ct">${EXN} ข้อ · มีเฉลยทุกข้อ</span></button>
+    <div class="tback" role="region" aria-label="แบบฝึกหัดแยกตามบท"></div></div>`;   // slides like a chapter stats tile
   groups.forEach(([k,gname,c],j)=>{if(!c)return;
     const cv=cov(pool.filter(q=>chOf(q,SUBJ)===k)),cls=`tile ${P[j%P.length]} ${tileSize(c,max)}`,n=parseInt(k),ii=i++;
     const face=`<span class="no">${n}</span><span class="nm">${gname}</span>
@@ -2612,6 +2626,17 @@ function statBody(ch){
     <div class="sdw"><div class="scap">ความยาก</div>${qs.length?`<div class="sdiff">${["easy","medium","hard"].filter(d=>df[d]).map(d=>`<i class="sd-${d}" style="flex:${df[d]}" title="${DIFF_TH[d]} ${df[d]} ข้อ">${df[d]}</i>`).join("")}</div>
       <div class="sleg">${["easy","medium","hard"].map(d=>`<span class="diff-txt de-${d}">${DIFF_TH[d]}</span>`).join("")}</div>`:`<div class="snone">ไม่มีข้อจากสนามที่เลือกในบทนี้</div>`}</div>
     ${EXC[ch]?`<button class="sexb" data-go="exch" data-ch="${ch}">✎ +${EXC[ch]} แบบฝึกหัด</button>`:""}</div>`;}
+// the ✎ tile's back: one row per exercise chapter -- count, difficulty mini-bar, ⚠ while its answers are unverified
+function exBody(){
+  const rows=Object.keys(EXC).sort().map((ch,k)=>{const qs=DATA.questions.filter(q=>isEx(q)&&q.ch===ch),df={easy:0,medium:0,hard:0};
+    qs.forEach(q=>{if(q.diff in df)df[q.diff]++;});
+    return `<button class="exr" data-go="exch" data-ch="${ch}" data-k="${k}" title="เปิดแบบฝึกหัดบท ${parseInt(ch)}"><span class="exn"><small>บท</small>${parseInt(ch)}</span>
+      <span class="ext"><span>${DATA.exTitles[ch]||DATA.chapters[ch]}</span>${qs.some(q=>q.solPending)?`<i class="exw">⚠ ยังไม่ตรวจ</i>`:""}</span><b>${qs.length} ข้อ</b>
+      <span class="exbar">${["easy","medium","hard"].filter(d=>df[d]).map(d=>`<i class="sd-${d}" style="flex:${df[d]}" title="${DIFF_TH[d]} ${df[d]} ข้อ"></i>`).join("")}</span></button>`;}).join("");
+  return `<div class="sth"><span class="sn">✎</span><span class="snm">แบบฝึกหัด · ${EXN} ข้อ<small>มีเฉลยทุกข้อ</small></span>
+    <button class="tbx" title="กลับ (Esc)" aria-label="ปิดรายการแบบฝึกหัด">✕</button></div>
+  <div class="sbody"><div class="scap">แยกตามบท · แตะเพื่อดูข้อ</div><div class="exrows">${rows}</div>
+    <div class="sdw"><div class="sleg">${["easy","medium","hard"].map(d=>`<span class="diff-txt de-${d}">${DIFF_TH[d]}</span>`).join("")}</div></div></div>`;}
 // rows the open tile needs at its current width: the stats face's natural height over one grid row (+ gap)
 function statRows(t){const b=t.querySelector(".tback"),cs=getComputedStyle($("#board")),rh=parseFloat(cs.gridAutoRows)||150,g=parseFloat(cs.rowGap)||6;
   b.style.minHeight="0";const h=b.offsetHeight;b.style.minHeight="";return Math.max(2,Math.ceil((h+g)/(rh+g)));}
@@ -2629,7 +2654,7 @@ function statSet(t,open,tx=0,dir=open?-1:1){
     const kids=[...B.children].filter(el=>!el.classList.contains("deco")),F=new Map(kids.map(el=>[el,el.getBoundingClientRect()]));
     if(prev)prev.classList.remove("open");
     t.classList.toggle("open",open);
-    if(open)t.querySelector(".tback").innerHTML=statBody(t.dataset.ch);
+    if(open)t.querySelector(".tback").innerHTML=t.dataset.ch==="ex"?exBody():statBody(t.dataset.ch);
     repack();B.querySelectorAll(".tile.deco").forEach(d=>d.style.animationDelay=".12s");
     if(!RM.matches)kids.forEach(el=>{const a=F.get(el),b=el.getBoundingClientRect(),E={duration:440,easing:"cubic-bezier(.2,.9,.3,1)"};
       if(turn.includes(el)){const dx=a.left+a.width/2-b.left-b.width/2,dy=a.top+a.height/2-b.top-b.height/2;
