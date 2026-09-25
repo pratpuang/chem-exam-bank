@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700;800&family=Sarabun:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--line:#141414;--acc:#f2b705}
+:root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--line:#141414;--acc:#f2b705;--stbg:#fcebb8;--sxbg:#fef7e1;--sxbd:#8a8886}
 /* registered as colors so a subject / night-mode swap can TRANSITION the tokens themselves: every
    var(--x) user fades together, without touching any element's own transition list */
 @property --paper{syntax:"<color>";inherits:true;initial-value:#efe9dc}
@@ -168,11 +168,11 @@ main{max-width:1060px;margin:18px auto 60px;padding:0 14px}
 /* sub-topic (chem only): tinted with the palette accent so it reads apart from the dashed chapter badge; a tap
    filters to it (a plain <span> label in present mode). white-space:normal: a long name drops to its own line
    first and only breaks inside when even that line is too narrow */
-.b-st{background:color-mix(in srgb,var(--acc) 26%,var(--card));color:var(--ink);font-family:inherit;white-space:normal;text-align:left}
+.b-st{background:var(--stbg);color:var(--ink);font-family:inherit;white-space:normal;text-align:left}
 button.b-st{cursor:pointer}button.b-st:hover{background:var(--acc);color:#141414}
 .row-h .b-st{display:block;flex:0 1 auto;min-width:0;max-width:30%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* one line in a list row */
 /* extra sub-topics (a question that also needs another skill): same badge, paler, so the main one leads */
-.b-st.b-sx{background:color-mix(in srgb,var(--acc) 9%,var(--card));border-color:color-mix(in srgb,var(--ink) 50%,var(--card));font-weight:600}
+.b-st.b-sx{background:var(--sxbg);border-color:var(--sxbd);font-weight:600}
 .b-more{background:var(--card);color:var(--ink);border-style:dotted;font-family:"JetBrains Mono";cursor:pointer;flex:0 0 auto}
 .row-h .b-st.b-sx,.row-h.allst .b-more{display:none}   /* list row: main + "+N"; the chip unfolds the rest onto a wrapped line */
 .row-h.allst{flex-wrap:wrap}.row-h.allst .b-st.b-sx{display:block}.row-h.allst .b-st{max-width:100%}
@@ -638,7 +638,7 @@ body[data-subj=bio] .lfst{display:none}
 @media(prefers-reduced-motion:reduce){.sbar:before{animation:none}}
 
 /* ---------- night mode: ink-black surfaces, cream text, black offset shadows ---------- */
-body.dark{--paper:#18181b;--card:#232327;--ink:#e8e2d4;--mut:#9c958a;--sh:#050506;--blue:#3b57d6;--red:#e2492f;--yel:#e8ae06;color-scheme:dark}
+body.dark{--paper:#18181b;--card:#232327;--ink:#e8e2d4;--mut:#9c958a;--sh:#050506;--blue:#3b57d6;--red:#e2492f;--yel:#e8ae06;--stbg:#59491e;--sxbg:#363024;--sxbd:#86827e;color-scheme:dark}
 body.dark .board{background:#050506;border-color:#050506}
 body.dark .d1{background:repeating-linear-gradient(45deg,var(--yel) 0 18px,#050506 18px 36px)}
 body.dark .d3{background:linear-gradient(var(--yel),var(--yel)) center/40% 40% no-repeat,#050506}
@@ -669,8 +669,8 @@ body.dark .modal,body.dark .expwrap{background:rgba(0,0,0,.8)}
 body.dark .kin .k2{border-color:#2c2c32}body.dark .kin .k4{opacity:.25}
 
 /* ---------- biology palette (colorhunt 063b00-266210-90b800-e1e100): same Bauhaus roles, warm greens ---------- */
-body[data-subj=bio]{--paper:#edeedb;--card:#fcfdf2;--mut:#5d634e;--red:#266210;--blue:#063b00;--yel:#e1e100;--acc:#90b800}
-body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a08a;--sh:#040604;--red:#347a1a;--blue:#1a5410;--yel:#d4d400;--acc:#86ab00}
+body[data-subj=bio]{--paper:#edeedb;--card:#fcfdf2;--mut:#5d634e;--red:#266210;--blue:#063b00;--yel:#e1e100;--acc:#90b800;--stbg:#e0ebb3;--sxbg:#f2f7dc;--sxbd:#888883}
+body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a08a;--sh:#040604;--red:#347a1a;--blue:#1a5410;--yel:#d4d400;--acc:#86ab00;--stbg:#3a4915;--sxbg:#283219;--sxbd:#828778}
 </style></head><body>
 <div class="kin" aria-hidden="true"><i class="k1"></i><i class="k2"></i><i class="k3"></i><i class="k4"></i><i class="k5"></i></div>
 
@@ -1569,7 +1569,7 @@ $("#mpt").onclick=()=>PD.open();
 let h2cP=null;
 function loadH2C(){return h2cP||(h2cP=new Promise((res,rej)=>{const sc=document.createElement("script");
   sc.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-  sc.onload=()=>res(window.html2canvas);sc.onerror=()=>{h2cP=null;rej(new Error("cdn"));};document.head.appendChild(sc);}));}
+  sc.onload=()=>res(window.html2canvas);sc.onerror=()=>{h2cP=null;rej(Object.assign(new Error("cdn"),{cdn:1}));};document.head.appendChild(sc);}));}
 function shotKey(){const q=filtered[mIdx];if(!q)return"";
   return q.id+"|"+document.body.className+"|"+$("#mtop").innerHTML+"|"+$("#mbody").innerHTML;}
 const imgsReady=root=>Promise.all([...root.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{im.addEventListener("load",r,{once:true});im.addEventListener("error",r,{once:true});})));
@@ -1617,7 +1617,7 @@ async function saveShot(){const q=filtered[mIdx],b=$("#mshot");if(!q||b.disabled
   try{if(!(shot.key===k&&shot.job)){const job=renderShot();shot={key:k,blob:null,job};}
     const blob=await shot.job;shot.blob=blob;deliverShot(blob,nm(blob));
     SFX.play("saved");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.textContent=lbl;},1200);
-  }catch(e){shot={key:"",blob:null,job:null};b.textContent=lbl;alert("บันทึกรูปไม่ได้ — ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างรูป");}
+  }catch(e){shot={key:"",blob:null,job:null};b.textContent=lbl;console.error(e);alert(e&&e.cdn?"บันทึกรูปไม่ได้ — ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างรูป":"บันทึกรูปไม่ได้ — สร้างรูปข้อนี้ไม่สำเร็จ ลองอีกครั้ง");}
   finally{b.disabled=false;}}
 $("#mshot").onclick=saveShot;
 // fetch the image maker quietly once the site has settled, so the first save doesn't wait on the CDN
