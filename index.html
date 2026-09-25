@@ -83,13 +83,16 @@ button.tile:hover:after{opacity:1;transform:none}
 /* subject selector: a 2-panel track slid by translateX; the drag follows the finger, release snaps */
 .htrack{display:flex;height:100%;transition:transform .45s cubic-bezier(.2,.9,.3,1)}
 .hpanel{flex:0 0 100%;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;padding:14px 16px}
-.hero b{font-size:4.6rem;font-weight:800;line-height:.9;color:var(--red)}
+.hero b{font-size:4.6rem;font-weight:800;line-height:.9;color:var(--red);display:flex;align-items:center;gap:.14em}
+.hero b .sic{width:.8em;height:.8em;color:var(--ink)}   /* subject icon beside the count: ink body + accent in var(--red) */
 .hero span{font-size:1.5rem;font-weight:800;line-height:1.15}
 .hero small{font-size:.8rem;color:var(--mut);margin-top:6px;line-height:1.5}
 .hnav{position:absolute;top:10px;left:12px;right:12px;display:flex;gap:4px;z-index:2}
 .hnav button{border:2px solid var(--ink);background:var(--card);color:var(--ink);font:800 .82rem "Anuphan",sans-serif;height:32px;padding:0 10px;cursor:pointer}
 .hnav .harr{width:34px;padding:0;font-size:1.05rem}.hnav .hsp{margin-left:auto}
 .hnav .hdot.on{background:var(--ink);color:var(--paper)}
+.hnav .hdot{display:inline-flex;align-items:center;gap:5px}.hnav .hdot .sic{width:18px;height:18px}
+.sic{flex:none;display:block}
 .hnav button:disabled{opacity:.3;cursor:default}
 @media(prefers-reduced-motion:reduce){.htrack{transition:none}}
 .tile.deco{cursor:default}
@@ -1438,6 +1441,11 @@ const TM=(()=>{
 const PAL=["c-red","c-yel","c-blue","c-card","c-ink","c-card","c-yel","c-red","c-card","c-blue"];
 function cov(qs){const n=qs.length;return n?Math.round(qs.filter(hasSol).length/n*100):0;}
 function tileSize(n,max){const r=n/max;return r>=.8?"w2 h2 big":r>=.5?"w2":"";}
+/* subject icons: flat inline SVG, ink parts = currentColor, accent = var(--red), so they follow palette + dark mode
+   (var() must go in style="", SVG presentation attributes don't resolve it) */
+const ICON={
+ chem:`<svg class="sic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 2h8v2h-1.5v5.2l5.9 10.3A1.7 1.7 0 0 1 18.9 22H5.1a1.7 1.7 0 0 1-1.5-2.5l5.9-10.3V4H8z"/><path style="fill:var(--red)" d="M6.7 15.4h10.6l2 3.6a.7.7 0 0 1-.6 1H5.3a.7.7 0 0 1-.6-1z"/></svg>`,
+ bio:`<svg class="sic" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke-width="2.6" stroke-linecap="round"><path stroke="currentColor" d="M7 2c0 5 10 5 10 10s-10 5-10 10"/><path style="stroke:var(--red)" d="M17 2c0 5-10 5-10 10s10 5 10 10"/><path stroke="currentColor" stroke-width="1.8" d="M8.6 4.2h6.8M8.6 12h6.8M8.6 19.8h6.8"/></g></svg>`};
 const BPAL=["c-red","c-acc","c-blue","c-yel","c-card","c-acc","c-ink"];
 /* plain text of a question for the recent preview: DOMParser is inert (never fetches the <img>s), and the
    cut is by characters -- Thai has no spaces to cut at -- stepping past combining vowel/tone marks so a
@@ -1455,11 +1463,11 @@ function heroHtml(){
   const bio=DATA.questions.filter(q=>q.subject==="bio"),si=SUBJS.indexOf(SUBJ);
   const bex=[...new Set(bio.map(q=>(DATA.exams[q.exam]||{label:q.exam}).label))].join(" · ");
   const yrs=bio.map(q=>q.year).filter(Boolean).sort(),yr=yrs.length?` ปี ${yrs[0]}${yrs[0]!==yrs[yrs.length-1]?"–"+yrs[yrs.length-1]:""}`:"";
-  const nav=SUBJS.length<2?"":`<div class="hnav"><button class="hdot${si===0?" on":""}" data-s="0">เคมี</button><button class="hdot${si===1?" on":""}" data-s="1">ชีววิทยา</button>
+  const nav=SUBJS.length<2?"":`<div class="hnav"><button class="hdot${si===0?" on":""}" data-s="0">${ICON.chem}เคมี</button><button class="hdot${si===1?" on":""}" data-s="1">${ICON.bio}ชีววิทยา</button>
     <button class="harr hsp" data-d="-1" title="วิชาก่อนหน้า (←)"${si===0?" disabled":""}>‹</button><button class="harr" data-d="1" title="วิชาถัดไป (→)"${si===1?" disabled":""}>›</button></div>`;
   return `<div class="tile hero" tabindex="0" aria-label="เลือกวิชา · ปัดหรือกด ← →">${nav}<div class="htrack" style="transform:translateX(${-si*100}%)">
-    <div class="hpanel"><b>${DATA.chemcount}</b><span>ข้อสอบเคมี<br>แยกตามบท</span><small>สอวน. · PAT2 · A-Level · 9 วิชาสามัญ<br>เลือกบทด้านข้าง หรือกด ทุกบท</small></div>
-    ${SUBJS.length>1?`<div class="hpanel"><b>${DATA.biocount}</b><span>ข้อสอบชีววิทยา<br>แยกตามหัวข้อ</span><small>${bex}${yr}<br>เลือกหัวข้อด้านข้าง หรือกด ทุกหัวข้อ</small></div>`:""}</div></div>`;}
+    <div class="hpanel"><b>${DATA.chemcount}${ICON.chem}</b><span>ข้อสอบเคมี<br>แยกตามบท</span><small>สอวน. · PAT2 · A-Level · 9 วิชาสามัญ<br>เลือกบทด้านข้าง หรือกด ทุกบท</small></div>
+    ${SUBJS.length>1?`<div class="hpanel"><b>${DATA.biocount}${ICON.bio}</b><span>ข้อสอบชีววิทยา<br>แยกตามหัวข้อ</span><small>${bex}${yr}<br>เลือกหัวข้อด้านข้าง หรือกด ทุกหัวข้อ</small></div>`:""}</div></div>`;}
 /* every tile that depends on the chosen subject (rebuilt on a switch; hero + recent stay put) */
 function subjTiles(){
   const bio=SUBJ==="bio",pool=DATA.questions.filter(q=>subjOf(q)===SUBJ),name=bio?"ชีววิทยา":"เคมี";
