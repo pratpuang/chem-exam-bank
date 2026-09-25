@@ -873,11 +873,26 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .k-alk{--kb:var(--red);color:#fff}.k-ae{--kb:#f28c28}.k-tm{--kb:var(--card)}.k-pt{--kb:#d9d2c1}.k-md{--kb:#9fb0e8}.k-nm{--kb:var(--yel)}.k-hal{--kb:var(--blue);color:#fff}.k-ng{--kb:var(--ink);color:var(--paper)}.k-ln{--kb:#f3c3b8}.k-an{--kb:#e39c8c}
 .pdph{display:flex;align-items:center;justify-content:center;font:600 calc(var(--u)*.17) "JetBrains Mono",monospace;opacity:.55;aspect-ratio:1/1}
 .pdinfo{grid-row:1/4;grid-column:3/13;display:flex;gap:16px;align-items:flex-start;padding:0 6px;overflow:auto}
-.pdbig{flex:none;position:relative;width:calc(var(--u)*2.9);height:calc(var(--u)*2.75);border:4px solid var(--ink);background:var(--card);box-shadow:6px 6px 0 var(--sh);display:flex;flex-direction:column;align-items:center;justify-content:space-between;font-weight:800;font-size:calc(var(--u)*1.05);padding:4px 10px 6px;line-height:1}
-.pdbig i{align-self:flex-start;font:800 calc(var(--u)*.44) "JetBrains Mono",monospace;font-style:normal;line-height:1}
-.pdbig u{font:700 calc(var(--u)*.22) "Anuphan",sans-serif;text-decoration:none;margin-top:-4px}
-.pdbig s{font:800 calc(var(--u)*.36) "JetBrains Mono",monospace;text-decoration:none;line-height:1}
-.pdbig.nil{color:var(--mut)}
+/* the big tile is a card with two faces (.bf element / .bb electron configuration), each turning on its own rotateY with its backface
+   hidden, like the memorize tiles. The back needs room for ~20 subshell terms, so the card widens as it turns (.bk) */
+.pdbig{flex:none;position:relative;width:calc(var(--u)*2.9);height:calc(var(--u)*2.75);perspective:calc(var(--u)*14);cursor:pointer;transition:width .5s cubic-bezier(.2,.7,.2,1)}
+.pdbig.nil{color:var(--mut);cursor:default}
+.pdbig.bk{width:calc(var(--u)*4.6)}
+.pdbig>div{position:absolute;inset:0;border:4px solid var(--ink);background:var(--card);box-shadow:6px 6px 0 var(--sh);backface-visibility:hidden;-webkit-backface-visibility:hidden;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.pdbig.still,.pdbig.still>div{transition:none}
+.pdbig .bf{display:flex;flex-direction:column;align-items:center;justify-content:space-between;font-weight:800;font-size:calc(var(--u)*1.05);padding:4px 10px 6px;line-height:1}
+.bf i{align-self:flex-start;font:800 calc(var(--u)*.44) "JetBrains Mono",monospace;font-style:normal;line-height:1}
+.bf u{font:700 calc(var(--u)*.22) "Anuphan",sans-serif;text-decoration:none;margin-top:-4px}
+.bf s{font:800 calc(var(--u)*.36) "JetBrains Mono",monospace;text-decoration:none;line-height:1}
+.pdbig .bb{transform:rotateY(-180deg);display:flex;flex-direction:column;overflow:hidden;line-height:1.15;--f:calc(var(--u)*.28)}
+.pdbig.bk .bf{transform:rotateY(180deg)}.pdbig.bk .bb{transform:none}
+.bb b{background:var(--ink);color:var(--paper);font:800 calc(var(--u)*.24) "JetBrains Mono",monospace;padding:2px 6px}
+.bb b i{font-style:normal;font-weight:600;opacity:.7;margin-left:.4em}
+.bb>em{font:800 calc(var(--u)*.34) "JetBrains Mono",monospace;font-style:normal;padding:3px 6px 1px}
+.bb p{margin:0;padding:0 6px;font:600 var(--f) "JetBrains Mono",monospace;flex:1;min-height:0}
+.bb p span{white-space:nowrap}.bb sup{font-size:.68em;line-height:0}
+.bb.l1{--f:calc(var(--u)*.23)}.bb.l2{--f:calc(var(--u)*.195)}.bb.l2>em{font-size:calc(var(--u)*.26)}
+.bb small{font:700 calc(var(--u)*.17) "Anuphan",sans-serif;color:var(--mut);padding:0 6px 3px}.bb small i{font-style:normal;color:var(--red)}
 .pdbig.pdrev{animation:pdbin .38s cubic-bezier(.2,.7,.2,1)}
 @keyframes pdbin{0%{transform:perspective(600px) rotateY(-90deg);opacity:.3}}
 .pdbrk{flex:1;min-width:0}
@@ -940,6 +955,7 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .pdcel .s0{border-radius:50%}.pdcel .s2{clip-path:polygon(50% 0,100% 100%,0 100%)}
 @keyframes pdpop{0%{opacity:1;transform:translate(-50%,-50%) scale(.3)}65%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--u)*var(--x)),calc(-50% + var(--u)*var(--y))) rotate(var(--r)) scale(1)}}
 @media (prefers-reduced-motion:reduce){#pd,#pdscrim{transition:none}.pde.inq::after,.mem .pde,.mem .pde::before,.pdbig.pdrev{animation:none!important}
+  .pdbig,.pdbig>div{transition-duration:1ms!important}
   .mem .pf,.mem .pb{transition-duration:1ms!important;transition-delay:0s!important}
   .pde.cel .pf,.pdcel b{animation:none!important}.pdcel i,.pde.cel .pf::after{display:none}
   .pde.cel .pf{outline:3px solid var(--yel);outline-offset:-3px}.pdrst,.pdrst.show{transition:none}}
@@ -1474,6 +1490,8 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=ls.get("cqb_sfx"
       tone(vary(note(784,(p|0)-1),.01),.06,{vol:.05,type:"triangle",lp:3500,attack:.001,delay:.04,wet:.15});},
     memUnflip:p=>{noise(.05,{freq:vary(2000,.1),sweep:.5,q:1,vol:.06,attack:.006});thock({f:vary(160),vol:.07,nf:1800,delay:.03});   // turned back down: the flick falls
       tone(vary(note(784,(p|0)-1)*.75,.01),.07,{vol:.04,type:"triangle",lp:2500,slide:.8,slideT:.05,attack:.001,delay:.04,wet:.12});},
+    // big element card turning over: a soft paper swoosh + a muffled tap as it lands (rising to the back, falling to the front)
+    bigFlip:bk=>{noise(.12,{freq:vary(bk?1000:1500,.08),sweep:bk?1.8:.55,q:.8,vol:.045,attack:.03,wet:.15});thock({f:vary(bk?190:165),vol:.045,nf:2000,delay:.09});},
     // หมู่ครบ: one glass note per element of the column running up the pentatonic, resolving on a bright bell at the next root
     memCol:n=>{n=Math.max(2,Math.min(8,n|0));const d=.12,g=.055;
       for(let i=0;i<n;i++)glass(vary(note(523,i),.004),{vol:.055,dur:.32,delay:d+i*g});
@@ -2067,15 +2085,33 @@ const PD=(()=>{
     ELS.forEach(e=>{const[r,c]=e.f!==null?[e.p==6?9:10,3+e.f]:[e.p,e.g];
       h+=`<div class="pde k-${e.cat}" data-z="${e.z}" data-w="${r+c-2}"${e.g&&(e.g<3||e.g>12)?` data-g="${e.g}"`:""} style="grid-row:${r};grid-column:${c}"><div class="pf"><i>${e.z}</i><b>${e.s}</b><s>${fm(e)}</s></div><em class="pb">${e.z}</em></div>`;});
     h+=`<div class="pdph" style="grid-row:6;grid-column:3">57–71</div><div class="pdph" style="grid-row:7;grid-column:3">89–103</div><div style="grid-row:8;grid-column:1;height:10px"></div>`;
-    h+=`<div class="pdinfo"><div class="pdbig" id="pdbig"></div><div class="pdbrk" id="pdbrk"></div></div>`;
+    h+=`<div class="pdinfo"><div class="pdbig" id="pdbig" tabindex="0" title="แตะเพื่อพลิกดูการจัดเรียงอิเล็กตรอน"><div class="bf"></div><div class="bb"></div></div><div class="pdbrk" id="pdbrk"></div></div>`;
     G.innerHTML=h;
     $("#pdkeys").innerHTML=["(",")","[","]","·"].map(k=>`<button class="kp" data-k="${k}">${k}</button>`).join("")+`<span class="sep"></span>`+[..."1234567890"].map(k=>`<button data-k="${k}">${k}</button>`).join("")+`<span class="sep"></span><button class="kx" data-k="bk" title="ลบตัวสุดท้าย">⌫</button><button class="kx" data-k="clr">ล้าง</button><span class="tip">คลิกซ้าย = เพิ่มธาตุ · คลิกขวา = ลดทีละ 1</span>`;
     big(BY[1]);update();built=true;}
-  // big tile: an element, or (e null) the memorize-mode neutral card that gives nothing away; fx = the flip-in reveal
+  // electron configuration: fill subshells in Madelung order (n+l, then n), then overwrite the real NIST ground states that break it.
+  // Z >= 104 are theoretical predictions (all of them match Madelung). Shells = electrons summed per n (the Thai ม.ปลาย 2, 8, 14, 2).
+  const SUB=[];for(let n=1;n<=7;n++)for(let l=0;l<Math.min(n,4);l++)SUB.push([n,l]);SUB.sort((a,b)=>a[0]+a[1]-b[0]-b[1]||a[0]-b[0]);
+  const EXC={24:"4s1 3d5",29:"4s1 3d10",41:"5s1 4d4",42:"5s1 4d5",44:"5s1 4d7",45:"5s1 4d8",46:"5s0 4d10",47:"5s1 4d10",57:"4f0 5d1",58:"4f1 5d1",64:"4f7 5d1",
+    78:"6s1 5d9",79:"6s1 5d10",89:"5f0 6d1",90:"5f0 6d2",91:"5f2 6d1",92:"5f3 6d1",93:"5f4 6d1",96:"5f7 6d1",103:"6d0 7p1"};
+  function cfg(z){let r=z;const occ=SUB.map(([,l])=>{const k=Math.min(r,4*l+2);r-=k;return k;});
+    (EXC[z]||"").replace(/(\d)([spdf])(\d+)/g,(_,n,l,k)=>{occ[SUB.findIndex(s=>s[0]==n&&s[1]=="spdf".indexOf(l))]=+k;});
+    const t=SUB.map((s,i)=>[s[0]+"spdf"[s[1]],occ[i],s[0]]).filter(x=>x[1]),sh=[];t.forEach(x=>sh[x[2]-1]=(sh[x[2]-1]||0)+x[1]);
+    const note=z>=104?"(ทำนาย)":!EXC[z]?"":[24,42].includes(z)?"★ ข้อยกเว้น: d⁵ ครึ่งเต็ม เสถียรกว่า":[29,47,79].includes(z)?"★ ข้อยกเว้น: d¹⁰ เต็ม เสถียรกว่า"
+      :z==46?"★ ข้อยกเว้น: 4d¹⁰ 5s⁰ (d¹⁰ เต็ม เสถียรกว่า)":"★ ข้อยกเว้นจากลำดับการบรรจุ";
+    return{t,sh:sh.join(", "),note};}
+  // big tile: an element, or (e null) the memorize-mode neutral card that gives nothing away; fx = the flip-in reveal.
+  // A different element (or the "?" card) always lands front-up, snapped without the turn.
   let shown=0;
-  const big=(e,fx)=>{const b=$("#pdbig");b.classList.toggle("nil",!e);shown=e?e.z:0;
-    if(e){last=e;b.innerHTML=`<i>${e.z}</i>${e.s}<u>${e.n}</u><s>${fm(e)}</s>`;}else b.innerHTML=`<i>&nbsp;</i>?<u>แตะธาตุเพื่อเปิด</u><s>&nbsp;</s>`;
+  const big=(e,fx)=>{const b=$("#pdbig"),z=e?e.z:0;
+    if(z!==shown&&b.classList.contains("bk")){b.classList.add("still");b.classList.remove("bk");void b.offsetWidth;b.classList.remove("still");}
+    b.classList.toggle("nil",!e);shown=z;
+    if(e){last=e;b.firstChild.innerHTML=`<i>${e.z}</i>${e.s}<u>${e.n}</u><s>${fm(e)}</s>`;const c=cfg(e.z);
+      b.lastChild.className="bb"+(c.t.length>15?" l2":c.t.length>10?" l1":"");   // shrink the long ones a notch so ~20 terms still fit
+      b.lastChild.innerHTML=`<b>${e.s}<i>Z ${e.z}</i></b><em>${c.sh}</em><p>${c.t.map(([s,k])=>`<span>${s}<sup>${k}</sup></span>`).join(" ")}</p>${c.note?`<small>${c.note.replace("★","<i>★</i>")}</small>`:""}`;}
+    else{b.firstChild.innerHTML=`<i>&nbsp;</i>?<u>แตะธาตุเพื่อเปิด</u><s>&nbsp;</s>`;b.lastChild.innerHTML="";}
     if(fx){b.classList.remove("pdrev");void b.offsetWidth;b.classList.add("pdrev");}};
+  function flipBig(){const b=$("#pdbig");if(!shown)return;b.classList.toggle("bk");SFX.play("bigFlip",b.classList.contains("bk"));}
   const r2=x=>(Math.round(x*100+1e-6)/100).toFixed(2);   // half-up, so 55.845 -> 55.85 like the tile
   function update(){
     let c;G.querySelectorAll(".pde.inf").forEach(t=>t.classList.remove("inf"));
@@ -2154,14 +2190,14 @@ const PD=(()=>{
       return`<i class="c${i%3} s${i/3|0}" style="--x:${(Math.cos(a)*.55).toFixed(2)};--y:${(Math.sin(a)*r).toFixed(2)};--r:${(Math.random()*360-180)|0}deg;--dl:${60+i*18}ms"></i>`;}).join("");
     G.appendChild(fx);celT[g]=setTimeout(()=>{fx.remove();ts.forEach(x=>x.classList.remove("cel"));},1700);SFX.play("memCol",ts.length);}
   G.addEventListener("animationend",e=>{if(e.animationName==="pdlu")e.target.classList.remove("up");});
-  G.addEventListener("click",e=>{const t=e.target.closest(".pde");if(!t)return;const el=BY[t.dataset.z];
+  G.addEventListener("click",e=>{if(e.target.closest(".pdbig"))return flipBig();const t=e.target.closest(".pde");if(!t)return;const el=BY[t.dataset.z];
     if(memOn){if(Date.now()-(t._ft||0)<350)return;t._ft=Date.now();t.style.setProperty("--d","0ms");   // a fast double-tap is one turn, not open-then-shut
       if(t.classList.contains("dn")){t.classList.replace("dn","up");big(el,1);SFX.play("memFlip",el.p);}
       else{t.classList.remove("up");t.classList.add("dn");if(shown===el.z)big(null,1);SFX.play("memUnflip",el.p);}
       colCheck(t);
       return;}
     if(mwOn)addSym(el.s);SFX.play(mwOn?"add":"element",el.z);big(el);flash(el.z);});
-  G.addEventListener("keydown",e=>{const t=e.target.closest(".pde");if(t&&(e.key==="Enter"||e.key===" ")){e.preventDefault();t.click();}});
+  G.addEventListener("keydown",e=>{if(e.target.id==="pdbig"&&(e.key==="Enter"||e.key===" ")){e.preventDefault();return flipBig();}const t=e.target.closest(".pde");if(t&&(e.key==="Enter"||e.key===" ")){e.preventDefault();t.click();}});
   G.addEventListener("contextmenu",e=>{const t=e.target.closest(".pde");if(!t||!mwOn||memOn)return;e.preventDefault();const el=BY[t.dataset.z];big(el);
     if(decSym(el.s)){flash(el.z);SFX.play("remove");}else SFX.play("bad");});
   G.addEventListener("mouseover",e=>{const t=e.target.closest(".pde");if(t){const el=BY[t.dataset.z];$("#pdhov").textContent=t.classList.contains("dn")?`Z ${el.z} · ?`:`${el.s} · ${el.n} · Z ${el.z} · ${fm(el)}`;}});
