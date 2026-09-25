@@ -882,7 +882,26 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .pdkeys .kp{background:var(--blue);color:#fff}.pdkeys .kx{background:var(--red);color:#fff}
 .pdkeys .sep{width:10px}
 .pdkeys .tip{margin-left:auto;font-size:.75rem;color:var(--mut)}
-@media (prefers-reduced-motion:reduce){#pd,#pdscrim{transition:none}.pde.inq::after{animation:none}}
+/* ท่องตารางธาตุ: tiles flip face-down (.dn) in a diagonal wave, a tap flips one back (.up). The flip is two half-turns:
+   edge-on at 50% the Bauhaus back (::before: the tile's own colour, hatched, a paper disc with Z) snaps in or out. */
+.pdmem.on{background:var(--red);color:#fff}
+#pdmwt{margin-left:0}
+.pdcnt{font:800 .85rem "JetBrains Mono",monospace;background:var(--ink);color:var(--yel);padding:6px 10px}
+.pdcnt:empty{display:none}
+.pde{touch-action:manipulation}
+.pde:focus-visible{outline:3px solid var(--ink);outline-offset:2px;z-index:3}
+.pde.dn,.pde.up{animation:pdfdn .3s var(--d,0ms) backwards}
+.pde.up{animation-name:pdfup}
+.pde.dn::before,.pde.up::before{content:attr(data-z);position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;color:var(--ink);font:800 calc(var(--u)*.27) "JetBrains Mono",monospace;
+  background-color:inherit;background-image:radial-gradient(circle closest-side,var(--paper) 0 72%,var(--ink) 73% 82%,transparent 83%),repeating-linear-gradient(45deg,rgba(20,20,20,.14) 0 2px,transparent 2px 6px);
+  animation:pdcin .3s var(--d,0ms) backwards}
+.pde.up::before{opacity:0;animation-name:pdcout}
+@keyframes pdfdn{0%{transform:perspective(320px) rotateY(0);animation-timing-function:ease-in}50%{transform:perspective(320px) rotateY(90deg)}50.01%{transform:perspective(320px) rotateY(-90deg);animation-timing-function:ease-out}100%{transform:perspective(320px) rotateY(0)}}
+@keyframes pdfup{0%{transform:perspective(320px) rotateY(0);animation-timing-function:ease-in}50%{transform:perspective(320px) rotateY(90deg)}50.01%{transform:perspective(320px) rotateY(-90deg);animation-timing-function:ease-out}100%{transform:perspective(320px) rotateY(0)}}
+@keyframes pdcin{0%,50%{opacity:0}50.01%,100%{opacity:1}}
+@keyframes pdcout{0%,50%{opacity:1}50.01%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){#pd,#pdscrim{transition:none}.pde.inq::after{animation:none}
+  .pde.dn,.pde.up,.pde.dn::before,.pde.up::before{animation-duration:1ms!important;animation-delay:0s!important}}
 
 /* ---------- tools drawer (constants · unit converter · ions) ---------- */
 #tdtab{position:fixed;left:0;top:calc(28% + 128px);z-index:45;writing-mode:vertical-rl;background:var(--yel);color:#141414;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:none;transition:transform .2s}
@@ -1244,7 +1263,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 </aside>
 <div id="pdscrim"></div>
 <aside id="pd" aria-label="ตารางธาตุ">
-  <div class="pdh"><b>ตารางธาตุ</b><span class="pdq" id="pdq"></span><span class="pdhov" id="pdhov"></span><button class="pdmwt" id="pdmwt" title="เปิด/ปิดเครื่องคิด Mw">🧮 คิด Mw</button><button class="pdx" id="pdx" title="ปิด (Esc)">✕</button></div>
+  <div class="pdh"><b>ตารางธาตุ</b><span class="pdq" id="pdq"></span><span class="pdhov" id="pdhov"></span><button class="pdmwt pdmem" id="pdmem" aria-pressed="false" title="คว่ำทุกธาตุ เหลือแค่เลขอะตอม แล้วแตะเพื่อเปิดทีละตัว">🃏 ท่องตารางธาตุ: ปิด</button><span class="pdcnt" id="pdcnt"></span><button class="pdmwt" id="pdmwt" title="เปิด/ปิดเครื่องคิด Mw">🧮 คิด Mw</button><button class="pdx" id="pdx" title="ปิด (Esc)">✕</button></div>
   <div class="pdw"><div class="pdg" id="pdg"></div></div>
   <div class="pdcalc"><input id="pdin" spellcheck="false" autocomplete="off" placeholder="พิมพ์สูตร เช่น Al2(SO4)3 หรือแตะธาตุ">
     <div class="pdmw"><small id="pdfd"></small><span id="pdmw">Mw = —</span></div>
@@ -1410,6 +1429,15 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=ls.get("cqb_sfx"
     element:z=>glass(note(523,((z|0)-1)%12),{vol:.07,dur:.25}),
     add:z=>{const f=note(523,((z|0)-1)%12);glass(f,{vol:.06,dur:.25});pop(f*.75,{vol:.06,rise:1.5,dur:.05,delay:.04});},
     remove:()=>{pop(vary(620),{vol:.1,rise:.6,dur:.09});thock({f:vary(160),vol:.07});},
+    // ท่องตารางธาตุ: a riffle dealing the deck face-down / one card turned up (tick pitched by period) / the deck gathered and squared
+    memOn:()=>{noise(.55,{freq:900,sweep:3,q:.6,vol:.05,attack:.15,wet:.2});let t=.02;
+      for(let i=0;i<12;i++){t+=.045-i*.0015;noise(.018,{freq:vary(2600,.15),q:2.2,vol:.07,delay:t,attack:.001});}
+      thock({f:vary(170),vol:.08,delay:t+.06});},
+    memFlip:p=>{noise(.05,{freq:vary(1400,.1),sweep:2,q:1,vol:.07,attack:.006});thock({f:vary(200),vol:.06,nf:2400,delay:.03});
+      tone(vary(note(784,(p|0)-1),.01),.06,{vol:.05,type:"triangle",lp:3500,attack:.001,delay:.04,wet:.15});},
+    memOff:()=>{noise(.4,{freq:2400,sweep:.3,q:.6,vol:.05,attack:.1,wet:.15});let t=0;
+      for(let i=0;i<9;i++){t+=.03+i*.004;noise(.016,{freq:vary(2000,.15),q:2,vol:.06,delay:t,attack:.001});}
+      thock({f:vary(150),vol:.1,delay:t+.07});thock({f:vary(190),vol:.07,delay:t+.15});},
     // ---- timer ----
     start:()=>{wood(vary(784,.01),{vol:.09});wood(vary(1175,.01),{vol:.08,delay:.07});},
     pause:()=>{wood(vary(1175,.01),{vol:.07});wood(vary(784,.01),{vol:.08,delay:.07});},
@@ -1968,7 +1996,7 @@ const PD=(()=>{
   function build(){
     let h="";
     ELS.forEach(e=>{const[r,c]=e.f!==null?[e.p==6?9:10,3+e.f]:[e.p,e.g];
-      h+=`<div class="pde k-${e.cat}" data-z="${e.z}" style="grid-row:${r};grid-column:${c}"><i>${e.z}</i><b>${e.s}</b><s>${fm(e)}</s></div>`;});
+      h+=`<div class="pde k-${e.cat}" data-z="${e.z}" data-w="${r+c-2}" style="grid-row:${r};grid-column:${c}"><i>${e.z}</i><b>${e.s}</b><s>${fm(e)}</s></div>`;});
     h+=`<div class="pdph" style="grid-row:6;grid-column:3">57–71</div><div class="pdph" style="grid-row:7;grid-column:3">89–103</div><div style="grid-row:8;grid-column:1;height:10px"></div>`;
     h+=`<div class="pdinfo"><div class="pdbig" id="pdbig"></div><div class="pdbrk" id="pdbrk"></div></div>`;
     G.innerHTML=h;
@@ -2022,11 +2050,24 @@ const PD=(()=>{
     $("#pdmwt").classList.toggle("on",on);$("#pdmwt").textContent=on?"🧮 คิด Mw: เปิด":"🧮 คิด Mw: ปิด";}
   setMw(mwOn);
   $("#pdmwt").onclick=()=>{setMw(!mwOn);SFX.play(mwOn?"on":"off");};
+  // ท่องตารางธาตุ: on = every tile face-down (only Z shows) in a diagonal wave; a tap turns ONE up and it stays up.
+  // Off = the still-hidden ones turn back over; on again = a fresh round, all face-down. Mw state is untouched.
+  let memOn=false;const cnt=()=>{$("#pdcnt").textContent=memOn?`เปิดแล้ว ${118-G.querySelectorAll(".pde.dn").length} / 118`:"";};
+  function setMem(on){memOn=on;const b=$("#pdmem");b.classList.toggle("on",on);b.setAttribute("aria-pressed",on);b.textContent=on?"🃏 ท่องตารางธาตุ: เปิด":"🃏 ท่องตารางธาตุ: ปิด";
+    G.querySelectorAll(".pde").forEach(t=>{t.style.setProperty("--d",t.dataset.w*22+"ms");
+      if(on){t.classList.remove("up","pdflash");t.classList.add("dn");t.tabIndex=0;}
+      else{t.removeAttribute("tabindex");if(t.classList.contains("dn")){t.classList.remove("dn");t.classList.add("up");}}});
+    cnt();}
+  $("#pdmem").onclick=()=>{setMem(!memOn);SFX.play(memOn?"memOn":"memOff");};
+  G.addEventListener("animationend",e=>{if(e.animationName==="pdfup")e.target.classList.remove("up");});   // lets the normal tap flash play again
   G.addEventListener("click",e=>{const t=e.target.closest(".pde");if(!t)return;const el=BY[t.dataset.z];
+    if(t.classList.contains("dn")){t.style.setProperty("--d","0ms");t.classList.replace("dn","up");t._ft=Date.now();cnt();SFX.play("memFlip",el.p);return;}   // face-down: the tap only flips it
+    if(Date.now()-(t._ft||0)<400)return;   // 2nd half of a double-tap on the card just flipped is not a new tap
     if(mwOn)addSym(el.s);SFX.play(mwOn?"add":"element",el.z);big(el);flash(el.z);});
-  G.addEventListener("contextmenu",e=>{const t=e.target.closest(".pde");if(!t||!mwOn)return;e.preventDefault();const el=BY[t.dataset.z];big(el);
+  G.addEventListener("keydown",e=>{const t=e.target.closest(".pde");if(t&&(e.key==="Enter"||e.key===" ")){e.preventDefault();t.click();}});
+  G.addEventListener("contextmenu",e=>{const t=e.target.closest(".pde");if(!t||!mwOn||t.classList.contains("dn"))return;e.preventDefault();const el=BY[t.dataset.z];big(el);
     if(decSym(el.s)){flash(el.z);SFX.play("remove");}else SFX.play("bad");});
-  G.addEventListener("mouseover",e=>{const t=e.target.closest(".pde");if(t){const el=BY[t.dataset.z];$("#pdhov").textContent=`${el.s} · ${el.n} · Z ${el.z} · ${fm(el)}`;}});
+  G.addEventListener("mouseover",e=>{const t=e.target.closest(".pde");if(t){const el=BY[t.dataset.z];$("#pdhov").textContent=t.classList.contains("dn")?`Z ${el.z} · ?`:`${el.s} · ${el.n} · Z ${el.z} · ${fm(el)}`;}});
   inp.addEventListener("input",update);
   $("#pdkeys").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.k;SFX.play("key",k);
     if(k=="bk")put(inp.value.slice(0,-1));else if(k=="clr")put("");else put(inp.value+k);});
