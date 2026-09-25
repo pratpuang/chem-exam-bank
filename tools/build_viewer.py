@@ -843,7 +843,11 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .pdmwt:active{transform:translate(3px,3px);box-shadow:none}
 #pd.nomw .pdcalc,#pd.nomw .pdbrk,#pd.nomw .pdq{display:none}
 .pdx{background:var(--ink);color:var(--paper);border:0;width:36px;height:36px;font-weight:800;cursor:pointer}
-.pdw{container-type:inline-size;overflow-x:auto}
+/* .pdw scrolls sideways only when the 600px-min grid can't fit (phones). Any scroll container also scrolls on y, so the memorize
+   tiles' offset shadow + lift (and the column burst) poking a few px past the grid's right/bottom edge used to raise scrollbars:
+   a 14px gutter (padding, cancelled by an equal negative margin, so nothing moves) absorbs them there, and wide panels don't clip at all */
+.pdw{container-type:inline-size;overflow-x:auto;padding:14px;margin:-14px}
+@media (min-width:700px){.pdw{overflow:visible}}
 .pdg{--u:calc(max(100cqi,600px)/18);display:grid;grid-template-columns:repeat(18,minmax(0,1fr));gap:3px;min-width:600px}
 .pde{aspect-ratio:1/1;cursor:pointer;user-select:none;-webkit-user-select:none;min-width:0;position:relative;line-height:1;perspective:calc(var(--u)*9);transition:transform .15s,box-shadow .15s}
 /* a tile is a slot holding two real faces: .pf (the element) and .pb (the memorize-mode back); both carry the category colour via --kb */
@@ -894,7 +898,11 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
    transform/opacity/scale animate (compositor-only), and the deck turns in an eased diagonal ripple (--d per tile). */
 .pdmem.on{background:var(--red);color:#fff}
 #pdmwt{margin-left:0}
-.pdrst{position:relative}.pdrst::after{content:"";position:absolute;inset:-5px -2px}   /* hit area >= 44px without a taller button */
+/* ↺ sits LEFT of the toggle and always keeps its slot (hidden = invisible, not gone), so turning the mode on/off never moves the toggle */
+.pdrst{position:relative;visibility:hidden;opacity:0;translate:14px 0;transition:opacity .25s,translate .3s cubic-bezier(.2,.7,.2,1),visibility 0s .3s}
+.pdrst.show{visibility:visible;opacity:1;translate:none;transition:opacity .25s,translate .3s cubic-bezier(.2,.7,.2,1)}
+#pdmem{margin-left:0;display:inline-grid}#pdmem>span{grid-area:1/1}#pdmem:not(.on)>span+span,#pdmem.on>span:first-child{visibility:hidden}   /* both labels share one cell: ปิด/เปิด never resizes it */
+.pdrst::after{content:"";position:absolute;inset:-5px -2px}   /* hit area >= 44px without a taller button */
 .pde{touch-action:manipulation}
 .pde:focus-visible{outline:3px solid var(--ink);outline-offset:2px;z-index:3}
 .mem .pf,.mem .pb{backface-visibility:hidden;-webkit-backface-visibility:hidden;transition:transform .48s cubic-bezier(.2,.7,.2,1) var(--d,0ms)}
@@ -909,8 +917,25 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 @keyframes pdld{45%{scale:1.06}}@keyframes pdlu{45%{scale:1.06}}   /* two names so each turn restarts the lift */
 @keyframes pdsd{45%{opacity:.45}}@keyframes pdsu{45%{opacity:.45}}
 .pdg.still *,.pdg.still *::before{transition:none!important;animation:none!important}
+/* หมู่ครบ: every tile of a main-group column open -> a shine runs down it, the column hops once together, a ✓ stamp lands on the
+   top tile and Bauhaus bits pop out above it. transform/opacity only; .pdcel is a throwaway grid item on the top tile's cell */
+.pde.cel .pf::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.8) 50%,transparent 70%);translate:-120% 0;animation:pdshine .45s ease-out calc(var(--i)*60ms) both;pointer-events:none}
+@keyframes pdshine{to{translate:120% 0}}
+.pde.cel .pf{animation:pdhop .4s cubic-bezier(.3,1.5,.5,1) calc(var(--n)*60ms + 120ms)}
+@keyframes pdhop{40%{translate:0 -12%}75%{translate:0 2%}}
+.pdcel{position:relative;z-index:4;pointer-events:none}
+.pdcel b{position:absolute;left:50%;top:50%;display:flex;flex-direction:column;align-items:center;background:var(--ink);color:var(--yel);border:2px solid var(--yel);box-shadow:3px 3px 0 var(--red);padding:2px 6px 3px;font:800 calc(var(--u)*.34) "Anuphan",sans-serif;line-height:1;white-space:nowrap;
+  transform:translate(-50%,-50%) rotate(-8deg);animation:pdstamp 1.6s cubic-bezier(.2,.9,.3,1.2) both}
+.pdcel small{font-size:calc(var(--u)*.17)}
+@keyframes pdstamp{0%{opacity:0;transform:translate(-50%,-50%) rotate(-8deg) scale(1.9)}14%{opacity:1;transform:translate(-50%,-50%) rotate(-8deg) scale(1)}82%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(-8deg) scale(1)}}
+.pdcel i{position:absolute;left:50%;top:40%;width:calc(var(--u)*.16);height:calc(var(--u)*.16);opacity:0;animation:pdpop .75s cubic-bezier(.15,.7,.3,1) var(--dl) both}
+.pdcel .c0{background:var(--red)}.pdcel .c1{background:var(--blue)}.pdcel .c2{background:var(--yel)}
+.pdcel .s0{border-radius:50%}.pdcel .s2{clip-path:polygon(50% 0,100% 100%,0 100%)}
+@keyframes pdpop{0%{opacity:1;transform:translate(-50%,-50%) scale(.3)}65%{opacity:1}100%{opacity:0;transform:translate(calc(-50% + var(--u)*var(--x)),calc(-50% + var(--u)*var(--y))) rotate(var(--r)) scale(1)}}
 @media (prefers-reduced-motion:reduce){#pd,#pdscrim{transition:none}.pde.inq::after,.mem .pde,.mem .pde::before,.pdbig.pdrev{animation:none!important}
-  .mem .pf,.mem .pb{transition-duration:1ms!important;transition-delay:0s!important}}
+  .mem .pf,.mem .pb{transition-duration:1ms!important;transition-delay:0s!important}
+  .pde.cel .pf,.pdcel b{animation:none!important}.pdcel i,.pde.cel .pf::after{display:none}
+  .pde.cel .pf{outline:3px solid var(--yel);outline-offset:-3px}.pdrst,.pdrst.show{transition:none}}
 
 /* ---------- tools drawer (constants · unit converter · ions) ---------- */
 #tdtab{position:fixed;left:0;top:calc(28% + 128px);z-index:45;writing-mode:vertical-rl;background:var(--yel);color:#141414;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;display:none;transition:transform .2s}
@@ -1272,7 +1297,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 </aside>
 <div id="pdscrim"></div>
 <aside id="pd" aria-label="ตารางธาตุ">
-  <div class="pdh"><b>ตารางธาตุ</b><span class="pdq" id="pdq"></span><span class="pdhov" id="pdhov"></span><button class="pdmwt pdmem" id="pdmem" aria-pressed="false" title="คว่ำทุกธาตุ เหลือแค่เลขอะตอม แล้วแตะเพื่อเปิดทีละตัว">🃏 ท่องตารางธาตุ: ปิด</button><button class="pdmwt pdrst" id="pdrst" hidden title="คว่ำทุกธาตุที่เปิดอยู่กลับทั้งหมด">↺ รีเซ็ต</button><button class="pdmwt" id="pdmwt" title="เปิด/ปิดเครื่องคิด Mw">🧮 คิด Mw</button><button class="pdx" id="pdx" title="ปิด (Esc)">✕</button></div>
+  <div class="pdh"><b>ตารางธาตุ</b><span class="pdq" id="pdq"></span><span class="pdhov" id="pdhov"></span><button class="pdmwt pdrst" id="pdrst" title="คว่ำทุกธาตุที่เปิดอยู่กลับทั้งหมด">↺ รีเซ็ต</button><button class="pdmwt pdmem" id="pdmem" aria-pressed="false" title="คว่ำทุกธาตุ เหลือแค่เลขอะตอม แล้วแตะเพื่อเปิดทีละตัว"><span>🃏 ท่องตารางธาตุ: ปิด</span><span>🃏 ท่องตารางธาตุ: เปิด</span></button><button class="pdmwt" id="pdmwt" title="เปิด/ปิดเครื่องคิด Mw">🧮 คิด Mw</button><button class="pdx" id="pdx" title="ปิด (Esc)">✕</button></div>
   <div class="pdw"><div class="pdg" id="pdg"></div></div>
   <div class="pdcalc"><input id="pdin" spellcheck="false" autocomplete="off" placeholder="พิมพ์สูตร เช่น Al2(SO4)3 หรือแตะธาตุ">
     <div class="pdmw"><small id="pdfd"></small><span id="pdmw">Mw = —</span></div>
@@ -1446,6 +1471,12 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=ls.get("cqb_sfx"
       tone(vary(note(784,(p|0)-1),.01),.06,{vol:.05,type:"triangle",lp:3500,attack:.001,delay:.04,wet:.15});},
     memUnflip:p=>{noise(.05,{freq:vary(2000,.1),sweep:.5,q:1,vol:.06,attack:.006});thock({f:vary(160),vol:.07,nf:1800,delay:.03});   // turned back down: the flick falls
       tone(vary(note(784,(p|0)-1)*.75,.01),.07,{vol:.04,type:"triangle",lp:2500,slide:.8,slideT:.05,attack:.001,delay:.04,wet:.12});},
+    // หมู่ครบ: one glass note per element of the column running up the pentatonic, resolving on a bright bell at the next root
+    memCol:n=>{n=Math.max(2,Math.min(8,n|0));const d=.12,g=.055;
+      for(let i=0;i<n;i++)glass(vary(note(523,i),.004),{vol:.055,dur:.32,delay:d+i*g});
+      const t=d+n*g+.02,r=note(523,Math.ceil(n/5)*5);
+      bell(r,1,{vol:.07,delay:t,ratio:1,index:1.1,wet:.5});bell(r/2,.8,{vol:.04,delay:t,ratio:1,index:.8,wet:.4});
+      noise(.3,{freq:5200,sweep:1.4,q:.6,vol:.025,attack:.03,delay:t,wet:.3});},
     memReset:()=>{noise(.3,{freq:1800,sweep:.5,q:.7,vol:.05,attack:.06,wet:.15});let t=.02;   // the open cards swept back into the deck
       for(let i=0;i<6;i++){t+=.035;noise(.016,{freq:vary(2300,.15),q:2,vol:.06,delay:t,attack:.001});}thock({f:vary(160),vol:.09,delay:t+.06});},
     memOff:()=>{noise(.4,{freq:2400,sweep:.3,q:.6,vol:.05,attack:.1,wet:.15});let t=0;
@@ -2009,7 +2040,7 @@ const PD=(()=>{
   function build(){
     let h="";
     ELS.forEach(e=>{const[r,c]=e.f!==null?[e.p==6?9:10,3+e.f]:[e.p,e.g];
-      h+=`<div class="pde k-${e.cat}" data-z="${e.z}" data-w="${r+c-2}" style="grid-row:${r};grid-column:${c}"><div class="pf"><i>${e.z}</i><b>${e.s}</b><s>${fm(e)}</s></div><em class="pb">${e.z}</em></div>`;});
+      h+=`<div class="pde k-${e.cat}" data-z="${e.z}" data-w="${r+c-2}"${e.g&&(e.g<3||e.g>12)?` data-g="${e.g}"`:""} style="grid-row:${r};grid-column:${c}"><div class="pf"><i>${e.z}</i><b>${e.s}</b><s>${fm(e)}</s></div><em class="pb">${e.z}</em></div>`;});
     h+=`<div class="pdph" style="grid-row:6;grid-column:3">57–71</div><div class="pdph" style="grid-row:7;grid-column:3">89–103</div><div style="grid-row:8;grid-column:1;height:10px"></div>`;
     h+=`<div class="pdinfo"><div class="pdbig" id="pdbig"></div><div class="pdbrk" id="pdbrk"></div></div>`;
     G.innerHTML=h;
@@ -2072,8 +2103,8 @@ const PD=(()=>{
   // Off = everything face-up. Always starts off: never saved, and reopening the drawer snaps it back off without animating.
   let memOn=false,memT=0;
   const ripple=t=>Math.round(420*(1-Math.cos(Math.PI*t.dataset.w/24)));   // 0..840 ms, eased; 24 = the far end of the f-row
-  function setMem(on,quiet){memOn=on;const b=$("#pdmem");b.classList.toggle("on",on);b.setAttribute("aria-pressed",on);b.textContent=on?"🃏 ท่องตารางธาตุ: เปิด":"🃏 ท่องตารางธาตุ: ปิด";
-    $("#pdrst").hidden=!on;clearTimeout(memT);
+  function setMem(on,quiet){memOn=on;const b=$("#pdmem");b.classList.toggle("on",on);b.setAttribute("aria-pressed",on);
+    $("#pdrst").classList.toggle("show",on);clearTimeout(memT);celClear();
     if(quiet)G.classList.add("still");
     if(on){G.classList.add("mem");void G.offsetWidth;}   // backs exist before the turn starts, so the first flip transitions too
     G.querySelectorAll(".pde").forEach(t=>{t.style.setProperty("--d",ripple(t)+"ms");
@@ -2084,12 +2115,25 @@ const PD=(()=>{
     big(on?null:last,!quiet);}
   $("#pdmem").onclick=()=>{setMem(!memOn);SFX.play(memOn?"memOn":"memOff");};
   $("#pdrst").onclick=()=>{const up=[...G.querySelectorAll(".pde:not(.dn)")],d0=Math.min(...up.map(ripple));   // only open tiles turn; the wave starts at the first of them
-    up.forEach(t=>{t.style.setProperty("--d",ripple(t)-d0+"ms");t.classList.remove("up");t.classList.add("dn");});big(null,1);SFX.play("memReset");};
+    up.forEach(t=>{t.style.setProperty("--d",ripple(t)-d0+"ms");t.classList.remove("up");t.classList.add("dn");});celClear();big(null,1);SFX.play("memReset");};
+  // หมู่ครบ: only the main-group columns (1, 2, 13-18) carry data-g; the d-block (3-12) and the La/Ac f-rows never celebrate.
+  // Fires once per completion; closing any tile of the column re-arms it. Reset / mode off / reopening the drawer clears it all.
+  const doneG=new Set(),celT={};
+  function celClear(){doneG.clear();for(const g in celT)clearTimeout(celT[g]);G.querySelectorAll(".pdcel").forEach(x=>x.remove());G.querySelectorAll(".cel").forEach(t=>t.classList.remove("cel"));}
+  function colCheck(t){const g=t.dataset.g;if(!g)return;const ts=[...G.querySelectorAll(`.pde[data-g="${g}"]`)];
+    if(ts.some(x=>x.classList.contains("dn"))){doneG.delete(g);return;}
+    if(doneG.has(g))return;doneG.add(g);clearTimeout(celT[g]);G.querySelectorAll(`.pdcel[data-g="${g}"]`).forEach(x=>x.remove());
+    ts.forEach((x,i)=>{x.style.setProperty("--i",i);x.style.setProperty("--n",ts.length);x.classList.remove("cel");void x.offsetWidth;x.classList.add("cel");});
+    const fx=document.createElement("div");fx.className="pdcel";fx.dataset.g=g;fx.style.cssText=`grid-row:${ts[0].style.gridRow};grid-column:${g}`;
+    fx.innerHTML=`<b>✓<small>หมู่ ${g}</small></b>`+[...Array(9)].map((_,i)=>{const a=(-160+140*(i+Math.random()*.6)/8.6)*Math.PI/180,r=.7+Math.random()*.5;   // an upward fan, kept within ~half a tile sideways
+      return`<i class="c${i%3} s${i/3|0}" style="--x:${(Math.cos(a)*.55).toFixed(2)};--y:${(Math.sin(a)*r).toFixed(2)};--r:${(Math.random()*360-180)|0}deg;--dl:${60+i*18}ms"></i>`;}).join("");
+    G.appendChild(fx);celT[g]=setTimeout(()=>{fx.remove();ts.forEach(x=>x.classList.remove("cel"));},1700);SFX.play("memCol",ts.length);}
   G.addEventListener("animationend",e=>{if(e.animationName==="pdlu")e.target.classList.remove("up");});
   G.addEventListener("click",e=>{const t=e.target.closest(".pde");if(!t)return;const el=BY[t.dataset.z];
     if(memOn){if(Date.now()-(t._ft||0)<350)return;t._ft=Date.now();t.style.setProperty("--d","0ms");   // a fast double-tap is one turn, not open-then-shut
       if(t.classList.contains("dn")){t.classList.replace("dn","up");big(el,1);SFX.play("memFlip",el.p);}
       else{t.classList.remove("up");t.classList.add("dn");if(shown===el.z)big(null,1);SFX.play("memUnflip",el.p);}
+      colCheck(t);
       return;}
     if(mwOn)addSym(el.s);SFX.play(mwOn?"add":"element",el.z);big(el);flash(el.z);});
   G.addEventListener("keydown",e=>{const t=e.target.closest(".pde");if(t&&(e.key==="Enter"||e.key===" ")){e.preventDefault();t.click();}});
