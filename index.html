@@ -110,7 +110,11 @@ button.tile:hover:after{opacity:1;transform:none}
 /* circle reveal between landing and app */
 #app{display:none}
 #app.show{display:block}
-#app{overflow-x:clip}   /* the deck's tilted backing cards poke ~3px past a phone's edge; clip at the screen edge (clip, not hidden: no scroll box, sticky header still works) */
+/* the poster deck's tilted backing cards poke a few px past a phone's edge: clip them at the screen edge (clip, not
+   hidden: no scroll box). Only in poster view, and on a full-width wrapper BELOW the header -- never on an ancestor
+   of anything sticky: iPad Safari shakes a sticky element inside a one-axis overflow clip while it scrolls
+   (WebKit bug 247130: the clip layer's "infinite" rect loses float precision, worse the longer the page) */
+#appbody.clipx{overflow-x:clip}
 #app.opening{clip-path:circle(0 at var(--x,50%) var(--y,50%));animation:reveal .65s cubic-bezier(.7,0,.2,1) forwards}
 @keyframes reveal{to{clip-path:circle(150% at var(--x,50%) var(--y,50%))}}
 body.inapp #landing{display:none}
@@ -161,6 +165,12 @@ main{max-width:1060px;margin:18px auto 60px;padding:0 14px}
 .b-id{background:var(--ink);color:var(--paper);font-family:"JetBrains Mono";font-size:.7rem}
 .b-exam i{width:9px;height:9px;display:inline-block}
 .b-ch{border-style:dashed}
+/* sub-topic (chem only): tinted with the palette accent so it reads apart from the dashed chapter badge; a tap
+   filters to it (a plain <span> label in present mode). white-space:normal: a long name drops to its own line
+   first and only breaks inside when even that line is too narrow */
+.b-st{background:color-mix(in srgb,var(--acc) 26%,var(--card));color:var(--ink);font-family:inherit;white-space:normal;text-align:left}
+button.b-st{cursor:pointer}button.b-st:hover{background:var(--acc);color:#141414}
+.row-h .b-st{display:block;flex:0 1 auto;min-width:0;max-width:30%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* one line in a list row */
 .b-diff:before{content:"";display:inline-block;width:10px;height:10px}
 .d-easy:before{background:var(--blue);border-radius:50%}
 .d-medium:before{background:var(--yel)}
@@ -580,17 +590,15 @@ body.tmopen #tm{transform:none;visibility:visible;transition:transform .55s cubi
 .btn.on{background:var(--ink);color:var(--paper)}
 
 /* ---------- landing: chapter stats slide (chem chapter tile: .tface = the normal tile, .tback = its stats) ----------
-   Slid left (or ‹📊) the tile is re-packed 2 columns wide and as many rows as its stats need, and turns over. */
+   Slid left or right (or ←/→ on the focused tile) it is re-packed 2 columns wide and as many rows as its stats need, and turns over. */
 .tile.st{padding:0;touch-action:pan-y;-webkit-user-select:none;user-select:none}
 .tile.st.c-red{--c:var(--red)}.tile.st.c-yel{--c:var(--yel)}.tile.st.c-blue,.tile.st.c-card,.tile.st.c-ink{--c:var(--blue)}
 .tface{position:absolute;inset:0;border:0;background:none;color:inherit;font:inherit;text-align:left;padding:14px 16px;display:flex;flex-direction:column;gap:4px;cursor:pointer}
 .tile.st:not(.open):hover{transform:scale(.965)}
-.tstat{position:absolute;right:8px;top:8px;z-index:1;border:2px solid currentColor;background:transparent;color:inherit;font:800 .78rem "Anuphan",sans-serif;padding:2px 6px;line-height:1.25;opacity:.75;transition:opacity .15s,transform .15s}
-.tstat:hover,.tstat:focus-visible{opacity:1;transform:translateX(-3px)}
 .tback{display:none;position:absolute;left:0;right:0;top:0;min-height:100%;flex-direction:column}
 .tile.st.open{cursor:default;z-index:2}
 .tile.st.open .tback{display:flex}
-.tile.st.open .tface,.tile.st.open .tstat{visibility:hidden}
+.tile.st.open .tface{visibility:hidden}
 .sth{display:flex;align-items:center;gap:10px;padding:8px 10px 8px 14px}
 .sth .sn{font-size:2.3rem;font-weight:800;line-height:.9}
 .sth .snm{flex:1;min-width:0;font-weight:800;font-size:.98rem;line-height:1.2}
@@ -702,7 +710,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
    <span id="count"></span>
  </div></div>
 </header>
-<main id="root"></main>
+<div id="appbody"><main id="root"></main></div>
 </div>
 
 <div class="modal" id="modal"><div class="sheet">
@@ -1033,6 +1041,11 @@ function examBadge(q){const e=DATA.exams[q.exam]||{label:q.exam.toUpperCase(),co
 function diffBadge(q){return q.diff?`<span class="badge b-diff d-${q.diff}">${DIFF_TH[q.diff]||q.diff}</span>`:"";}
 function idBadge(q){return `<span class="badge b-id">${q.id}</span>`;}
 function typeBadge(q){return q.type?`<span class="badge b-type">${q.type}</span>`:"";}
+// chem only (bio/applied never carry a topic); ids repeat across chapters, so look it up under the question's own
+function topicBadge(q,label){const t=q.topic&&(ST[q.ch]||[]).find(x=>x.id===q.topic);if(!t)return "";
+  return label?`<span class="badge b-st">${t.th}</span>`:`<button class="badge b-st" data-ch="${q.ch}" data-st="${t.id}" title="${t.th} · ดูทุกข้อในหัวข้อย่อยนี้">${t.th}</button>`;}
+// filters for chapter + sub-topic (a sub-topic badge or a stats bar); the caller resets the rest first
+function topicFilters(ch,t){$("#fsubj").value="chem";populateChapters("chem");$("#fch").value=ch;syncFacets(fstate());$("#ftopic").value=t;}
 function chBadge(q){
   if(q.subject==="bio") return `<span class="badge b-ch">ชีววิทยา ${q.bio}. ${q.chName}</span>`;
   if(q.subject==="applied") return `<span class="badge b-ch">ประยุกต์ · ${q.chName}</span>`;
@@ -1124,7 +1137,7 @@ function apply(keepPos){
 }
 
 function render(){
-  const R=$("#root");dwell(null);
+  const R=$("#root");dwell(null);$("#appbody").classList.toggle("clipx",view==="poster");
   if(!filtered.length){R.innerHTML='<div class="empty">ไม่พบข้อสอบที่ตรงกับเงื่อนไข</div>';return;}
   if(view==="poster") renderPoster(R);
   else if(view==="cards") renderCards(R);
@@ -1136,7 +1149,7 @@ function render(){
 function posterHtml(q,i,anim){return `<article class="poster lv-${q.diff} ${anim||""}" data-i="${i}">
    <div class="pnum${qnum(q)>999?" l4":""}">${qnum(q)}</div>
    <div class="phead">${q.groupLabel}</div>
-   <div class="pmeta">${idBadge(q)}${examBadge(q)}${diffBadge(q)}${typeBadge(q)}</div>
+   <div class="pmeta">${idBadge(q)}${topicBadge(q)}${examBadge(q)}${diffBadge(q)}${typeBadge(q)}</div>
    <div class="body">${q.bodyHtml}${figHtml(q)}</div>${noteHtml(q)}
    ${solHtml(q)}
    <div class="foot">${footHtml(q)}<button class="present-btn" data-i="${i}">⤢ แสดงให้นักเรียน</button></div></article>`;}
@@ -1166,7 +1179,7 @@ function pstep(d){
 /* ---- CARDS ---- */
 function cardHtml(q,idx){return `<div class="card lv-${q.diff}${idx<12?" anim":""}" data-i="${idx}" style="--i:${idx}">
    <span class="cnum">${qnum(q)}</span>
-   <div class="card-top">${idBadge(q)}${chBadge(q)}${examBadge(q)}${diffBadge(q)}${typeBadge(q)}
+   <div class="card-top">${idBadge(q)}${chBadge(q)}${topicBadge(q)}${examBadge(q)}${diffBadge(q)}${typeBadge(q)}
      <button class="present-btn" data-i="${idx}">⤢ แสดง</button></div>
    <div class="body">${q.bodyHtml}${figHtml(q)}</div>${noteHtml(q)}
    ${solHtml(q)}
@@ -1187,7 +1200,7 @@ function renderList(R){
     html+=`<div class="row" data-i="${i}">
       <div class="row-h"><span class="chev">▸</span><span class="row-id">${q.id}</span>
         <span class="diff-txt de-${q.diff}">${DIFF_TH[q.diff]||""}</span>
-        <span class="row-snip">${q.snippet||""}</span>${examBadge(q)}</div>
+        <span class="row-snip">${q.snippet||""}</span>${topicBadge(q)}${examBadge(q)}</div>
       <div class="row-body"><div class="body">${q.bodyHtml}${figHtml(q)}</div>${noteHtml(q)}
         ${solHtml(q)}
         <div class="foot">${footHtml(q)}
@@ -1217,7 +1230,7 @@ function closeModal(){if(!$("#modal").classList.contains("show"))return;$("#moda
   dwell(view==="poster"&&document.body.classList.contains("inapp")?filtered[pIdx]:null);}
 function fillModal(){
   const q=filtered[mIdx];dwell(q);
-  $("#mtop").innerHTML=`${idBadge(q)}${chBadge(q)}${examBadge(q)}${diffBadge(q)}`;
+  $("#mtop").innerHTML=`${idBadge(q)}${chBadge(q)}${topicBadge(q,true)}${examBadge(q)}${diffBadge(q)}`;
   $("#mbody").innerHTML=q.bodyHtml+figHtml(q).replace(' loading="lazy"','');
   $("#mfoot").innerHTML=footHtml(q);
   const nb=$("#mnote");if(q.note){nb.style.display="block";nb.innerHTML="📌 "+q.note;}else nb.style.display="none";
@@ -1399,6 +1412,7 @@ $("#root").addEventListener("click",e=>{
   if(e.target.closest("#pprev")){pstep(-1);return;}
   if(e.target.closest("#pnext")){pstep(1);return;}
   const p=e.target.closest(".present-btn");if(p){openModal(+p.dataset.i);return;}
+  const tb=e.target.closest("button.b-st");if(tb){SFX.play("bar",0);resetFilters();topicFilters(tb.dataset.ch,tb.dataset.st);apply();window.scrollTo(0,0);return;}
   const item=e.target.closest(".pane-item");if(item){SFX.play("select");paneShow(+item.dataset.i);return;}
   const rh=e.target.closest(".row-h");if(rh){SFX.play(rh.parentElement.classList.toggle("open")?"unfold":"fold");return;}
   markChoice(e);
@@ -1799,7 +1813,7 @@ function plainClip(html,n){const s=new DOMParser().parseFromString(html,"text/ht
 function recentHtml(){
   const rq=RECENT.map(id=>DATA.questions.find(x=>x.id===id)).filter(Boolean);if(!rq.length)return"";
   const q=rq[0];
-  return `<div class="tile c-card recent full" style="--i:0"><div class="rtop"><span class="rk">🕘 เพิ่งดู</span>${idBadge(q)}${chBadge(q)}${examBadge(q)}${diffBadge(q)}</div>
+  return `<div class="tile c-card recent full" style="--i:0"><div class="rtop"><span class="rk">🕘 เพิ่งดู</span>${idBadge(q)}${chBadge(q)}${topicBadge(q)}${examBadge(q)}${diffBadge(q)}</div>
     <div class="rtx">${plainClip(q.bodyHtml,160).replace(/&/g,"&amp;").replace(/</g,"&lt;")}</div>
     <button class="rgo" data-go="qid" data-q="${q.id}">ทำต่อ →</button>
     ${rq.length>1?`<div class="rl">${rq.slice(1,6).map(q=>`<button data-go="qid" data-q="${q.id}" title="${(q.snippet||"").replace(/<[^>]+>/g,"").replace(/"/g,"&quot;").slice(0,90)}">${q.id.slice(2)} · ${q.subject==="bio"?"ชีวะ":q.subject==="applied"?"ประยุกต์":"บท "+parseInt(q.ch)}</button>`).join("")}</div>`:""}</div>`;}
@@ -1823,9 +1837,9 @@ function subjTiles(){
     const cv=cov(pool.filter(q=>chOf(q,SUBJ)===k)),cls=`tile ${P[j%P.length]} ${tileSize(c,max)}`,n=parseInt(k),ii=i++;
     const face=`<span class="no">${n}</span><span class="nm">${gname}</span>
       <span class="ct">${c} ข้อ${cv?` · วิธีทำ ${cv}%`:""}</span><span class="cov"><i style="width:${cv}%"></i></span>`;
-    // chem chapters with sub-topics: a wrapper (no nested buttons) holding the tile face, the ‹📊 opener and the stats face
-    h+=!bio&&ST[k]?`<div class="${cls} st" data-ch="${k}" style="--i:${ii}"><button class="tface" data-go="ch" data-ch="${k}">${face}</button>
-      <button class="tstat" title="สถิติบทนี้ (หรือปัดบล็อกไปทางซ้าย)" aria-label="สถิติบท ${n}" aria-expanded="false">‹📊</button><div class="tback" role="region" aria-label="สถิติบท ${n}"></div></div>`
+    // chem chapters with sub-topics: a wrapper (no nested buttons) holding the tile face and the stats face
+    h+=!bio&&ST[k]?`<div class="${cls} st" data-ch="${k}" style="--i:${ii}"><button class="tface" data-go="ch" data-ch="${k}" aria-keyshortcuts="ArrowLeft ArrowRight">${face}</button>
+      <div class="tback" role="region" aria-label="สถิติบท ${n}"></div></div>`
       :`<button class="${cls}" data-go="ch" data-ch="${k}" style="--i:${ii}">${face}</button>`;
   });
   if(!bio&&DATA.appcount){const qs=DATA.questions.filter(q=>q.subject==="applied"),cv=cov(qs);
@@ -1903,8 +1917,8 @@ window.addEventListener("resize",()=>{if(document.body.classList.contains("inapp
   const n=boardN(),o=$("#board .tile.st.open");
   if(n!==boardCols||(o&&statRows(o)!=o.dataset.rows))repack();});
 
-/* ---- chapter stats: slide a chem chapter tile left (or ‹📊) -> it re-packs 2 columns wide and turns over to
-   its sub-topic bars + difficulty split; slide right / ✕ / Esc turns it back. One open at a time; the paper
+/* ---- chapter stats: slide a chem chapter tile left or right (or ←/→ on it) -> it re-packs 2 columns wide and turns
+   over to its sub-topic bars + difficulty split; slide either way / ←→ / ✕ / Esc turns it back. One open at a time; the paper
    chips are one global choice, remembered. A bar opens the app on that chapter + sub-topic + those papers. ---- */
 const PAPERS=[["posn","สอวน."],["pat2","PAT2"],["alevel","A-Level"],["samanya","9 วิชาสามัญ"]];
 let PSEL=[];try{PSEL=JSON.parse(ls.get("cqb_papers","[]"));}catch(e){}
@@ -1930,28 +1944,29 @@ function repack(){packBoard();const o=$("#board .tile.st.open");if(o){const r=st
 let stBusy=false;
 /* open/close with a card turn: the face being left folds edge-on (phase 1), then the board re-packs and every
    tile FLIP-slides from where it was; the turned tile unfolds from its old spot + size. WAAPI, because the
-   tiles' tileIn fill would override an inline transform. tx = where a drag left the tile. */
-function statSet(t,open,tx=0){
+   tiles' tileIn fill would override an inline transform. tx = where a drag left the tile; dir = which way it
+   turns (-1 left, 1 right; default: open turns left, close turns right). */
+function statSet(t,open,tx=0,dir=open?-1:1){
   if(!t||stBusy||t.classList.contains("open")===open)return;
   const B=$("#board"),prev=open?B.querySelector(".tile.st.open"):null,turn=[t,prev].filter(Boolean);stBusy=true;
   SFX.play(open?"statOpen":"statClose");
   const go=()=>{
     const kids=[...B.children].filter(el=>!el.classList.contains("deco")),F=new Map(kids.map(el=>[el,el.getBoundingClientRect()]));
-    if(prev){prev.classList.remove("open");prev.querySelector(".tstat").setAttribute("aria-expanded","false");}
-    t.classList.toggle("open",open);t.querySelector(".tstat").setAttribute("aria-expanded",open);
+    if(prev)prev.classList.remove("open");
+    t.classList.toggle("open",open);
     if(open)t.querySelector(".tback").innerHTML=statBody(t.dataset.ch);
     repack();B.querySelectorAll(".tile.deco").forEach(d=>d.style.animationDelay=".12s");
     if(!RM.matches)kids.forEach(el=>{const a=F.get(el),b=el.getBoundingClientRect(),E={duration:440,easing:"cubic-bezier(.2,.9,.3,1)"};
       if(turn.includes(el)){const dx=a.left+a.width/2-b.left-b.width/2,dy=a.top+a.height/2-b.top-b.height/2;
-        el.animate([{transform:`perspective(1200px) translate(${dx}px,${dy}px) scale(${a.width/b.width},${a.height/b.height}) rotateY(${el===t&&open?90:-90}deg)`},
+        el.animate([{transform:`perspective(1200px) translate(${dx}px,${dy}px) scale(${a.width/b.width},${a.height/b.height}) rotateY(${el===t?-dir*90:-90}deg)`},
           {transform:"perspective(1200px)"}],E);}
       else if(Math.abs(a.left-b.left)+Math.abs(a.top-b.top)>.5)el.animate([{transform:`translate(${a.left-b.left}px,${a.top-b.top}px)`},{transform:"none"}],E);});
-    const f=open?t.querySelector(".tbx"):t.querySelector(".tstat");if(open||t.contains(document.activeElement)||document.activeElement===document.body)f.focus({preventScroll:true});
+    const f=t.querySelector(open?".tbx":".tface");if(open||t.contains(document.activeElement)||document.activeElement===document.body)f.focus({preventScroll:true});
     setTimeout(()=>{stBusy=false;if(open){const r=t.getBoundingClientRect();if(r.bottom>innerHeight||r.top<0)t.scrollIntoView({block:"nearest",behavior:RM.matches?"auto":"smooth"});}},RM.matches?0:460);};
   if(RM.matches)return go();
-  // phase 1: fold what's showing edge-on -- leftward for open (the slide's direction), rightward for close
+  // phase 1: fold what's showing edge-on the way it was slid (then phase 2 unfolds it from the other edge)
   const fold=turn.map(el=>el.animate([{transform:`perspective(1200px) translateX(${el===t?tx:0}px)`},
-      {transform:`perspective(1200px) translateX(${el===t?tx:0}px) rotateY(${el===t&&open?-90:90}deg)`}],{duration:150,easing:"ease-in",fill:"forwards"}));
+      {transform:`perspective(1200px) translateX(${el===t?tx:0}px) rotateY(${el===t?dir*90:90}deg)`}],{duration:150,easing:"ease-in",fill:"forwards"}));
   Promise.all(fold.map(a=>a.finished)).then(()=>{go();fold.forEach(a=>a.cancel());},()=>{stBusy=false;});   // phase 2 is already running when the fold lets go
 }
 function chipToggle(b){const k=b.dataset.p,on=PSEL.includes(k),t=b.closest(".tile");
@@ -1959,22 +1974,26 @@ function chipToggle(b){const k=b.dataset.p,on=PSEL.includes(k),t=b.closest(".til
   PSEL=PAPERS.map(p=>p[0]).filter(x=>x===k?!on:PSEL.includes(x));ls.set("cqb_papers",JSON.stringify(PSEL));SFX.play("chip",!on);
   t.querySelector(".tback").innerHTML=statBody(t.dataset.ch);t.querySelector(`.pchip[data-p="${k}"]`).focus({preventScroll:true});}
 // slide: a clearly horizontal drag (>10px, more x than y) is taken over, a vertical one scrolls the page as usual
-// (touch-action:pan-y); released 30px+ the right way it turns the tile. The click a mouse drag ends with is eaten.
+// (touch-action:pan-y); released 30px+ either way it turns the tile that way. The click a mouse drag ends with is eaten.
 let sdrag=null,sEat=0;
 $("#board").addEventListener("pointerdown",e=>{const t=e.target.closest(".tile.st");if(!t||e.button>0||stBusy)return;
   sdrag={x:e.clientX,y:e.clientY,id:e.pointerId,t,on:false,dx:0};});
 $("#board").addEventListener("pointermove",e=>{const d=sdrag;if(!d||e.pointerId!==d.id)return;const dx=e.clientX-d.x,dy=e.clientY-d.y;
   if(!d.on){if(Math.abs(dx)<10&&Math.abs(dy)<10)return;if(Math.abs(dy)>=Math.abs(dx)){sdrag=null;return;}
     d.on=true;try{d.t.setPointerCapture(e.pointerId);}catch(_){}}
-  const way=d.t.classList.contains("open")?1:-1;d.dx=dx;d.t.style.translate=`${Math.round(dx*(dx*way>0?.35:.08))}px 0`;});   // the wrong way barely gives
+  d.dx=dx;d.t.style.translate=`${Math.round(dx*.35)}px 0`;});
 function sdragEnd(e){const d=sdrag;if(!d||e.pointerId!==d.id)return;sdrag=null;if(!d.on)return;sEat=Date.now()+350;
   const open=d.t.classList.contains("open"),tx=parseFloat(d.t.style.translate)||0;d.t.style.translate="";
-  if(e.type==="pointerup"&&(open?d.dx>=30:d.dx<=-30))statSet(d.t,!open,tx);
+  if(e.type==="pointerup"&&Math.abs(d.dx)>=30)statSet(d.t,!open,tx,Math.sign(d.dx));
   else if(tx)d.t.animate([{translate:`${tx}px 0`},{translate:"0 0"}],{duration:220,easing:"cubic-bezier(.2,.9,.3,1)"});}
 $("#board").addEventListener("pointerup",sdragEnd);
 $("#board").addEventListener("pointercancel",sdragEnd);
 $("#board").addEventListener("click",e=>{if(Date.now()<sEat){e.stopPropagation();e.preventDefault();}},true);
-if(Object.keys(ST).length)$(".lfoot").insertAdjacentHTML("beforeend",`<span class="lfst"> · ปัดบล็อกบทไปทางซ้าย (หรือแตะ ‹📊) เพื่อดูสถิติหัวข้อย่อย</span>`);
+// keyboard: ←/→ on a focused tile face turns it that way; inside an open stats tile they turn it back
+$("#board").addEventListener("keydown",e=>{const t=e.target.closest(".tile.st");if(!t||(e.key!=="ArrowLeft"&&e.key!=="ArrowRight"))return;
+  const open=t.classList.contains("open");if(!open&&!e.target.classList.contains("tface"))return;
+  e.preventDefault();statSet(t,!open,0,e.key==="ArrowLeft"?-1:1);});
+if(Object.keys(ST).length)$(".lfoot").insertAdjacentHTML("beforeend",`<span class="lfst"> · ปัดบล็อกบทไปซ้ายหรือขวา (หรือกด ← → ที่บล็อก) เพื่อดูสถิติหัวข้อย่อย</span>`);
 /* ---- search straight from the board: text / formula / Q-id ("38" or "q38" -> Q-0038) ---- */
 function lsNorm(v){v=v.trim();const m=v.match(/^(?:q-?)?0*(\d{1,4})$/i);
   if(m){const id="Q-"+m[1].padStart(4,"0");if(DATA.questions.some(x=>x.id===id))return id;}return v;}
@@ -1999,8 +2018,10 @@ function enterApp(x,y,fn){
 $("#board").addEventListener("click",e=>{
   const hb=e.target.closest(".hnav button");
   if(hb){const k=+hb.dataset.d||0;goSubj(hb.dataset.s!=null?+hb.dataset.s:SUBJS.indexOf(SUBJ)+k,k);return;}
-  const sb=e.target.closest(".tstat,.tbx");if(sb){statSet(sb.closest(".tile"),sb.classList.contains("tstat"));return;}
+  const sb=e.target.closest(".tbx");if(sb){statSet(sb.closest(".tile"),false);return;}
   const pc=e.target.closest(".pchip");if(pc){chipToggle(pc);return;}
+  const tb=e.target.closest("button.b-st");if(tb){const r=tb.getBoundingClientRect();SFX.play("bar",0);setTimeout(()=>SFX.play("whoosh"),70);   // sub-topic badge on the recent block
+    enterApp(r.left+r.width/2,r.top+r.height/2,()=>{resetFilters();topicFilters(tb.dataset.ch,tb.dataset.st);apply();});return;}
   const t=e.target.closest("[data-go]");if(!t||t.disabled)return;
   const r=t.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,g=t.dataset.go;
   SFX.play(g==="topic"?"bar":"tile",+t.dataset.k);setTimeout(()=>SFX.play("whoosh"),70);
