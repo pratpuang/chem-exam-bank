@@ -1167,10 +1167,8 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=ls.get("cqb_sfx"
     for(let i=0;i<N;i++)ring[i]/=mx;   // normalised so every pluck lands at the same level
     for(let i=0,p=0;i<n;i++){const q=p+1===N?0:p+1,y=ring[p];d[i]=y;ring[p]=damp*.5*(y+ring[q]);p=q;}
     const t=c.currentTime+(o.delay||0),src=c.createBufferSource(),g=c.createGain();src.buffer=b;
-    const v=vary(o.vol||.3,.07);if(o.attack){g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+o.attack);}else g.gain.setValueAtTime(v,t);   // optional fade-in softens the pick
-    g.gain.setValueAtTime(v,t+dur*.7);g.gain.linearRampToValueAtTime(0,t+dur);
-    let out=src;if(o.lp){const fl=c.createBiquadFilter();fl.type="lowpass";fl.frequency.value=o.lp;src.connect(fl);out=fl;}
-    out.connect(g);route(g,o.wet==null?.15:o.wet);src.start(t);}
+    const v=vary(o.vol||.3,.07);g.gain.setValueAtTime(v,t);g.gain.setValueAtTime(v,t+dur*.7);g.gain.linearRampToValueAtTime(0,t+dur);
+    src.connect(g);route(g,o.wet==null?.15:o.wet);src.start(t);}
   // ---- instruments built from those voices ----
   function mallet(f,o={}){const v=o.vol||.14;tone(f,.42,{vol:v,wet:.25,delay:o.delay,attack:.002});tone(f*3.98,.07,{vol:v*.22,delay:o.delay,attack:.001});noise(.012,{vol:v*.3,freq:3000,q:1,delay:o.delay});}
   function thock(o={}){const v=o.vol||.15,d=o.delay||0;
@@ -1204,9 +1202,9 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=ls.get("cqb_sfx"
     // ---- subject swipe on the landing: chem = glass + bubbles, bio = plucked string + wood + leaves ----
     chem:d=>{const up=d>=0;[0,.05,.1,.16].forEach((t,i)=>pop(vary(up?420+i*120:780-i*120,.08),{vol:.085,delay:t+rnd()*.02,dur:.06}));
       glass(vary(up?1319:1175,.01),{vol:.05,delay:.2});noise(.25,{freq:up?700:2200,sweep:up?3:.33,q:.8,vol:.05,attack:.08,wet:.2});},
-    bio:d=>{const[a,b]=d>=0?[196,294]:[294,196],S={bright:.07,lp:2600,attack:.006,damp:.994};   // soft: dark pluck, fade-in, no noise layers
-      pluck(vary(a,.01),.6,{...S,vol:.054});pluck(vary(b,.01),.7,{...S,vol:.044,delay:.09});
-      tone(vary(d>=0?392:330,.02),.12,{vol:.024,slide:.93,slideT:.06,attack:.005,lp:2200,wet:.15});},
+    bio:d=>{const[a,b]=d>=0?[392,523]:[523,392];   // water-drop bloop, then a kalimba duet a 4th apart (up = next, down = back); pure sines, no grit
+      tone(vary(520,.03),.09,{vol:.033,slide:1.9,slideT:.07,attack:.005,lp:3000,wet:.2});
+      [[a,.07],[b,.17]].forEach(([f,t])=>{f=vary(f,.008);tone(f,.7,{vol:.061,attack:.006,delay:t,lp:3000,wet:.3});tone(f*2,.22,{vol:.016,attack:.005,delay:t,lp:3000});});},
     // ---- filters and picking things ----
     filter:i=>{noise(.01,{vol:.05,freq:2400,q:3});noise(.01,{vol:.04,freq:2600,q:3,delay:.03});   // dial detent, then a blip per filter
       tone(vary(note(523,i),.01),.09,{vol:.09,type:"triangle",lp:1800,slide:1.12,slideT:.02,attack:.002,delay:.02,wet:.12});thock({f:vary(180),vol:.06});},
@@ -1249,8 +1247,9 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=ls.get("cqb_sfx"
     splitOff:()=>{noise(.14,{freq:1500,sweep:.4,q:1,vol:.07,attack:.05});wood(vary(495,.015),{vol:.09,delay:.13});wood(vary(330,.015),{vol:.07,delay:.16});},
     snap:()=>{wood(vary(880,.03),{vol:.07});thock({f:vary(200),vol:.07,delay:.012});},   // divider dropped
     // ---- side drawers: a soft slide + landing, tinted per drawer ----
-    drawer:w=>{if(w==="td"){noise(.16,{type:"lowpass",freq:400,sweep:2.5,q:.5,vol:.042,attack:.08,wet:.15});   // tools: rounder, no click transients
-        tone(vary(150),.12,{vol:.048,slide:.55,slideT:.08,attack:.005,lp:700,delay:.14});pluck(vary(392,.01),.45,{vol:.03,bright:.07,lp:2600,attack:.006,delay:.13});return;}
+    drawer:w=>{if(w==="td"){tone(vary(330,.02),.14,{vol:.055,type:"triangle",slide:1.5,slideT:.12,attack:.008,lp:1800,wet:.15});   // tools: a smooth glide in...
+        tone(vary(140),.14,{vol:.097,slide:.6,slideT:.09,attack:.004,lp:600,delay:.13});   // ...lands on a felt thock...
+        tone(vary(784,.008),.45,{vol:.035,attack:.005,delay:.17,lp:3000,wet:.35});tone(vary(1175,.008),.5,{vol:.031,attack:.005,delay:.25,lp:3000,wet:.35});return;}
       noise(.16,{type:"lowpass",freq:500,sweep:4,q:.7,vol:.08,attack:.07,wet:.15});thock({f:vary(150),vol:.09,delay:.14});
       if(w==="pd")glass(vary(1568,.01),{vol:.04,delay:.15,dur:.4});
       else if(w==="vs"){tone(vary(523),.3,{vol:.05,slide:1.5,slideT:.25,delay:.12,wet:.35});tone(vary(784),.3,{vol:.04,slide:1.5,slideT:.25,delay:.16,wet:.35});}   // swirl for the 3D model
