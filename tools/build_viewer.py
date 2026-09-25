@@ -388,10 +388,23 @@ HTML = r"""<!doctype html><html lang="th"><head><meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700;800&family=Sarabun:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--line:#141414}
+:root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--line:#141414;--acc:#f2b705}
+/* registered as colors so a subject / night-mode swap can TRANSITION the tokens themselves: every
+   var(--x) user fades together, without touching any element's own transition list */
+@property --paper{syntax:"<color>";inherits:true;initial-value:#efe9dc}
+@property --card{syntax:"<color>";inherits:true;initial-value:#fffdf7}
+@property --ink{syntax:"<color>";inherits:true;initial-value:#141414}
+@property --red{syntax:"<color>";inherits:true;initial-value:#e4412b}
+@property --blue{syntax:"<color>";inherits:true;initial-value:#1f3fbf}
+@property --yel{syntax:"<color>";inherits:true;initial-value:#f2b705}
+@property --mut{syntax:"<color>";inherits:true;initial-value:#6b6457}
+@property --sh{syntax:"<color>";inherits:true;initial-value:#141414}
+@property --acc{syntax:"<color>";inherits:true;initial-value:#f2b705}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;font-family:"Anuphan","Sarabun","Segoe UI",Tahoma,sans-serif;background:var(--paper);color:var(--ink);font-size:16px}
+body{margin:0;font-family:"Anuphan","Sarabun","Segoe UI",Tahoma,sans-serif;background:var(--paper);color:var(--ink);font-size:16px;
+  transition:--paper .5s,--card .5s,--ink .5s,--red .5s,--blue .5s,--yel .5s,--mut .5s,--sh .5s,--acc .5s}
+@media(prefers-reduced-motion:reduce){body{transition:none}}
 button,select,input,textarea{font-family:inherit;color:inherit}
 button{cursor:pointer}
 /* ---------- kinetic background (B5) ---------- */
@@ -442,11 +455,21 @@ button.tile:hover:after{opacity:1;transform:none}
 .tile .cov i{display:block;height:100%;background:currentColor;opacity:.85}
 .tile.w2{grid-column:span 2}.tile.h2{grid-row:span 2}
 .tile.big .no{font-size:4.4rem}.tile.big .nm{font-size:1.3rem}
-.c-red{background:var(--red);color:#fff}.c-yel{background:var(--yel)}.c-blue{background:var(--blue);color:#fff}.c-ink{background:var(--ink);color:var(--paper)}.c-card{background:var(--card)}
-.hero{grid-column:span 2;grid-row:span 2;justify-content:flex-end;background:var(--card);cursor:default}
+.c-red{background:var(--red);color:#fff}.c-yel{background:var(--yel)}.c-blue{background:var(--blue);color:#fff}.c-ink{background:var(--ink);color:var(--paper)}.c-card{background:var(--card)}.c-acc{background:var(--acc);color:#141414}
+.hero{grid-column:span 2;grid-row:span 2;background:var(--card);cursor:default;padding:0;touch-action:pan-y;user-select:none;-webkit-user-select:none;outline-offset:-5px}
+.hero:focus-visible{outline:3px solid var(--red)}
+/* subject selector: a 2-panel track slid by translateX; the drag follows the finger, release snaps */
+.htrack{display:flex;height:100%;transition:transform .45s cubic-bezier(.2,.9,.3,1)}
+.hpanel{flex:0 0 100%;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;padding:14px 16px}
 .hero b{font-size:4.6rem;font-weight:800;line-height:.9;color:var(--red)}
 .hero span{font-size:1.5rem;font-weight:800;line-height:1.15}
 .hero small{font-size:.8rem;color:var(--mut);margin-top:6px;line-height:1.5}
+.hnav{position:absolute;top:10px;left:12px;right:12px;display:flex;gap:4px;z-index:2}
+.hnav button{border:2px solid var(--ink);background:var(--card);color:var(--ink);font:800 .82rem "Anuphan",sans-serif;height:32px;padding:0 10px;cursor:pointer}
+.hnav .harr{width:34px;padding:0;font-size:1.05rem}.hnav .hsp{margin-left:auto}
+.hnav .hdot.on{background:var(--ink);color:var(--paper)}
+.hnav button:disabled{opacity:.3;cursor:default}
+@media(prefers-reduced-motion:reduce){.htrack{transition:none}}
 .tile.deco{cursor:default}
 .d0{background:radial-gradient(circle at 100% 100%,var(--blue) 0 58%,transparent 59%),var(--paper)}
 .d1{background:repeating-linear-gradient(45deg,var(--yel) 0 18px,var(--ink) 18px 36px)}
@@ -462,6 +485,7 @@ button.tile:hover:after{opacity:1;transform:none}
 /* circle reveal between landing and app */
 #app{display:none}
 #app.show{display:block}
+#app{overflow-x:clip}   /* the deck's tilted backing cards poke ~3px past a phone's edge; clip at the screen edge (clip, not hidden: no scroll box, sticky header still works) */
 #app.opening{clip-path:circle(0 at var(--x,50%) var(--y,50%));animation:reveal .65s cubic-bezier(.7,0,.2,1) forwards}
 @keyframes reveal{to{clip-path:circle(150% at var(--x,50%) var(--y,50%))}}
 body.inapp #landing{display:none}
@@ -470,7 +494,7 @@ body.inapp #landing{display:none}
 header{position:sticky;top:0;z-index:20;background:var(--ink);color:var(--paper)}
 .bar1{display:flex;align-items:stretch;flex-wrap:wrap;max-width:1180px;margin:0 auto}
 .home{border:0;background:var(--red);color:#fff;font-weight:800;padding:0 16px;font-size:.9rem;display:flex;align-items:center;gap:6px}
-.home:hover{background:#c73621}
+.home:hover{background:color-mix(in srgb,var(--red) 86%,#000)}
 .title{font-weight:800;font-size:1.05rem;padding:12px 16px;display:flex;align-items:center;gap:8px;white-space:nowrap}
 .title small{font-weight:400;opacity:.6;font-size:.75rem}
 #q{flex:1;min-width:170px;background:var(--ink);border:0;border-left:3px solid var(--paper);color:var(--paper);padding:0 14px;font-size:.95rem;outline:none}
@@ -882,11 +906,16 @@ body.tmopen #tm{transform:none;visibility:visible;transition:transform .55s cubi
 #tmmini.done .tmmd{color:var(--red)}
 
 /* ---------- landing: recent tile + difficulty bar ---------- */
-.tile.recent{cursor:default}
-.recent .rl{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto}
+.tile.recent{cursor:default;gap:8px}
+.board.hasrec{grid-template-rows:auto}   /* row 1 = the full-width recent strip, sized to its content */
+.recent .rtop{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.recent .rk{font-weight:800;font-size:.9rem;margin-right:4px}
+.recent .rtx{font-size:1.02rem;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.recent .rgo{align-self:flex-start;border:3px solid var(--ink);background:var(--red);color:#fff;font:800 .95rem "Anuphan",sans-serif;padding:6px 16px;cursor:pointer;box-shadow:3px 3px 0 var(--sh)}
+.recent .rgo:active{transform:translate(3px,3px);box-shadow:none}
+.recent .rl{display:flex;flex-wrap:wrap;gap:5px}
 .recent .rl button{border:2px solid var(--ink);background:var(--card);color:var(--ink);font:700 .74rem "JetBrains Mono",monospace;padding:3px 8px;cursor:pointer;box-shadow:2px 2px 0 var(--sh)}
 .recent .rl button:hover{background:var(--ink);color:var(--paper)}
-.recent .empty-r{font-size:.8rem;opacity:.7;margin-top:auto}
 .btn.on{background:var(--ink);color:var(--paper)}
 
 /* ---------- night mode: ink-black surfaces, cream text, black offset shadows ---------- */
@@ -919,6 +948,10 @@ body.dark .fig{background:#fff}
 body.dark .tile .cov{background:rgba(255,255,255,.14)}
 body.dark .modal,body.dark .expwrap{background:rgba(0,0,0,.8)}
 body.dark .kin .k2{border-color:#2c2c32}body.dark .kin .k4{opacity:.25}
+
+/* ---------- biology palette (colorhunt 063b00-266210-90b800-e1e100): same Bauhaus roles, warm greens ---------- */
+body[data-subj=bio]{--paper:#edeedb;--card:#fcfdf2;--mut:#5d634e;--red:#266210;--blue:#063b00;--yel:#e1e100;--acc:#90b800}
+body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a08a;--sh:#040604;--red:#347a1a;--blue:#1a5410;--yel:#d4d400;--acc:#86ab00}
 </style></head><body>
 <div class="kin" aria-hidden="true"><i class="k1"></i><i class="k2"></i><i class="k3"></i><i class="k4"></i><i class="k5"></i></div>
 
@@ -1127,6 +1160,12 @@ $("#ldark").onclick=$("#darkbtn").onclick=()=>{setDark(!document.body.classList.
 let RECENT=[];try{RECENT=JSON.parse(ls.get("cqb_recent","[]"))||[];}catch(e){RECENT=[];}
 function seen(q){if(!q)return;RECENT=[q.id,...RECENT.filter(x=>x!==q.id)].slice(0,8);ls.set("cqb_recent",JSON.stringify(RECENT));}
 
+/* ---------- subject (เคมี / ชีววิทยา): drives the landing board AND the whole-app palette ---------- */
+const SUBJS=DATA.biocount?["chem","bio"]:["chem"];
+let SUBJ=ls.get("cqb_subj","chem");if(!SUBJS.includes(SUBJ))SUBJ="chem";
+document.body.dataset.subj=SUBJ;
+function setSubj(s){if(s===SUBJ||!SUBJS.includes(s))return false;SUBJ=s;ls.set("cqb_subj",s);document.body.dataset.subj=s;return true;}
+
 /* ---------- filters ---------- */
 function opt(sel,val,label){const o=document.createElement("option");o.value=val;o.textContent=label;sel.appendChild(o);}
 opt($("#fsubj"),"",`ทุกวิชา (${DATA.questions.length})`);
@@ -1241,6 +1280,9 @@ function syncFacets(f){
 function apply(keepPos){
   let f=fstate();syncFacets(f);f=fstate();   // a select can fall back to "all" when its value vanished
   filtered=DATA.questions.filter(x=>qMatch(x,f));
+  // palette follows the subject on screen: the subject filter, else a result set that's all one subject
+  const bioN=filtered.filter(x=>x.subject==="bio").length;
+  setSubj(f.subj?(f.subj==="bio"?"bio":"chem"):!filtered.length?SUBJ:bioN===filtered.length?"bio":bioN?SUBJ:"chem");
   if(!keepPos) pIdx=0;
   $("#count").textContent=`${filtered.length} / ${DATA.questions.length} ข้อ`;
   render();
@@ -1774,33 +1816,83 @@ const TM=(()=>{
 const PAL=["c-red","c-yel","c-blue","c-card","c-ink","c-card","c-yel","c-red","c-card","c-blue"];
 function cov(qs){const n=qs.length;return n?Math.round(qs.filter(hasSol).length/n*100):0;}
 function tileSize(n,max){const r=n/max;return r>=.8?"w2 h2 big":r>=.5?"w2":"";}
-function buildBoard(){
-  const Q=DATA.questions, chem=Q.filter(q=>q.subject!=="bio"&&q.subject!=="applied");
-  const counts=Object.entries(DATA.counts).filter(([k,c])=>c&&k);
-  const max=Math.max(...counts.map(([,c])=>c));
-  $("#lsub").textContent=`${Q.length} ข้อ · ${Object.keys(DATA.examcount).length} สนามสอบ · มีวิธีทำ ${SC.have} ข้อ`;
-  let h=`<div class="tile hero"><b>${chem.length}</b><span>ข้อสอบเคมี<br>แยกตามบท</span><small>สอวน. · PAT2 · A-Level · 9 วิชาสามัญ<br>เลือกบทด้านข้าง หรือกด ทุกบท</small></div>`;
-  let i=1;
-  h+=`<button class="tile c-ink" data-go="all" style="--i:${i++}"><span class="no">∀</span><span class="nm">ทุกบท</span><span class="ct">${Q.length} ข้อ · ทุกวิชา</span></button>`;
-  h+=`<button class="tile c-yel" data-go="random" style="--i:${i++}"><span class="no">🎲</span><span class="nm">สุ่ม 1 ข้อ</span><span class="ct">จากทั้งคลัง</span></button>`;
-  CHS.forEach(([k,name],j)=>{
-    const c=DATA.counts[k]||0;if(!c)return;
-    const qs=chem.filter(q=>q.ch===k),cv=cov(qs);
-    h+=`<button class="tile ${PAL[j%PAL.length]} ${tileSize(c,max)}" data-go="ch" data-ch="${k}" style="--i:${i++}">
-      <span class="no">${parseInt(k)}</span><span class="nm">${name}</span>
+const BPAL=["c-red","c-acc","c-blue","c-yel","c-card","c-acc","c-ink"];
+/* plain text of a question for the recent preview: DOMParser is inert (never fetches the <img>s), and the
+   cut is by characters -- Thai has no spaces to cut at -- stepping past combining vowel/tone marks so a
+   base consonant never loses its mark */
+function plainClip(html,n){const s=new DOMParser().parseFromString(html,"text/html").body.textContent.replace(/\s+/g," ").trim();
+  if(s.length<=n)return s;let e=n;while(e<s.length&&/[\u0E31\u0E34-\u0E3A\u0E47-\u0E4E]/.test(s[e]))e++;return s.slice(0,e).trimEnd()+"…";}
+function recentHtml(){
+  const rq=RECENT.map(id=>DATA.questions.find(x=>x.id===id)).filter(Boolean);if(!rq.length)return"";
+  const q=rq[0];
+  return `<div class="tile c-card recent full" style="--i:0"><div class="rtop"><span class="rk">🕘 เพิ่งดู</span>${idBadge(q)}${chBadge(q)}${examBadge(q)}${diffBadge(q)}</div>
+    <div class="rtx">${plainClip(q.bodyHtml,160).replace(/&/g,"&amp;").replace(/</g,"&lt;")}</div>
+    <button class="rgo" data-go="qid" data-q="${q.id}">ทำต่อ →</button>
+    ${rq.length>1?`<div class="rl">${rq.slice(1,6).map(q=>`<button data-go="qid" data-q="${q.id}" title="${(q.snippet||"").replace(/<[^>]+>/g,"").replace(/"/g,"&quot;").slice(0,90)}">${q.id.slice(2)} · ${q.subject==="bio"?"ชีวะ":q.subject==="applied"?"ประยุกต์":"บท "+parseInt(q.ch)}</button>`).join("")}</div>`:""}</div>`;}
+function heroHtml(){
+  const bio=DATA.questions.filter(q=>q.subject==="bio"),si=SUBJS.indexOf(SUBJ);
+  const bex=[...new Set(bio.map(q=>(DATA.exams[q.exam]||{label:q.exam}).label))].join(" · ");
+  const yrs=bio.map(q=>q.year).filter(Boolean).sort(),yr=yrs.length?` ปี ${yrs[0]}${yrs[0]!==yrs[yrs.length-1]?"–"+yrs[yrs.length-1]:""}`:"";
+  const nav=SUBJS.length<2?"":`<div class="hnav"><button class="hdot${si===0?" on":""}" data-s="0">เคมี</button><button class="hdot${si===1?" on":""}" data-s="1">ชีววิทยา</button>
+    <button class="harr hsp" data-d="-1" title="วิชาก่อนหน้า (←)"${si===0?" disabled":""}>‹</button><button class="harr" data-d="1" title="วิชาถัดไป (→)"${si===1?" disabled":""}>›</button></div>`;
+  return `<div class="tile hero" tabindex="0" aria-label="เลือกวิชา · ปัดหรือกด ← →">${nav}<div class="htrack" style="transform:translateX(${-si*100}%)">
+    <div class="hpanel"><b>${DATA.chemcount}</b><span>ข้อสอบเคมี<br>แยกตามบท</span><small>สอวน. · PAT2 · A-Level · 9 วิชาสามัญ<br>เลือกบทด้านข้าง หรือกด ทุกบท</small></div>
+    ${SUBJS.length>1?`<div class="hpanel"><b>${DATA.biocount}</b><span>ข้อสอบชีววิทยา<br>แยกตามหัวข้อ</span><small>${bex}${yr}<br>เลือกหัวข้อด้านข้าง หรือกด ทุกหัวข้อ</small></div>`:""}</div></div>`;}
+/* every tile that depends on the chosen subject (rebuilt on a switch; hero + recent stay put) */
+function subjTiles(){
+  const bio=SUBJ==="bio",pool=DATA.questions.filter(q=>subjOf(q)===SUBJ),name=bio?"ชีววิทยา":"เคมี";
+  const groups=bio?Object.entries(DATA.bioChapters).map(([k,n])=>[k,n,DATA.biocounts[k]||0]):CHS.map(([k,n])=>[k,n,DATA.counts[k]||0]);
+  const max=Math.max(...groups.map(g=>g[2])),P=bio?BPAL:PAL;let i=2;
+  let h=`<button class="tile c-ink" data-go="all" style="--i:${i++}"><span class="no">∀</span><span class="nm">${bio?"ทุกหัวข้อ":"ทุกบท"}</span><span class="ct">${pool.length} ข้อ · ${name}</span></button>`;
+  h+=`<button class="tile c-yel" data-go="random" style="--i:${i++}"><span class="no">🎲</span><span class="nm">สุ่ม 1 ข้อ</span><span class="ct">จาก${name}ทั้งหมด</span></button>`;
+  groups.forEach(([k,gname,c],j)=>{if(!c)return;
+    const cv=cov(pool.filter(q=>chOf(q,SUBJ)===k));
+    h+=`<button class="tile ${P[j%P.length]} ${tileSize(c,max)}" data-go="ch" data-ch="${k}" style="--i:${i++}">
+      <span class="no">${parseInt(k)}</span><span class="nm">${gname}</span>
       <span class="ct">${c} ข้อ${cv?` · วิธีทำ ${cv}%`:""}</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;
   });
-  if(DATA.biocount){const qs=Q.filter(q=>q.subject==="bio"),cv=cov(qs);
-    h+=`<button class="tile c-blue w2" data-go="bio" style="--i:${i++}"><span class="no">ชีวะ</span><span class="nm">ชีววิทยา</span><span class="ct">${DATA.biocount} ข้อ${cv?` · วิธีทำ ${cv}%`:""}</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;}
-  if(DATA.appcount){const qs=Q.filter(q=>q.subject==="applied"),cv=cov(qs);
+  if(!bio&&DATA.appcount){const qs=DATA.questions.filter(q=>q.subject==="applied"),cv=cov(qs);
     h+=`<button class="tile c-red" data-go="applied" style="--i:${i++}"><span class="no">✦</span><span class="nm">เคมีประยุกต์</span><span class="ct">${DATA.appcount} ข้อ</span><span class="cov"><i style="width:${cv}%"></i></span></button>`;}
-  if(SC.flag) h+=`<button class="tile c-card" data-go="flag" style="--i:${i++}"><span class="no">⚠</span><span class="nm">วิธีทำไม่ฟันธง</span><span class="ct">${SC.flag} ข้อ</span></button>`;
-  const rq=RECENT.map(id=>DATA.questions.find(x=>x.id===id)).filter(Boolean);
-  h+=`<div class="tile c-card w2 recent" style="--i:${i++}"><span class="no">🕘</span><span class="nm">เพิ่งดู</span>${rq.length
-    ?`<div class="rl">${rq.map(q=>`<button data-go="qid" data-q="${q.id}" title="${(q.snippet||"").replace(/<[^>]+>/g,"").replace(/"/g,"&quot;").slice(0,90)}">${q.id.slice(2)} · ${q.subject==="bio"?"ชีวะ":q.subject==="applied"?"ประยุกต์":"บท "+parseInt(q.ch)}</button>`).join("")}</div>`
-    :`<span class="empty-r">เปิดข้อไหนก็ได้ แล้วจะมาอยู่ที่นี่</span>`}</div>`;
-  $("#board").innerHTML=h;packBoard();
+  const fl=pool.filter(q=>hasSol(q)&&q.solFlag).length;
+  if(fl) h+=`<button class="tile c-card" data-go="flag" style="--i:${i++}"><span class="no">⚠</span><span class="nm">วิธีทำไม่ฟันธง</span><span class="ct">${fl} ข้อ</span></button>`;
+  return h;}
+function buildBoard(){
+  const Q=DATA.questions,rec=recentHtml();
+  $("#lsub").textContent=`${Q.length} ข้อ · ${Object.keys(DATA.examcount).length} สนามสอบ · มีวิธีทำ ${SC.have} ข้อ`;
+  $("#board").classList.toggle("hasrec",!!rec);
+  $("#board").innerHTML=rec+heroHtml()+subjTiles();packBoard();
 }
+/* switch subject from the landing: slide the hero, swap palette, rebuild only the subject tiles */
+function goSubj(idx){
+  const B=$("#board"),hero=B.querySelector(".hero"),tr=hero.querySelector(".htrack"),s=SUBJS[idx];
+  tr.style.transition="";
+  if(!s||!setSubj(s)){tr.style.transform=`translateX(${-SUBJS.indexOf(SUBJ)*100}%)`;return;}   // edge / same: snap back
+  tr.style.transform=`translateX(${-idx*100}%)`;
+  hero.querySelectorAll(".hdot").forEach((b,k)=>b.classList.toggle("on",k===idx));
+  hero.querySelectorAll(".harr").forEach(b=>b.disabled=(+b.dataset.d<0?idx===0:idx===SUBJS.length-1));
+  SFX.play("swish",idx?1:-1);
+  [...B.children].forEach(el=>{if(!el.matches(".hero,.recent"))el.remove();});
+  B.insertAdjacentHTML("beforeend",subjTiles());packBoard();
+}
+/* swipe: only a drag that is clearly horizontal (>10px, more x than y) is taken over; a vertical one is
+   left alone (touch-action:pan-y lets the browser scroll it), so page scrolling on phones is untouched */
+let hdrag=null;
+$("#board").addEventListener("pointerdown",e=>{const h=e.target.closest(".hero");
+  if(!h||SUBJS.length<2||e.button>0||e.target.closest("button"))return;
+  hdrag={x:e.clientX,y:e.clientY,id:e.pointerId,dx:0,on:false,h,tr:h.querySelector(".htrack")};});
+$("#board").addEventListener("pointermove",e=>{const d=hdrag;if(!d||e.pointerId!==d.id)return;
+  const dx=e.clientX-d.x,dy=e.clientY-d.y,si=SUBJS.indexOf(SUBJ);
+  if(!d.on){if(Math.abs(dx)<10&&Math.abs(dy)<10)return;if(Math.abs(dy)>=Math.abs(dx)){hdrag=null;return;}
+    d.on=true;d.tr.style.transition="none";try{d.h.setPointerCapture(e.pointerId);}catch(_){}}
+  d.dx=(si===0&&dx>0)||(si===SUBJS.length-1&&dx<0)?dx*.3:dx;   // rubber-band past the ends
+  d.tr.style.transform=`translateX(calc(${-si*100}% + ${d.dx}px))`;});
+function hdragEnd(e){const d=hdrag;if(!d||e.pointerId!==d.id)return;hdrag=null;if(!d.on)return;
+  const si=SUBJS.indexOf(SUBJ),go=e.type==="pointerup"&&Math.abs(d.dx)>Math.max(40,d.h.offsetWidth*.18);
+  goSubj(go?si+(d.dx<0?1:-1):si);}
+$("#board").addEventListener("pointerup",hdragEnd);
+$("#board").addEventListener("pointercancel",hdragEnd);
+$("#board").addEventListener("keydown",e=>{if(!e.target.closest(".hero")||SUBJS.length<2)return;
+  if(e.key==="ArrowLeft"||e.key==="ArrowRight"){e.preventDefault();goSubj(SUBJS.indexOf(SUBJ)+(e.key==="ArrowRight"?1:-1));}});
 /* Place tiles in order (same rule as CSS sparse auto-placement) at explicit cells, then fill
    every cell left empty -- a wide tile that doesn't fit at a row end leaves one -- with a filler. */
 let boardCols=0;
@@ -1811,7 +1903,7 @@ function packBoard(){
   const fits=(r,c,w,h)=>{if(c+w>cols)return false;for(let y=r;y<r+h;y++)for(let x=c;x<c+w;x++)if(used(y,x))return false;return true;};
   let r=0,c=0;
   [...B.children].forEach(el=>{const cl=el.classList,big=cl.contains("hero")||cl.contains("big");
-    const w=Math.min(cols,big||cl.contains("w2")?2:1),h=big||cl.contains("h2")?2:1;
+    const w=cl.contains("full")?cols:Math.min(cols,big||cl.contains("w2")?2:1),h=big||cl.contains("h2")?2:1;
     let pr=r,pc=c;while(!fits(pr,pc,w,h)){if(++pc>=cols){pc=0;pr++;}}
     for(let y=pr;y<pr+h;y++){occ[y]=occ[y]||[];for(let x=pc;x<pc+w;x++)occ[y][x]=1;}
     el.style.gridRow=`${pr+1} / span ${h}`;el.style.gridColumn=`${pc+1} / span ${w}`;
@@ -1836,23 +1928,26 @@ function lsGo(){
 $("#lq").addEventListener("input",()=>{const v=lsNorm($("#lq").value),n=lsCount(v);$("#lct").textContent=n<0?"":v!==$("#lq").value.trim()?v:`${n} ข้อ`;});
 $("#lq").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();lsGo();}});
 $("#lgo").onclick=lsGo;
-function resetFilters(){$("#q").value="";$("#fsubj").value="";populateChapters("");["#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).value="");}
+// ...then re-list every option: syncFacets drops options that had 0 hits under the LAST filter, so
+// without this a tile could set #fsubj="bio" on a select that no longer has a "bio" option
+function resetFilters(){$("#q").value="";$("#fsubj").value="";populateChapters("");["#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).value="");syncFacets(fstate());}
 function enterApp(x,y,fn){
   const app=$("#app");app.style.setProperty("--x",x+"px");app.style.setProperty("--y",y+"px");
   fn();document.body.classList.add("inapp");app.classList.add("show","opening");window.scrollTo(0,0);
   setTimeout(()=>app.classList.remove("opening"),700);
 }
 $("#board").addEventListener("click",e=>{
+  const hb=e.target.closest(".hnav button");
+  if(hb){goSubj(hb.dataset.s!=null?+hb.dataset.s:SUBJS.indexOf(SUBJ)+(+hb.dataset.d));return;}
   const t=e.target.closest("[data-go]");if(!t)return;
   const r=t.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,g=t.dataset.go;
   SFX.play("tile");setTimeout(()=>SFX.play("whoosh"),70);
   enterApp(x,y,()=>{
     resetFilters();
-    if(g==="ch"){$("#fsubj").value="chem";populateChapters("chem");$("#fch").value=t.dataset.ch;}
-    else if(g==="bio"){$("#fsubj").value="bio";populateChapters("bio");}
-    else if(g==="applied"){$("#fsubj").value="applied";populateChapters("applied");}
-    else if(g==="flag"){$("#fsol").value=g;}
-    else if(g==="qid"){$("#q").value=t.dataset.q;}
+    if(g==="qid"){$("#q").value=t.dataset.q;}
+    else{const s=g==="applied"?"applied":SUBJ;$("#fsubj").value=s;populateChapters(s);   // every other tile is scoped to the subject
+      if(g==="ch")$("#fch").value=t.dataset.ch;
+      else if(g==="flag")$("#fsol").value=g;}
     apply();
     if(g==="random"&&filtered.length){setTimeout(()=>SFX.play("dice"),250);setTimeout(()=>openModal(Math.floor(Math.random()*filtered.length)),650);}
   });
