@@ -439,6 +439,73 @@ if os.path.isdir(EX_DIR):
     if exercises: examcount["ex"] = len(exercises)
     print("exercises:", len(exercises), "| unverified (PENDING):", sum(e["solPending"] for e in exercises), {k: sum(1 for e in exercises if e["ch"] == k) for k in sorted({e["ch"] for e in exercises})})
 
+# ---------- correct option: class="okopt" on the one choice the answer names (shown green only while the reveal is open) ----------
+# The options are the LAST run of lines "1) 2) 3)..." / "ก) ข) ค)..." (or "1." -- samanya's <br>-separated <p> lines) and
+# nothing but closing tags may follow them, so a numbered statement list above figure-only choices never counts.
+# The answer (official key, else the worked answer when it isn't ⚠ flagged/pending) must name the choice outright:
+# a bare "3" / "(3)" / "ข้อ 3" / "ค", or a label "3) 0.294". A label whose text matches a DIFFERENT choice is a
+# contradiction -> nothing marked. Anything else ("3 หรือ 5", "1 (As2S3…)", no key) marks nothing and the page shows
+# the answer big instead (q["okOpt"] tells it which). Only a class goes into bodyHtml: no text, so no answer leaks
+# into the snippet/search/text readers of bodyHtml.
+_OPT_SEQ = ("123456789", "กขคงจฉ")
+_OPT_MK = re.compile(r"\s*\(?([1-9]|[ก-ฉ])[.)](?=\s|$)")
+_ANS_BARE = re.compile(r"(?:ข้อ\s*)?\(?([1-9]|[ก-ฉ])\)?\.?")
+_ANS_LAB = re.compile(r"(?:ข้อ\s*([1-9]|[ก-ฉ])(?=[\s).])\)?|\(([1-9]|[ก-ฉ])\)|([1-9]|[ก-ฉ])\))\s*(.*)", re.S)
+_SUBSUP = str.maketrans("₀₁₂₃₄₅₆₇₈₉⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻−–×", "01234567890123456789+---x")
+def _plain(h): return _html.unescape(re.sub(r"<[^>]+>", "", h))
+def _norm(h): return re.sub(r"\s+", "", _plain(h).translate(_SUBSUP)).lower()
+def _opt_lines(body):
+    """candidate choice lines in page order: (container, start, end, html) -- each <li> of a <ul>, or each
+    <br>-separated line of a <p>"""
+    out = [(("ul", body.count("<ul>", 0, m.start())), m.start(), m.end(), m.group(1))
+           for m in re.finditer(r"<li>(.*?)</li>", body, re.S)]
+    for p in re.finditer(r"<p>(.*?)</p>", body, re.S):
+        if "<br />" not in p.group(1): continue
+        pos = p.start(1)
+        for ln in p.group(1).split("<br />"):
+            out.append((("p", p.start()), pos + len(ln) - len(ln.lstrip()), pos + len(ln.rstrip()), ln))
+            pos += len(ln) + 6   # len("<br />")
+    return sorted(out, key=lambda x: x[1])
+def _option_run(body):
+    lines, best = _opt_lines(body), None
+    for i, ln in enumerate(lines):
+        m = _OPT_MK.match(_plain(ln[3]))
+        if not m or m.group(1) not in ("1", "ก"): continue
+        seq, run = next(s for s in _OPT_SEQ if s[0] == m.group(1)), [(ln, m.group(1))]
+        for nx in lines[i+1:]:
+            mm = _OPT_MK.match(_plain(nx[3]))
+            if nx[0] != ln[0] or not mm or len(run) >= len(seq) or mm.group(1) != seq[len(run)]: break
+            run.append((nx, mm.group(1)))
+        if len(run) >= 2 and (best is None or run[0][0][1] > best[0][0][1]): best = run
+    return best if best and not _plain(body[best[-1][0][2]:]).strip() else None
+def _ans_choice(a):
+    t = _plain(a).strip()
+    m = _ANS_BARE.fullmatch(t)
+    if m: return m.group(1), ""
+    m = _ANS_LAB.fullmatch(t)
+    return (m.group(1) or m.group(2) or m.group(3), m.group(4).strip()) if m else (None, "")
+okcount = {}   # exam -> [marked, questions with a choice list]
+for q in questions:
+    q["okOpt"] = False
+    run = _option_run(q["bodyHtml"])
+    if not run: continue
+    c = okcount.setdefault(q["exam"], [0, 0]); c[1] += 1
+    key = q["answer"] if q["answer"] and not re.search("no key", q["answer"], re.I) else ""
+    k, rest = _ans_choice(key or ("" if q.get("solFlag") or q.get("solPending") else q["solAnswer"]))
+    ks = [r[1] for r in run]
+    if k not in ks: continue
+    i = ks.index(k)
+    if rest:
+        r = _norm(rest)
+        # same text, an abbreviation of it, or it + a trailing remark ("… — มีขั้ว"); "1.0" is NOT a prefix hit on "1.0x106"
+        hit = [j for j, (ln, _) in enumerate(run) if (lambda o: o.startswith(r) or r.startswith(o) and not r[len(o)].isalnum() and r[len(o)] not in ".,")(_norm(_OPT_MK.sub("", _plain(ln[3]), 1)))]
+        if hit and i not in hit: continue   # the label's text is another choice's: contradiction, mark nothing
+    (_, s, e, _), b = run[i][0], q["bodyHtml"]
+    q["bodyHtml"] = b[:s] + '<li class="okopt">' + b[s+4:] if b.startswith("<li>", s) else b[:s] + '<span class="okopt">' + b[s:e] + "</span>" + b[e:]
+    q["okOpt"] = True; c[0] += 1
+print("correct option marked:", sum(c[0] for c in okcount.values()), "/", sum(c[1] for c in okcount.values()),
+      "questions with a choice list |", {k: "%d/%d" % tuple(v) for k, v in sorted(okcount.items())})
+
 data = {
  "questions": questions, "chapters": CHAPTERS, "solcount": solcount,
  "bioChapters": BIO_CHAPTERS, "appTopics": APP_TOPICS,
@@ -463,7 +530,7 @@ HTML = r"""<!doctype html><html lang="th"><head><meta charset="utf-8">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700;800&family=Sarabun:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--line:#141414;--acc:#f2b705;--stbg:#fcebb8;--sxbg:#fef7e1;--sxbd:#8a8886;--exg:rgba(20,20,20,.055);--xg:rgba(255,253,247,.17)}
+:root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--line:#141414;--acc:#f2b705;--stbg:#fcebb8;--sxbg:#fef7e1;--sxbd:#8a8886;--exg:rgba(20,20,20,.055);--xg:rgba(255,253,247,.17);--ok:#2f8f4e;--okbg:#e3f1dc}
 /* registered as colors so a subject / night-mode swap can TRANSITION the tokens themselves: every
    var(--x) user fades together, without touching any element's own transition list */
 @property --paper{syntax:"<color>";inherits:true;initial-value:#efe9dc}
@@ -644,6 +711,16 @@ button.b-st{cursor:pointer}button.b-st:hover{background:var(--acc);color:#141414
 .body li{padding:6px 12px;margin:4px 0;border:2px solid transparent;cursor:pointer;transition:background .15s,border-color .15s}
 .body li:hover{background:#f6f0e2;border-color:#d8cfbb}
 .body li.mk{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+/* the correct choice while its reveal is open (.body.rv): green tint + border + a ✓ sticker, so it isn't colour-only.
+   Nothing here changes layout (border was already there, transparent; the sticker is absolute), so pen ink stored
+   against #mbody never shifts. A circled (.mk) correct choice keeps the circle's fill and still shows the green. */
+.body.rv .okopt{position:relative;background:var(--okbg);border-color:var(--ok)}
+.body.rv li.okopt{box-shadow:inset 6px 0 0 var(--ok)}
+.body.rv span.okopt{outline:2px solid var(--ok);outline-offset:1px}
+.body.rv li.okopt.mk{background:var(--ink);color:var(--paper)}
+.body.rv .okopt:after{content:"✓";content:"✓"/"คำตอบที่ถูก";position:absolute;top:-9px;right:8px;width:22px;height:22px;display:grid;place-items:center;background:var(--ok);color:#fff;border:2px solid var(--ink);font:800 .8rem/1 "JetBrains Mono",monospace}
+.body.rv span.okopt:after{top:50%;right:auto;left:calc(100% + 6px);transform:translateY(-50%)}   /* a <br> line, not a box: sit just after its text, never on it */
+@media(prefers-reduced-motion:reduce){.body li{transition:none}}
 .body table{border-collapse:collapse;font-size:.92em;margin:.5em 0}
 .body td,.body th,.solbody td,.solbody th{border:2px solid var(--ink);padding:3px 8px}
 .fig{display:block;max-width:100%;height:auto;margin:12px auto;border:3px solid var(--ink);background:#fff;padding:6px}
@@ -670,6 +747,12 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .flag .solbox:before{background:var(--yel)}
 .soldis{font-size:.78rem;background:#fff4cc;border:2px solid var(--ink);padding:5px 9px;margin-bottom:9px}
 .solans{font-weight:800;margin-bottom:6px;font-size:1rem}
+/* no choice to turn green (fill-in, or an answer that can't be pinned to one choice): the answer, big, above the working */
+.bigans{margin-top:12px;border:3px solid var(--ink);background:var(--card);padding:10px 16px 12px 24px;position:relative}
+.bigans:before{content:"";position:absolute;left:-3px;top:-3px;bottom:-3px;width:10px;background:var(--ok)}
+.bigans .bl{display:block;font-size:.74rem;font-weight:800;color:var(--mut);letter-spacing:.02em}
+.bigans .bv{display:block;font-weight:800;font-size:clamp(1.5rem,5vw,2.2rem);line-height:1.3;overflow-wrap:anywhere}
+.bigans.long .bv{font-size:1.15rem;line-height:1.6}
 .chk{display:inline-block;font-size:.72rem;font-weight:700;background:#e3f1dc;border:2px solid var(--ink);padding:0 7px;margin-bottom:6px}
 .solbody{font-size:.94rem;line-height:1.8}
 .solbody p{margin:.4em 0}
@@ -717,7 +800,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .poster.outL{animation:pOutL .2s ease-in forwards}.poster.outR{animation:pOutR .2s ease-in forwards}
 @keyframes pOutL{to{opacity:0;transform:translateX(-90%) rotate(-10deg)}}
 @keyframes pOutR{to{opacity:0;transform:translateX(90%) rotate(10deg)}}
-.poster .solbox{max-width:88%}
+.poster .solbox,.poster .bigans{max-width:88%}
 
 /* ---------- CARDS view (mini posters) ---------- */
 .card{position:relative;background:var(--card);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);padding:18px 20px 16px 32px;margin-bottom:22px;overflow:hidden}
@@ -827,7 +910,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .exprow button.pri{background:var(--ink);color:var(--paper)}
 .exprow button.dan{color:var(--red)}
 @media(max-width:640px){.mctrl{gap:8px}.mctrl button{font-size:.9rem;padding:6px 6px}
-  .poster{padding:20px 16px 18px 26px}.poster .pnum{font-size:4.2rem}.poster .body,.poster .solbox{max-width:100%}.poster .phead,.poster .pmeta{max-width:78%}.sheet{padding:22px 16px 18px 28px}.sheet .body{font-size:1.15rem}}
+  .poster{padding:20px 16px 18px 26px}.poster .pnum{font-size:4.2rem}.poster .body,.poster .solbox,.poster .bigans{max-width:100%}.poster .phead,.poster .pmeta{max-width:78%}.sheet{padding:22px 16px 18px 28px}.sheet .body{font-size:1.15rem}}
 
 .katex-display{overflow-x:auto;overflow-y:hidden;padding:4px 0;margin:.6em 0}
 .katex{font-size:1.08em}
@@ -1224,7 +1307,7 @@ body[data-subj=bio] .lfst{display:none}
 @media(prefers-reduced-motion:reduce){.xf{animation:none}.xtg i{transition:none}}
 
 /* ---------- night mode: ink-black surfaces, cream text, black offset shadows ---------- */
-body.dark{--paper:#18181b;--card:#232327;--ink:#e8e2d4;--mut:#9c958a;--sh:#050506;--blue:#3b57d6;--red:#e2492f;--yel:#e8ae06;--stbg:#59491e;--sxbg:#363024;--sxbd:#86827e;--exg:rgba(232,226,212,.06);--xg:rgba(24,24,27,.17);color-scheme:dark}
+body.dark{--paper:#18181b;--card:#232327;--ink:#e8e2d4;--mut:#9c958a;--sh:#050506;--blue:#3b57d6;--red:#e2492f;--yel:#e8ae06;--stbg:#59491e;--sxbg:#363024;--sxbd:#86827e;--exg:rgba(232,226,212,.06);--xg:rgba(24,24,27,.17);--okbg:#1f3a26;color-scheme:dark}
 body.dark .board{background:#050506;border-color:#050506}
 body.dark .d1{background:repeating-linear-gradient(45deg,var(--yel) 0 18px,#050506 18px 36px)}
 body.dark .d3{background:linear-gradient(var(--yel),var(--yel)) center/40% 40% no-repeat,#050506}
@@ -1239,6 +1322,7 @@ body.dark .c-yel,body.dark .k-nm,body.dark .k-ae,body.dark .k-pt,body.dark .k-md
 body.dark .k-tm{--kb:#2c2c32}
 body.dark .body li:hover,body.dark .pane-item:hover{background:#2a2a30;border-color:#3a3a40}
 body.dark .body li.mk{background:var(--yel);color:#141414;border-color:var(--yel)}
+body.dark .body.rv li.okopt.mk{background:var(--yel);color:#141414;border-color:var(--ok)}
 body.dark .note,body.dark .soldis{background:#3a3212;color:#f3ead0}
 body.dark code{background:#2c2c32}
 body.dark .solbtn.done,body.dark .chk{background:#1f3a26}
@@ -1692,7 +1776,12 @@ function revBox(q){const a=ansTxt(q);
       :q.solFlag?`<div class="soldis">⚠ ข้อนี้ไม่ฟันธง — โจทย์กำกวมหรือตัวเลือกไม่ตรง อ่านเหตุผลในวิธีทำแล้วตัดสินเอง</div>`:""}
     ${a?`<div class="solans">${a}</div>`:""}${q.solHtml?`<div class="solbody">${q.solHtml}</div>`:""}${noteHtml(q)}
     ${hasRev(q)?"":`<div class="solnone">ข้อนี้ไม่มีเฉลยทางการ และยังไม่มีวิธีทำ</div>`}</div>`;}
-const revWrap=q=>`<div class="solwrap${q.solFlag?" flag":""}"><div class="solin">${revBox(q)}</div></div>`;
+// no choice turned green (q.okOpt: the build marked one) -> the answer goes big on top; the solbox below is unchanged
+function bigAns(q){const a=keyTxt(q)||q.solAnswer;if(q.okOpt||!a)return"";
+  const lb=(keyTxt(q)?"เฉลยทางการ":"คำตอบ")+(!keyTxt(q)&&q.solPending?" · ⚠ ยังไม่ได้ตรวจ":!keyTxt(q)&&q.solFlag?" · ⚠ ไม่ฟันธง":"");
+  const long=a.replace(/<[^>]+>/g,"").length>28;
+  return `<div class="bigans${long?" long":""}"><span class="bl">${lb}</span><span class="bv">${a}</span></div>`;}
+const revWrap=q=>`<div class="solwrap${q.solFlag?" flag":""}"><div class="solin">${bigAns(q)}${revBox(q)}</div></div>`;
 /* collapsed on render (attempt before seeing the working) */
 function solHtml(q){
   if(!hasRev(q)) return "";
@@ -1856,7 +1945,7 @@ function closeModal(){if(!$("#modal").classList.contains("show"))return;$("#moda
 function fillModal(anim){
   const q=filtered[mIdx];dwell(q);
   $("#mtop").innerHTML=`${idBadge(q)}${chBadge(q)}${topicBadge(q,true)}${examBadge(q)}${diffBadge(q)}`;
-  $("#mbody").innerHTML=q.bodyHtml+figHtml(q).replace(' loading="lazy"','');
+  $("#mbody").innerHTML=q.bodyHtml+figHtml(q).replace(' loading="lazy"','');$("#mbody").classList.remove("rv");
   $("#mfoot").innerHTML=footHtml(q);
   const rb=$("#mreveal");rb.innerHTML=`<span class="nw">${revName(q).replace(" + ",'&nbsp;</span><span class="nw">+ ')}</span>`;rb.classList.toggle("flag",!!(q.solFlag||q.solPending));rb.setAttribute("aria-expanded","false");   // label wraps only between its words
   $("#msol").innerHTML=revWrap(q);tex($("#msol"));
@@ -2041,6 +2130,7 @@ function solToggle(e){
     const open=w.classList.toggle("show");
     SFX.play(open?"reveal":"conceal");if(open)seen(qAt(b));
     b.textContent = open ? "ซ่อน"+b.dataset.name.replace("⚠ ","")+" ↑" : b.dataset.label;
+    const bd=b.parentElement.querySelector(":scope>.body");if(bd)bd.classList.toggle("rv",open);   // correct choice green while open
   }
   return true;
 }
@@ -2067,7 +2157,7 @@ $("#mbody").addEventListener("click",e=>{if(markChoice(e)&&window.prepShot)prepS
 
 $("#mx").onclick=closeModal;
 $("#modal").onclick=e=>{if(e.target.id==="modal")closeModal();};
-$("#mreveal").onclick=()=>{const w=$("#msol .solwrap");if(!w)return;const open=w.classList.toggle("show");$("#mreveal").setAttribute("aria-expanded",open);
+$("#mreveal").onclick=()=>{const w=$("#msol .solwrap");if(!w)return;const open=w.classList.toggle("show");$("#mreveal").setAttribute("aria-expanded",open);$("#mbody").classList.toggle("rv",open);
   SFX.play(open?"reveal":"conceal");if(open)seen(filtered[mIdx]);};
 
 /* ---- keyboard ---- */
@@ -2271,7 +2361,7 @@ async function renderShot(){const q=filtered[mIdx];const h2c=await loadH2C();
   const wrap=document.createElement("div");wrap.className="shotwrap";
   const sh=document.createElement("div");sh.className=$("#modal .sheet").className+" shot";
   ["#mtop","#mbody"].forEach(sel=>sh.appendChild($(sel).cloneNode(true)));
-  sh.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));sh.querySelectorAll("img").forEach(im=>im.loading="eager");
+  sh.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));sh.querySelectorAll(".rv").forEach(e=>e.classList.remove("rv"));sh.querySelectorAll("img").forEach(im=>im.loading="eager");   // .rv off: the PNG never carries the green answer
   const sd=document.createElement("div");sd.className="shotsd";wrap.appendChild(sd);
   wrap.appendChild(sh);document.body.appendChild(wrap);
   try{
