@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700;800&family=Sarabun:wght@400;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--line:#141414;--acc:#f2b705;--stbg:#fcebb8;--sxbg:#fef7e1;--sxbd:#8a8886;--exg:rgba(20,20,20,.055)}
+:root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--line:#141414;--acc:#f2b705;--stbg:#fcebb8;--sxbg:#fef7e1;--sxbd:#8a8886;--exg:rgba(20,20,20,.055);--xg:rgba(255,253,247,.17)}
 /* registered as colors so a subject / night-mode swap can TRANSITION the tokens themselves: every
    var(--x) user fades together, without touching any element's own transition list */
 @property --paper{syntax:"<color>";inherits:true;initial-value:#efe9dc}
@@ -750,9 +750,28 @@ body[data-subj=bio] .lfst{display:none}
 .exr b{font:800 .8rem "JetBrains Mono",monospace}
 .exbar{grid-column:2 / 4;display:flex;height:10px;border:2px solid var(--ink)}
 .exbar i+i{border-left:2px solid var(--ink)}
+/* ✎ sub-topic drill-down: the ▾ beside a chapter row drops that chapter's exercise sub-topics. Ink bars on a 6mm
+   write-box grid, never the yellow exam bars; the label is drawn twice -- ink on the track, paper on the fill (clipped
+   to --w) -- so it stays readable wherever the fill ends */
+.exhd{display:flex;gap:5px}.exhd .exr,.exhd .sexb{flex:1;min-width:0}
+.xtg{flex:none;width:44px;min-height:44px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font:800 1rem "Anuphan",sans-serif;cursor:pointer;padding:0}
+.xtg:hover,.xtg:focus-visible{background:var(--yel);color:#141414;outline:0}
+.xtg[aria-expanded=true]{background:var(--ink);color:var(--paper)}
+.xtg i{display:inline-block;font-style:normal;transition:transform .2s}.xtg[aria-expanded=true] i{transform:rotate(180deg)}
+.xbars{display:flex;flex-direction:column;gap:4px;margin-top:4px}.xbars[hidden]{display:none}
+.xbar{position:relative;display:block;width:100%;min-height:44px;padding:0;border:2px solid var(--ink);color:var(--ink);font:700 .82rem "Anuphan",sans-serif;text-align:left;cursor:pointer;
+  background:linear-gradient(var(--exg) 1px,transparent 1px) 0 0/6mm 6mm,linear-gradient(90deg,var(--exg) 1px,transparent 1px) 0 0/6mm 6mm,var(--card)}
+.xl{display:flex;align-items:center;gap:8px;min-height:40px;padding:0 10px}
+.xl span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.xl b{font:800 .82rem "JetBrains Mono",monospace}
+.xf{position:absolute;inset:0;color:var(--paper);clip-path:inset(0 calc(100% - var(--w)) 0 0);animation:xgrow .45s cubic-bezier(.2,.9,.3,1) both;animation-delay:calc(var(--k)*28ms);
+  background:linear-gradient(var(--xg) 1px,transparent 1px) 0 0/6mm 6mm,linear-gradient(90deg,var(--xg) 1px,transparent 1px) 0 0/6mm 6mm,var(--ink)}
+.xbar:hover,.xbar:focus-visible{outline:3px solid var(--yel);outline-offset:1px}
+@keyframes xgrow{from{clip-path:inset(0 100% 0 0)}}
+@media(prefers-reduced-motion:reduce){.xf{animation:none}.xtg i{transition:none}}
 
 /* ---------- night mode: ink-black surfaces, cream text, black offset shadows ---------- */
-body.dark{--paper:#18181b;--card:#232327;--ink:#e8e2d4;--mut:#9c958a;--sh:#050506;--blue:#3b57d6;--red:#e2492f;--yel:#e8ae06;--stbg:#59491e;--sxbg:#363024;--sxbd:#86827e;--exg:rgba(232,226,212,.06);color-scheme:dark}
+body.dark{--paper:#18181b;--card:#232327;--ink:#e8e2d4;--mut:#9c958a;--sh:#050506;--blue:#3b57d6;--red:#e2492f;--yel:#e8ae06;--stbg:#59491e;--sxbg:#363024;--sxbd:#86827e;--exg:rgba(232,226,212,.06);--xg:rgba(24,24,27,.17);color-scheme:dark}
 body.dark .board{background:#050506;border-color:#050506}
 body.dark .d1{background:repeating-linear-gradient(45deg,var(--yel) 0 18px,#050506 18px 36px)}
 body.dark .d3{background:linear-gradient(var(--yel),var(--yel)) center/40% 40% no-repeat,#050506}
@@ -2152,19 +2171,19 @@ window.addEventListener("resize",()=>{if(document.body.classList.contains("inapp
 /* ---- chapter stats: slide a chem chapter tile left or right (or ←/→ on it) -> it re-packs 2 columns wide and turns
    over to its sub-topic bars + difficulty split; slide either way / ←→ / ✕ / Esc turns it back. One open at a time; the paper
    chips are one global choice, remembered. A bar opens the app on that chapter + sub-topic + those papers. ---- */
-// the 5th chip (แบบฝึกหัด) only decides whether a bar also opens the exercises: bars + difficulty always count exam papers (PX)
-const EXPAPERS=[["posn","สอวน."],["pat2","PAT2"],["alevel","A-Level"],["samanya","9 วิชาสามัญ"]],PAPERS=EXPAPERS.concat(EXN?[["ex","✎ แบบฝึกหัด"]]:[]);
+// exam papers only: exercises have their own ✎ button + ▾ bars on the tile (the old 5th "✎ แบบฝึกหัด" chip is gone, 2026-09-26)
+const PAPERS=[["posn","สอวน."],["pat2","PAT2"],["alevel","A-Level"],["samanya","9 วิชาสามัญ"]];
 let PSEL=[];try{PSEL=JSON.parse(ls.get("cqb_papers","[]"));}catch(e){}
-PSEL=PAPERS.map(p=>p[0]).filter(k=>Array.isArray(PSEL)&&PSEL.includes(k));if(!PSEL.some(k=>k!=="ex"))PSEL=PAPERS.map(p=>p[0]);
-const PX=()=>PSEL.filter(k=>k!=="ex");
+PSEL=PAPERS.map(p=>p[0]).filter(k=>Array.isArray(PSEL)&&PSEL.includes(k));if(!PSEL.length)PSEL=PAPERS.map(p=>p[0]);
+ls.set("cqb_papers",JSON.stringify(PSEL));   // write the cleaned list back: drops a stale "ex" saved by the old chip
 const EXC={};DATA.questions.forEach(q=>{if(isEx(q))EXC[q.ch]=(EXC[q.ch]||0)+1;});   // exercises per chapter
-const examSel=()=>PSEL.length===PAPERS.length?"":PSEL.join("+");   // every paper on = no exam filter at all
+const examSel=()=>PSEL.length===PAPERS.length?(EXN?EXONLY:""):PSEL.join("+");   // every paper on = every exam, still no exercises
 const RM=matchMedia("(prefers-reduced-motion:reduce)");
 function statBody(ch){
-  const px=PX(),qs=DATA.questions.filter(q=>subjOf(q)==="chem"&&q.ch===ch&&px.includes(q.exam)),cnt={},df={easy:0,medium:0,hard:0};
+  const px=PSEL,qs=DATA.questions.filter(q=>subjOf(q)==="chem"&&q.ch===ch&&px.includes(q.exam)),cnt={},df={easy:0,medium:0,hard:0};
   qs.forEach(q=>{q.topics.forEach(t=>cnt[t]=(cnt[t]||0)+1);if(q.diff in df)df[q.diff]++;});   // bars count every tag (can sum > qs.length); header + difficulty stay distinct
   const tops=ST[ch].map(t=>[t.id,t.th,cnt[t.id]||0]).sort((a,b)=>b[2]-a[2]),max=Math.max(1,tops[0][2]),n=parseInt(ch);
-  return `<div class="sth"><span class="sn">${n}</span><span class="snm">${DATA.chapters[ch]}<small>${qs.length} ข้อ${px.length<EXPAPERS.length?" · "+px.map(k=>PAPERS.find(p=>p[0]===k)[1]).join(" + "):""}</small></span>
+  return `<div class="sth"><span class="sn">${n}</span><span class="snm">${DATA.chapters[ch]}<small>${qs.length} ข้อ${px.length<PAPERS.length?" · "+px.map(k=>PAPERS.find(p=>p[0]===k)[1]).join(" + "):""}</small></span>
     <button class="tbx" title="กลับ (Esc)" aria-label="ปิดสถิติบท ${n}">✕</button></div>
   <div class="sbody"><div class="pchips" role="group" aria-label="สนามสอบ">${PAPERS.map(([k,l])=>{const on=PSEL.includes(k);
       return `<button class="pchip${on?" on":""}" data-p="${k}" aria-pressed="${on}">${l}</button>`;}).join("")}</div>
@@ -2172,18 +2191,38 @@ function statBody(ch){
     <div class="sbars">${tops.map(([id,th,c],k)=>`<button class="sbar" data-go="topic" data-ch="${ch}" data-t="${id}" data-k="${k}" style="--w:${c/max*100}%;--k:${k}"${c?"":" disabled"} title="${th} · ${c} ข้อ"><span class="sl">${th}</span><b>${c}</b></button>`).join("")}</div>
     <div class="sdw"><div class="scap">ความยาก</div>${qs.length?`<div class="sdiff">${["easy","medium","hard"].filter(d=>df[d]).map(d=>`<i class="sd-${d}" style="flex:${df[d]}" title="${DIFF_TH[d]} ${df[d]} ข้อ">${df[d]}</i>`).join("")}</div>
       <div class="sleg">${["easy","medium","hard"].map(d=>`<span class="diff-txt de-${d}">${DIFF_TH[d]}</span>`).join("")}</div>`:`<div class="snone">ไม่มีข้อจากสนามที่เลือกในบทนี้</div>`}</div>
-    ${EXC[ch]?`<button class="sexb" data-go="exch" data-ch="${ch}">✎ +${EXC[ch]} แบบฝึกหัด</button>`:""}</div>`;}
+    ${EXC[ch]?`<div class="exi"><div class="exhd"><button class="sexb" data-go="exch" data-ch="${ch}">✎ +${EXC[ch]} แบบฝึกหัด</button>
+      <button class="xtg" data-x="st${ch}" aria-expanded="${XOPEN.has("st"+ch)}" aria-controls="xb-st${ch}" aria-label="หัวข้อย่อยแบบฝึกหัดบท ${n}" title="หัวข้อย่อยแบบฝึกหัด"><i aria-hidden="true">▾</i></button></div>
+      ${xBars(ch,"st"+ch)}</div>`:""}</div>`;}
 // the ✎ tile's back: one row per exercise chapter -- count, difficulty mini-bar, ⚠ while its answers are unverified
 function exBody(){
   const rows=Object.keys(EXC).sort().map((ch,k)=>{const qs=DATA.questions.filter(q=>isEx(q)&&q.ch===ch),df={easy:0,medium:0,hard:0};
     qs.forEach(q=>{if(q.diff in df)df[q.diff]++;});
-    return `<button class="exr" data-go="exch" data-ch="${ch}" data-k="${k}" title="เปิดแบบฝึกหัดบท ${parseInt(ch)}"><span class="exn"><small>บท</small>${parseInt(ch)}</span>
+    return `<div class="exi"><div class="exhd"><button class="exr" data-go="exch" data-ch="${ch}" data-k="${k}" title="เปิดแบบฝึกหัดบท ${parseInt(ch)}"><span class="exn"><small>บท</small>${parseInt(ch)}</span>
       <span class="ext"><span>${DATA.exTitles[ch]||DATA.chapters[ch]}</span>${qs.some(q=>q.solPending)?`<i class="exw">⚠ ยังไม่ตรวจ</i>`:""}</span><b>${qs.length} ข้อ</b>
-      <span class="exbar">${["easy","medium","hard"].filter(d=>df[d]).map(d=>`<i class="sd-${d}" style="flex:${df[d]}" title="${DIFF_TH[d]} ${df[d]} ข้อ"></i>`).join("")}</span></button>`;}).join("");
+      <span class="exbar">${["easy","medium","hard"].filter(d=>df[d]).map(d=>`<i class="sd-${d}" style="flex:${df[d]}" title="${DIFF_TH[d]} ${df[d]} ข้อ"></i>`).join("")}</span></button>
+      <button class="xtg" data-x="ex${ch}" aria-expanded="${XOPEN.has("ex"+ch)}" aria-controls="xb-ex${ch}" aria-label="หัวข้อย่อยแบบฝึกหัดบท ${parseInt(ch)}" title="หัวข้อย่อย"><i aria-hidden="true">▾</i></button></div>
+      ${xBars(ch,"ex"+ch)}</div>`;}).join("");
   return `<div class="sth"><span class="sn">✎</span><span class="snm">แบบฝึกหัด · ${EXN} ข้อ<small>มีเฉลยทุกข้อ</small></span>
     <button class="tbx" title="กลับ (Esc)" aria-label="ปิดรายการแบบฝึกหัด">✕</button></div>
-  <div class="sbody"><div class="scap">แยกตามบท · แตะเพื่อดูข้อ</div><div class="exrows">${rows}</div>
+  <div class="sbody"><div class="scap">แยกตามบท · แตะเพื่อดูข้อ · ▾ หัวข้อย่อย</div><div class="exrows">${rows}</div>
     <div class="sdw"><div class="sleg">${["easy","medium","hard"].map(d=>`<span class="diff-txt de-${d}">${DIFF_TH[d]}</span>`).join("")}</div></div></div>`;}
+// ✎ sub-topic bars: one per sub-topic with ≥1 exercise in ch (most first), fill = its share of the chapter's exercises.
+// key = the toggle that owns the list; XOPEN = which lists are dropped open (kept across a re-render, cleared when a tile opens)
+const XOPEN=new Set();
+function xBars(ch,key){
+  const qs=DATA.questions.filter(q=>isEx(q)&&q.ch===ch),cnt={};qs.forEach(q=>q.topics.forEach(t=>cnt[t]=(cnt[t]||0)+1));
+  const bars=(ST[ch]||[]).filter(t=>cnt[t.id]).sort((a,b)=>cnt[b.id]-cnt[a.id]).map((t,k)=>{const l=`<span class="xl"><span>✎ ${t.th}</span><b>${cnt[t.id]}</b></span>`;
+    return `<button class="xbar" data-go="extopic" data-ch="${ch}" data-t="${t.id}" data-k="${k}" style="--w:${cnt[t.id]/qs.length*100}%;--k:${k}" title="${t.th} · ${cnt[t.id]} ข้อ">${l}<span class="xf" aria-hidden="true">${l}</span></button>`;});
+  return `<div class="xbars" id="xb-${key}" role="group" aria-label="แบบฝึกหัดบท ${parseInt(ch)} แยกหัวข้อย่อย"${XOPEN.has(key)?"":" hidden"}>${bars.join("")}</div>`;}
+// drop a list open / fold it back, then re-pack the tile to its new height (tiles that move slide there)
+function xToggle(b){
+  const k=b.dataset.x,on=!XOPEN.has(k),B=$("#board"),kids=[...B.children].filter(el=>!el.classList.contains("deco")),F=new Map(kids.map(el=>[el,el.getBoundingClientRect()]));
+  on?XOPEN.add(k):XOPEN.delete(k);b.setAttribute("aria-expanded",on);document.getElementById("xb-"+k).hidden=!on;SFX.play("chip",on);
+  repack();B.querySelectorAll(".tile.deco").forEach(d=>d.style.animationDelay=".12s");
+  if(!RM.matches)kids.forEach(el=>{const a=F.get(el),r=el.getBoundingClientRect();
+    if(Math.abs(a.left-r.left)+Math.abs(a.top-r.top)>.5)el.animate([{transform:`translate(${a.left-r.left}px,${a.top-r.top}px)`},{transform:"none"}],{duration:440,easing:"cubic-bezier(.2,.9,.3,1)"});});
+  if(on)document.getElementById("xb-"+k).scrollIntoView({block:"nearest",behavior:RM.matches?"auto":"smooth"});}
 // rows the open tile needs at its current width: the stats face's natural height over one grid row (+ gap)
 function statRows(t){const b=t.querySelector(".tback"),cs=getComputedStyle($("#board")),rh=parseFloat(cs.gridAutoRows)||150,g=parseFloat(cs.rowGap)||6;
   b.style.minHeight="0";const h=b.offsetHeight;b.style.minHeight="";return Math.max(2,Math.ceil((h+g)/(rh+g)));}
@@ -2201,7 +2240,7 @@ function statSet(t,open,tx=0,dir=open?-1:1){
     const kids=[...B.children].filter(el=>!el.classList.contains("deco")),F=new Map(kids.map(el=>[el,el.getBoundingClientRect()]));
     if(prev)prev.classList.remove("open");
     t.classList.toggle("open",open);
-    if(open)t.querySelector(".tback").innerHTML=t.dataset.ch==="ex"?exBody():statBody(t.dataset.ch);
+    if(open){XOPEN.clear();t.querySelector(".tback").innerHTML=t.dataset.ch==="ex"?exBody():statBody(t.dataset.ch);}
     repack();B.querySelectorAll(".tile.deco").forEach(d=>d.style.animationDelay=".12s");
     if(!RM.matches)kids.forEach(el=>{const a=F.get(el),b=el.getBoundingClientRect(),E={duration:440,easing:"cubic-bezier(.2,.9,.3,1)"};
       if(turn.includes(el)){const dx=a.left+a.width/2-b.left-b.width/2,dy=a.top+a.height/2-b.top-b.height/2;
@@ -2217,7 +2256,7 @@ function statSet(t,open,tx=0,dir=open?-1:1){
   Promise.all(fold.map(a=>a.finished)).then(()=>{go();fold.forEach(a=>a.cancel());},()=>{stBusy=false;});   // phase 2 is already running when the fold lets go
 }
 function chipToggle(b){const k=b.dataset.p,on=PSEL.includes(k),t=b.closest(".tile");
-  if(on&&k!=="ex"&&PX().length===1){SFX.play("bad");return;}   // never zero exam papers: the last one stays on
+  if(on&&PSEL.length===1){SFX.play("bad");return;}   // never zero papers: the last one stays on
   PSEL=PAPERS.map(p=>p[0]).filter(x=>x===k?!on:PSEL.includes(x));ls.set("cqb_papers",JSON.stringify(PSEL));SFX.play("chip",!on);
   t.querySelector(".tback").innerHTML=statBody(t.dataset.ch);t.querySelector(`.pchip[data-p="${k}"]`).focus({preventScroll:true});}
 // slide: a clearly horizontal drag (>10px, more x than y) is taken over, a vertical one scrolls the page as usual
@@ -2267,17 +2306,20 @@ $("#board").addEventListener("click",e=>{
   if(hb){const k=+hb.dataset.d||0;goSubj(hb.dataset.s!=null?+hb.dataset.s:SUBJS.indexOf(SUBJ)+k,k);return;}
   const sb=e.target.closest(".tbx");if(sb){statSet(sb.closest(".tile"),false);return;}
   const pc=e.target.closest(".pchip");if(pc){chipToggle(pc);return;}
+  const xt=e.target.closest("[data-x]");if(xt){xToggle(xt);return;}
   const tb=e.target.closest("button.b-st");if(tb){const r=tb.getBoundingClientRect();SFX.play("bar",0);setTimeout(()=>SFX.play("whoosh"),70);   // sub-topic badge on the recent block
     enterApp(r.left+r.width/2,r.top+r.height/2,()=>{resetFilters();topicFilters(tb.dataset.ch,tb.dataset.st);apply();});return;}
   const t=e.target.closest("[data-go]");if(!t||t.disabled)return;
   const r=t.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,g=t.dataset.go;
-  SFX.play(g==="topic"?"bar":g==="ex"||g==="exch"?"exOpen":"tile",+t.dataset.k);setTimeout(()=>SFX.play("whoosh"),70);
+  const xg=g==="ex"||g==="exch"||g==="extopic";   // ✎ destinations: exercises only
+  SFX.play(g==="topic"?"bar":xg?"exOpen":"tile",+t.dataset.k);setTimeout(()=>SFX.play("whoosh"),70);
   enterApp(x,y,()=>{
     resetFilters();
     if(g==="qid"){$("#q").value=t.dataset.q;}
     else{const s=g==="applied"?"applied":SUBJ;$("#fsubj").value=s;populateChapters(s);   // every other tile is scoped to the subject
-      if(EXN&&s==="chem"&&g!=="topic"){const ex=g==="ex"||g==="exch"?"ex":EXONLY;opt($("#fexam"),ex,ex);$("#fexam").value=ex;}   // ✎ tiles: exercises only; the rest: exams only
-      if(g==="ch"||g==="exch")$("#fch").value=t.dataset.ch;
+      if(EXN&&s==="chem"&&g!=="topic"){const ex=xg?"ex":EXONLY;opt($("#fexam"),ex,ex);$("#fexam").value=ex;}   // ✎ tiles: exercises only; the rest: exams only
+      if(g==="ch"||g==="exch"||g==="extopic")$("#fch").value=t.dataset.ch;
+      if(g==="extopic"){syncFacets(fstate());$("#ftopic").value=t.dataset.t;}   // a ✎ bar: + that sub-topic
       else if(g==="flag")$("#fsol").value=g;
       else if(g==="topic"){$("#fch").value=t.dataset.ch;const ex=examSel();   // a stats bar: chapter + sub-topic + the chosen papers
         if(ex){opt($("#fexam"),ex,ex);$("#fexam").value=ex;}
