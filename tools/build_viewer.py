@@ -398,7 +398,7 @@ if os.path.isfile(SUBTOP):
 # present / chemcount above were counted before this, so the landing tiles and hero stay exams-only.
 # No worksheet folder -> no exercises, the feature is simply absent.
 EX_DIR = os.path.join(os.path.dirname(ROOT), "worksheet-generator", "chapters")
-EX_MAP = {"mol": "05", "กรดเบส": "11"}
+EX_MAP = {"mol": "05", "สารละลาย": "06", "กรดเบส": "11"}
 EX_DIFF = {"ง่าย": "easy", "กลาง": "medium", "ยาก": "hard"}
 EX_TOP = os.path.join(ROOT, "concepts", "exercise-topics.json")
 _EX_ANS = re.compile(r"(?:<br>\s*)?<b>ตอบ\s*(.+?)</b>\s*$", re.S)   # a trailing "ตอบ ..." line -> the answer box
