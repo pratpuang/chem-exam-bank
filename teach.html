@@ -1,0 +1,1674 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>สอนพิเศษ · คลังข้อสอบเคมี</title>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--ok:#2f8f4e;--stbg:#fcebb8;--grid:#e6dfcf;--orange:#f28c28;--lav:#9fb0e8;--dash:#d9d2c1}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:"Anuphan","Sarabun","Segoe UI",Tahoma,sans-serif;background:var(--paper);color:var(--ink);font-size:16px;min-height:100vh;overflow-x:hidden}
+body.lockscroll{overflow:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.mono{font-family:"JetBrains Mono",monospace}
+.mut{color:var(--mut)}
+
+/* ---------- drifting bauhaus background ---------- */
+.kin{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.kin i{position:absolute;display:block}
+.kin .k1{width:460px;height:460px;border-radius:50%;background:var(--blue);right:-170px;top:90px;clip-path:polygon(0 0,100% 0,100% 50%,0 50%);animation:spin 46s linear infinite;opacity:.9}
+.kin .k2{width:240px;height:240px;border:24px solid var(--ink);border-radius:50%;left:-80px;bottom:30px;animation:drift 20s ease-in-out infinite alternate;opacity:.85}
+.kin .k3{width:170px;height:150px;background:var(--red);clip-path:polygon(50% 0,100% 100%,0 100%);left:4%;top:34%;animation:spin 32s linear infinite reverse;opacity:.85}
+.kin .k4{width:280px;height:280px;right:6%;bottom:-70px;background:radial-gradient(var(--ink) 2px,transparent 2.5px) 0 0/18px 18px;animation:drift 24s ease-in-out infinite alternate-reverse;opacity:.5}
+.kin .k5{width:120px;height:120px;background:var(--yel);right:30%;top:55%;animation:drift 28s ease-in-out infinite alternate;opacity:.9}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes drift{to{transform:translate(40px,-30px) rotate(12deg)}}
+.shapes{display:inline-flex;gap:6px;align-items:center}
+.shapes i{display:inline-block;width:16px;height:16px}
+.shapes .c{background:var(--red);border-radius:50%}.shapes .s{background:var(--yel)}.shapes .t{background:var(--blue);clip-path:polygon(50% 0,100% 100%,0 100%)}
+
+/* ---------- lock ---------- */
+#lock{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:var(--paper)}
+#lock .door{position:relative;z-index:1;background:var(--card);border:3px solid var(--ink);box-shadow:10px 10px 0 var(--sh);padding:30px 34px 26px 44px;width:min(380px,92vw);animation:pIn .5s cubic-bezier(.2,1.2,.4,1)}
+#lock .door:before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:var(--red)}
+#lock h2{margin:0 0 4px;font-size:1.6rem;font-weight:800;display:flex;gap:10px;align-items:center}
+#lock .pins{display:flex;gap:10px;margin:18px 0 14px}
+#lock .pins i{width:46px;height:56px;border:3px solid var(--ink);display:grid;place-items:center;font:800 1.6rem "JetBrains Mono";background:var(--paper);transition:background .15s,transform .15s}
+#lock .pins i.on{background:var(--yel);transform:translateY(-3px)}
+#lock .keys{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;background:var(--ink);border:4px solid var(--ink)}
+#lock .keys button{border:0;background:var(--card);font:800 1.2rem "JetBrains Mono";padding:12px 0}
+#lock .keys button:active{background:var(--yel)}
+#lock.shake .door{animation:shake .35s}
+#lock.out{animation:fadeOut .45s forwards}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+@keyframes fadeOut{to{opacity:0;visibility:hidden}}
+@keyframes pIn{from{opacity:0;transform:translateX(60px) rotate(2deg)}to{opacity:1;transform:none}}
+
+/* ---------- header ---------- */
+#app{position:relative;z-index:1}
+#app>header{background:var(--ink);color:var(--paper);position:sticky;top:0;z-index:40}
+.bar1{display:flex;align-items:stretch;flex-wrap:wrap;max-width:1180px;margin:0 auto}
+.home{border:0;background:var(--red);color:#fff;font-weight:800;padding:0 16px;font-size:.9rem;display:flex;align-items:center;gap:6px;text-decoration:none;min-height:48px}
+.home:hover{background:color-mix(in srgb,var(--red) 86%,#000)}
+.title{font-weight:800;font-size:1.05rem;padding:12px 16px;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.title small{font-weight:400;opacity:.6;font-size:.75rem}
+.hnav{margin-left:auto;display:flex;align-items:stretch}
+.hbtn{border:0;border-left:3px solid var(--paper);background:var(--ink);color:var(--paper);padding:0 14px;font-weight:700;font-size:.88rem;white-space:nowrap;transition:background .15s}
+.hbtn:hover{background:#2a2a2a}
+.hbtn.y{background:var(--yel);color:var(--ink)}
+.hbtn.mon{font-family:"JetBrains Mono";min-width:96px;cursor:default;display:flex;align-items:center;justify-content:center}
+.hbtn.mon:hover{background:var(--ink)}
+@media (max-width:640px){.title small{display:none}.title{padding:10px}.hbtn{padding:0 10px}}
+
+main{max-width:1180px;margin:0 auto;padding:22px 16px 80px 56px}
+@media (max-width:640px){main{padding:16px 12px 80px 44px}}
+.vhead{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:0 0 16px}
+.vhead h1{margin:0;font-size:2.3rem;font-weight:800;line-height:1;letter-spacing:-.01em}
+.vhead h1.sm{font-size:1.9rem}
+.vhead .sp{flex:1}
+
+/* ---------- buttons ---------- */
+.lbtn{border:3px solid var(--ink);background:var(--card);font-weight:700;padding:8px 14px;box-shadow:4px 4px 0 var(--sh);transition:transform .1s,box-shadow .1s;font-size:.88rem}
+.lbtn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--sh)}
+.lbtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--sh)}
+.lbtn.red{background:var(--red);color:#fff}.lbtn.blue{background:var(--blue);color:#fff}.lbtn.yel{background:var(--yel);color:#141414}.lbtn.ink{background:var(--ink);color:var(--paper)}
+.lbtn.sm{padding:3px 9px;font-size:.78rem;box-shadow:2px 2px 0 var(--sh);border-width:2px}
+.lbtn.sm:hover{box-shadow:3px 3px 0 var(--sh)}
+.seg{display:inline-flex;border:3px solid var(--ink);background:var(--card);box-shadow:4px 4px 0 var(--sh)}
+.seg button{border:0;border-right:3px solid var(--ink);background:transparent;padding:7px 12px;font-size:.84rem;font-weight:700}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--ink);color:var(--paper)}
+.c-pink{background:#ef8fb3;color:#141414}.c-teal{background:#178a86;color:#fff}.c-brown{background:#8b5e3c;color:#fff}.c-mint{background:#8fd3b0;color:#141414}.c-plum{background:#7b4fa0;color:#fff}.c-sky{background:#7cc4ec;color:#141414}
+.c-red{background:var(--red);color:#fff}.c-blue{background:var(--blue);color:#fff}.c-yel{background:var(--yel);color:#141414}.c-ink{background:var(--ink);color:var(--paper)}.c-ok{background:var(--ok);color:#fff}.c-orange{background:var(--orange);color:#141414}.c-lav{background:var(--lav);color:#141414}
+
+/* ---------- money ---------- */
+.progress{height:20px;border:3px solid var(--ink);display:flex;overflow:hidden;background:repeating-linear-gradient(45deg,var(--yel) 0 8px,var(--card) 8px 16px);background-size:45px 45px;animation:stripes 2s linear infinite}
+.progress .fill{height:100%;background:var(--red);border-right:3px solid var(--ink);width:0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+@keyframes stripes{to{background-position:45px 0}}
+.mhero{position:relative;background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);border-left:16px solid var(--red);padding:16px 18px 18px;margin-bottom:18px;animation:enter .6s both}
+.eyebrow{font-weight:800;font-size:.85rem}
+.amount{font:800 clamp(42px,6.4vw,62px)/1.15 "JetBrains Mono",monospace;letter-spacing:-.05em;margin:2px 0 10px}
+.progress.big{height:26px}
+.pcap{display:flex;justify-content:space-between;margin:6px 0 10px;font-size:.82rem;font-weight:600}
+.badge{display:inline-block;background:var(--yel);border:2px solid var(--ink);padding:3px 9px;font:700 .82rem "JetBrains Mono"}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:0 0 18px}
+.stat{border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:13px 15px;transition:transform .18s,box-shadow .18s;animation:enter .6s both;animation-delay:calc(.1s + var(--i,0)*80ms)}
+.stat:hover{transform:translate(-2px,-3px);box-shadow:7px 8px 0 var(--sh)}
+.stat strong{display:block;font:800 1.75rem/1.2 "JetBrains Mono",monospace;margin-top:4px;letter-spacing:-.03em}
+@media (max-width:640px){.stats{gap:8px}.stat{padding:10px 8px}.stat strong{font-size:clamp(16px,4.8vw,26px)}.eyebrow{font-size:.75rem}}
+.mbottom{display:grid;grid-template-columns:2.05fr 1fr;gap:18px;animation:enter .6s both;animation-delay:.2s}
+@media (max-width:860px){.mbottom{grid-template-columns:1fr}}
+.panel{background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh)}
+.chart-panel{padding:14px 14px 30px}
+.chart{position:relative;height:230px;margin-top:22px;display:flex;align-items:flex-end;gap:14px;padding-bottom:26px;background:repeating-linear-gradient(to top,transparent 0,transparent 39px,var(--grid) 39px,var(--grid) 40px);background-position:0 -26px;background-clip:content-box}
+.column{position:relative;flex:1;height:100%;display:flex;align-items:center;justify-content:flex-end;flex-direction:column;min-width:0;border:0;background:none;padding:0}
+.bar{position:relative;width:100%;background:var(--ink);border:2px solid var(--ink);transform-origin:bottom;animation:grow .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*80ms);transition:background .2s}
+.column:hover .bar:not(.forecast),.column.sel .bar:not(.forecast){background:var(--blue)}
+.column .value{position:absolute;top:-24px;left:50%;transform:translateX(-50%);font:700 .74rem "JetBrains Mono";white-space:nowrap;background:var(--card);padding:1px 4px;z-index:3}
+.column .label{position:absolute;bottom:-25px;font-weight:800;font-size:.78rem;width:100%;text-align:center;padding:1px 0}
+.column.sel .label{background:var(--red);color:#fff}
+.bar.forecast{background:repeating-linear-gradient(45deg,var(--yel) 0 7px,var(--card) 7px 14px);border:2px dashed #9b7900}
+.bar .actual{position:absolute;bottom:0;left:-2px;right:-2px;background:var(--red);border-top:2px solid var(--ink);transition:height 1s cubic-bezier(.2,.8,.2,1)}
+.average{position:absolute;left:0;right:0;border-top:3px dashed var(--blue);z-index:2;pointer-events:none;opacity:.85;transition:bottom .6s}
+.average span{position:absolute;left:0;bottom:3px;color:var(--blue);font:800 .7rem "JetBrains Mono";background:var(--card);padding:1px 4px}
+@keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.cal-panel{padding:14px}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
+.wd{text-align:center;font-size:.7rem;font-weight:700;color:var(--mut)}
+.day{aspect-ratio:1;border:2px solid var(--ink);background:var(--card);font:700 .82rem "JetBrains Mono";display:flex;align-items:center;justify-content:center;position:relative;transition:background .18s,transform .18s,border-radius .25s,box-shadow .18s;padding:0}
+.day:hover{transform:translateY(-2px);box-shadow:2px 2px 0 var(--ink)}
+.day.past{border-color:#c9c2b2;color:#a39d90}
+.day.today{background:var(--blue);color:#fff}
+.day.has:after{content:"";position:absolute;bottom:3px;width:5px;height:5px;background:var(--red);border-radius:50%}
+.day.today.has:after{background:var(--yel)}
+.day.holiday{background:var(--red);color:#fff;border-radius:50%}
+.day.holiday:after{display:none}
+.cnote{font-size:.75rem;margin-top:10px;font-weight:600;min-height:18px}
+
+/* ---------- schedule: day spine + ticket rows ---------- */
+.sched{margin-top:40px}
+.sbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.who-f{display:flex;gap:6px;flex-wrap:wrap}
+.who-f button{border:2px solid var(--ink);background:var(--card);font-weight:800;font-size:.78rem;padding:3px 10px;display:flex;align-items:center;gap:6px;transition:transform .1s}
+.who-f button i{width:10px;height:10px;border:2px solid var(--ink);display:inline-block}
+.who-f button.on{background:var(--ink);color:var(--paper);transform:translateY(-2px)}
+.nextcard{position:relative;display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);padding:14px 18px 14px 28px;margin-bottom:18px;overflow:hidden;animation:enter .5s both}
+.nextcard:before{content:"";position:absolute;left:0;top:0;bottom:0;width:12px;background:var(--red)}
+.nextcard .tm{font:800 3.2rem/1 "JetBrains Mono";color:var(--red);letter-spacing:-.04em}
+.nextcard .eb{font-size:.7rem;font-weight:800;letter-spacing:.16em}
+.nextcard .nm{font-size:1.4rem;font-weight:800;line-height:1.15}
+.nextcard .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:700px){.nextcard{grid-template-columns:1fr}.nextcard .acts{justify-content:flex-start}}
+.strip{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;background:var(--ink);border:3px solid var(--ink);margin-top:6px;max-width:360px}
+.strip i{height:12px;background:var(--card)}
+.strip i.d{background:var(--blue)}.strip i.n{background:var(--yel);animation:blink 1.6s ease-in-out infinite}.strip i.s{background:repeating-linear-gradient(45deg,var(--card) 0 4px,#d9d2c1 4px 8px)}
+@keyframes blink{50%{background:var(--card)}}
+
+.dgroup{display:grid;grid-template-columns:84px minmax(0,1fr);gap:16px;margin-bottom:20px;animation:enter .45s both;animation-delay:calc(var(--i,0)*40ms)}
+.dside{position:sticky;top:64px;align-self:start;width:100%;border:0;background:var(--paper);color:var(--ink);text-align:right;padding:6px 6px 0 0;font:inherit;transition:transform .15s}
+.dside:hover{transform:translateX(-3px)}
+.dside .w{display:block;font-weight:800;font-size:.82rem}
+.dside b{display:block;font:800 2.7rem/1 "JetBrains Mono";letter-spacing:-.05em}
+.dside .m{display:block;font-weight:800;font-size:.78rem;color:var(--mut)}
+.dside em{display:block;font-style:normal;font-size:.68rem;font-weight:800;margin-top:4px;color:var(--mut)}
+.dside .plus{position:absolute;left:4px;top:6px;font-style:normal;font-weight:800;color:var(--red);opacity:0;transition:opacity .15s}
+.dside:hover .plus{opacity:1}
+.dside.today b,.dside.today .w,.dside.today em{color:var(--red)}
+.dside.today:after{content:"";position:absolute;right:-11px;top:6px;bottom:0;width:6px;background:var(--red)}
+.dside.hol em{color:var(--red)}
+.dstack{display:flex;flex-direction:column;gap:12px;min-width:0}
+
+.tk{position:relative;display:grid;grid-template-columns:62px minmax(0,1fr) auto;background:var(--card);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--sh);min-height:70px;cursor:pointer;transition:transform .15s,box-shadow .15s}
+.tk:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--sh)}
+.stub .amt{font:800 1.05rem "JetBrains Mono";color:var(--mut);letter-spacing:-.02em}
+.tk .face{position:relative;overflow:hidden;border-right:3px solid var(--ink);display:grid;place-items:center}
+.tk .face b{font-size:2.7rem;font-weight:800;line-height:1;color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.9)}
+.tk .face.c-yel b,.tk .face.c-orange b,.tk .face.c-lav b{-webkit-text-stroke-color:rgba(20,20,20,.55)}
+.tk .mid{padding:9px 14px;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.tk .dl{font-size:.7rem;font-weight:800;letter-spacing:.08em;color:var(--red);margin-bottom:3px}
+.tk .when{font:800 1.5rem/1.1 "JetBrains Mono";letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk .when small{font-size:.74rem;color:var(--mut);font-weight:700;letter-spacing:0;margin-left:6px}
+.tk .who{font-weight:800;font-size:1.02rem;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk .who span{font-weight:600;color:var(--mut);font-size:.8rem;margin-left:6px}
+.tk .nt{font-size:.8rem;color:var(--mut);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk .stub{position:relative;border-left:3px dashed var(--ink);display:grid;place-items:center;padding:0 14px;min-width:122px}
+.stamp{border:3px solid currentColor;background:transparent;font:800 .8rem "Anuphan",sans-serif;padding:3px 9px;transform:rotate(-5deg);letter-spacing:.03em;white-space:nowrap;line-height:1.25;text-align:center;transition:transform .15s}
+.stamp small{display:block;font:700 .68rem "JetBrains Mono"}
+button.stamp:hover{transform:rotate(-5deg) scale(1.1)}
+.stamp.plan{color:var(--mut);border-style:dashed;transform:none}
+.stamp.paid{color:var(--ok)}
+.stamp.owe{color:#a77700}
+.stamp.late{color:var(--red)}
+.stamp.cancel{color:#9b9484}
+.stamp.wait{background:var(--yel);color:var(--ink);border-color:var(--ink);animation:nudge 1.8s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(-1deg) scale(1.06)}}
+.tk .tools{position:absolute;right:8px;top:-15px;display:flex;gap:4px;opacity:0;transform:translateY(4px);transition:.15s;z-index:2}
+.tk:hover .tools,.tk:focus-within .tools{opacity:1;transform:none}
+.tk .tools button{width:30px;height:30px;border:2px solid var(--ink);background:var(--card);font-size:.8rem;display:grid;place-items:center}
+.tk .tools button:hover{background:var(--yel)}
+.tk .tools button.del:hover{background:var(--red);color:#fff}
+@media (hover:none){.tk .tools{display:none}}
+.tk.cancel>span:not(.tools){opacity:.5}.tk.cancel .when,.tk.cancel .who{text-decoration:line-through}
+.tk.holi>span:not(.tools){opacity:.5}
+.tk.pv{cursor:default;margin-bottom:4px}.tk.pv:hover{transform:none;box-shadow:4px 4px 0 var(--sh)}
+.tk.sm{grid-template-columns:46px minmax(0,1fr) auto;min-height:66px}
+.tk.sm .face b{font-size:2rem}.tk.sm .when{font-size:1.2rem}.tk.sm .stub{min-width:96px;padding:0 8px}
+@media (max-width:560px){
+  .dgroup{grid-template-columns:1fr;gap:8px}
+  .dside{position:static;display:flex;align-items:baseline;gap:8px;text-align:left;padding:6px 12px}
+  .dside b{font-size:1.5rem}.dside em{margin:0}.dside .sum{margin:0 0 0 auto;padding:0;border:0}
+  .tk{grid-template-columns:46px minmax(0,1fr) auto}.tk .face b{font-size:2rem}.tk .when{font-size:1.2rem}.tk .stub{min-width:88px;padding:0 6px}
+}
+.empty{background:var(--card);border:3px dashed var(--ink);padding:24px;text-align:center;color:var(--mut);font-weight:700}
+
+/* ---------- inline controls (instead of form boxes) ---------- */
+.eb2{display:block;font-size:.7rem;font-weight:800;letter-spacing:.16em;color:var(--mut);margin:18px 0 7px}
+.ln{width:100%;border:0;border-bottom:3px solid var(--ink);background:transparent;padding:6px 2px;outline:none;font-weight:600;font-size:1rem}
+.ln:focus{border-bottom-color:var(--blue)}
+.ln::placeholder{color:#b3ab9b}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:2px solid var(--ink);background:var(--card);font-weight:800;font-size:.85rem;padding:5px 11px;transition:transform .12s,box-shadow .12s,background .15s}
+.chip:hover{transform:translate(-1px,-1px);box-shadow:2px 2px 0 var(--sh)}
+.chip.on{background:var(--ink);color:var(--paper);box-shadow:3px 3px 0 var(--red);transform:translate(-1px,-1px)}
+.chip.mono{font-family:"JetBrains Mono"}
+.step{display:inline-flex;align-items:center;border:3px solid var(--ink);background:var(--card)}
+.step button{border:0;background:transparent;width:38px;height:42px;font:800 1.2rem "JetBrains Mono"}
+.step button:hover{background:var(--yel)}
+.step b{font:800 1.45rem "JetBrains Mono";padding:0 6px;min-width:3.4ch;text-align:center}
+.trow2{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-end}
+.go{border:3px solid var(--ink);background:var(--ink);color:var(--paper);font-weight:800;font-size:1.05rem;padding:10px 22px;box-shadow:4px 4px 0 var(--red);transition:transform .1s,box-shadow .1s}
+.go:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--red)}
+.go:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--red)}
+.go.sm{font-size:.88rem;padding:7px 14px;box-shadow:3px 3px 0 var(--red)}
+.go.red{background:var(--red);box-shadow:4px 4px 0 var(--ink)}
+.linkx{border:0;background:none;color:var(--red);font-weight:800;padding:4px 0;text-decoration:underline;text-underline-offset:4px}
+.ghostb{border:0;background:none;font-weight:800;padding:8px 10px;color:var(--mut)}
+.ghostb:hover{color:var(--ink)}
+.cfoot{display:flex;align-items:center;gap:10px;margin-top:26px;flex-wrap:wrap}
+.cfoot .sp{flex:1}
+
+/* ---------- side tabs + drawers (bank pattern) ---------- */
+#stabs{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:45;display:flex;flex-direction:column;gap:14px}
+#stabs button{writing-mode:vertical-rl;border:3px solid var(--ink);border-left:0;padding:16px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);min-height:104px;text-align:center;transition:transform .2s}
+#stabs button:hover{transform:translateX(4px)}
+#scrim{position:fixed;inset:0;z-index:70;background:rgba(20,20,20,.35);opacity:0;pointer-events:none;transition:opacity .35s}
+body.dopen #scrim{opacity:1;pointer-events:auto}
+.drawer{position:fixed;left:0;top:0;bottom:0;z-index:71;width:min(1100px,96vw);background:var(--paper);border-right:4px solid var(--ink);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 22px 48px;overflow:auto;overscroll-behavior:contain}
+.drawer.open{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
+#d-cal{box-shadow:10px 0 0 var(--blue)}#d-stu{box-shadow:10px 0 0 var(--red);width:min(1180px,97vw)}#d-kit{box-shadow:10px 0 0 var(--yel)}
+.pdh{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:-14px -22px 18px;position:sticky;top:-14px;background:var(--paper);padding:12px 22px 10px;z-index:3;border-bottom:3px solid var(--ink)}
+.pdh>b{font-size:1.4rem;font-weight:800}
+.pdhov{font:600 .8rem "JetBrains Mono",monospace;color:var(--mut);flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdx{background:var(--ink);color:var(--paper);border:0;width:38px;height:38px;font-weight:800}
+@keyframes tileIn{from{opacity:0;transform:scale(.6) rotate(-6deg)}to{opacity:1;transform:none}}
+@keyframes cardIn{from{opacity:0;transform:translateY(24px) rotate(-1.5deg)}to{opacity:1;transform:none}}
+
+/* calendar drawer */
+.calwrap{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(280px,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.calwrap{grid-template-columns:1fr}}
+.calhead{display:flex;align-items:flex-end;gap:12px;margin:0 0 10px;flex-wrap:wrap}
+.calhead .mn{font-size:clamp(2.3rem,5vw,3.6rem);font-weight:800;line-height:.95;letter-spacing:-.02em}
+.calhead .yr{font:800 1.6rem "JetBrains Mono";color:transparent;-webkit-text-stroke:2px var(--ink);margin-bottom:4px}
+.calhead .sp{flex:1}
+.calnav{display:flex;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--sh);background:var(--card);margin-bottom:6px}
+.calnav button{border:0;border-right:3px solid var(--ink);background:transparent;font-weight:800;padding:6px 13px}
+.calnav button:last-child{border-right:0}
+.calnav button:hover{background:var(--yel)}
+.calfig{display:flex;gap:26px;margin:0 0 14px;flex-wrap:wrap}
+.calfig b{display:block;font:800 1.35rem/1.1 "JetBrains Mono";letter-spacing:-.03em}
+.calfig span{font-size:.72rem;font-weight:700;color:var(--mut)}
+.mcal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;background:var(--ink);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh)}
+.mcal .h{background:var(--ink);color:var(--paper);font-weight:800;font-size:.72rem;text-align:center;padding:5px 0}
+.mcal .h.we{color:var(--yel)}
+.mc{background:var(--card);min-height:96px;padding:6px 6px 5px;display:flex;flex-direction:column;gap:2px;border:0;text-align:left;overflow:hidden;position:relative;font:inherit;color:inherit;transition:background .15s}
+.drawer.open .mc{animation:tileIn .5s cubic-bezier(.3,1.4,.5,1) both;animation-delay:calc(var(--i,0)*10ms)}
+.mcal.still .mc{animation:none!important}
+button.mc:hover{background:#fbf3dc}
+.mc .n{font:800 .9rem "JetBrains Mono";width:26px;height:26px;display:grid;place-items:center;margin:-3px 0 1px -3px;flex:none}
+.mc.today .n{background:var(--red);color:#fff!important;border-radius:50%}
+.mc.out{background:var(--paper)}.mc.out .n{color:#c9c2b2}
+.mc.hol{background:#fbe4dd}.mc.hol .n{color:var(--red)}
+.mc.sel{background:var(--stbg);box-shadow:inset 0 0 0 3px var(--ink)}
+.mc .evs{display:flex;flex-direction:column;gap:3px;min-width:0}
+.mc .ev{display:block;font-size:.7rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 6px;line-height:1.45;min-width:0}
+.mc .ev.x{background:transparent!important;color:var(--mut)!important;text-decoration:line-through;padding-left:0}
+.mc .ev.dl{background:var(--ink);color:var(--paper)}
+.mc .more{font-size:.64rem;font-weight:800;color:var(--mut)}
+@media (max-width:640px){.mc{min-height:58px;padding:4px}.mc .ev{font-size:0;height:6px;padding:0}.mc .ev.x{display:none}.mc .more{display:none}.calfig{gap:16px}}
+.calleg{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;font-size:.74rem;font-weight:700}.calleg i{display:inline-block;width:12px;height:12px;border:2px solid var(--ink);margin-right:6px;vertical-align:-2px}.calleg .lh{background:#fbe4dd}.calleg .lt{background:var(--red);border-radius:50%}.calleg .ld{background:var(--ink)}
+.agenda{position:sticky;top:70px;background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);overflow:hidden}
+.agenda .ah{position:relative;padding:16px 18px 14px;border-bottom:3px solid var(--ink);background:var(--blue);color:#fff;overflow:hidden;min-height:132px;display:flex;flex-direction:column;justify-content:flex-end}
+.agenda .ah .big{position:absolute;right:-6px;top:-26px;font:800 9rem/1 "JetBrains Mono";letter-spacing:-.06em;color:transparent;-webkit-text-stroke:3px rgba(255,255,255,.45);pointer-events:none}
+.agenda .ah h3{margin:0;font-size:2rem;font-weight:800;line-height:1;position:relative}
+.agenda .ah p{margin:4px 0 0;font-weight:700;font-size:.85rem;opacity:.9;position:relative}
+.agenda .ah .ahs{font-family:"JetBrains Mono";font-size:.78rem;margin-top:8px;opacity:1}
+.agenda .ah.today{background:var(--red)}
+.agenda .ah.hol{background:repeating-linear-gradient(45deg,var(--ink) 0 9px,#3a3a3a 9px 18px)}
+.agenda .ab{padding:16px 14px 6px;display:flex;flex-direction:column;gap:14px}
+.agenda .dlr{background:var(--ink);color:var(--paper);font-weight:800;font-size:.85rem;padding:6px 10px}
+.agenda .free{text-align:center;font-weight:800;font-size:1.2rem;color:var(--mut);padding:10px 0}
+.agenda .free small{display:block;font-size:.78rem;font-weight:600}
+.agenda .acts{display:flex;gap:10px;padding:10px 14px 16px;flex-wrap:wrap;align-items:center}
+
+/* students drawer: same-size cards, tap one to open it */
+.scards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:24px;align-items:start;grid-auto-flow:dense}
+.sc{background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);position:relative;overflow:hidden;height:226px;display:flex;flex-direction:column;cursor:pointer;text-align:left;padding:0;font:inherit;color:inherit;transition:transform .18s,box-shadow .18s}
+.sc:hover{transform:translate(-3px,-3px);box-shadow:9px 9px 0 var(--sh)}
+.drawer.open .sc{animation:cardIn .55s cubic-bezier(.2,1.1,.4,1) both;animation-delay:calc(.15s + var(--i,0)*60ms)}
+.scards.still .sc{animation:none!important}
+.sc .band{position:relative;flex:1;padding:14px 16px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;border-bottom:3px solid var(--ink)}
+.sc .band .big{position:absolute;right:-8px;bottom:-46px;font-size:10rem;font-weight:800;line-height:1;color:transparent;-webkit-text-stroke:3px rgba(255,255,255,.45);pointer-events:none}
+.sc .band.c-sky .big,.sc .band.c-pink .big,.sc .band.c-mint .big,.sc .band.c-yel .big,.sc .band.c-orange .big,.sc .band.c-lav .big{-webkit-text-stroke-color:rgba(20,20,20,.18)}
+.sc .band .idx{position:absolute;left:16px;top:13px;font:800 .72rem "JetBrains Mono";opacity:.75}
+.sc .band h3{margin:0;font-size:2.1rem;font-weight:800;line-height:1.05;position:relative}
+.sc .band p{margin:4px 0 0;font-size:.8rem;font-weight:700;opacity:.88;position:relative}
+.otag{position:absolute;right:12px;top:11px;font:800 .72rem "JetBrains Mono";background:var(--card);color:var(--red);border:2px solid var(--ink);padding:1px 7px;box-shadow:2px 2px 0 var(--sh)}
+.sc .foot{padding:11px 16px 13px;background:var(--card)}
+.sc .foot .nx{display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+.sc .lab{font:700 .64rem "JetBrains Mono";letter-spacing:.14em;color:var(--mut)}
+.sc .foot b{font:800 1.3rem "JetBrains Mono";letter-spacing:-.03em}
+.sc .foot .nx em{font-style:normal;font-size:.8rem;font-weight:700;color:var(--mut)}
+.mstrip{display:grid;grid-template-columns:repeat(14,1fr);gap:2px;margin-top:9px}
+.mstrip i{height:6px;background:var(--grid)}
+.mstrip i.d{background:var(--blue)}.mstrip i.n{background:var(--yel);box-shadow:0 0 0 1.5px var(--ink)}.mstrip i.s{background:transparent;border:1px dashed #c9c2b2}
+.mstrip.none{display:block;height:6px;margin-top:9px;font-size:0}
+/* opened card */
+.sc.open{grid-column:1/-1;height:auto;cursor:default;display:block;box-shadow:9px 9px 0 var(--sh)}
+.sc.open:hover{transform:none}
+.sc.open.fresh>*{animation:fadeUp .35s .3s both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.cpick{display:flex;gap:5px;margin-top:14px;position:relative}
+.cpick button{width:22px;height:22px;border:2px solid var(--ink);padding:0;transition:transform .12s}
+.cpick button:hover{transform:translateY(-3px)}
+.cpick button.on{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink)}
+@keyframes openIn{from{opacity:.4;transform:scale(.97) translateY(10px)}to{opacity:1;transform:none}}
+.ohead{position:relative;display:flex;align-items:flex-end;gap:20px;padding:22px 24px 20px;min-height:170px;overflow:hidden;border-bottom:3px solid var(--ink)}
+.ohead .big{position:absolute;right:150px;bottom:-70px;font-size:15rem;font-weight:800;line-height:1;color:transparent;-webkit-text-stroke:3px rgba(255,255,255,.4);pointer-events:none}
+.ohead.c-sky .big,.ohead.c-pink .big,.ohead.c-mint .big,.ohead.c-yel .big,.ohead.c-orange .big,.ohead.c-lav .big{-webkit-text-stroke-color:rgba(20,20,20,.16)}
+.ohead .l{position:relative;flex:1;min-width:0}
+.ohead h3{margin:0;font-size:3.2rem;font-weight:800;line-height:1}
+.ohead p{margin:6px 0 0;font-weight:700;font-size:.92rem;opacity:.9}
+.otags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.otags span{border:2px solid currentColor;padding:1px 9px;font-size:.78rem;font-weight:700}
+.otags span.t{font-family:"JetBrains Mono"}
+.ohead .r{position:absolute;right:14px;top:14px;display:flex;gap:6px}
+.ohead .r button{border:2px solid currentColor;background:transparent;color:inherit;font-weight:800;font-size:.8rem;padding:0 11px;height:36px}
+.ohead .r button:hover{background:rgba(255,255,255,.2)}
+.ohead .r .shut{background:var(--ink);color:var(--paper);border-color:var(--ink);width:36px;padding:0}
+.ostats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:3px solid var(--ink)}
+.ostats>div{padding:14px 20px;border-right:2px solid var(--grid)}
+.ostats>div:last-child{border-right:0}
+.ostats b{display:block;font:800 1.6rem/1.15 "JetBrains Mono";letter-spacing:-.04em}
+.ostats span{font-size:.72rem;font-weight:700;color:var(--mut)}
+.ostats .hot b{color:var(--red)}
+.obody{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2px;background:var(--grid)}
+.obody .col{padding:20px 24px;display:flex;flex-direction:column;gap:22px;min-width:0;background:var(--card)}
+
+.obody .lab{display:block;margin-bottom:9px}
+.now{font-weight:800;font-size:1.05rem;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.now small{font:700 .72rem "JetBrains Mono";color:var(--mut)}
+.segbar{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;margin-top:10px}
+.segbar button{height:34px;border:2px solid var(--ink);background:var(--card);padding:0;font:800 .62rem "JetBrains Mono";color:var(--mut);transition:transform .12s}
+.segbar button:hover{transform:translateY(-3px)}
+.segbar .d{background:var(--blue);color:#fff}
+.segbar .n{background:var(--yel);color:var(--ink);transform:translateY(-4px);box-shadow:0 4px 0 var(--ink)}
+.segbar .s{background:repeating-linear-gradient(45deg,var(--card) 0 4px,#e1d9c8 4px 8px);border-style:dashed}
+.hint{font-size:.68rem;color:var(--mut);font-weight:600;margin-top:8px}
+.rcpt{border:2px solid var(--ink);background:var(--stbg)}
+.rcpt .r{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 8px 7px 12px;border-bottom:2px dashed rgba(20,20,20,.25);font-size:.86rem;font-weight:700}
+.rcpt .r:last-child{border-bottom:0}
+.rcpt .r b{font-family:"JetBrains Mono"}
+.rcpt button{border:2px solid var(--ink);background:var(--card);font-weight:800;font-size:.74rem;padding:3px 9px}
+.rcpt button:hover{background:var(--ok);color:#fff}
+.clear{font-weight:700;color:var(--ok);font-size:.9rem}
+.fbl{display:flex;flex-direction:column;gap:12px}
+.q{position:relative;padding:2px 26px 2px 30px;font-size:.94rem;font-weight:600}
+.q:before{content:"“";position:absolute;left:0;top:-10px;font:800 2.6rem "Anuphan";color:var(--blue)}
+.q.con:before{color:var(--red)}
+.q small{display:block;font:600 .66rem "JetBrains Mono";color:var(--mut);margin-top:1px}
+.q .x{position:absolute;right:0;top:0;border:0;background:none;color:var(--mut);font-weight:800;opacity:0;transition:opacity .15s}
+.q:hover .x{opacity:1}
+.addq{border:0;background:transparent;font-weight:800;font-size:.84rem;padding:4px 0;color:var(--blue);text-align:left;align-self:flex-start}
+.addq:hover{text-decoration:underline;text-underline-offset:3px}
+.qin{display:flex;gap:8px;align-items:center}
+.qin .ln{font-size:.92rem;padding:4px 2px}
+.ofoot{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:14px 24px;border-top:3px solid var(--ink);background:var(--paper)}
+.addcard{border:3px dashed var(--ink);background:transparent;height:226px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:800;font-size:1.05rem;box-shadow:none;transition:background .15s;cursor:pointer}
+.addcard:hover{background:var(--card);transform:none;box-shadow:none}
+.addcard b{font-size:3.4rem;line-height:1}
+@media (max-width:760px){.ostats{grid-template-columns:1fr 1fr}.ostats>div:nth-child(2){border-right:0}.ostats>div:nth-child(-n+2){border-bottom:2px solid var(--grid)}.obody{grid-template-columns:1fr}.obody .col+.col{border-left:0;border-top:2px solid var(--grid)}.ohead{flex-direction:column;align-items:flex-start;padding-top:60px}.ohead h3{font-size:2.4rem}}
+
+/* session composer: one ticket bar, one picker at a time */
+.tokbar{display:grid;grid-template-columns:1.25fr 1.35fr 1fr 1fr auto;gap:3px;background:var(--ink);border:3px solid var(--ink);margin-top:4px}
+.tok{border:0;background:var(--card);padding:10px 12px 9px;text-align:left;display:flex;flex-direction:column;gap:3px;min-width:0;transition:background .15s}
+.tok:hover{background:#fbf3dc}
+.tok small{font-size:.64rem;font-weight:800;letter-spacing:.14em;color:var(--mut)}
+.tok b{font-size:1.15rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:7px}
+.tok b i{flex:none;width:12px;height:12px;border:2px solid var(--ink)}
+.tok.mono b{font-family:"JetBrains Mono"}
+.tok.on{background:var(--yel)}
+.tok.on small{color:var(--ink)}
+.tok.amt{background:var(--ink);color:var(--paper);justify-content:center;padding:10px 14px;cursor:default}
+.tok.amt small{color:#b9b2a2}
+.tok.amt b{font-family:"JetBrains Mono"}
+.picker{border:3px solid var(--ink);border-top:0;background:var(--paper);padding:16px 14px;animation:pk .25s ease both}
+@keyframes pk{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.picker .row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.picker .sub{font-size:.72rem;font-weight:700;color:var(--mut);margin-top:10px}
+.chip i.sq{display:inline-block;width:11px;height:11px;border:2px solid var(--ink);margin-right:6px;vertical-align:-1px}
+.chip.on i.sq{border-color:var(--paper)}
+.moreb{border:0;background:none;font-weight:800;font-size:.84rem;color:var(--blue);padding:16px 0 0}
+.moreb:hover{text-decoration:underline;text-underline-offset:3px}
+.morep{margin-top:4px}
+@media (max-width:560px){.tokbar{grid-template-columns:1fr 1fr}.tok.amt{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center}}
+
+/* message drawer */
+.kit{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+@media (max-width:820px){.kit{grid-template-columns:1fr}}
+.kh{font-size:1.3rem;font-weight:800;margin:0 0 12px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.kh small{font-size:.75rem;font-weight:600;color:var(--mut)}
+.ratebar{grid-column:1/-1;display:flex;gap:18px;flex-wrap:wrap;align-items:stretch}
+.rtile{flex:1 1 240px;border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:12px 14px;display:flex;align-items:center;gap:12px;justify-content:space-between}
+.rtile .l{font-weight:800;font-size:.9rem}
+.rtile .l small{display:block;font-weight:600;opacity:.8;font-size:.72rem}
+.rtile .v{display:flex;align-items:center;gap:4px}
+.rtile .v button{width:34px;height:34px;border:2px solid currentColor;background:transparent;color:inherit;font:800 1.1rem "JetBrains Mono"}
+.rtile .v button:hover{background:rgba(255,255,255,.2)}
+.rtile .v span{font:800 1.3rem "JetBrains Mono"}
+.rtile input{width:4.2ch;border:0;border-bottom:3px solid transparent;background:transparent;color:inherit;text-align:center;font:800 2.1rem "JetBrains Mono";outline:none;-moz-appearance:textfield;padding:0}
+.rtile input::-webkit-inner-spin-button,.rtile input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.ratenote{flex:1 1 200px;font-size:.78rem;font-weight:600;color:var(--mut);align-self:center}
+.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.wk button{border:3px solid var(--ink);background:var(--card);padding:12px 2px 10px;text-align:center;transition:transform .12s,background .15s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.wk button:hover{transform:translateY(-2px)}
+.wk button b{font-size:1.1rem;font-weight:800}
+.wk button span{font:700 .68rem "JetBrains Mono";color:var(--mut)}
+.wk button.on{background:var(--yel);box-shadow:inset 0 -5px 0 var(--ink)}
+.wk button.on span{color:var(--ink)}
+.wk button.full{opacity:.4}
+.bub{position:relative;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:14px 16px 12px;margin-top:16px}
+.bub .bt{white-space:pre-wrap;font-size:.92rem;line-height:1.7}
+.bub .bt.hint{color:var(--mut);font-weight:600}
+.bub .bf{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font:600 .7rem "JetBrains Mono";color:var(--mut)}
+.bub.me{background:#e4e9fb;margin-left:22px}
+.bub.me:after{content:"";position:absolute;right:26px;bottom:-15px;width:18px;height:18px;background:#e4e9fb;border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);transform:skewX(-35deg)}
+.cpy{border:3px solid var(--ink);background:var(--yel);color:var(--ink);font-weight:800;font-size:.82rem;padding:5px 14px;box-shadow:3px 3px 0 var(--sh);transition:transform .1s,box-shadow .1s}
+.cpy:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--sh)}
+.cpy:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--sh)}
+.post{background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh)}
+.post .ph{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:3px solid var(--ink)}
+.post .ph b{display:block;font-weight:800}
+.post .ph small{font-size:.72rem;color:var(--mut);font-weight:600}
+.post .ph .cpy{margin-left:auto}
+.av{width:42px;height:42px;border:3px solid var(--ink);background:var(--card);display:grid;place-items:center;flex:none}
+.av .shapes i{width:9px;height:9px}
+.post .pb{position:relative;padding:14px 16px;white-space:pre-wrap;line-height:1.75;font-size:.92rem;max-height:300px;overflow:hidden}
+.post .pb:after{content:"";position:absolute;left:0;right:0;bottom:0;height:80px;background:linear-gradient(rgba(255,253,247,0),var(--card))}
+.post.full .pb{max-height:none}.post.full .pb:after{display:none}
+.pmore{display:block;width:100%;border:0;border-top:3px solid var(--ink);background:var(--card);font-weight:800;padding:10px;color:var(--blue)}
+.pmore:hover{background:var(--paper)}
+
+/* ---------- editor sheet ---------- */
+#modal{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(20,20,20,.45);opacity:0;pointer-events:none;transition:opacity .25s;padding:16px}
+#modal.open{opacity:1;pointer-events:auto}
+.sheet{position:relative;background:var(--card);border:3px solid var(--ink);box-shadow:10px 10px 0 var(--sh);width:min(520px,100%);max-height:92vh;overflow:auto;padding:22px 22px 18px 36px;transform:translateY(30px) rotate(1deg);transition:transform .45s cubic-bezier(.2,1.3,.4,1)}
+.sheet.wide{width:min(660px,100%)}
+#modal.open .sheet{transform:none}
+.sheet:before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:var(--red)}
+.sheet h2{margin:0 0 10px;font-size:1.5rem;font-weight:800}
+.sheet .x{position:absolute;right:10px;top:10px;z-index:4}
+.sheet .eyebrow{margin-bottom:10px}
+.who-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:7px}
+.wt{position:relative;overflow:hidden;border:3px solid var(--ink);padding:8px 9px 6px;text-align:left;min-height:64px;display:flex;flex-direction:column;justify-content:flex-end;font-weight:800;line-height:1.1;transition:transform .15s,opacity .15s,box-shadow .15s}
+.wt small{font-weight:600;font-size:.7rem;opacity:.85}
+.wt .i{position:absolute;right:-2px;top:-16px;font-size:3.4rem;line-height:1;color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.6)}
+.wt.c-pink .i,.wt.c-mint .i,.wt.c-yel .i,.wt.c-orange .i,.wt.c-lav .i{-webkit-text-stroke-color:rgba(20,20,20,.25)}
+.who-tiles .wt:not(.on){opacity:.42}
+.who-tiles .wt:hover{opacity:1}
+.wt.on{transform:translate(-3px,-3px);box-shadow:4px 4px 0 var(--sh)}
+.dstrip{display:grid;grid-auto-flow:column;grid-auto-columns:54px;gap:5px;overflow-x:auto;padding:6px 6px 10px 2px;scrollbar-width:thin}
+.dt{border:2px solid var(--ink);background:var(--card);padding:4px 0 5px;text-align:center;font-weight:800;font-size:.68rem;line-height:1.25;transition:transform .12s}
+.dt b{display:block;font:800 1.25rem "JetBrains Mono"}
+.dt.we{color:var(--red)}
+.dt.hol{background:repeating-linear-gradient(45deg,var(--card) 0 5px,#f6d6cf 5px 10px)}
+.dt.past{color:#a39d90;border-color:#b9b2a2}
+.dt.today b{text-decoration:underline 3px var(--red);text-underline-offset:3px}
+.dt.on{background:var(--ink);color:var(--paper);border-color:var(--ink);transform:translateY(-4px);box-shadow:0 4px 0 var(--red)}
+.other{font-size:.72rem;font-weight:700;letter-spacing:0;color:var(--blue);margin-left:10px;cursor:pointer;position:relative}
+.other input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.stamps{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:4px 0}
+.stp{border:3px solid currentColor;background:transparent;font-weight:800;font-size:.9rem;padding:5px 13px;letter-spacing:.04em;opacity:.35;transform:rotate(-2deg);transition:opacity .15s,transform .15s}
+.stp:hover{opacity:.7}
+.stp.on{opacity:1;transform:rotate(-5deg) scale(1.06)}
+.stp.plan{color:var(--blue)}.stp.done{color:var(--ok)}.stp.cancel{color:var(--mut)}
+.stp.paid{color:var(--ok);opacity:1}.stp.owe{color:var(--red);opacity:1}
+.stp.sep{border:0;opacity:1;color:var(--mut);padding:0;transform:none;cursor:default}
+.pband{position:relative;margin:-22px -22px 4px -36px;padding:20px 60px 16px 36px;min-height:138px;overflow:hidden;border-bottom:3px solid var(--ink);display:flex;flex-direction:column;justify-content:flex-end;transition:background .25s,color .25s}
+.pband .big{position:absolute;right:20px;top:-30px;font-size:9.5rem;font-weight:800;line-height:1;color:transparent;-webkit-text-stroke:3px rgba(255,255,255,.5);pointer-events:none}
+.pband.c-yel .big,.pband.c-orange .big,.pband.c-lav .big{-webkit-text-stroke-color:rgba(20,20,20,.22)}
+.pband .eyebrow{position:relative;margin:0 0 2px;opacity:.85}
+.nmin{position:relative;border:0;border-bottom:3px dashed currentColor;background:transparent;color:inherit;font-size:2.3rem;font-weight:800;outline:none;padding:0;width:100%;max-width:340px}
+.nmin::placeholder{color:inherit;opacity:.45}
+.pband p{position:relative;margin:6px 0 0;font-weight:700;font-size:.85rem;opacity:.9}
+.sw{display:flex;gap:7px;flex-wrap:wrap;max-width:300px}
+.sw button{width:34px;height:34px;border:3px solid var(--ink);transition:transform .12s,box-shadow .12s}
+.sw button.on{transform:translateY(-4px);box-shadow:0 4px 0 var(--ink)}
+.slotl{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.slc{display:inline-flex;align-items:center;gap:8px;border:3px solid var(--ink);background:var(--paper);padding:3px 3px 3px 10px;font-weight:800;font-size:.88rem;box-shadow:3px 3px 0 var(--sh)}
+.slc b{font-family:"JetBrains Mono"}
+.slc button{border:0;background:var(--ink);color:var(--paper);width:24px;height:24px;font-size:.7rem}
+.slc button:hover{background:var(--red)}
+.slotadd{display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:var(--paper);padding:12px;border-left:6px solid var(--yel)}
+.slotadd .step b{font-size:1.15rem}
+.slotadd .step button{height:36px;width:32px}
+
+/* ================= v7 design layer ================= */
+main{padding-top:30px}
+.sec{margin-bottom:56px}
+.sh{display:flex;align-items:center;gap:14px;margin:0 0 20px;flex-wrap:wrap}
+.sh .no{font:800 .85rem "JetBrains Mono";color:var(--paper);background:var(--red);padding:3px 7px}
+.sh h2{margin:0;font-size:2.1rem;font-weight:800;line-height:1.1;letter-spacing:-.01em}
+.sh .rule{flex:1;height:3px;background:var(--ink);min-width:30px}
+.lab{font:700 .7rem "JetBrains Mono";letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
+.money{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);background:var(--card);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);margin-bottom:22px;animation:enter .6s both}
+.money .mhero{position:relative;padding:22px 28px 24px 36px;border:0;border-right:3px solid var(--ink);box-shadow:none;margin:0;background:none;animation:none}
+.money .mhero:before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:var(--red)}
+.money .amount{margin:4px 0 14px}
+.mfig{display:flex;flex-direction:column}
+.fg{flex:1;display:grid;grid-template-columns:10px 1fr auto;gap:16px;align-items:center;padding:14px 22px 14px 18px;border:0;border-bottom:2px solid var(--grid);background:none;text-align:left;font:inherit;color:inherit;animation:enter .6s both;animation-delay:calc(.15s + var(--i,0)*80ms)}
+.fg:last-child{border-bottom:0}
+button.fg{cursor:pointer;transition:background .15s}
+button.fg:hover{background:#fbf3dc}
+.fg i{align-self:stretch;min-height:38px}
+.fg span{font-weight:800;font-size:.95rem;line-height:1.25}
+.fg small{display:block;font-weight:600;font-size:.72rem;color:var(--mut)}
+.fg strong{font:800 1.75rem "JetBrains Mono";letter-spacing:-.04em}
+.fg.red strong{color:var(--red)}
+.mchart{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);background:var(--card);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);animation:enter .6s both;animation-delay:.2s}
+.chart-wrap{padding:16px 20px 32px;border-right:3px solid var(--ink)}
+.holwrap{padding:16px 18px}
+.mchart .chart{background-color:transparent}
+.holwrap .day{border:0;background:var(--paper)}
+.holwrap .day.past{background:transparent;color:#b3ab9b}
+.holwrap .day:hover{box-shadow:none;background:var(--stbg)}
+.holwrap .day.today{background:var(--blue);color:#fff}
+.holwrap .day.holiday{background:var(--red);color:#fff}
+@media (max-width:860px){.money,.mchart{grid-template-columns:1fr}.money .mhero{border-right:0;border-bottom:3px solid var(--ink)}.chart-wrap{border-right:0;border-bottom:3px solid var(--ink)}}
+
+/* next-session banner */
+.nb{position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:30px;align-items:center;background:var(--card);color:var(--ink);border:3px solid var(--ink);padding:22px 26px 22px 42px;box-shadow:7px 7px 0 var(--sh);margin-bottom:26px;overflow:hidden;animation:enter .5s both}
+.nb .stripe{position:absolute;left:0;top:0;bottom:0;width:14px;border-right:3px solid var(--ink)}
+.nb .ghost{position:absolute;right:200px;top:-54px;font-size:12rem;font-weight:800;line-height:1;color:transparent;-webkit-text-stroke:3px rgba(20,20,20,.07);pointer-events:none}
+.nb .eb{font:700 .72rem "JetBrains Mono";letter-spacing:.14em;color:var(--mut)}
+.nb .tm{font:800 4.2rem/1 "JetBrains Mono";color:var(--ink);letter-spacing:-.06em;margin-top:4px}
+.nb .nm{font-size:1.7rem;font-weight:800;line-height:1.1;display:flex;align-items:center;gap:10px}
+.nb .nm i{width:14px;height:14px;border:2px solid var(--ink);flex:none}
+.nb .meta{color:var(--mut);font-size:.88rem;font-weight:600;margin-top:4px}
+.nb .ch{margin-top:10px;font-weight:800;font-size:.95rem}
+.nb .rem{margin-top:6px;font-size:.82rem;color:var(--mut);font-weight:700}
+.nb .go-y{position:relative;background:var(--yel);color:var(--ink);border:3px solid var(--ink);font-weight:800;padding:11px 18px;box-shadow:4px 4px 0 var(--sh);transition:transform .1s,box-shadow .1s}
+.nb .go-y:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--sh)}
+@media (max-width:700px){.nb{grid-template-columns:1fr;gap:12px}.nb .tm{font-size:3.2rem}}
+.alert{display:flex;gap:10px;align-items:center;border-left:6px solid var(--yel);background:var(--stbg);padding:9px 12px;font-size:.85rem;font-weight:600;margin:-8px 0 22px}
+#whof.who-f{gap:4px 16px;margin-bottom:18px}
+#whof.who-f button{border:0;background:none;padding:4px 0;font-size:.85rem;border-bottom:3px solid transparent;transform:none}
+#whof.who-f button i{border-radius:50%;width:11px;height:11px}
+#whof.who-f button.on{color:var(--ink);background:none;border-bottom-color:var(--ink)}
+#whof.who-f button:not(.on){color:var(--mut)}
+
+/* day card + rows */
+.dc{background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);margin-bottom:18px;animation:enter .45s both;animation-delay:calc(var(--i,0)*40ms)}
+.dch{display:flex;align-items:center;gap:14px;padding:10px 12px 10px 16px;border-bottom:3px solid var(--ink)}
+.dch b{font:800 2.1rem/1 "JetBrains Mono";letter-spacing:-.06em;min-width:2ch}
+.dch .dw{font-weight:800;font-size:1.02rem;line-height:1.15}
+.dch .dw small{display:block;font-weight:600;font-size:.74rem;color:var(--mut)}
+.dch .sp{flex:1}
+.dch .dsum{font:700 .78rem "JetBrains Mono";color:var(--mut)}
+.dch .htag{font-size:.7rem;font-weight:800;border:2px solid currentColor;padding:0 7px}
+.dch .dadd{border:2px solid currentColor;background:transparent;color:inherit;width:32px;height:32px;font-weight:800;font-size:1rem;opacity:.55;transition:opacity .15s}
+.dch .dadd:hover{opacity:1}
+.dc.today .dch{background:var(--red);color:#fff}
+.dc.today .dch small,.dc.today .dch .dsum{color:#fff;opacity:.85}
+.dc.hol .dch{background:#fbe4dd}.dc.hol .dch .htag{color:var(--red)}
+.dc.today.hol .dch{background:var(--red)}.dc.today.hol .dch .htag{color:#fff}
+.rw{position:relative;display:grid;grid-template-columns:8px 30px 86px minmax(0,1fr) auto;align-items:center;gap:0 16px;padding:13px 18px 13px 0;border-top:2px solid var(--grid);cursor:pointer;transition:background .15s}
+.dch + .rw,.rw:first-child{border-top:0}
+.rw:hover{background:#fbf5e6}
+.rw .cb{align-self:stretch;margin:-13px 0}
+.rw .tm{font:800 1.5rem/1 "JetBrains Mono";letter-spacing:-.04em}
+.rw .tm small{display:block;font-size:.68rem;color:var(--mut);margin-top:4px;font-weight:700;letter-spacing:0}
+.rw .nm{min-width:0}
+.rw .nm b{display:block;font-size:1.08rem;font-weight:800}
+.rw .nm small{display:block;font-size:.8rem;color:var(--mut);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rw .st{display:flex;justify-content:flex-end;min-width:96px}
+.rw .tools{position:absolute;right:128px;top:50%;transform:translateY(-50%);display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.rw:hover .tools,.rw:focus-within .tools{opacity:1}
+.rw .tools button{width:30px;height:30px;border:2px solid var(--ink);background:var(--card);font-size:.8rem}
+.rw .tools button:hover{background:var(--yel)}.rw .tools button.del:hover{background:var(--red);color:#fff}
+@media (hover:none){.rw .tools{display:none}}
+.rw.cancel>span:not(.tools),.rw.holi>span:not(.tools){opacity:.45}
+.rw.cancel .tm,.rw.cancel .nm b{text-decoration:line-through}
+.rw.pv{cursor:default}.rw.pv:hover{background:none}
+.st .amt{font:800 1.05rem "JetBrains Mono";color:var(--mut)}
+@media (max-width:560px){.rw{grid-template-columns:6px 28px 62px minmax(0,1fr) auto;gap:0 10px;padding-right:10px}.rw .tm{font-size:1.2rem}.rw .st{min-width:0}.dch{gap:10px}.dch b{font-size:1.7rem}}
+.agenda .ab{padding:0;gap:0}
+.agenda .ab .dlr{margin:12px 14px 0}
+.agenda .ab .free{padding:26px 0}
+.agenda .acts{border-top:3px solid var(--ink);padding-top:14px}
+
+
+/* composer polish */
+.tok.who b{font-size:1.2rem}
+.picker{position:relative}
+.dt{position:relative}
+.dt .dots{display:block;height:8px;line-height:6px;font-size:.8rem;letter-spacing:-1px;color:var(--mut)}
+.dt.on .dots{color:var(--yel)}
+.dt em{position:absolute;left:50%;top:-14px;transform:translateX(-50%);font-style:normal;font-size:.6rem;color:var(--mut);white-space:nowrap}
+.dt.reg{box-shadow:inset 0 -4px 0 var(--blue)}
+.dt.reg.on{box-shadow:0 4px 0 var(--red),inset 0 -4px 0 var(--blue)}
+.dstrip{padding-top:18px}
+.einfo{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:10px 2px 0;font-size:.82rem;font-weight:700}
+.einfo .lab{margin-right:4px}
+.einfo .oc{display:inline-flex;align-items:center;gap:5px;font-family:"JetBrains Mono";font-size:.76rem}
+.einfo .oc i{width:10px;height:10px;border:2px solid var(--ink)}
+.einfo .oc.bad{color:var(--red);text-decoration:underline wavy}
+.einfo .oc.free{color:var(--ok);font-family:inherit}
+.einfo .warn{color:var(--red);font-weight:800}
+.who-tiles{grid-template-columns:repeat(auto-fill,minmax(118px,1fr))}
+.who-tiles .wt{min-height:72px}
+.who-tiles .wt small{margin-top:2px}
+
+/* composer v10: calmer */
+.picker{border-width:3px;background:var(--card);padding:16px}
+.pcs{display:flex;flex-wrap:wrap;gap:8px}
+.pc:not(.on){background:var(--card)}
+.pc{display:inline-flex;align-items:center;gap:8px;border:2px solid var(--ink);font-weight:800;font-size:.92rem;padding:7px 13px;transition:transform .12s,box-shadow .12s}
+.pc i{width:12px;height:12px;border:2px solid var(--ink)}
+.pc:hover{transform:translate(-1px,-1px);box-shadow:2px 2px 0 var(--sh)}
+.pc.on{box-shadow:3px 3px 0 var(--sh);transform:translate(-2px,-2px)}
+.pc.on i{border-color:currentColor;background:transparent}
+.dt .dots{display:none}
+.dt.reg{box-shadow:none}.dt.reg:after{content:"";position:absolute;left:50%;bottom:3px;width:5px;height:5px;border-radius:50%;background:var(--blue);transform:translateX(-50%)}
+.dt.reg.on{box-shadow:0 4px 0 var(--red)}.dt.reg.on:after{background:var(--yel)}
+.ewarn{font-size:.8rem;font-weight:800;color:var(--red)}
+.tokbar{box-shadow:none}
+
+/* free-time week grid */
+.agwrap{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:900px){.agwrap{grid-template-columns:minmax(0,1fr)}}
+.agbar{margin-bottom:12px}
+.ag{display:grid;grid-template-columns:40px repeat(7,minmax(0,1fr));gap:2px;background:var(--ink);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh)}
+.ag-c{background:var(--ink)}
+.ag-h{border:0;background:var(--card);padding:6px 0 5px;text-align:center;line-height:1.15;transition:background .15s}
+.ag-h b{display:block;font-size:.82rem;font-weight:800}
+.ag-h span{font:700 .72rem "JetBrains Mono";color:var(--mut)}
+.ag-h.on{background:var(--yel)}.ag-h.on span{color:var(--ink)}
+.ag-h.none{color:#b3ab9b}
+.ag-h.today b{color:var(--red)}
+.ag-t{background:var(--ink);color:var(--paper);font:700 .6rem "JetBrains Mono";text-align:center;padding-top:2px}
+.ag-x{border:0;height:21px;padding:0;background:var(--card);font:800 .7rem "Anuphan";color:inherit}
+button.ag-x.free:hover{background:var(--stbg)}
+button.ag-x.blk:hover{filter:brightness(.95)}
+.ag-x.blk{background:repeating-linear-gradient(45deg,#e6dfcf 0 4px,#d4ccba 4px 8px)}
+.ag-x.hol{background:#fbe4dd}
+.ag-x.past{background:#e9e3d5}
+.ag-x.ses{display:grid;place-items:center}
+.aglg{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:.74rem;font-weight:700}
+.aglg i{display:inline-block;width:12px;height:12px;border:2px solid var(--ink);margin-right:5px;vertical-align:-2px}
+.aglg i.free{background:var(--card)}.aglg i.blk{background:repeating-linear-gradient(45deg,#e6dfcf 0 3px,#d4ccba 3px 6px)}.aglg i.ses{background:var(--blue)}.aglg i.hol{background:#fbe4dd}
+.tpl-e{display:none;width:100%;min-height:150px;border:2px solid var(--ink);background:var(--paper);padding:10px 12px;font:inherit;font-size:.9rem;line-height:1.65;resize:vertical;outline:none}
+.editing .tpl-e{display:block}
+.editing .bt,.editing .pb,.editing .pmore{display:none}
+.post .tpl-e{border:0;border-top:0}
+.tplhint{display:none}.editing .tplhint{display:inline}.editing #freeinfo{display:none}
+/* wrap-up */
+.wch{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.wch button{border:2px solid var(--ink);background:var(--card);min-height:46px;padding:3px 4px;text-align:left;font-size:.6rem;font-weight:700;line-height:1.15;display:flex;flex-direction:column;justify-content:space-between;transition:transform .12s}
+.wch button b{font:800 .85rem "JetBrains Mono"}
+.wch button.d{background:var(--blue);color:#fff}
+.wch button.n{background:#fbeeb8}
+.wch button.s{background:repeating-linear-gradient(45deg,var(--card) 0 4px,#e1d9c8 4px 8px);color:var(--mut)}
+.wch button.pick{background:var(--yel);color:var(--ink);transform:translateY(-4px);box-shadow:0 4px 0 var(--ink)}
+.nxs{font-size:.9rem;font-weight:700;color:var(--ok);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.nxs b{color:var(--ink)}
+.logl{display:flex;flex-direction:column;gap:8px}
+.lgi{font-size:.88rem;font-weight:600;border-left:4px solid var(--blue);padding-left:10px}
+.lgi b{font-family:"JetBrains Mono";font-size:.76rem;margin-right:6px}
+.lgi small{display:block;color:var(--mut);font-size:.76rem}
+@media (max-width:560px){.wch{grid-template-columns:repeat(5,minmax(0,1fr))}}
+.qin .chips{flex-wrap:nowrap;flex:none}
+
+/* tick box */
+.ckw{display:flex;align-items:center;justify-content:center}
+.ck{width:24px;height:24px;border:2.5px solid var(--ink);background:var(--card);font:900 .9rem/1 "Anuphan";color:#fff;display:grid;place-items:center;padding:0;transition:transform .12s,background .15s}
+.ck:hover{transform:scale(1.12);background:var(--stbg)}
+.ck.on{background:var(--ok);border-color:var(--ok)}
+.ck.on:hover{background:#25703d}
+.rw .cb{margin-right:-4px}
+/* wrap-up wizard */
+.whead{display:flex;align-items:center;gap:12px;margin:0 50px 14px 0}
+.wdot{width:46px;height:46px;border:3px solid var(--ink);display:grid;place-items:center;font-weight:800;font-size:1.5rem;flex:none}
+.whead b{display:block;font-size:1.3rem;font-weight:800;line-height:1.1}
+.whead small{font-size:.78rem;color:var(--mut);font-weight:600}
+.wprog{display:flex;align-items:center;gap:5px;margin-bottom:20px}
+.wprog i{flex:1;height:6px;background:var(--grid);transition:background .25s}
+.wprog i.d{background:var(--ink)}.wprog i.n{background:var(--yel);box-shadow:0 0 0 2px var(--ink)}
+.wprog span{font:700 .72rem "JetBrains Mono";color:var(--mut);margin-left:6px}
+.wbody{min-height:200px}
+.wbody.in{animation:wIn .3s ease both}
+@keyframes wIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+.wq{margin:0 0 14px;font-size:1.45rem;font-weight:800}
+.wq small{font-size:.8rem;color:var(--mut);font-weight:600;margin-left:6px}
+.wsub{margin-top:16px}
+.ln.big{font-size:1.15rem;padding:8px 2px}
+.wamt{font:800 3rem/1 "JetBrains Mono";letter-spacing:-.05em}
+.wpick{display:flex;gap:10px;margin:20px 0 14px;flex-wrap:wrap}
+.wopt{flex:1 1 160px;border:3px solid var(--ink);background:var(--card);font-weight:800;font-size:1rem;padding:14px 12px;transition:transform .12s,box-shadow .12s,background .15s}
+.wopt:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--sh)}
+.wopt.on{background:var(--ink);color:var(--paper);box-shadow:4px 4px 0 var(--yel);transform:translate(-2px,-2px)}
+.wopt.on.ok{background:var(--ok);border-color:var(--ink)}.wopt.on.bad{background:var(--red)}
+.wsum{display:flex;flex-direction:column;border:3px solid var(--ink)}
+.wsum button{display:grid;grid-template-columns:80px minmax(0,1fr) auto;gap:12px;align-items:center;border:0;border-bottom:2px solid var(--grid);background:var(--card);padding:11px 14px;text-align:left;font:inherit}
+.wsum button:last-child{border-bottom:0}
+.wsum button:hover{background:#fbf3dc}
+.wsum span{font:700 .7rem "JetBrains Mono";color:var(--mut);letter-spacing:.08em}
+.wsum b{font-weight:700;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wsum i{font-style:normal;font-size:.75rem;font-weight:800;color:var(--blue)}
+
+/* free-time day list */
+#agrid.ag{display:flex;flex-direction:column;gap:0;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh)}
+.fd{display:grid;grid-template-columns:28px 92px minmax(0,1fr) 190px 32px;align-items:center;gap:12px;padding:11px 12px;border-bottom:2px solid var(--grid)}
+.fd:last-child{border-bottom:0}
+.fd.none .fdn,.fd.none .ftx{color:#b3ab9b}
+.fck{width:24px;height:24px;border:2.5px solid var(--ink);background:var(--card);font:900 .9rem/1 "Anuphan";color:var(--ink);display:grid;place-items:center;padding:0}
+.fck:disabled{border-color:#cfc8b8;cursor:default}
+.fd.on .fck{background:var(--yel)}
+.fdn b{font-weight:800}.fdn span{font:700 .78rem "JetBrains Mono";color:var(--mut)}
+.fbar{display:flex;height:12px;border:2px solid var(--ink);background:var(--card);min-width:80px}
+.fbar i{flex:1}
+.fbar i.free{background:var(--yel)}.fd:not(.on) .fbar i.free{background:#f6e7ad}
+.fbar i.blk,.fbar i.past{background:transparent}
+.fbar i.hol{background:#fbe4dd}
+.ftx{font:700 .78rem/1.5 "JetBrains Mono";text-align:right}
+.fed{width:30px;height:30px;border:0;background:transparent;font-size:.9rem;opacity:.5;transition:opacity .15s}
+.fed:hover,.fd.open .fed{opacity:1}
+.fd.open{background:var(--paper)}
+.fhrs{grid-column:1/-1;display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:3px;padding:4px 0 2px}
+.fh.free{background:var(--yel)}
+.fh{border:2px solid var(--ink);font:700 .62rem "JetBrains Mono";padding:6px 0;text-align:center;color:var(--ink)}
+.fh.blk{background:var(--card);color:#b3ab9b;border-color:#cfc8b8}
+.fh.past{background:transparent;border-color:transparent;color:#cfc8b8}
+.fh.ses{color:#fff}
+button.fh:hover{transform:translateY(-2px)}
+.fnote{grid-column:1/-1;font-size:.7rem;font-weight:600;color:var(--mut);margin-top:4px}
+@media (max-width:620px){.fd{grid-template-columns:26px 1fr auto 30px}.fbar{grid-column:2/4;grid-row:2}.ftx{grid-column:3}.fhrs{grid-template-columns:repeat(7,minmax(0,1fr))}}
+
+/* mini card: chapter + last note */
+.sc:not(.open):not(.addcard){height:318px}
+.sc:not(.open) .band{flex:none;height:112px}
+.sc:not(.open) .band .big{font-size:8.5rem;bottom:-38px}
+.sc .foot{flex:1;display:flex;flex-direction:column;gap:0;padding:12px 16px 14px;min-height:0}
+.chr{display:flex;align-items:baseline;gap:8px;margin-top:12px;min-width:0}
+.chn{font:800 .78rem "JetBrains Mono";background:var(--yel);border:2px solid var(--ink);padding:0 6px;flex:none}
+.chm{font-weight:800;font-size:.98rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.chc{font:700 .7rem "JetBrains Mono";color:var(--mut);flex:none}
+.sc .mstrip{margin-top:7px}
+.lastn{margin-top:12px;padding:8px 10px 8px 12px;background:var(--paper);border-left:4px solid var(--blue);min-height:0;overflow:hidden}
+.lastn .lab{display:block;font-size:.6rem}
+.lastn p{margin:3px 0 0;font-size:.86rem;font-weight:700;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lastn small{display:block;font-size:.72rem;color:var(--mut);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.lastn.empty{border-left-color:var(--dash)}.lastn.empty p{color:var(--mut);font-weight:600;font-size:.8rem}
+.addcard{height:318px!important}
+.bub .bf>span:last-child{margin-left:auto;display:flex;gap:6px;align-items:center}
+
+/* wide drawers: ~80% of the screen, layouts use the room */
+.drawer{width:80vw!important;container-type:inline-size}
+@media (max-width:900px){.drawer{width:96vw!important}}
+.mc .ev em{display:none;font-style:normal;font-family:"JetBrains Mono";font-size:.64rem;margin-right:5px;opacity:.85}
+@container (min-width:1150px){
+  .calwrap{grid-template-columns:minmax(0,2.1fr) minmax(320px,1fr)}
+  .mc{min-height:112px;padding:8px}
+  .mc .ev{font-size:.74rem;padding:2px 7px}
+  .mc .ev em{display:inline}
+  .calhead .mn{font-size:4rem}
+  .kit{grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:30px}
+  .kit .agwrap{grid-column:1}
+  .kit>section:last-child{grid-column:2!important;grid-row:2;align-self:start}
+  .post .pb{max-height:560px}
+  .scards{grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:26px}
+  .ohead{min-height:190px;padding:26px 30px 24px}
+  .ohead h3{font-size:3.8rem}
+  .ostats b{font-size:1.9rem}
+  .ostats>div{padding:18px 24px}
+  .obody .col{padding:24px 28px}
+}
+@container (min-width:1500px){
+  .scards{grid-template-columns:repeat(auto-fill,minmax(285px,1fr))}
+  .kit .agwrap{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
+.cpy,.ghostb{white-space:nowrap}
+.bub .bf{gap:10px}
+
+/* bank hand-off */
+.bsheet{position:fixed;inset:0;z-index:999;background:var(--paper);transform:translateY(100%);transition:transform .38s cubic-bezier(.7,0,.2,1)}
+.bsheet.on{transform:none}
+body.frombank #lock .door,body.frombank #app{animation:fromBank .6s cubic-bezier(.2,.9,.3,1) both}
+@keyframes fromBank{from{opacity:0;transform:translateY(40px)}}
+/* ---------- misc ---------- */
+footer.live{display:flex;justify-content:space-between;align-items:center;color:#756149;font:.75rem "JetBrains Mono";margin-top:18px;flex-wrap:wrap;gap:6px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#887044;margin-right:8px;animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.ghost{border:0;background:transparent;color:#756149;font:.75rem "JetBrains Mono";padding:4px}
+.ghost:hover{color:var(--red)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:#fff;padding:12px 20px;border-left:6px solid var(--yel);transition:.25s;z-index:95;white-space:nowrap;font-weight:700;display:flex;gap:14px;align-items:center}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast button{border:2px solid #fff;background:transparent;color:var(--yel);font-weight:800;padding:1px 8px}
+button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.demo-flag{position:static;background:var(--yel);border:2px solid var(--ink);font:700 .7rem "JetBrains Mono";padding:3px 8px;box-shadow:3px 3px 0 var(--sh)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="kin" aria-hidden="true"><i class="k1"></i><i class="k2"></i><i class="k3"></i><i class="k4"></i><i class="k5"></i></div>
+
+<div id="lock">
+  <div class="door">
+    <h2><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>สอนพิเศษ</h2>
+    <div class="mut" style="font-size:.85rem">ส่วนตัว · ใส่รหัส 4 หลัก <span class="mono">(demo: 0000)</span></div>
+    <div class="pins" id="pins"><i></i><i></i><i></i><i></i></div>
+    <div class="keys" id="keys"></div>
+  </div>
+</div>
+
+<div id="app">
+<header>
+  <div class="bar1">
+    <a class="home" href="index.html" onclick="return toBank()">⌂ <span>คลังข้อสอบ</span></a>
+    <span class="title"><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>สอนพิเศษ <small>Teaching</small></span>
+    <div class="hnav">
+      <button class="hbtn" id="mprev" aria-label="เดือนก่อน">◀</button>
+      <span class="hbtn mon" id="mlabel"></span>
+      <button class="hbtn" id="mnext" aria-label="เดือนถัดไป">▶</button>
+      <button class="hbtn y" onclick="editSession()">＋ คาบ</button>
+    </div>
+  </div>
+</header>
+
+<nav id="stabs">
+  <button class="c-blue" onclick="openDrawer('cal')" title="ปฏิทินรายเดือน">ปฏิทิน</button>
+  <button class="c-red" onclick="openDrawer('stu')" title="นักเรียนทุกคน">นักเรียน</button>
+  <button class="c-yel" onclick="openDrawer('kit')" title="โพสต์ · ตอบแชท · เวลาว่าง">ข้อความ</button>
+</nav>
+
+<main>
+  <section class="sec" id="money">
+    <header class="sh"><span class="no">01</span><h2 id="mtitle">รายได้เดือนนี้</h2><span class="rule"></span></header>
+    <div class="money">
+      <div class="mhero">
+        <div class="lab">ได้รับแล้ว</div>
+        <div class="amount" id="income">฿0</div>
+        <div class="progress big" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="fill" id="mfill"></div></div>
+        <div class="pcap"><span id="mpct"></span><span>คาดทั้งเดือน <b class="mono" id="mfc"></b></span></div>
+        <div class="badge" id="mcmp"></div>
+      </div>
+      <div class="mfig">
+        <div class="fg" style="--i:0"><i class="c-blue"></i><span>ยังจะได้อีก<small>คาบที่นัดไว้เดือนนี้</small></span><strong id="sLeft">฿0</strong></div>
+        <button class="fg red" style="--i:1" onclick="openDrawer('stu');stuOwe=true;renderStudents(true)" title="ดูว่าใครค้าง"><i class="c-red"></i><span>ค้างชำระ<small>ทุกเดือนรวมกัน · แตะดู</small></span><strong id="sOwe">฿0</strong></button>
+        <div class="fg" style="--i:2"><i class="c-yel"></i><span>รับแล้วทั้งปี<small>ม.ค. ถึงตอนนี้</small></span><strong id="sAll">฿0</strong></div>
+      </div>
+    </div>
+    <div class="mchart">
+      <div class="chart-wrap"><div class="lab">6 เดือนล่าสุด · แตะแท่งเพื่อดูเดือนนั้น</div><div class="chart" id="chart"></div></div>
+      <div class="holwrap"><div class="lab" id="ctitle"></div><div class="calendar" id="calendar"></div><div class="cnote" id="cnote"></div></div>
+    </div>
+  </section>
+
+  <section class="sec sched" id="sched">
+    <header class="sh"><span class="no">02</span><h2>ตารางสอน</h2><span class="rule"></span>
+      <span class="seg" id="srange"><button data-r="week" class="on">7 วันข้างหน้า</button><button data-r="month">ทั้งเดือน</button><button data-r="past">ที่ผ่านมา</button></span>
+      <button class="go sm" onclick="editSession()">＋ เพิ่มคาบ</button></header>
+    <div id="nextcard"></div>
+    <div class="who-f" id="whof"></div>
+    <div id="slist"></div>
+  </section>
+  <footer class="live"><span class="demo-flag">DEMO · ข้อมูลตัวอย่าง</span><span><i class="dot"></i>สด · อัปเดต <span id="clock"></span> · บันทึกในเครื่องนี้</span><span><button class="ghost" id="reset">⟲ ล้างข้อมูลตัวอย่าง</button></span></footer>
+</main>
+</div>
+
+<div id="scrim" onclick="closeDrawer()"></div>
+<aside class="drawer" id="d-cal" aria-label="ปฏิทิน">
+  <div class="pdh"><b>ปฏิทิน</b><span class="pdhov">แตะวันเพื่อดูคาบ · ตั้งวันหยุดได้จากแผงขวา</span><button class="pdx" onclick="closeDrawer()" title="ปิด (Esc)">✕</button></div>
+  <div class="calwrap">
+    <div>
+      <div class="calhead"><span class="mn" id="cmn"></span><span class="yr" id="cyr"></span><span class="sp"></span>
+        <div class="calnav"><button id="cprev" aria-label="เดือนก่อน">◀</button><button id="ctoday">วันนี้</button><button id="cnext" aria-label="เดือนถัดไป">▶</button></div></div>
+      <div class="calfig" id="cfig"></div>
+      <div class="mcal" id="mcal"></div>
+      <div class="calleg"><span><i class="lh"></i>วันหยุด</span><span><i class="lt"></i>วันนี้</span><span><i class="ld"></i>เดดไลน์</span><span class="mut">ขีดฆ่า = ยกเลิก / ไม่นับ</span></div>
+    </div>
+    <div class="agenda" id="daypane"></div>
+  </div>
+</aside>
+<aside class="drawer" id="d-stu" aria-label="นักเรียน">
+  <div class="pdh"><b>นักเรียน</b><span class="pdhov" id="stuhov"></span><button class="go sm" onclick="editStudent()">＋ นักเรียน</button><button class="pdx" onclick="closeDrawer()" title="ปิด (Esc)">✕</button></div>
+  <div class="scards" id="scards"></div>
+</aside>
+<aside class="drawer" id="d-kit" aria-label="ข้อความ">
+  <div class="pdh"><b>ข้อความ</b><span class="pdhov">เปลี่ยนเรทที่เดียว ทุกข้อความเปลี่ยนตาม · กดคัดลอกแล้วไปวางใน LINE / FB</span><button class="pdx" onclick="closeDrawer()" title="ปิด (Esc)">✕</button></div>
+  <div class="kit">
+    <div class="ratebar" id="ratebar">
+      <div class="rtile c-red"><div class="l">เรียนเดี่ยว<small>บาท / ชั่วโมง</small></div><div class="v"><button data-r="solo" data-d="-25" aria-label="ลด">−</button><span>฿</span><input id="r1" type="number" inputmode="numeric" aria-label="เรทเดี่ยว"><button data-r="solo" data-d="25" aria-label="เพิ่ม">+</button></div></div>
+      <div class="rtile c-blue"><div class="l">เรียนกลุ่ม<small>บาท / ชั่วโมง / คน</small></div><div class="v"><button data-r="group" data-d="-25" aria-label="ลด">−</button><span>฿</span><input id="r2" type="number" inputmode="numeric" aria-label="เรทกลุ่ม"><button data-r="group" data-d="25" aria-label="เพิ่ม">+</button></div></div>
+    </div>
+    <div class="agwrap">
+      <section>
+        <h3 class="kh">ว่างวันไหน <small>ติ๊กวันที่จะส่ง · ✎ ปรับชั่วโมงที่ไม่ว่าง</small></h3>
+        <div class="agbar"><span class="seg" id="kweek"><button data-k="0" class="on">สัปดาห์นี้</button><button data-k="1">สัปดาห์หน้า</button><button data-k="2">อีก 2 สัปดาห์</button></span></div>
+        <div class="ag" id="agrid"></div>
+              </section>
+      <section>
+        <h3 class="kh">ข้อความเวลาว่าง <small>ส่งให้น้องที่ถามเวลา</small></h3>
+        <div class="bub me"><div class="bt" id="free"></div><textarea class="tpl-e" aria-label="แก้ข้อความเวลาว่าง"></textarea><div class="bf"><span><span id="freeinfo"></span><span class="tplhint">{วันว่าง} = รายการวันที่ติ๊ก</span></span><span><button class="ghostb" onclick="editTpl('free',this)">✎ แก้</button><button class="cpy" onclick="copy('free')">คัดลอก</button></span></div></div>
+        <h3 class="kh" style="margin-top:34px">ตอบแชท <small>ตอนมีคนทักมาถาม</small></h3>
+        <div class="bub me"><div class="bt" id="dm"></div><textarea class="tpl-e" aria-label="แก้ข้อความตอบแชท"></textarea><div class="bf"><span class="tplhint">ใช้ {เดี่ยว} {กลุ่ม} แทนเรท</span><span><button class="ghostb" onclick="editTpl('dm',this)">✎ แก้</button><button class="cpy" onclick="copy('dm')">คัดลอก</button></span></div></div>
+      </section>
+    </div>
+    <section style="grid-column:1/-1">
+      <h3 class="kh">โพสต์หานักเรียน <small>FB group / LINE OpenChat</small></h3>
+      <div class="post"><div class="ph"><span class="av"><span class="shapes"><i class="c"></i><i class="s"></i></span></span><div><b>พี่ปราช · สอนเคมี</b><small>โพสต์ · สาธารณะ</small></div><span style="margin-left:auto;display:flex;gap:6px;align-items:center"><button class="ghostb" onclick="editTpl('post',this)">✎ แก้</button><button class="cpy" onclick="copy('post')">คัดลอก</button></span></div><div class="pb" id="post"></div><textarea class="tpl-e" style="min-height:320px" aria-label="แก้โพสต์"></textarea><button class="pmore" onclick="const p=this.parentNode;p.classList.toggle('full');this.textContent=p.classList.contains('full')?'ย่อ ▴':'ดูทั้งโพสต์ ▾'">ดูทั้งโพสต์ ▾</button></div>
+    </section>
+  </div>
+</aside>
+
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+
+<script>
+/* =============================== data =============================== */
+const KEY = 'teach-demo-v3';
+const CH = ['ปฏิบัติการ','อะตอม','ตารางธาตุ','พันธะเคมี','โมล','สารละลาย','ปริมาณสัมพันธ์','แก๊ส','อัตรา','สมดุล','กรด-เบส','ไฟฟ้าเคมี','อินทรีย์','พอลิเมอร์'];
+const TH_M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const TH_MF = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const TH_D = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+const TH_DF = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+const COLORS = ['c-blue','c-red','c-yel','c-ok','c-orange','c-lav','c-pink','c-teal','c-brown','c-mint','c-plum','c-sky'];
+const STATUS = {plan:'นัดไว้', done:'สอนแล้ว', cancel:'ยกเลิก'};
+const pad = n => String(n).padStart(2,'0');
+const isoD = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const uid = () => Math.random().toString(36).slice(2,9);
+const NOW = new Date();
+
+function seed(){
+  const students = [
+    {id:'pl',name:'ปลื้ม',grade:'ม.6',subj:'chem',mode:'ออนไลน์',rate:300,color:0,slots:[[2,'18:00',1],[4,'20:00',2],[6,'20:00',1]],goal:'TCAS เคมี + เกรดเทอม',contact:'LINE',map:'ddddddddddnttt',feed:[['pro','2026-09-15','อธิบายไฟฟ้าเคมีเข้าใจกว่าที่โรงเรียน'],['con','2026-09-22','ขอเวลาจดก่อนเปลี่ยนหน้า']]},
+    {id:'ro',name:'รอบิตี้',grade:'ม.5',subj:'bio',mode:'ออนไลน์',rate:300,color:3,slots:[[2,'21:00',1]],goal:'เกรดชีวะเทอม 1',contact:'LINE',map:null,feed:[]},
+    {id:'sl',name:'ซีลี่',grade:'ม.4',subj:'chem',mode:'ออนไลน์',rate:300,color:2,slots:[[5,'20:00',1.5]],goal:'ปูพื้นฐาน ม.4',contact:'IG',map:'ddddnttttsssss',feed:[['pro','2026-09-25','ชอบที่ให้ลองทำก่อน']]},
+    {id:'kk',name:'กีกี้',grade:'ม.5',subj:'chem',mode:'ออนไซต์',rate:350,color:4,slots:[[6,'09:00',2]],goal:'เพิ่มเกรด',contact:'ผู้ปกครอง · LINE',map:'ddddddnttttsss',feed:[]},
+    {id:'km',name:'ไข่มุก',grade:'ม.6',subj:'chem',mode:'ออนไลน์',rate:300,color:5,slots:[[6,'12:00',2]],goal:'A-Level เคมี',contact:'LINE',map:'dddddddtdntttt',feed:[]},
+    {id:'lo',name:'ลีโอบดิน',grade:'ม.5',subj:'chem',mode:'ออนไลน์',rate:250,color:1,slots:[[6,'18:00',1.5]],goal:'กรด-เบส ให้รอดสอบ',contact:'LINE',map:'ddddddddddnsss',feed:[['pro','2026-08-30','น้ำเสียงดีแล้ว'],['con','2026-08-30','เขียนเสร็จอย่าเพิ่งเปลี่ยนหน้า รอให้จดก่อน']]},
+  ];
+  const sessions = [];
+  const unpaid = ['lo|2026-10-03','pl|2026-10-01','sl|2026-09-25'];
+  for (let d = new Date(2026,8,1); d <= new Date(2026,10,30); d.setDate(d.getDate()+1)){
+    const date = isoD(d), wd = d.getDay();
+    for (const s of students) for (const [w,t,h] of s.slots) if (w === wd){
+      const past = new Date(`${date}T${t}:00`) <= NOW;
+      const midterm = date >= '2026-10-05' && date <= '2026-10-09';
+      sessions.push({id:uid(), who:s.id, date, time:t, h, rate:s.rate, series:s.id+'-'+w+'-'+t,
+        status: midterm && past ? 'cancel' : past ? 'done' : 'plan', paid: past && !midterm && !unpaid.includes(s.id+'|'+date),
+        note: midterm ? 'สอบกลางภาค' : ''});
+    }
+  }
+  return {v:4, avail:defAvail(), tpl:defTpl(), students, sessions, history:{'2026-4':8500,'2026-5':11500,'2026-6':9800,'2026-7':12400}, holidays:{'2026-9':[5,6,7,8,9]}, rates:{solo:300,group:175}, deadlines:[{d:'2026-10-19',t:'ส่งรายงาน Ceutic 4'},{d:'2026-11-30',t:'สอบปลายภาค'}]};
+}
+let DB;
+try{ DB = JSON.parse(localStorage.getItem(KEY)); }catch{}
+if (!DB || DB.v !== 4) DB = seed();
+function defAvail(){ return {block:{0:[],1:[8,9,10,11,12,13,14,15,16],2:[8,9,10,11,12,13,14,15,16],3:[8,9,10,11,12,13,14,15,16],4:[8,9,10,11,12,13,14,15,16],5:[8,9,10,11,12,13,14,15,16],6:[]}}; }
+DB.avail ||= defAvail();
+function defTpl(){ return {free:"ช่วงนี้พี่ว่างประมาณนี้นะครับ\n{วันว่าง}\nสะดวกช่วงไหนบอกพี่ได้เลยครับ 😊", post:"📚 เปิดรับสอนพิเศษวิชาเคมี ระดับมัธยมศึกษา\nสวัสดีครับ 😊\nผมเป็นนักศึกษาเภสัชศาสตร์ ชั้นปีที่ 4 มหาวิทยาลัยมหิดล\nเปิดรับสอนพิเศษวิชาเคมี สำหรับนักเรียนระดับมัธยม ไม่ว่าจะเป็น\n✅ ปูพื้นฐานเคมีในห้องเรียน\n✅ เพิ่มเกรดและเสริมความเข้าใจ\n✅ เตรียมสอบเข้า ม.4 / TCAS / คณะสายวิทยาศาสตร์สุขภาพ\nผลงาน\n🏅 เหรียญทองแดง สอวน. ค่ายระดับชาติ สาขาเคมี\nรูปแบบการสอน\n📍 สอนได้ทั้งออนไลน์ ทั้งนอกสถานที่ในกรุงเทพฯ (สามารถตกลงสถานที่ได้)\n👤 เรียนเดี่ยว หรือ 👥 เรียนเป็นกลุ่ม\nอัตราค่าสอน\nเรียนเดี่ยว {เดี่ยว} บาท/ชั่วโมง\nเรียนกลุ่ม {กลุ่ม} บาท/ชั่วโมง/คน\nหากสนใจ สามารถทักมาสอบถามรายละเอียด รูปแบบการเรียน ตารางสอน หรือสอบถามผลงานเพิ่มเติมได้เลยครับ 😊", dm:"สอนเคมีครับมีทั้งปูพื้นฐาน เพิ่มเกรด สอบเข้า มีรูปแบบออนไลน์ และ ออนไซต์ถ้าไม่ไกลมากครับผม ค่าเรียนชม.ละ {เดี่ยว} บาท (เรียนกลุ่ม {กลุ่ม}/คน) สงสัยตรงไหนสอบถามเพิ่มได้ครับ ถ้าสนใจขอชื่อนักเรียนกับระดับชั้นไว้หน่อยนะครับผม"}; }
+DB.tpl ||= defTpl();
+DB.tpl.free ??= defTpl().free;
+let undoSnap = null;
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch{} }
+function snap(){ undoSnap = JSON.stringify(DB); }
+
+/* =============================== helpers =============================== */
+const $ = s => document.querySelector(s);
+const cash = n => '฿' + Math.round(n).toLocaleString('en-US');
+const st = id => DB.students.find(s => s.id === id) || (DB.archived || []).find(s => s.id === id);
+const colorOf = id => COLORS[(st(id)?.color ?? 0) % COLORS.length];
+const mkey = (y,m) => `${y}-${m}`;
+const atOf = s => new Date(`${s.date}T${s.time}:00`);
+const isHolD = date => { const [y,m,d] = date.split('-').map(Number); return (DB.holidays[mkey(y,m-1)] || []).includes(d); };
+const amt = s => s.rate * s.h;
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const later = fn => requestAnimationFrame(() => requestAnimationFrame(fn));
+const dLabel = date => { const x = new Date(date+'T00:00'); return `${TH_D[x.getDay()]}. ${x.getDate()} ${TH_M[x.getMonth()]}`; };
+const relDay = date => { const a = new Date(date+'T00:00'), b = new Date(NOW.getFullYear(),NOW.getMonth(),NOW.getDate()); const n = Math.round((a-b)/864e5); return n===0?'วันนี้':n===1?'พรุ่งนี้':n===-1?'เมื่อวาน':n>1&&n<=7?`อีก ${n} วัน`:n<-1&&n>-7?`${-n} วันก่อน`:dLabel(date); };
+const sorted = list => [...list].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
+// counts toward money unless cancelled; a planned one on a holiday drops out of the forecast
+const counts = s => s.status !== 'cancel' && !(s.status === 'plan' && isHolD(s.date));
+const needsConfirm = s => s.status === 'plan' && atOf(s) <= NOW;
+let toastT;
+function toast(t, undo){
+  const e = $('#toast'); e.innerHTML = ''; e.append(t);
+  if (undo && undoSnap){ const b = document.createElement('button'); b.textContent = 'เลิกทำ'; b.onclick = () => { DB = JSON.parse(undoSnap); undoSnap = null; save(); renderAll(); e.classList.remove('show'); }; e.append(b); }
+  e.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('show'), undo ? 4200 : 1800);
+}
+function count(el, target, ms = 950){
+  cancelAnimationFrame(el._f); const start = performance.now(), from = el._v || 0; el._v = target;
+  const tick = t => { const p = reduced ? 1 : Math.min((t-start)/ms, 1); el.textContent = cash(from + (target-from)*(1-Math.pow(1-p,3))); if (p < 1) el._f = requestAnimationFrame(tick); };
+  el._f = requestAnimationFrame(tick);
+}
+function copy(id){ const v = $('#'+id).value; (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(() => toast('คัดลอกแล้ว ✓'), () => { $('#'+id).select(); document.execCommand('copy'); toast('คัดลอกแล้ว ✓'); }); }
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* =============================== money maths =============================== */
+function monthSessions(y, m){ const p = `${y}-${pad(m+1)}`; return DB.sessions.filter(s => s.date.startsWith(p)); }
+function monthMoney(y, m){
+  const all = monthSessions(y, m).filter(counts);
+  const earned = all.filter(s => s.status==='done' && s.paid).reduce((a,s)=>a+amt(s),0);
+  const owe = all.filter(s => s.status==='done' && !s.paid).reduce((a,s)=>a+amt(s),0);
+  const left = all.filter(s => s.status==='plan').reduce((a,s)=>a+amt(s),0);
+  return {earned, owe, left, forecast: earned+owe+left, n: all.length};
+}
+const owedAll = () => DB.sessions.filter(s => s.status==='done' && !s.paid);
+function monthTotal(y, m){ const mm = monthMoney(y, m); return mm.n ? mm.forecast : (DB.history[mkey(y,m)] ?? 0); }
+
+
+/* =============================== to / from the bank =============================== */
+// back: a paper sheet drops over the page, the bank fades it away on arrival (sessionStorage "teach-back")
+function toBank(hash = ''){
+  try{ sessionStorage.setItem('teach-back', '1'); }catch{}
+  const p = document.createElement('div'); p.className = 'bsheet'; document.body.appendChild(p);
+  requestAnimationFrame(() => p.classList.add('on'));
+  setTimeout(() => { location.href = 'index.html' + hash; }, 380);
+  return false;
+}
+addEventListener('pageshow', () => document.querySelectorAll('.bsheet').forEach(p => p.remove()));
+// arriving from the bank's slide-up: the sheet that grew there is this page's paper; settle the content in
+try{ if (sessionStorage.getItem('teach-from-bank')){ sessionStorage.removeItem('teach-from-bank'); document.body.classList.add('frombank'); setTimeout(() => document.body.classList.remove('frombank'), 900); } }catch{}
+
+/* =============================== lock =============================== */
+(function(){
+  if (new URLSearchParams(location.search).has('open') || sessionStorage.getItem('teach-ok')) { $('#lock').remove(); return; }
+  let code = '';
+  $('#keys').innerHTML = ['1','2','3','4','5','6','7','8','9','⌫','0','↵'].map(k => `<button data-k="${k}">${k}</button>`).join('');
+  const paint = () => document.querySelectorAll('#pins i').forEach((p,i) => { p.classList.toggle('on', i < code.length); p.textContent = i < code.length ? '●' : ''; });
+  const press = k => {
+    if (k === '⌫') code = code.slice(0,-1); else if (k !== '↵' && code.length < 4) code += k;
+    paint();
+    if (code.length === 4){
+      if (code === '0000'){ try{ sessionStorage.setItem('teach-ok','1'); }catch{} $('#lock').classList.add('out'); setTimeout(() => $('#lock')?.remove(), 460); ['#income','#sLeft','#sOwe','#sAll'].forEach(s => $(s)._v = 0); renderMoney(); }
+      else { $('#lock').classList.add('shake'); setTimeout(() => { $('#lock').classList.remove('shake'); code=''; paint(); }, 380); }
+    }
+  };
+  $('#keys').onclick = e => { const k = e.target.dataset.k; if (k) press(k); };
+  addEventListener('keydown', e => { if (!$('#lock')) return; if (/^\d$/.test(e.key)) press(e.key); if (e.key === 'Backspace') press('⌫'); });
+})();
+
+/* =============================== MONEY =============================== */
+let my = NOW.getFullYear(), mm_ = NOW.getMonth();
+$('#mprev').onclick = () => { mm_--; if (mm_ < 0){ mm_ = 11; my--; } renderMoney(); renderSchedule(); };
+$('#mnext').onclick = () => { mm_++; if (mm_ > 11){ mm_ = 0; my++; } renderMoney(); renderSchedule(); };
+$('#reset').onclick = () => { if (confirm('ล้างทุกอย่างกลับเป็นข้อมูลตัวอย่าง?')){ DB = seed(); save(); renderAll(); toast('รีเซ็ตแล้ว'); } };
+function renderMoney(){
+  const isCur = my === NOW.getFullYear() && mm_ === NOW.getMonth();
+  $('#mlabel').textContent = `${TH_M[mm_]} ${String(my+543).slice(-2)}`;
+  $('#mtitle').textContent = isCur ? 'รายได้เดือนนี้' : `รายได้ ${TH_MF[mm_]} ${my+543}`;
+  const M = monthMoney(my, mm_);
+  let earned = M.earned, forecast = M.forecast;
+  if (!M.n){ forecast = DB.history[mkey(my,mm_)] ?? 0; earned = forecast; }
+  count($('#income'), earned);
+  const pct = forecast ? Math.round(earned/forecast*100) : 0;
+  $('#mfill').style.width = '0'; later(() => $('#mfill').style.width = pct + '%');
+  $('#mpct').textContent = `ได้แล้ว ${pct}%`;
+  $('#mfc').textContent = cash(forecast);
+  const months = []; for (let k = 1; k <= 6; k++){ let y = NOW.getFullYear(), m = NOW.getMonth()-k; while (m < 0){ m += 12; y--; } months.push(monthTotal(y,m)); }
+  const hist = months.filter(v => v > 0), avg = hist.length ? Math.round(hist.reduce((a,b)=>a+b,0)/hist.length) : 0;
+  const diff = forecast - avg;
+  $('#mcmp').textContent = `${diff >= 0 ? '▲' : '▼'}${cash(Math.abs(diff))} ${diff >= 0 ? 'เหนือ' : 'ใต้'}ค่าเฉลี่ย ${cash(avg)}`;
+  count($('#sLeft'), M.left);
+  count($('#sOwe'), owedAll().reduce((a,s)=>a+amt(s),0));
+  let yr = 0; for (let m = 0; m <= NOW.getMonth(); m++){ const x = monthMoney(NOW.getFullYear(), m); yr += x.n ? x.earned : (DB.history[mkey(NOW.getFullYear(),m)] ?? 0); }
+  count($('#sAll'), yr);
+  const cols = []; for (let k = 5; k >= 0; k--){ let y = my, m = mm_ - k; while (m < 0){ m += 12; y--; } cols.push([y,m]); }
+  const maxV = Math.max(...cols.map(([y,m]) => monthTotal(y,m)), avg, 1) * 1.1, H = 204;
+  $('#chart').innerHTML = `<div class="average" style="bottom:${26 + avg/maxV*H}px"><span>เฉลี่ย ${cash(avg)}</span></div>` + cols.map(([y,m], i) => {
+    const v = monthTotal(y,m), x = monthMoney(y,m), open = x.n && x.left > 0, sel = (y === my && m === mm_);
+    return `<button class="column ${sel?'sel':''}" title="${TH_M[m]}: ${cash(v)}" onclick="my=${y};mm_=${m};renderMoney();renderSchedule()"><div class="bar ${open?'forecast':''}" style="height:${Math.max(4, v/maxV*H)}px;--i:${i}"><span class="value">${open?'คาด ':''}${(v/1000).toFixed(1)}k</span>${open?`<div class="actual" style="height:0" data-h="${v ? x.earned/v*100 : 0}"></div>`:''}</div><span class="label">${TH_M[m]}</span></button>`;
+  }).join('');
+  later(() => document.querySelectorAll('#chart .actual').forEach(e => e.style.height = e.dataset.h + '%'));
+  renderHolCal();
+}
+function renderHolCal(){
+  const y = my, m = mm_, days = new Date(y, m+1, 0).getDate(), off = new Date(y, m, 1).getDay();
+  const list = DB.holidays[mkey(y,m)] || (DB.holidays[mkey(y,m)] = []);
+  const ses = monthSessions(y, m).filter(s => s.status !== 'cancel');
+  $('#ctitle').textContent = `${TH_M[m]} ${String(y+543).slice(-2)} · วันหยุด`;
+  let h = TH_D.map(d => `<div class="wd">${d}</div>`).join('') + '<span></span>'.repeat(off);
+  const today0 = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
+  for (let d = 1; d <= days; d++){
+    const date = new Date(y, m, d), iso = isoD(date);
+    h += `<button class="day${date < today0?' past':''}${iso === isoD(NOW)?' today':''}${ses.some(s => s.date === iso)?' has':''}${list.includes(d)?' holiday':''}" aria-pressed="${list.includes(d)}" data-d="${d}">${d}</button>`;
+  }
+  $('#calendar').innerHTML = h;
+  $('#calendar').onclick = e => { const d = +e.target.dataset.d; if (d) toggleHol(`${y}-${pad(m+1)}-${pad(d)}`); };
+  const left = monthSessions(y,m).filter(s => s.status === 'plan' && counts(s) && atOf(s) > NOW).length;
+  $('#cnote').textContent = `หยุด ${list.length} วัน · เหลือสอน ${left} คาบ · แตะวันที่เพื่อสลับ`;
+}
+
+/* =============================== SCHEDULE =============================== */
+const qsa = s => document.querySelectorAll(s);
+const endOf = s => { const [hh,mi] = s.time.split(':').map(Number), t = hh*60+mi+s.h*60; return `${pad(Math.floor(t/60)%24)}:${pad(t%60)}`; };
+const addMin = (t, d) => { const [h,m] = t.split(':').map(Number), x = ((h*60+m+d) % 1440 + 1440) % 1440; return `${pad(Math.floor(x/60))}:${pad(x%60)}`; };
+const relOnly = date => { const r = relDay(date); return r === dLabel(date) ? '' : r; };
+let range = 'week', whoF = new Set();
+$('#srange').onclick = e => { const r = e.target.dataset.r; if (!r) return; range = r; qsa('#srange button').forEach(b => b.classList.toggle('on', b.dataset.r === r)); renderSchedule(); };
+$('#whof').onclick = e => { const w = e.target.closest('button')?.dataset.w; if (!w) return; if (w === '*') whoF.clear(); else whoF.has(w) ? whoF.delete(w) : whoF.add(w); renderSchedule(); };
+function strip(map){ return `<div class="strip">${map.split('').map(c => `<i class="${c==='t'?'':c}"></i>`).join('')}</div>`; }
+function renderSchedule(){
+  $('#whof').innerHTML = DB.students.map(s => `<button class="${whoF.has(s.id)?'on':''}" data-w="${s.id}"><i class="${colorOf(s.id)}"></i>${esc(s.name)}</button>`).join('') + (whoF.size ? `<button data-w="*">ล้าง ✕</button>` : '');
+  const endAt = s => new Date(atOf(s).getTime() + s.h*36e5);
+  const nx = sorted(DB.sessions.filter(s => s.status==='plan' && counts(s) && endAt(s) > NOW))[0];
+  const live = nx && atOf(nx) <= NOW;
+  const confirmN = DB.sessions.filter(needsConfirm).length;
+  let nc = '';
+  if (nx){
+    const s = st(nx.who), cur = s?.map ? s.map.indexOf('n') : -1, lastCon = s ? [...s.feed].reverse().find(f => f[0]==='con') : null;
+    nc = `<div class="nb"><span class="stripe ${colorOf(nx.who)}"></span><span class="ghost">${esc((s?.name || '?')[0])}</span>
+      <div><div class="eb">${live ? `● กำลังสอนอยู่ · ถึง ${endOf(nx)}` : `คาบถัดไป · ${relDay(nx.date)}`}</div><div class="tm">${nx.time}</div></div>
+      <div style="position:relative;min-width:0"><div class="nm"><i class="${colorOf(nx.who)}"></i>${esc(s?.name)}</div>
+        <div class="meta">${esc(s?.grade)} · ${esc(s?.mode)} · ${nx.h} ชม. · ${cash(amt(nx))}</div>
+        ${cur >= 0 ? `<div class="ch">บท ${cur+1} · ${CH[cur]}${nx.note ? ` · ${esc(nx.note)}` : ''}</div>` : (nx.note || s?.goal ? `<div class="ch">${esc(nx.note || s?.goal)}</div>` : '')}
+        ${lastCon ? `<div class="rem">⚠ “${esc(lastCon[2])}”</div>` : ''}</div>
+      ${cur >= 0 ? `<button class="go-y" onclick="toBank('#ch=${String(cur+1).padStart(2,'0')}')" title="เปิดข้อสอบบทนี้ในคลัง">🎯 ข้อสอบบท ${cur+1}</button>` : '<span></span>'}</div>`;
+  }
+  if (confirmN) nc += `<div class="alert">⏳ <span>มี <b>${confirmN} คาบ</b> ที่เลยเวลาแล้วแต่ยังไม่ได้ยืนยัน · แตะตรา <b>สอนแล้ว?</b></span></div>`;
+  $('#nextcard').innerHTML = nc;
+  let list = DB.sessions.filter(s => !whoF.size || whoF.has(s.who));
+  if (range === 'week'){ const end = new Date(NOW); end.setDate(end.getDate()+7); list = sorted(list.filter(s => (atOf(s) > NOW || needsConfirm(s)) && atOf(s) < end)); }
+  else if (range === 'month'){ const p = `${my}-${pad(mm_+1)}`; list = sorted(list.filter(s => s.date.startsWith(p))); }
+  else list = [...list.filter(s => atOf(s) <= NOW)].sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time)).slice(0, 40);
+  const groups = []; for (const s of list){ const g = groups[groups.length-1]; if (g && g.date === s.date) g.items.push(s); else groups.push({date:s.date, items:[s]}); }
+  $('#slist').innerHTML = groups.length ? groups.map((g, gi) => dayCard(g.date, g.items, gi)).join('')
+    : `<div class="empty">ไม่มีคาบในช่วงนี้ · <button class="go sm" onclick="editSession()">＋ เพิ่มคาบ</button></div>`;
+}
+function dayCard(date, items, i = 0){
+  const hol = isHolD(date), x = new Date(date+'T00:00'), sum = items.filter(counts).reduce((a,s)=>a+amt(s),0), rel = relOnly(date);
+  return `<section class="dc ${date===isoD(NOW)?'today':''} ${hol?'hol':''}" style="--i:${i}">
+    <header class="dch"><b>${x.getDate()}</b><span class="dw">${TH_DF[x.getDay()]}<small>${TH_MF[x.getMonth()]}${rel ? ' · '+rel : ''}</small></span>${hol ? '<span class="htag">วันหยุด</span>' : ''}<span class="sp"></span><span class="dsum">${items.length} คาบ · ${cash(sum)}</span><button class="dadd" title="เพิ่มคาบวันนี้" onclick="editSession(null,'${date}')">＋</button></header>
+    ${items.map(s => rw(s)).join('')}</section>`;
+}
+function rw(s, pv){
+  const p = st(s.who), hol = isHolD(s.date) && s.status === 'plan';
+  return `<div class="rw ${pv?'pv':''} ${s.status==='cancel'?'cancel':''} ${hol?'holi':''}" ${pv ? '' : `onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}"`}>
+    <span class="cb ${colorOf(s.who)}"></span>
+    <span class="ckw">${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" ${pv ? 'tabindex="-1"' : ''} title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" onclick="event.stopPropagation();${pv ? '' : s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}</span>
+    <span class="tm">${s.time}<small>ถึง ${endOf(s)}</small></span>
+    <span class="nm"><b>${esc(p?.name ?? '?')}</b><small>${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</small></span>
+    <span class="st">${stampOf(s, pv)}</span>
+    ${pv ? '' : `<span class="tools">${s.status === 'done' ? `<button title="บันทึกการสอน" onclick="event.stopPropagation();wrapUp('${s.id}')">📝</button>` : ''}<button title="แก้ / เลื่อน" onclick="event.stopPropagation();editSession('${s.id}')">✎</button><button class="del" title="ลบ" onclick="event.stopPropagation();delSession('${s.id}')">🗑</button></span>`}
+  </div>`;
+}
+function stampOf(s, pv){
+  const a = cash(amt(s)), hol = isHolD(s.date) && s.status === 'plan';
+  const S = (cls, t, sm, act, tip) => act && !pv
+    ? `<button class="stamp ${cls}" title="${tip}" onclick="event.stopPropagation();${act}">${t}<small>${sm}</small></button>`
+    : `<span class="stamp ${cls}">${t}<small>${sm}</small></span>`;
+  if (s.status === 'cancel') return S('cancel', 'ยกเลิก', 'ไม่นับ');
+  if (needsConfirm(s)) return S('wait', 'สอนแล้ว?', 'แตะยืนยัน', `markDone('${s.id}')`, 'ยืนยันว่าสอนแล้ว');
+  if (hol) return S('cancel', 'วันหยุด', 'ไม่นับ');
+  if (s.status === 'plan') return `<span class="amt" title="นัดไว้">${a}</span>`;
+  if (s.paid) return S('paid', 'จ่ายแล้ว ✓', a, `togglePaid('${s.id}')`, 'แตะเพื่อกลับเป็นค้างจ่าย');
+  const days = Math.floor((NOW - atOf(s))/864e5);
+  return days > 7 ? S('late', `ค้าง ${days} วัน`, a, `togglePaid('${s.id}')`, 'แตะเมื่อได้เงินแล้ว') : S('owe', 'ค้างจ่าย', a, `togglePaid('${s.id}')`, 'แตะเมื่อได้เงินแล้ว');
+}
+function tk(s, o = {}){
+  const p = st(s.who), hol = isHolD(s.date) && s.status === 'plan';
+  return `<div class="tk ${o.sm?'sm':''} ${o.pv?'pv':''} ${s.status==='cancel'?'cancel':''} ${hol?'holi':''}" ${o.pv ? '' : `onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}"`}>
+    <span class="face ${colorOf(s.who)}"><b>${esc((p?.name || '?')[0])}</b></span>
+    <span class="mid">${o.date ? `<span class="dl">${dLabel(s.date)}${relOnly(s.date) ? ' · '+relOnly(s.date) : ''}</span>` : ''}<span class="when">${s.time}<small>– ${endOf(s)} · ${s.h} ชม.</small></span><span class="who">${esc(p?.name ?? '?')}</span>${s.note ? `<span class="nt">📝 ${esc(s.note)}</span>` : ''}</span>
+    <span class="stub">${stampOf(s, o.pv)}</span>
+    ${o.pv ? '' : `<span class="tools"><button title="แก้ / เลื่อน" onclick="event.stopPropagation();editSession('${s.id}')">✎</button><button class="del" title="ลบ" onclick="event.stopPropagation();delSession('${s.id}')">🗑</button></span>`}
+  </div>`;
+}
+function renderAll(){ renderMoney(); renderSchedule(); if (openD === 'cal') renderCal(); if (openD === 'stu') renderStudents(); if (openD === 'kit') writeKit(); }
+function markDone(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.status = 'done'; save(); renderAll(); wrapUp(id); }
+let wu = null;
+function undone(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.status = 'plan'; s.paid = false; save(); renderAll(); toast(`${st(s.who)?.name} · กลับเป็นนัดไว้`, true); }
+function wrapUp(id){
+  const s = DB.sessions.find(x => x.id === id), p = st(s.who), cur = p?.map ? p.map.indexOf('n') : -1;
+  const nextS = sorted(DB.sessions.filter(x => x.who === s.who && x.status === 'plan' && counts(x) && atOf(x) > atOf(s)))[0];
+  wu = {id, step:0, steps:[...(p.map ? ['ch'] : []), 'log', 'money', 'next', 'fb', 'sum'],
+    ch: cur, fin:false, topic: s.log?.topic || '', hw: s.log?.hw || '', h: s.h, paid: s.paid, fbk:'pro', fb:'',
+    addNext: !nextS, nextS, nd: shift(s.date, 7), nt: s.time, nh: s.h};
+  openModal('<div id="wiz"></div>', true);
+  $('#sheet').onclick = e => {
+    const t = e.target.closest('button'); if (!t) return; const d = t.dataset;
+    if (d.go){ const n = wu.step + +d.go; if (n >= 0 && n < wu.steps.length){ wu.step = n; return renderWu(); } return; }
+    if (d.jump !== undefined){ wu.step = +d.jump; return renderWu(); }
+    if (d.ch !== undefined) wu.ch = +d.ch;
+    else if (t.id === 'wfin') wu.fin = !wu.fin;
+    else if (d.h) wu.h = +d.h;
+    else if (d.pay) wu.paid = d.pay === '1';
+    else if (d.act) wu.addNext = d.act === 'more';
+    else if (d.d) wu.nd = d.d;
+    else if (d.nt) wu.nt = addMin(wu.nt, +d.nt);
+    else if (d.k) wu.fbk = d.k;
+    else return;
+    renderWu(true);
+  };
+  renderWu();
+}
+function wuBody(k, s, p){
+  if (k === 'ch') return `<h3 class="wq">วันนี้สอนถึงบทไหน?</h3><div class="wch" id="wch">${CH.map((c,j) => `<button data-ch="${j}" class="${p.map[j]==='t'?'':p.map[j]} ${wu.ch===j?'pick':''}"><b>${j+1}</b>${c}</button>`).join('')}</div>
+    <div class="wsub"><button class="chip ${wu.fin?'on':''}" id="wfin" ${wu.ch<0?'disabled':''}>${wu.ch<0 ? 'เลือกบทก่อน' : (wu.fin?'✓ ':'') + `จบบท ${wu.ch+1} แล้ว · ขึ้นบทต่อไป`}</button></div>`;
+  if (k === 'log') return `<h3 class="wq">สอนอะไรไป?</h3><input class="ln big" id="wtopic" value="${esc(wu.topic)}" placeholder="เช่น สมดุล · Le Chatelier ถึงข้อ 3" oninput="wu.topic=this.value">
+    <h3 class="wq" style="margin-top:26px">การบ้าน?</h3><input class="ln big" id="whw" value="${esc(wu.hw)}" placeholder="เช่น แบบฝึกหัดบท 10 ข้อ 1–10 · ไม่มีก็เว้นไว้" oninput="wu.hw=this.value">`;
+  if (k === 'money') return `<h3 class="wq">ค่าเรียนคาบนี้</h3><div class="wamt">${cash(s.rate * wu.h)}</div>
+    <div class="wsub"><span class="lab">สอนจริงกี่ชั่วโมง</span><div class="chips" style="margin-top:6px">${[1,1.5,2,2.5,3].map(h => `<button class="chip mono ${wu.h===h?'on':''}" data-h="${h}">${h}</button>`).join('')}</div></div>
+    <div class="wpick"><button class="wopt ${wu.paid?'on ok':''}" data-pay="1">ได้เงินแล้ว ✓</button><button class="wopt ${!wu.paid?'on bad':''}" data-pay="0">ยังค้างจ่าย</button></div>`;
+  if (k === 'next') return `<h3 class="wq">นัดครั้งหน้า?</h3>${wu.nextS ? `<div class="nxs">✓ มีนัดแล้ว · <b>${dLabel(wu.nextS.date)} ${wu.nextS.time}</b></div>` : ''}
+    <div class="wpick"><button class="wopt ${wu.addNext?'on':''}" data-act="more">${wu.nextS ? '＋ นัดเพิ่มอีกคาบ' : '＋ นัดเลย'}</button><button class="wopt ${!wu.addNext?'on':''}" data-act="none">${wu.nextS ? 'พอแล้ว' : 'ไว้ทีหลัง'}</button></div>
+    ${wu.addNext ? `<div class="dstrip" id="wstrip">${stripFrom(shift(s.date, 1), s.who)}</div>
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:4px"><div class="step"><button data-nt="-15" aria-label="ถอย 15 นาที">−</button><b>${wu.nt}</b><button data-nt="15" aria-label="เลื่อน 15 นาที">+</button></div><span class="mut" style="font-weight:700">${dLabel(wu.nd)} · ${wu.nh} ชม.</span></div>` : ''}`;
+  if (k === 'fb') return `<h3 class="wq">น้องพูดอะไรไหม? <small>ไม่มีก็ข้ามได้</small></h3><div class="chips" style="margin-bottom:10px"><button class="chip ${wu.fbk==='pro'?'on':''}" data-k="pro">ชม · ดีแล้ว</button><button class="chip ${wu.fbk==='con'?'on':''}" data-k="con">อยากให้แก้</button></div>
+    <input class="ln big" id="wfb" value="${esc(wu.fb)}" placeholder="น้องพูดว่า…" oninput="wu.fb=this.value">`;
+  const L = [];
+  if (p.map && wu.ch >= 0) L.push(['ch', 'บท', `บท ${wu.ch+1} ${CH[wu.ch]}${wu.fin ? ' · จบบทแล้ว' : ''}`]);
+  L.push(['log', 'สอน', esc(wu.topic) || '—'], ['log', 'การบ้าน', esc(wu.hw) || '—'], ['money', 'เงิน', `${cash(s.rate*wu.h)} · ${wu.h} ชม. · ${wu.paid ? 'ได้แล้ว' : 'ค้าง'}`],
+    ['next', 'นัดหน้า', wu.addNext ? `${dLabel(wu.nd)} ${wu.nt}` : (wu.nextS ? `มีแล้ว ${dLabel(wu.nextS.date)}` : 'ยังไม่นัด')], ['fb', 'น้องพูด', esc(wu.fb) || '—']);
+  return `<h3 class="wq">เช็กอีกที</h3><div class="wsum">${L.map(([k, a, b]) => `<button data-jump="${wu.steps.indexOf(k)}"><span>${a}</span><b>${b}</b><i>แก้</i></button>`).join('')}</div>`;
+}
+function renderWu(keep){
+  const s = DB.sessions.find(x => x.id === wu.id), p = st(s.who), k = wu.steps[wu.step], last = wu.step === wu.steps.length - 1;
+  const sc = $('#wstrip')?.scrollLeft;
+  $('#wiz').innerHTML = `<button class="pdx x" onclick="closeModal()" title="ปิด">✕</button>
+    <div class="whead"><span class="wdot ${colorOf(s.who)}">${esc(p.name[0])}</span><div><div class="lab">จบคาบแล้ว ✓</div><b>${esc(p.name)}</b><small>${dLabel(s.date)} · ${s.time}–${endOf(s)}</small></div></div>
+    <div class="wprog">${wu.steps.map((_, n) => `<i class="${n < wu.step ? 'd' : n === wu.step ? 'n' : ''}"></i>`).join('')}<span>${wu.step+1}/${wu.steps.length}</span></div>
+    <div class="wbody ${keep ? '' : 'in'}" id="wstep">${wuBody(k, s, p)}</div>
+    <div class="cfoot">${wu.step ? '<button class="ghostb" data-go="-1">← ย้อน</button>' : '<button class="ghostb" onclick="closeModal()">ข้ามทั้งหมด</button>'}<span class="sp"></span>
+      ${last ? '<button class="go" onclick="saveWu()">บันทึกคาบนี้</button>' : `${['fb','log'].includes(k) ? '<button class="ghostb" data-go="1">ข้าม</button>' : ''}<button class="go" data-go="1">ถัดไป →</button>`}</div>`;
+  if (keep && sc != null && $('#wstrip')) $('#wstrip').scrollLeft = sc;
+  else later(() => { const on = $('#wstrip .on'); if (on) $('#wstrip').scrollLeft = on.offsetLeft - 120; });
+  qsa('#wstrip .dt').forEach(b => b.classList.toggle('on', b.dataset.d === wu.nd));
+  if (!keep) $('#wstep input')?.focus();
+}
+function saveWu(){
+  snap();
+  const s = DB.sessions.find(x => x.id === wu.id), p = st(s.who);
+  s.h = wu.h; s.paid = wu.paid;
+  const topic = wu.topic.trim(), hw = wu.hw.trim();
+  if (topic || hw) s.log = {topic, hw}; else delete s.log;
+  if (p.map && wu.ch >= 0){
+    const a = p.map.split(''), c = wu.ch, nx = wu.fin ? a.findIndex((x, j) => j > c && x === 't') : -1;
+    a.forEach((x, j) => { if (x === 'n') a[j] = j < c ? 'd' : 't'; });
+    a[c] = wu.fin ? 'd' : 'n'; if (nx >= 0) a[nx] = 'n';
+    p.map = a.join('');
+  }
+  if (wu.fb.trim()) p.feed.push([wu.fbk, s.date, wu.fb.trim()]);
+  let added = '';
+  if (wu.addNext){ DB.sessions.push({id:uid(), who:s.who, date:wu.nd, time:wu.nt, h:wu.nh, rate:s.rate, status:'plan', paid:false, note: hw ? 'การบ้าน: ' + hw : '', series:null}); added = ` · นัด ${dLabel(wu.nd)} ${wu.nt}`; }
+  save(); closeModal(); renderAll(); toast(`บันทึกคาบ ${p.name}${added}`, true);
+}
+function togglePaid(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.paid = !s.paid; save(); renderAll(); toast(s.paid ? `✓ ${st(s.who)?.name} จ่ายแล้ว ${cash(amt(s))}` : `${st(s.who)?.name} · กลับเป็นค้างจ่าย`, true); }
+function delSession(id){
+  const s = DB.sessions.find(x => x.id === id); if (!s) return;
+  const rest = DB.sessions.filter(x => x.series && x.series === s.series && x.date > s.date && x.status === 'plan');
+  const go = all => { snap(); const kill = new Set([id, ...(all ? rest.map(r => r.id) : [])]); DB.sessions = DB.sessions.filter(x => !kill.has(x.id)); save(); closeModal(); renderAll(); toast(all ? `ลบ ${kill.size} คาบ · ${st(s.who)?.name} ตั้งแต่ ${dLabel(s.date)}` : `ลบคาบ ${st(s.who)?.name} ${dLabel(s.date)}`, true); };
+  if (!rest.length) return go(false);
+  openModal(`<h2>ลบคาบนี้?</h2><div class="dc" style="margin:6px 0 0">${rw(s, true)}</div><div class="mut" style="font-size:.85rem;margin-top:8px">${dLabel(s.date)}</div><p class="mut" style="margin:14px 0 0">เป็นคาบประจำ · หลังจากนี้ยังมีอีก ${rest.length} คาบ</p>
+    <div class="cfoot"><button class="ghostb" onclick="closeModal()">ยกเลิก</button><span class="sp"></span><button class="go sm" id="d1" style="background:var(--card);color:var(--ink)">ลบแค่คาบนี้</button><button class="go sm red" id="d2">ลบคาบนี้ + ทุกคาบหลังจากนี้</button></div>`);
+  $('#d1').onclick = () => go(false); $('#d2').onclick = () => go(true);
+}
+
+/* ---------- session composer: one ticket bar, one picker at a time ---------- */
+let edit = null;
+function stripFrom(iso, who = edit?.who){
+  const start = new Date(iso+'T00:00'), t0 = isoD(NOW); let h = '';
+  for (let k = 0; k < 35; k++){ const d = new Date(start); d.setDate(d.getDate()+k); const i = isoD(d), w = d.getDay();
+    const reg = (st(who)?.slots || []).some(x => x[0] === w);
+    h += `<button class="dt${w===0||w===6?' we':''}${isHolD(i)?' hol':''}${i<t0?' past':''}${i===t0?' today':''}${reg?' reg':''}" data-d="${i}">${TH_D[w]}<b>${d.getDate()}</b>${d.getDate()===1||k===0?`<em>${TH_M[d.getMonth()]}</em>`:''}</button>`; }
+  return h;
+}
+const shift = (iso, n) => { const d = new Date(iso+'T00:00'); d.setDate(d.getDate()+n); return isoD(d); };
+const NEXT = {who:'date', date:'time', time:'h', h:null};
+function editSession(id, date){
+  if (!id && !DB.students.length){ toast('เพิ่มนักเรียนก่อน'); return editStudent(); }
+  const s = id ? DB.sessions.find(x => x.id === id) : null, first = DB.students[0];
+  edit = s ? {...s, rep:0} : {id:null, who:first?.id, date: date || isoD(NOW), time: first?.slots[0]?.[1] || '18:00', h: first?.slots[0]?.[2] || 1, rate:first?.rate || DB.rates.solo, status:'plan', paid:false, note:'', rep:0};
+  edit.pick = s ? 'date' : 'who'; edit.more = false;
+  edit.from = s ? shift(s.date, -7) : date && date < isoD(NOW) ? shift(date, -3) : isoD(NOW);
+  openModal(`<button class="pdx x" onclick="closeModal()" title="ปิด">✕</button>
+    <h2>${s ? 'แก้ / เลื่อนคาบ' : 'คาบใหม่'}</h2>
+    <div class="tokbar" id="etok"></div>
+    <div class="picker" id="epk"></div>
+    <button class="moreb" id="emoreb"></button>
+    <div class="morep" id="emore" hidden>
+      <span class="eb2">โน้ต</span><input class="ln" id="enote" value="${esc(edit.note)}" placeholder="จะสอนอะไร · เช่น สมดุล Le Chatelier">
+      <div class="trow2">
+        <div><span class="eb2">เรท / ชม.</span><div class="step"><button data-rt="-25" aria-label="ลดเรท">−</button><b id="erate"></b><button data-rt="25" aria-label="เพิ่มเรท">+</button></div></div>
+        ${s ? `<div><span class="eb2">สถานะ</span><div class="stamps" id="estatus">${Object.entries(STATUS).map(([k,v]) => `<button class="stp ${k}" data-s="${k}">${v}</button>`).join('')}<button class="stp" id="epaid"></button></div></div>`
+            : `<div><span class="eb2">ทำซ้ำทุกสัปดาห์</span><div class="chips" id="erep">${[[0,'ครั้งเดียว'],[3,'4 สัปดาห์'],[7,'8 สัปดาห์'],[11,'ทั้งเทอม']].map(([v,t]) => `<button class="chip" data-rep="${v}">${t}</button>`).join('')}</div></div>`}
+      </div>
+    </div>
+    <div class="cfoot">${s ? `<button class="linkx" onclick="delSession('${s.id}')">ลบคาบนี้</button>` : ''}<span class="ewarn" id="ewarn"></span><span class="sp"></span><button class="ghostb" onclick="closeModal()">ยกเลิก</button><button class="go" onclick="saveSession()">${s ? 'บันทึก' : 'เพิ่มคาบ'}</button></div>`, true);
+  $('#sheet').onclick = e => {
+    const t = e.target.closest('button'); if (!t) return; const d = t.dataset;
+    let adv = false;
+    if (d.p) edit.pick = d.p;
+    else if (d.w){ edit.who = d.w; if (!edit.id){ const p = st(d.w); edit.rate = p.rate; if (p.slots[0]){ edit.time = p.slots[0][1]; edit.h = p.slots[0][2]; } } adv = true; }
+    else if (d.d){ edit.date = d.d; adv = true; }
+    else if (d.tm) edit.time = addMin(edit.time, +d.tm);
+    else if (d.t){ edit.time = d.t; adv = true; }
+    else if (d.h) edit.h = +d.h;
+    else if (d.rt) edit.rate = Math.max(0, edit.rate + +d.rt);
+    else if (d.s) edit.status = d.s;
+    else if (t.id === 'epaid') edit.paid = !edit.paid;
+    else if (d.rep !== undefined) edit.rep = +d.rep;
+    else if (t.id === 'emoreb') edit.more = !edit.more;
+    else return;
+    paintEdit(!!(d.p || adv));
+  };
+  $('#enote').oninput = e => { edit.note = e.target.value; };
+  paintEdit(true);
+}
+function picker(){
+  const k = edit.pick;
+  if (k === 'who') return `<div class="pcs">${DB.students.map(p => `<button class="pc ${edit.who===p.id ? 'on '+colorOf(p.id) : ''}" data-w="${p.id}"><i class="${colorOf(p.id)}"></i>${esc(p.name)}</button>`).join('')}</div>`;
+  if (k === 'date') return `<div class="dstrip" id="estrip">${stripFrom(edit.from)}</div><div class="sub"><label class="other" style="margin:0">📅 วันอื่น<input type="date" id="edate"></label></div>`;
+  if (k === 'time'){
+    const usual = [...new Set((st(edit.who)?.slots || []).map(x => x[1]))];
+    return `<div class="row"><div class="step"><button data-tm="-15" aria-label="ถอย 15 นาที">−</button><b>${edit.time}</b><button data-tm="15" aria-label="เลื่อน 15 นาที">+</button></div>
+      ${usual.length ? `<div class="chips">${usual.map(t => `<button class="chip mono ${t===edit.time?'on':''}" data-t="${t}">${t}</button>`).join('')}</div>` : ''}</div>
+`;
+  }
+  return `<div class="chips">${[1,1.5,2,2.5,3].map(h => `<button class="chip mono ${edit.h===h?'on':''}" data-h="${h}">${h} ชม.</button>`).join('')}</div>`;
+}
+function clashNote(){
+  const [h0,m0] = edit.time.split(':').map(Number), a = h0*60+m0, b = a + edit.h*60;
+  const clash = DB.sessions.filter(x => x.date === edit.date && x.id !== edit.id && x.status !== 'cancel' && (([h,m]) => h*60+m < b && h*60+m + x.h*60 > a)(x.time.split(':').map(Number)));
+  return clash.length ? `⚠ ชนกับ ${clash.map(x => `${esc(st(x.who)?.name)} ${x.time}`).join(', ')}` : isHolD(edit.date) ? '☂ วันหยุด · ไม่นับเงิน' : '';
+}
+function paintEdit(full){
+  const p = st(edit.who), tok = (k, lab, val, cls='') => `<button class="tok ${cls} ${edit.pick===k?'on':''}" data-p="${k}"><small>${lab}</small><b>${val}</b></button>`;
+  $('#etok').innerHTML = tok('who','ใคร',`<i class="${colorOf(edit.who)}"></i>${esc(p?.name ?? '—')}`, 'who') + tok('date','วันไหน',`${dLabel(edit.date)}`) + tok('time','เริ่ม',edit.time,'mono') + tok('h','นาน',`${edit.h} ชม.`,'mono')
+    + `<div class="tok amt"><small>รวม</small><b>${cash(edit.rate*edit.h)}</b></div>`;
+  if (full){
+    $('#epk').innerHTML = picker(); $('#epk').style.animation = 'none'; $('#epk').offsetHeight; $('#epk').style.animation = '';
+    const di = $('#edate'); if (di) di.onchange = e => { if (!e.target.value) return; edit.date = e.target.value; edit.from = shift(edit.date, -3); if (!edit.id) edit.pick = 'time'; paintEdit(true); };
+    later(() => { const on = $('#estrip .on'); if (on) $('#estrip').scrollLeft = on.offsetLeft - 120; });
+  } else $('#epk').innerHTML = picker();
+  qsa('#estrip .dt').forEach(b => b.classList.toggle('on', b.dataset.d === edit.date));
+  $('#ewarn').innerHTML = clashNote();
+  $('#emore').hidden = !edit.more;
+  $('#emoreb').textContent = edit.more ? 'ซ่อนตัวเลือก ▴' : (edit.id ? 'โน้ต · เรท · สถานะ ▾' : 'โน้ต · เรท · ทำซ้ำทุกสัปดาห์ ▾');
+  $('#erate').textContent = edit.rate;
+  qsa('#estatus [data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === edit.status));
+  const pd = $('#epaid'); if (pd){ pd.hidden = edit.status !== 'done'; pd.className = 'stp ' + (edit.paid ? 'paid' : 'owe'); pd.textContent = edit.paid ? 'จ่ายแล้ว ✓' : 'ยังค้างจ่าย'; }
+  qsa('#erep .chip').forEach(b => b.classList.toggle('on', +b.dataset.rep === edit.rep));
+}
+function saveSession(){
+  const v = {who:edit.who, date:edit.date, time:edit.time, h:edit.h || 1, rate:edit.rate || 0, status:edit.status, paid: edit.status==='done' && edit.paid, note:$('#enote').value.trim()};
+  if (!v.who || !v.date || !v.time) return toast('เลือกนักเรียน วันที่ และเวลาก่อน');
+  snap();
+  if (edit.id){
+    const s = DB.sessions.find(x => x.id === edit.id), moved = s.date !== v.date || s.time !== v.time;
+    Object.assign(s, v); if (moved) s.series = null;
+    save(); closeModal(); renderAll();
+    toast(moved ? `เลื่อน ${st(v.who).name} → ${dLabel(v.date)} ${v.time}` : 'บันทึกแล้ว', true);
+  } else {
+    if (v.status === 'plan' && new Date(`${v.date}T${v.time}:00`) <= NOW) v.status = 'done';
+    const rep = edit.rep || 0, series = rep ? uid() : null;
+    for (let k = 0; k <= rep; k++){ const d = new Date(v.date+'T00:00'); d.setDate(d.getDate()+7*k); DB.sessions.push({...v, id:uid(), date:isoD(d), series, status: k ? 'plan' : v.status, paid: k ? false : v.paid}); }
+    save(); closeModal(); renderAll();
+    toast(rep ? `เพิ่ม ${rep+1} คาบ · ${st(v.who).name} ทุกวัน${TH_DF[new Date(v.date+'T00:00').getDay()]}` : `เพิ่มคาบ ${st(v.who).name} ${dLabel(v.date)}`, true);
+  }
+}
+
+/* =============================== modal + drawers =============================== */
+function openModal(html, wide){ const sh = $('#sheet'); sh.onclick = null; sh.className = 'sheet' + (wide ? ' wide' : ''); sh.innerHTML = html; sh.scrollTop = 0; $('#modal').classList.add('open'); }
+function closeModal(){ $('#modal').classList.remove('open'); }
+let openD = null;
+function openDrawer(k){
+  closeDrawer(); openD = k;
+  ({cal:() => renderCal(true), stu:() => renderStudents(true), kit:renderKit})[k]();
+  $('#d-'+k).scrollTop = 0;
+  $('#d-'+k).classList.add('open'); document.body.classList.add('dopen','lockscroll');
+}
+function closeDrawer(){ stuOwe = false; qsa('.drawer.open').forEach(d => d.classList.remove('open')); document.body.classList.remove('dopen','lockscroll'); openD = null; }
+addEventListener('keydown', e => {
+  if (e.key === 'Enter' && $('#modal').classList.contains('open') && $('#wiz') && e.target.tagName !== 'BUTTON'){ e.preventDefault(); const n = document.querySelector('#wiz .cfoot .go'); return n && n.click(); }
+  if (e.key === 'Enter' && $('#modal').classList.contains('open') && $('#etok') && !e.target.closest('.qin') && e.target.tagName !== 'BUTTON'){ e.preventDefault(); return saveSession(); }
+  if (e.key === 'Enter' && e.target.classList?.contains('rw')) return e.target.click();
+  if (e.key !== 'Escape') return; if ($('#modal').classList.contains('open')) closeModal(); else closeDrawer();
+});
+function toggleHol(iso){
+  const [y,m,d] = iso.split('-').map(Number), k = mkey(y, m-1), list = DB.holidays[k] || (DB.holidays[k] = []);
+  const i = list.indexOf(d); i >= 0 ? list.splice(i,1) : list.push(d); save();
+  const lost = DB.sessions.filter(s => s.date === iso && s.status === 'plan').reduce((a,s)=>a+amt(s),0);
+  toast(`${i>=0?'ยกเลิกวันหยุด':'ตั้งเป็นวันหยุด'} · ${d} ${TH_M[m-1]}${lost?` · คาด ${i>=0?'+':'−'}${cash(lost)}`:''}`);
+  renderAll();
+}
+
+/* ---------- calendar drawer ---------- */
+let cy = NOW.getFullYear(), cm = NOW.getMonth(), cday = isoD(NOW);
+$('#cprev').onclick = () => { cm--; if (cm < 0){ cm = 11; cy--; } renderCal(true); };
+$('#cnext').onclick = () => { cm++; if (cm > 11){ cm = 0; cy++; } renderCal(true); };
+$('#ctoday').onclick = () => { cy = NOW.getFullYear(); cm = NOW.getMonth(); cday = isoD(NOW); renderCal(true); };
+function renderCal(anim){
+  const M = monthMoney(cy, cm), hols = (DB.holidays[mkey(cy,cm)] || []).length;
+  $('#cmn').textContent = TH_MF[cm]; $('#cyr').textContent = cy + 543;
+  $('#cfig').innerHTML = `<div><b>${M.n}</b><span>คาบ</span></div><div><b>${cash(M.earned)}</b><span>ได้แล้ว</span></div><div><b>${cash(M.forecast)}</b><span>คาดทั้งเดือน</span></div><div><b>${hols}</b><span>วันหยุด</span></div>`;
+  const days = new Date(cy, cm+1, 0).getDate(), off = new Date(cy, cm, 1).getDay(), ses = monthSessions(cy, cm), prevDays = new Date(cy, cm, 0).getDate();
+  let h = TH_D.map((d,i) => `<div class="h${i===0||i===6?' we':''}">${d}</div>`).join(''), i = 0;
+  for (let k = off-1; k >= 0; k--) h += `<div class="mc out" style="--i:${i++}"><span class="n">${prevDays-k}</span></div>`;
+  for (let d = 1; d <= days; d++){
+    const iso = `${cy}-${pad(cm+1)}-${pad(d)}`;
+    const items = [...DB.deadlines.filter(x => x.d === iso).map(x => `<span class="ev dl">⚑ ${esc(x.t)}</span>`),
+      ...sorted(ses.filter(s => s.date === iso)).map(e => `<span class="ev ${colorOf(e.who)} ${counts(e)?'':'x'}" title="${e.time}"><em>${e.time}</em>${esc(st(e.who)?.name)}</span>`)];
+    h += `<button class="mc${iso===isoD(NOW)?' today':''}${isHolD(iso)?' hol':''}${iso===cday?' sel':''}" style="--i:${i++}" data-iso="${iso}"><span class="n">${d}</span><span class="evs">${items.slice(0,2).join('')}${items.length > 2 ? `<span class="more">+${items.length-2} อีก</span>` : ''}</span></button>`;
+  }
+  const tail = (7 - (off + days) % 7) % 7; for (let k = 1; k <= tail; k++) h += `<div class="mc out" style="--i:${i++}"><span class="n">${k}</span></div>`;
+  $('#mcal').classList.toggle('still', !anim);
+  $('#mcal').innerHTML = h;
+  $('#mcal').onclick = e => { const b = e.target.closest('.mc[data-iso]'); if (b){ cday = b.dataset.iso; renderDay(); } };
+  renderDay();
+}
+function renderDay(){
+  qsa('#mcal .mc[data-iso]').forEach(b => b.classList.toggle('sel', b.dataset.iso === cday));
+  const x = new Date(cday+'T00:00'), hol = isHolD(cday), dayS = sorted(DB.sessions.filter(s => s.date === cday)), dl = DB.deadlines.filter(d => d.d === cday);
+  const sum = dayS.filter(counts).reduce((a,s)=>a+amt(s),0);
+  $('#daypane').innerHTML = `<div class="ah ${cday===isoD(NOW)?'today':''} ${hol?'hol':''}"><span class="big">${x.getDate()}</span><h3>${TH_DF[x.getDay()]}</h3><p>${x.getDate()} ${TH_MF[x.getMonth()]} ${x.getFullYear()+543}${relOnly(cday) ? ' · '+relOnly(cday) : ''}</p><p class="ahs">${hol?'☂ วันหยุด · ':''}${dayS.length ? `${dayS.length} คาบ · ${cash(sum)}` : 'ไม่มีคาบ'}</p></div>
+    <div class="ab">${dl.map(d => `<div class="dlr">⚑ ${esc(d.t)}</div>`).join('')}${dayS.map(s => rw(s)).join('') || (dl.length ? '' : '<div class="free">ว่างทั้งวัน<small>พักได้ หรือเปิดรับน้องเพิ่ม</small></div>')}</div>
+    <div class="acts"><button class="go sm" onclick="editSession(null,'${cday}')">＋ คาบวันนี้</button><button class="chip" onclick="toggleHol('${cday}')">${hol ? '↺ ยกเลิกวันหยุด' : '☂ ตั้งเป็นวันหยุด'}</button></div>`;
+}
+
+/* ---------- students drawer ---------- */
+const fbKind = {}, fbOpen = {};
+let openStu = null, popStu = false, stuOwe = false;
+function flip(fn){
+  const box = $('#scards'), before = new Map([...box.querySelectorAll('[data-id]')].map(e => [e.dataset.id, e.getBoundingClientRect()]));
+  fn();
+  if (reduced) return;
+  box.querySelectorAll('[data-id]').forEach(e => {
+    const b = before.get(e.dataset.id); if (!b) return;
+    const a = e.getBoundingClientRect(), dx = b.left - a.left, dy = b.top - a.top, sx = b.width / a.width, sy = b.height / a.height;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(sx-1) < .01 && Math.abs(sy-1) < .01) return;
+    e.style.transformOrigin = 'top left'; e.style.transition = 'none';
+    e.style.transform = `translate(${dx}px,${dy}px) scale(${sx},${sy})`;
+    e.getBoundingClientRect();
+    e.style.transition = 'transform .55s cubic-bezier(.2,.9,.25,1)'; e.style.transform = '';
+    e.addEventListener('transitionend', () => { e.style.transition = ''; e.style.transformOrigin = ''; }, {once:true});
+  });
+}
+function toggleStu(id){ flip(() => { openStu = openStu === id ? null : id; popStu = !!openStu; renderStudents(); }); if (openStu) later(() => document.querySelector('.sc.open')?.scrollIntoView({behavior: reduced ? 'auto' : 'smooth', block:'nearest'})); }
+function renderStudents(anim){
+  $('#stuhov').textContent = `${DB.students.length} คน · ค้างรวม ${cash(owedAll().reduce((a,s)=>a+amt(s),0))} · แตะการ์ดเพื่อเปิด`;
+  const curP = `${NOW.getFullYear()}-${pad(NOW.getMonth()+1)}`;
+  $('#scards').classList.toggle('still', !anim);
+  const oweOf = id => owedAll().filter(s => s.who === id).reduce((a,s)=>a+amt(s),0);
+  const list = stuOwe ? [...DB.students].sort((a,b) => oweOf(b.id) - oweOf(a.id)) : DB.students;
+  $('#scards').innerHTML = list.map((p, i0) => { const i = DB.students.indexOf(p);
+    const mine = DB.sessions.filter(s => s.who === p.id);
+    const owe = sorted(mine.filter(s => s.status==='done' && !s.paid)), oweSum = owe.reduce((a,s)=>a+amt(s),0);
+    const next = sorted(mine.filter(s => s.status==='plan' && counts(s) && atOf(s) > NOW))[0];
+    const sub = `${esc(p.grade)} · ${p.subj==='bio'?'ชีวะ':'เคมี'} · ${esc(p.mode)}`, c = colorOf(p.id);
+    if (openStu !== p.id) return `<div class="sc" data-id="${p.id}" style="--i:${i}" role="button" tabindex="0" onclick="toggleStu('${p.id}')" onkeydown="if(event.key==='Enter')toggleStu('${p.id}')">
+      <div class="band ${c}"><span class="idx">${pad(i+1)}</span><span class="big">${esc(p.name[0])}</span>${oweSum ? `<span class="otag">ค้าง ${cash(oweSum)}</span>` : ''}<h3>${esc(p.name)}</h3><p>${sub}</p></div>
+      <div class="foot"><div class="nx"><span class="lab">ถัดไป</span>${next ? `<b>${next.time}</b><em>${relDay(next.date)}</em>` : '<em>ไม่มีนัด</em>'}</div>
+        ${(() => { const cc = p.map ? p.map.indexOf('n') : -1, dn = p.map ? p.map.split('').filter(x => x === 'd').length : 0;
+          return p.map ? `<div class="chr"><span class="chn">${cc >= 0 ? 'บท ' + (cc+1) : '—'}</span><span class="chm">${cc >= 0 ? CH[cc] : 'ยังไม่ได้เลือกบท'}</span><span class="chc">${dn}/14</span></div>
+            <div class="mstrip">${p.map.split('').map(x => `<i class="${x==='t'?'':x}"></i>`).join('')}</div>`
+            : `<div class="chr"><span class="chn">${p.subj === 'bio' ? 'ชีวะ' : 'เคมี'}</span><span class="chm">${esc(p.goal) || '—'}</span></div><div class="mstrip none"></div>`; })()}
+        ${(() => { const lg = sorted(mine.filter(x => x.log?.topic)).pop();
+          return `<div class="lastn ${lg ? '' : 'empty'}"><span class="lab">${lg ? 'คาบล่าสุด · ' + dLabel(lg.date) : 'คาบล่าสุด'}</span><p>${lg ? esc(lg.log.topic) : 'ยังไม่มีบันทึก · ติ๊ก ✓ หลังสอนเพื่อจด'}</p>${lg?.log.hw ? `<small>การบ้าน: ${esc(lg.log.hw)}</small>` : ''}</div>`; })()}</div></div>`;
+    const mo = mine.filter(s => s.date.startsWith(curP) && counts(s)), moSum = mo.reduce((a,s)=>a+amt(s),0);
+    const cur = p.map ? p.map.indexOf('n') : -1, done = p.map ? p.map.split('').filter(x => x==='d').length : 0, k = fbKind[p.id] || 'pro';
+    return `<div class="sc open ${popStu?'fresh':''}" data-id="${p.id}" style="--i:${i}">
+      <div class="ohead ${c}"><span class="big">${esc(p.name[0])}</span>
+        <div class="l"><h3>${esc(p.name)}</h3><p>${sub} · ${cash(p.rate)}/ชม.</p>
+          <div class="otags">${p.slots.map(([w,t,h]) => `<span class="t">${TH_D[w]}. ${t} · ${h}ชม.</span>`).join('')}${p.goal ? `<span>🎯 ${esc(p.goal)}</span>` : ''}${p.contact ? `<span>☎ ${esc(p.contact)}</span>` : ''}</div>
+          </div>
+        <div class="r"><button onclick="editStudent('${p.id}')">✎ แก้ข้อมูล</button><button onclick="delStudent('${p.id}')">ลบ</button><button class="shut" title="ปิด" onclick="toggleStu('${p.id}')">✕</button></div></div>
+      <div class="ostats">
+        <div class="hot"><b>${next ? next.time : '—'}</b><span>${next ? 'คาบถัดไป · ' + relDay(next.date) : 'ยังไม่มีนัด'}</span></div>
+        <div><b>${mo.length}</b><span>คาบเดือนนี้</span></div>
+        <div><b>${cash(moSum)}</b><span>รายได้เดือนนี้</span></div>
+        <div class="${oweSum?'hot':''}"><b>${cash(oweSum)}</b><span>${owe.length ? `ค้าง ${owe.length} คาบ` : 'ไม่มีค้าง'}</span></div></div>
+      <div class="obody">
+        <div class="col">
+          <div>${p.map ? `<div class="now"><span>${cur >= 0 ? `กำลังสอน บท ${cur+1} · ${CH[cur]}` : 'แผนที่บท'}</span><small>${done}/14 บท</small></div>
+            <div class="segbar">${p.map.split('').map((x,j) => `<button class="${x==='t'?'':x}" onclick="cycle('${p.id}',${j})" title="บท ${j+1} ${CH[j]}">${j+1}</button>`).join('')}</div>
+            <div class="hint">แตะช่องเพื่อเปลี่ยน · น้ำเงิน สอนแล้ว · เหลือง กำลังสอน · ลาย ไม่อยู่ในหลักสูตร</div>`
+            : `<span class="lab">แผนที่บท</span><button class="addq" onclick="startMap('${p.id}')">＋ ตั้งแผนที่บท</button>`}</div>
+          <div><span class="lab">ค้างจ่าย</span>${owe.length ? `<div class="rcpt">${owe.map(s => `<div class="r"><span>${dLabel(s.date)} · <b>${cash(amt(s))}</b></span><button onclick="togglePaid('${s.id}')">ได้เงินแล้ว ✓</button></div>`).join('')}</div>` : '<div class="clear">✓ เคลียร์หมดแล้ว</div>'}</div>
+        </div>
+        <div class="col">${(() => { const lg = sorted(mine.filter(x => x.log)).reverse().slice(0, 4); return `<div><span class="lab">บันทึกการสอน</span>${lg.length ? `<div class="logl">${lg.map(x => `<div class="lgi"><b>${dLabel(x.date)}</b> ${esc(x.log.topic || '—')}${x.log.hw ? `<small>การบ้าน: ${esc(x.log.hw)}</small>` : ''}</div>`).join('')}</div>` : '<div class="mut" style="font-size:.85rem;font-weight:600">ยังไม่มี · ขึ้นหลังกด ✓ จบคาบ</div>'}</div>`; })()}</div><div class="col"><div><span class="lab">น้องพูดว่า</span><div class="fbl">
+          ${p.feed.map((f,j) => [f,j]).reverse().map(([f,j]) => `<div class="q ${f[0]==='con'?'con':''}">${esc(f[2])}<small>${f[0]==='con'?'ต้องแก้':'ดีแล้ว'} · ${f[1]}</small><button class="x" title="ลบ" onclick="delFb('${p.id}',${j})">✕</button></div>`).join('') || '<div class="mut" style="font-size:.88rem;font-weight:600">ยังไม่มี</div>'}
+          ${fbOpen[p.id] ? `<div class="qin"><span class="chips"><button class="chip ${k==='pro'?'on':''}" onclick="fbKind['${p.id}']='pro';renderStudents()">ดี</button><button class="chip ${k==='con'?'on':''}" onclick="fbKind['${p.id}']='con';renderStudents()">แก้</button></span><input class="ln" id="fb-${p.id}" placeholder="น้องพูดว่า…" onkeydown="if(event.key==='Enter')addFb('${p.id}');if(event.key==='Escape'){event.stopPropagation();fbOpen['${p.id}']=0;renderStudents()}"><button class="cpy" onclick="addFb('${p.id}')">จด</button></div>`
+            : `<button class="addq" onclick="fbOpen['${p.id}']=1;renderStudents();document.getElementById('fb-${p.id}').focus()">＋ จดสิ่งที่น้องพูด</button>`}</div></div></div>
+      </div>
+      <div class="ofoot"><button class="go sm" onclick="closeDrawer();editSession();setTimeout(()=>{edit.who='${p.id}';edit.rate=${p.rate};edit.pick='date';paintEdit(true)},0)">＋ คาบให้ ${esc(p.name)}</button><button class="chip" onclick="closeDrawer();whoF=new Set(['${p.id}']);range='month';qsa('#srange button').forEach(b=>b.classList.toggle('on',b.dataset.r==='month'));renderSchedule();document.getElementById('sched').scrollIntoView({behavior:'smooth'})">ดูตารางของ ${esc(p.name)} →</button></div>
+    </div>`;
+  }).join('') + `<button class="sc addcard" data-id="_add" style="--i:${DB.students.length}" onclick="editStudent()"><b>＋</b>เพิ่มนักเรียน</button>`;
+  popStu = false;
+}
+function setColor(id, c){ st(id).color = c; save(); renderAll(); toast(`เปลี่ยนสี ${st(id).name} แล้ว`); }
+function cycle(id, i){ const p = st(id), o = 'tdns'; const a = p.map.split(''); a[i] = o[(o.indexOf(a[i])+1) % 4]; p.map = a.join(''); save(); renderStudents(); renderSchedule(); }
+function startMap(id){ st(id).map = 'tttttttttttttt'; save(); renderStudents(); }
+function addFb(id){ const el = $('#fb-'+id), t = el.value.trim(); if (!t) return; st(id).feed.push([fbKind[id] || 'pro', isoD(NOW), t]); fbOpen[id] = 0; save(); renderStudents(); renderSchedule(); toast('จดแล้ว'); }
+function delFb(id, j){ snap(); st(id).feed.splice(j,1); save(); renderStudents(); renderSchedule(); toast('ลบแล้ว', true); }
+function delStudent(id){
+  const p = st(id), fut = DB.sessions.filter(s => s.who === id && s.status === 'plan' && atOf(s) > NOW).length;
+  openModal(`<h2>ลบ ${esc(p.name)}?</h2><p class="mut">คาบในอนาคต ${fut} คาบจะถูกลบด้วย · คาบที่สอนไปแล้วและยอดเงินยังอยู่ในประวัติ</p>
+    <div class="cfoot"><span class="sp"></span><button class="ghostb" onclick="closeModal()">ยกเลิก</button><button class="go red" id="dx">ลบนักเรียน</button></div>`);
+  $('#dx').onclick = () => { snap(); DB.sessions = DB.sessions.filter(s => !(s.who === id && s.status === 'plan' && atOf(s) > NOW)); DB.students = DB.students.filter(x => x.id !== id); DB.archived = [...(DB.archived||[]), p]; whoF.delete(id); if (openStu === id) openStu = null; save(); closeModal(); renderAll(); toast(`ลบ ${p.name} แล้ว`, true); };
+}
+
+/* ---------- student editor: the card is the form ---------- */
+let pe = null;
+function editStudent(id){
+  const p = id ? st(id) : {name:'',grade:'ม.4',subj:'chem',mode:'ออนไลน์',rate:DB.rates.solo,slots:[],goal:'',contact:'',color:DB.students.length % 6};
+  pe = {...p, slots:p.slots.map(s => [...s]), gen:true, nd:1, nt:'18:00', nh:1};
+  const ch = (k, opts) => `<div class="chips" data-k="${k}">${opts.map(([v,t]) => `<button class="chip" data-v="${v}">${t}</button>`).join('')}</div>`;
+  openModal(`<button class="pdx x" onclick="closeModal()" title="ปิด">✕</button>
+    <div class="pband" id="pband"><span class="big" id="pbig"></span><span class="eyebrow">${id ? 'แก้ข้อมูลนักเรียน' : 'นักเรียนใหม่'}</span><input class="nmin" id="pn" placeholder="ชื่อเล่น…" value="${esc(p.name)}" autocomplete="off"><p id="pmeta"></p></div>
+    <span class="eb2">ชั้น</span>${ch('grade', ['ม.1','ม.2','ม.3','ม.4','ม.5','ม.6','ซิ่ว','มหาลัย'].map(g => [g,g]))}
+    <div class="trow2"><div><span class="eb2">วิชา</span>${ch('subj', [['chem','เคมี'],['bio','ชีวะ']])}</div><div><span class="eb2">เรียนแบบ</span>${ch('mode', ['ออนไลน์','ออนไซต์','ผสม'].map(g => [g,g]))}</div></div>
+    <div class="trow2"><div><span class="eb2">เรท / ชม.</span><div class="step"><button data-rate="-25" aria-label="ลดเรท">−</button><b id="prate"></b><button data-rate="25" aria-label="เพิ่มเรท">+</button></div></div>
+      <div><span class="eb2">สีประจำตัว</span><div class="sw" id="pcol">${COLORS.map((c,i) => `<button class="${c}" data-c="${i}" aria-label="สี ${i+1}"></button>`).join('')}</div></div></div>
+    <span class="eb2">เวลาประจำ · ใช้สร้างตารางสอน</span><div class="slotl" id="pslots"></div>
+    <div class="slotadd"><div class="chips" id="pnd">${[1,2,3,4,5,6,0].map(w => `<button class="chip" data-nd="${w}">${TH_D[w]}.</button>`).join('')}</div>
+      <div class="step"><button data-nt="-30" aria-label="ถอย 30 นาที">−</button><b id="pnt"></b><button data-nt="30" aria-label="เลื่อน 30 นาที">+</button></div>
+      <div class="chips" id="pnh">${[1,1.5,2].map(h => `<button class="chip mono" data-nh="${h}">${h} ชม.</button>`).join('')}</div>
+      <button class="go sm" id="paddslot">＋ เพิ่มเวลานี้</button></div>
+    ${id ? '' : '<div style="margin-top:12px"><button class="chip" id="pgen"></button></div>'}
+    <span class="eb2">เป้าหมาย</span><input class="ln" id="pgo" value="${esc(p.goal)}" placeholder="เช่น TCAS เคมี · เพิ่มเกรด · ปูพื้นฐาน">
+    <span class="eb2">ติดต่อ</span><input class="ln" id="pc" value="${esc(p.contact)}" placeholder="LINE / IG / ผู้ปกครอง">
+    <div class="cfoot">${id ? `<button class="linkx" onclick="delStudent('${id}')">ลบนักเรียน</button>` : ''}<span class="sp"></span><button class="ghostb" onclick="closeModal()">ยกเลิก</button><button class="go" id="psave">${id ? 'บันทึก' : 'เพิ่มนักเรียน'}</button></div>`, true);
+  $('#sheet').onclick = e => {
+    const t = e.target.closest('button'); if (!t) return; const d = t.dataset, k = t.parentNode.dataset.k;
+    if (k && d.v !== undefined) pe[k] = d.v;
+    else if (d.c !== undefined) pe.color = +d.c;
+    else if (d.rate) pe.rate = Math.max(0, pe.rate + +d.rate);
+    else if (d.nd !== undefined) pe.nd = +d.nd;
+    else if (d.nt) pe.nt = addMin(pe.nt, +d.nt);
+    else if (d.nh) pe.nh = +d.nh;
+    else if (t.id === 'paddslot'){ pe.slots.push([pe.nd, pe.nt, pe.nh]); pe.slots.sort((a,b) => (a[0]+6)%7 - (b[0]+6)%7 || a[1].localeCompare(b[1])); }
+    else if (d.rm !== undefined) pe.slots.splice(+d.rm, 1);
+    else if (t.id === 'pgen') pe.gen = !pe.gen;
+    else return;
+    paintStu();
+  };
+  $('#pn').oninput = e => { pe.name = e.target.value; $('#pbig').textContent = (pe.name.trim() || '?')[0]; };
+  $('#psave').onclick = () => {
+    const name = pe.name.trim(); if (!name) return toast('ใส่ชื่อก่อน');
+    const v = {name, grade:pe.grade, subj:pe.subj, mode:pe.mode, rate:pe.rate, slots:pe.slots, goal:$('#pgo').value.trim(), contact:$('#pc').value.trim(), color:pe.color};
+    snap();
+    if (id){ Object.assign(st(id), v); save(); closeModal(); renderAll(); toast(`บันทึก ${name} แล้ว`, true); }
+    else {
+      const np = {...v, id:uid(), map: v.subj==='chem' ? 'tttttttttttttt' : null, feed:[]};
+      DB.students.push(np);
+      if (pe.gen) for (let k = 0; k < 56; k++){ const d = new Date(NOW); d.setDate(d.getDate()+k); for (const [w,t,h] of v.slots) if (d.getDay() === w && new Date(`${isoD(d)}T${t}:00`) > NOW) DB.sessions.push({id:uid(), who:np.id, date:isoD(d), time:t, h, rate:np.rate, status:'plan', paid:false, note:'', series:np.id+'-'+w+'-'+t}); }
+      save(); closeModal(); renderAll(); toast(`เพิ่ม ${name} แล้ว`, true);
+    }
+  };
+  paintStu();
+}
+function paintStu(){
+  $('#pband').className = 'pband ' + COLORS[pe.color % COLORS.length];
+  $('#pbig').textContent = (pe.name.trim() || '?')[0];
+  $('#pmeta').textContent = `${pe.grade} · ${pe.subj==='bio'?'ชีวะ':'เคมี'} · ${pe.mode} · ${cash(pe.rate)}/ชม.`;
+  qsa('#sheet [data-k]').forEach(g => g.querySelectorAll('[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === String(pe[g.dataset.k]))));
+  $('#prate').textContent = cash(pe.rate);
+  qsa('#pcol button').forEach(b => b.classList.toggle('on', +b.dataset.c === pe.color));
+  $('#pslots').innerHTML = pe.slots.length ? pe.slots.map(([w,t,h], i) => `<span class="slc">${TH_DF[w]} <b>${t}</b> · ${h} ชม.<button data-rm="${i}" title="ลบเวลานี้">✕</button></span>`).join('') : '<span class="mut" style="font-size:.85rem;font-weight:600">ยังไม่มี · เลือกวัน เวลา แล้วกดเพิ่มด้านล่าง</span>';
+  qsa('#pnd [data-nd]').forEach(b => b.classList.toggle('on', +b.dataset.nd === pe.nd));
+  $('#pnt').textContent = pe.nt;
+  qsa('#pnh [data-nh]').forEach(b => b.classList.toggle('on', +b.dataset.nh === pe.nh));
+  const g = $('#pgen'); if (g){ g.classList.toggle('on', pe.gen); g.textContent = (pe.gen ? '✓ ' : '') + 'สร้างคาบตามเวลาประจำ 8 สัปดาห์ข้างหน้า'; }
+}
+
+/* ---------- message drawer ---------- */
+let kweek = 0, pickInit = ''; const pickedD = new Set(); const H0 = 8, H1 = 22;
+function weekDays(){
+  const t = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate()), mon = new Date(t);
+  mon.setDate(t.getDate() - (t.getDay()+6)%7 + 7*kweek);
+  return [...Array(7)].map((_, k) => { const x = new Date(mon); x.setDate(mon.getDate()+k); return x; });
+}
+function cellState(date, h){
+  const iso = isoD(date);
+  if (isHolD(iso)) return {t:'hol'};
+  const end = new Date(date); end.setHours(h+1, 0, 0, 0); if (end <= NOW) return {t:'past'};
+  const ses = DB.sessions.find(x => { if (x.date !== iso || x.status === 'cancel') return false; const [a,b] = x.time.split(':').map(Number), s0 = a*60+b; return s0 < (h+1)*60 && s0 + x.h*60 > h*60; });
+  if (ses) return {t:'ses', s:ses};
+  if ((DB.avail.block[date.getDay()] || []).includes(h)) return {t:'blk'};
+  return {t:'free'};
+}
+function freeOf(date){
+  const out = []; let run = null;
+  for (let h = H0; h < H1; h++){ if (cellState(date, h).t === 'free'){ if (run) run[1] = h+1; else run = [h, h+1]; } else if (run){ out.push(run); run = null; } }
+  if (run) out.push(run);
+  return out;
+}
+let kOpen = null;
+const rng = ([a,b]) => `${pad(a)}:00–${pad(b)}:00`;
+function renderAvail(){
+  const days = weekDays();
+  if (pickInit !== isoD(days[0])){ pickedD.clear(); days.forEach(d => freeOf(d).length && pickedD.add(isoD(d))); pickInit = isoD(days[0]); kOpen = null; }
+  $('#agrid').innerHTML = days.map(d => {
+    const i = isoD(d), fr = freeOf(d), hol = isHolD(i), past = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23) < NOW, on = pickedD.has(i), open = kOpen === i;
+    const cells = []; for (let h = H0; h < H1; h++) cells.push(cellState(d, h));
+    const bar = cells.map(c => `<i class="${c.t} ${c.t==='ses' ? colorOf(c.s.who) : ''}"></i>`).join('');
+    const txt = hol ? 'วันหยุด' : past ? 'ผ่านไปแล้ว' : fr.length ? fr.map(rng).join('<br>') : 'ไม่ว่าง';
+    return `<div class="fd ${on?'on':''} ${fr.length?'':'none'} ${open?'open':''}">
+      <button class="fck" data-day="${i}" ${fr.length ? '' : 'disabled'} aria-label="ใส่วันนี้ในข้อความ">${on ? '✓' : ''}</button>
+      <div class="fdn"><b>${TH_D[d.getDay()]}.</b> <span>${d.getDate()} ${TH_M[d.getMonth()]}</span></div>
+      <div class="fbar" title="${pad(H0)}:00–${pad(H1)}:00">${bar}</div>
+      <div class="ftx">${txt}</div>
+      ${hol || past ? '<span></span>' : `<button class="fed" data-open="${i}" title="ปรับชั่วโมงที่ไม่ว่าง">${open ? '✓' : '✎'}</button>`}
+      ${open ? `<div class="fhrs">${cells.map((c, n) => { const h = H0 + n;
+          return c.t === 'ses' ? `<span class="fh ses ${colorOf(c.s.who)}" title="${esc(st(c.s.who)?.name)}">${pad(h)}</span>`
+            : c.t === 'past' ? `<span class="fh past">${pad(h)}</span>`
+            : `<button class="fh ${c.t}" data-wd="${d.getDay()}" data-h="${h}">${pad(h)}</button>`; }).join('')}
+        <div class="fnote">แตะชั่วโมงเพื่อสลับ ว่าง / ไม่ว่าง · ใช้กับทุกวัน${TH_DF[d.getDay()]} · ช่องสีคือคาบที่นัดแล้ว</div></div>` : ''}
+    </div>`;
+  }).join('');
+  const lines = days.filter(d => pickedD.has(isoD(d))).map(d => { const f = freeOf(d); return f.length ? `• ${TH_DF[d.getDay()]} ${d.getDate()} ${TH_M[d.getMonth()]}  ${f.map(rng).join(', ')}` : null; }).filter(Boolean);
+  $('#free').textContent = lines.length ? fillTpl(DB.tpl.free).replace('{วันว่าง}', lines.join('\n')) : 'ติ๊กวันด้านซ้าย แล้วข้อความจะขึ้นตรงนี้';
+  $('#free').classList.toggle('hint', !lines.length);
+  $('#freeinfo').textContent = `${lines.length} วัน · หักคาบที่นัดไว้ + วันหยุดให้แล้ว`;
+}
+$('#kweek').onclick = e => { const k = e.target.dataset.k; if (k === undefined) return; kweek = +k; qsa('#kweek button').forEach(b => b.classList.toggle('on', b.dataset.k === k)); renderAvail(); };
+$('#agrid').onclick = e => {
+  const b = e.target.closest('button'); if (!b || b.disabled) return;
+  if (b.dataset.day){ const i = b.dataset.day; pickedD.has(i) ? pickedD.delete(i) : pickedD.add(i); return renderAvail(); }
+  if (b.dataset.open){ kOpen = kOpen === b.dataset.open ? null : b.dataset.open; return renderAvail(); }
+  const wd = +b.dataset.wd, hr = +b.dataset.h, list = DB.avail.block[wd] || (DB.avail.block[wd] = []), k = list.indexOf(hr);
+  k >= 0 ? list.splice(k, 1) : list.push(hr); save(); renderAvail();
+};
+const fillTpl = t => t.replaceAll('{เดี่ยว}', DB.rates.solo).replaceAll('{กลุ่ม}', DB.rates.group);
+function renderKit(){ $('#r1').value = DB.rates.solo; $('#r2').value = DB.rates.group; writeKit(); }
+function writeKit(){ $('#post').textContent = fillTpl(DB.tpl.post); $('#dm').textContent = fillTpl(DB.tpl.dm); renderAvail(); }
+function editTpl(k, btn){
+  const box = btn.closest('.bub,.post'), on = box.classList.toggle('editing'), ta = box.querySelector('.tpl-e');
+  btn.textContent = on ? '✓ เสร็จ' : '✎ แก้';
+  if (on){ ta.value = DB.tpl[k]; ta.oninput = () => { DB.tpl[k] = ta.value; save(); writeKit(); }; ta.focus(); }
+}
+function copy(id){
+  const v = $('#'+id).innerText, ok = () => toast('คัดลอกแล้ว ✓');
+  const fb = () => { const t = document.createElement('textarea'); t.value = v; document.body.append(t); t.select(); document.execCommand('copy'); t.remove(); ok(); };
+  navigator.clipboard ? navigator.clipboard.writeText(v).then(ok, fb) : fb();
+}
+$('#ratebar').onclick = e => { const b = e.target.closest('[data-r]'); if (!b) return; DB.rates[b.dataset.r] = Math.max(0, (DB.rates[b.dataset.r] || 0) + +b.dataset.d); save(); renderKit(); };
+$('#r1').oninput = e => { DB.rates.solo = +e.target.value || 0; save(); writeKit(); };
+$('#r2').oninput = e => { DB.rates.group = +e.target.value || 0; save(); writeKit(); };
+
+/* =============================== boot =============================== */
+window.onerror = m => document.body.setAttribute('data-err', m);
+const tick = () => $('#clock').textContent = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+tick(); setInterval(tick, 30000);
+if (!DB.logSeeded){
+  const demo = {pl:['กรด-เบส · ไทเทรต + กราฟการไทเทรต','แบบฝึกหัดชีท 11 ข้อ 1–8'], ro:['ระบบหายใจ · การแลกเปลี่ยนแก๊ส',''], sl:['โมล · คำนวณมวลโมเลกุล ถึงข้อ 6','ชีทโมล หน้า 2'], kk:['ปริมาณสัมพันธ์ · สารกำหนดปริมาณ ถึงข้อ 4','ชีท 7 หน้า 1'], km:['สมดุลเคมี · Le Chatelier ถึงข้อ 3',''], lo:['กรด-เบส · pH บัฟเฟอร์ เริ่มไทเทรต','']};
+  for (const [id, [topic, hw]] of Object.entries(demo)){ const last = sorted(DB.sessions.filter(x => x.who === id && x.status === 'done')).pop(); if (last) last.log = {topic, hw}; }
+  DB.logSeeded = true; save();
+}
+renderMoney(); renderSchedule();
+const QP = new URLSearchParams(location.search);
+if (QP.has('stuopen')) openStu = DB.students[0].id;
+if (QP.get('drawer')) openDrawer(QP.get('drawer'));
+if (QP.has('new')) editSession();
+if (QP.has('wrap')) markDone(sorted(DB.sessions.filter(s => s.status==='plan'))[0].id);
+if (QP.has('edit')) editSession(DB.sessions.find(s => s.status==='plan')?.id);
+if (QP.has('stuedit')) editStudent(DB.students[0].id);
+</script>
+</body>
+</html>
