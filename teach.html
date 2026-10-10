@@ -899,6 +899,14 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .alert.clashal button{border:2px solid var(--ink);background:var(--card);font:700 .78rem "Anuphan";padding:2px 8px;cursor:pointer}
 .alert.clashal button:hover{background:var(--yel)}
 .mc .ev.clash{outline:2px solid var(--red);outline-offset:-2px}
+/* graduated: plum + gold */
+:root{--k-grd:#6d3fa0}
+.ktag.k-grd,.otags .ktag.k-grd{background:var(--k-grd);color:#fff;border-color:var(--ink)}
+.ktag.k-grd:before{background:#f2b705;opacity:1}
+.sdiv.k-grd:before{background:var(--k-grd)}.sdiv.k-grd span{color:var(--k-grd)}
+.sc.gone:has(.k-grd){opacity:.85;filter:saturate(.6)}
+#sheet [data-k="kind"] .chip.on[data-v="graduated"]{background:var(--k-grd);color:#fff;border-color:var(--ink)}
+.dalt{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 /* ---------- misc ---------- */
 footer.live{display:flex;justify-content:space-between;align-items:center;color:#756149;font:.75rem "JetBrains Mono";margin-top:18px;flex-wrap:wrap;gap:6px}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#887044;margin-right:8px;animation:pulse 2s infinite}
@@ -1040,7 +1048,8 @@ const CACHE = 'teach-cache-v1';
 const CHF = ['ความปลอดภัยและทักษะปฏิบัติการ','อะตอมและแบบจำลองอะตอม','ตารางธาตุและสมบัติของธาตุ','พันธะเคมี','โมลและสูตรเคมี','สารละลาย','ปริมาณสัมพันธ์','แก๊สและสมบัติของแก๊ส','อัตราการเกิดปฏิกิริยาเคมี','สมดุลเคมี','กรด-เบส','เคมีไฟฟ้า','เคมีอินทรีย์','พอลิเมอร์'];
 const CHS = {d:'สอนแล้ว', n:'กำลังสอน', t:'ยังไม่สอน', s:'ไม่อยู่ในหลักสูตร'};
 // student type: drives the tag on every card and the order of the student page
-const KINDS = {regular:['ประจำ','k-reg'], adhoc:['เป็นครั้งๆ','k-adh'], trial:['ทดลองเรียน','k-tri'], stopped:['ไม่เรียนแล้ว','k-stp']};
+const KINDS = {regular:['ประจำ','k-reg'], adhoc:['เป็นครั้งๆ','k-adh'], trial:['ทดลองเรียน','k-tri'], graduated:['เรียนจบ 🎓','k-grd'], stopped:['ไม่เรียนแล้ว','k-stp']};
+const GONE = ['graduated','stopped'];   // off the schedule, kept in history
 const KORDER = ['regular','adhoc','trial'];
 const kindOf = p => KINDS[p.kind] ? p.kind : (DB.archived || []).includes(p) ? 'stopped' : p.slots?.length ? 'regular' : 'adhoc';
 const ktag = p => { const [t, c] = KINDS[kindOf(p)]; return `<span class="ktag ${c}">${t}</span>`; };
@@ -1723,10 +1732,10 @@ function renderStudents(anim){
   const byKind = [...DB.students].sort((a, b) => KORDER.indexOf(kindOf(a)) - KORDER.indexOf(kindOf(b)));
   const active = stuOwe ? [...DB.students].sort((a,b) => oweOf(b.id) - oweOf(a.id)) : byKind;
   // a header wherever the type changes (the stopped group's header is its fold bar)
-  const head = (p, j, L) => { if (stuOwe) return ''; const k = kindOf(p), pk = j ? kindOf(L[j-1]) : null; if (k === pk || k === 'stopped') return '';
-    const n = k === 'stopped' ? (DB.archived || []).length : DB.students.filter(x => kindOf(x) === k).length;
+  const head = (p, j, L) => { if (stuOwe) return ''; const k = kindOf(p), pk = j ? kindOf(L[j-1]) : null; if (k === pk) return '';
+    const n = [...DB.students, ...(DB.archived || [])].filter(x => kindOf(x) === k).length;
     return `<div class="sdiv ${KINDS[k][1]}"><span>${KINDS[k][0]}</span><b>${n}</b></div>`; };
-  const cardsOf = (L, off = 0) => L.map((p, i0) => { const i = i0 + off, gone = kindOf(p) === 'stopped';
+  const cardsOf = (L, off = 0) => L.map((p, i0) => { const i = i0 + off, gone = GONE.includes(kindOf(p));
     return head(p, i0, L) + (() => {
     const mine = DB.sessions.filter(s => s.who === p.id);
     const owe = sorted(mine.filter(s => s.status==='done' && !s.paid)), oweSum = owe.reduce((a,s)=>a+amt(s),0);
@@ -1773,9 +1782,9 @@ function renderStudents(anim){
   }).join('');
   // the add card closes the active groups; the stopped ones fold behind a bar underneath
   const add = `<button class="sc addcard" data-id="_add" style="--i:${DB.students.length}" onclick="editStudent()"><b>＋</b>เพิ่มนักเรียน</button>`;
-  const ng = (DB.archived || []).length, fold = ng && !stuOwe ? `<button class="gonebar" onclick="showGone=!showGone;renderStudents()"><span>ไม่เรียนแล้ว · ${ng} คน</span><b>${showGone ? 'ซ่อน ▴' : 'ดู ▾'}</b></button>` : '';
+  const ng = (DB.archived || []).length, fold = ng && !stuOwe ? `<button class="gonebar" onclick="showGone=!showGone;renderStudents()"><span>${(() => { const g = (DB.archived || []).filter(x => kindOf(x) === 'graduated').length; return (g ? `เรียนจบ 🎓 ${g} · ` : '') + `ไม่เรียนแล้ว ${ng - g}`; })()} คน</span><b>${showGone ? 'ซ่อน ▴' : 'ดู ▾'}</b></button>` : '';
   // order is fixed: active groups → ＋ card → the fold bar → (when open) the stopped students underneath it
-  $('#scards').innerHTML = cardsOf(active) + add + fold + (showGone && !stuOwe ? cardsOf(DB.archived || [], active.length) : '');
+  $('#scards').innerHTML = cardsOf(active) + add + fold + (showGone && !stuOwe ? cardsOf([...(DB.archived || [])].sort((a, b) => GONE.indexOf(kindOf(a)) - GONE.indexOf(kindOf(b))), active.length) : '');
   popStu = false;
 }
 function setColor(id, c){ st(id).color = c; save(); renderAll(); toast(`เปลี่ยนสี ${st(id).name} แล้ว`); }
@@ -1787,16 +1796,27 @@ function delFb(id, j){ snap(); st(id).feed.splice(j,1); save(); renderStudents()
 // ไม่เรียนแล้ว = archived: off the schedule (future planned classes go), history and money stay
 function setGone(p, gone){
   const inA = (DB.archived ||= []).includes(p);
-  if (gone && !inA){ DB.students = DB.students.filter(x => x !== p); DB.archived.push(p); p.kind = 'stopped';
+  if (gone && !inA){ DB.students = DB.students.filter(x => x !== p); DB.archived.push(p); if (!GONE.includes(p.kind)) p.kind = 'stopped';
     DB.sessions = DB.sessions.filter(s => !(s.who === p.id && s.status === 'plan' && atOf(s) > NOW)); whoF.delete(p.id); if (openStu === p.id) openStu = null; return 'gone'; }
   if (!gone && inA){ DB.archived = DB.archived.filter(x => x !== p); DB.students.push(p); return 'back'; }
   return null;
 }
+// ลบ = gone for good: the student AND every class + money record of theirs. Stopping is a type (ไม่เรียนแล้ว /
+// เรียนจบ), offered right here so nobody wipes history by accident. Undo works until you leave the page.
 function delStudent(id){
-  const p = st(id), fut = DB.sessions.filter(s => s.who === id && s.status === 'plan' && atOf(s) > NOW).length;
-  openModal(`<h2>ลบ ${esc(p.name)}?</h2><p class="mut">คาบในอนาคต ${fut} คาบจะถูกลบด้วย · คาบที่สอนไปแล้วและยอดเงินยังอยู่ในประวัติ</p>
-    <div class="cfoot"><span class="sp"></span><button class="ghostb" onclick="closeModal()">ยกเลิก</button><button class="go red" id="dx">ลบนักเรียน</button></div>`);
-  $('#dx').onclick = () => { snap(); DB.sessions = DB.sessions.filter(s => !(s.who === id && s.status === 'plan' && atOf(s) > NOW)); DB.students = DB.students.filter(x => x.id !== id); DB.archived = [...(DB.archived||[]), p]; p.kind = 'stopped'; whoF.delete(id); if (openStu === id) openStu = null; save(); closeModal(); renderAll(); toast(`ลบ ${p.name} แล้ว`, true); };
+  const p = st(id), mine = DB.sessions.filter(s => s.who === id), done = mine.filter(s => s.status === 'done'), money = done.reduce((a, s) => a + amt(s), 0);
+  const gone = GONE.includes(kindOf(p));
+  openModal(`<h2>ลบ ${esc(p.name)} ถาวร?</h2>
+    <p class="dwarn">จะหายทั้งหมด: ข้อมูลนักเรียน · คาบ ${mine.length} คาบ${done.length ? ` (สอนแล้ว ${done.length} คาบ · รายได้ ${cash(money)} จะหายจากยอดรายได้)` : ''} · บันทึกการสอนและแผนที่บท</p>
+    ${gone ? '' : `<p class="mut" style="margin:12px 0 0;font-size:.88rem">ถ้าน้องแค่หยุดเรียนหรือเรียนจบ ให้เปลี่ยนประเภทแทน · ประวัติกับยอดเงินยังอยู่ครบ</p>
+    <div class="dalt"><button class="chip" id="dstop">→ ไม่เรียนแล้ว</button><button class="chip" id="dgrad">→ เรียนจบ 🎓</button></div>`}
+    <div class="cfoot"><span class="sp"></span><button class="ghostb" onclick="closeModal()">ยกเลิก</button><button class="go red" id="dx">ลบถาวร</button></div>`);
+  const asType = k => { snap(); p.kind = k; setGone(p, true); save(); closeModal(); renderAll(); if (k === 'graduated') SFX.play('done');
+    toast(k === 'graduated' ? `🎉 ${p.name} เรียนจบแล้ว` : `${p.name} → ไม่เรียนแล้ว`, true); };
+  if (!gone){ $('#dstop').onclick = () => asType('stopped'); $('#dgrad').onclick = () => asType('graduated'); }
+  $('#dx').onclick = () => { snap(); DB.sessions = DB.sessions.filter(s => s.who !== id); DB.students = DB.students.filter(x => x.id !== id);
+    DB.archived = (DB.archived || []).filter(x => x.id !== id); whoF.delete(id); if (openStu === id) openStu = null;
+    save(); closeModal(); renderAll(); SFX.play('del'); toast(`ลบ ${p.name} ถาวรแล้ว`, true); };
 }
 
 /* ---------- student editor: the card is the form ---------- */
@@ -1841,8 +1861,9 @@ function editStudent(id){
     const name = pe.name.trim(); if (!name) return toast('ใส่ชื่อก่อน');
     const v = {name, grade:pe.grade, subj:pe.subj, mode:pe.mode, rate:pe.rate, slots:pe.slots, goal:$('#pgo').value.trim(), contact:$('#pc').value.trim(), notes:$('#pnotes').value.trim(), color:pe.color, kind:pe.kind};
     snap();
-    if (id){ const o = st(id); Object.assign(o, v); const moved = setGone(o, v.kind === 'stopped'); save(); closeModal(); renderAll();
-      toast(moved === 'gone' ? `${name} → ไม่เรียนแล้ว · ลบคาบที่นัดไว้ข้างหน้า` : moved === 'back' ? `${name} กลับมาเรียน` : `บันทึก ${name} แล้ว`, true); }
+    if (id){ const o = st(id); Object.assign(o, v); const moved = setGone(o, GONE.includes(v.kind)); save(); closeModal(); renderAll();
+      if (moved === 'gone' && v.kind === 'graduated') SFX.play('done');
+      toast(moved === 'gone' ? (v.kind === 'graduated' ? `🎉 ${name} เรียนจบแล้ว · ลบคาบที่นัดไว้ข้างหน้า` : `${name} → ไม่เรียนแล้ว · ลบคาบที่นัดไว้ข้างหน้า`) : moved === 'back' ? `${name} กลับมาเรียน` : `บันทึก ${name} แล้ว`, true); }
     else {
       const np = {...v, id:uid(), map: v.subj==='chem' ? 'tttttttttttttt' : null, feed:[]};
       DB.students.push(np);
