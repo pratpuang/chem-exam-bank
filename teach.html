@@ -1160,12 +1160,32 @@ const isGen = x => !!x.series && x.series === `${x.who}-${wdOf(x.date)}-${x.time
 const untouched = x => x.status === 'plan' && !x.note && !x.log && !x.paid;
 function addSkip(x){ DB.skips ||= []; const key = occKey(x.who, x.date, x.time); if (!DB.skips.some(k => k.key === key)) DB.skips.push({key, date: x.date}); }
 const ROLL_DAYS = 56, MAX_ADD = 300, MAX_DEL = 30;
+// one-time baseline: classes deleted BEFORE skip notes existed left plain gaps. The first run with the skips table
+// records every gap up to the end of the imported range as deliberate, then writes a permanent marker into the same
+// insert-only table (so no device can undo it, and any device running it twice writes the same keys)
+const LEGACY_END = '2026-11-29', BASELINE = '__baseline__|v1|', BASE_DATE = '2099-12-31';
+function baseline(skip){
+  if (skip.has(BASELINE)) return 0;
+  const taken = new Set(DB.sessions.map(x => occKey(x.who, x.date, x.time))); let n = 0;
+  for (const p of DB.students){
+    if (p.kind !== 'regular' || !p.slots?.length) continue;
+    for (let k = 0; ; k++){
+      const d = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + k), date = isoD(d); if (date > LEGACY_END) break;
+      for (const [w, t] of p.slots){ if (d.getDay() !== w || new Date(`${date}T${t}:00`) <= NOW) continue;
+        const key = occKey(p.id, date, t); if (!taken.has(key) && !skip.has(key)){ DB.skips.push({key, date}); skip.add(key); n++; } }
+    }
+  }
+  DB.skips.push({key: BASELINE, date: BASE_DATE}); skip.add(BASELINE);
+  return n + 1;
+}
 let rollWarn = '';
 function rolling(){
   // only on real data: signed in, skips table present, the real type column loaded (never a guessed type)
   if (!user || skipsOff || missing.students.has('kind')) return false;
   const today = isoD(NOW), future = x => x.date > today || (x.date === today && atOf(x) > NOW);
-  const skip = new Set((DB.skips || []).map(k => k.key)), act = new Map(DB.students.map(p => [p.id, p]));
+  DB.skips ||= [];
+  const skip = new Set(DB.skips.map(k => k.key)), act = new Map(DB.students.map(p => [p.id, p]));
+  const based = baseline(skip);
   const regular = p => p.kind === 'regular' && p.slots?.length;
   // 1) reconcile untouched future generated classes
   const del = [], fixH = [];
@@ -1197,7 +1217,7 @@ function rolling(){
   if (warn) return false;
   // keep the skip list small: notes for dates long past can't matter any more
   const cutoff = isoD(new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() - 30)), oldSkips = (DB.skips || []).filter(k => k.date < cutoff).length;
-  if (!del.length && !fixH.length && !add.length && !oldSkips) return false;
+  if (!del.length && !fixH.length && !add.length && !oldSkips){ if (based){ cacheSave(); schedulePush(); } return !!based; }
   if (del.length) DB.sessions = DB.sessions.filter(x => !dropping.has(x));
   fixH.forEach(([x, h]) => x.h = h);
   DB.sessions.push(...add);
