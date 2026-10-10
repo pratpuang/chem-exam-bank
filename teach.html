@@ -884,6 +884,12 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .hint .lg{display:inline-flex;gap:6px;align-items:center;margin-left:8px;white-space:nowrap}
 .hint .lg i{width:11px;height:11px;border:2px solid var(--ink);background:var(--card);display:inline-block;margin-left:4px}
 .hint .lg i.d{background:var(--blue)}.hint .lg i.n{background:var(--yel)}.hint .lg i.s{background:repeating-linear-gradient(45deg,var(--card) 0 2px,#e1d9c8 2px 4px)}
+/* delete confirm */
+.dskip{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:center;margin:16px 0 0;padding:10px 12px;border:2px dashed var(--grid);cursor:pointer}
+.dskip input{width:20px;height:20px;accent-color:var(--ink);grid-row:span 2}
+.dskip span{font-weight:700;font-size:.9rem}.dskip small{font-size:.74rem;color:var(--mut);font-weight:600}
+.dskip:has(input:checked){border-color:var(--ink);background:var(--stbg)}
+.dwarn{margin:12px 0 0;padding:8px 12px;border-left:4px solid var(--red);background:#fbe4dd;font-weight:700;font-size:.86rem}
 /* ---------- misc ---------- */
 footer.live{display:flex;justify-content:space-between;align-items:center;color:#756149;font:.75rem "JetBrains Mono";margin-top:18px;flex-wrap:wrap;gap:6px}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#887044;margin-right:8px;animation:pulse 2s infinite}
@@ -1488,14 +1494,25 @@ function saveWu(){
   save(); closeModal(); renderAll(); toast(`บันทึกคาบ ${p.name}${added}`, true);
 }
 function togglePaid(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.paid = !s.paid; save(); renderAll(); toast(s.paid ? `✓ ${st(s.who)?.name} จ่ายแล้ว ${cash(amt(s))}` : `${st(s.who)?.name} · กลับเป็นค้างจ่าย`, true); }
+// delete a class: always confirm (it may carry money), unless "ไม่ต้องถามอีก 10 นาที" was ticked — then it goes
+// straight away (only this class, never the rest of a series) with the usual undo toast
+const SKIPDEL = 'teach-skipdel', skipDel = () => { try{ return +localStorage.getItem(SKIPDEL) > Date.now(); }catch{ return false; } };
 function delSession(id){
   const s = DB.sessions.find(x => x.id === id); if (!s) return;
   const rest = DB.sessions.filter(x => x.series && x.series === s.series && x.date > s.date && x.status === 'plan');
-  const go = all => { snap(); const kill = new Set([id, ...(all ? rest.map(r => r.id) : [])]); DB.sessions = DB.sessions.filter(x => !kill.has(x.id)); save(); closeModal(); renderAll(); toast(all ? `ลบ ${kill.size} คาบ · ${st(s.who)?.name} ตั้งแต่ ${dLabel(s.date)}` : `ลบคาบ ${st(s.who)?.name} ${dLabel(s.date)}`, true); };
-  if (!rest.length) return go(false);
-  openModal(`<h2>ลบคาบนี้?</h2><div class="dc" style="margin:6px 0 0">${rw(s, true)}</div><div class="mut" style="font-size:.85rem;margin-top:8px">${dLabel(s.date)}</div><p class="mut" style="margin:14px 0 0">เป็นคาบประจำ · หลังจากนี้ยังมีอีก ${rest.length} คาบ</p>
-    <div class="cfoot"><button class="ghostb" onclick="closeModal()">ยกเลิก</button><span class="sp"></span><button class="go sm" id="d1" style="background:var(--card);color:var(--ink)">ลบแค่คาบนี้</button><button class="go sm red" id="d2">ลบคาบนี้ + ทุกคาบหลังจากนี้</button></div>`);
-  $('#d1').onclick = () => go(false); $('#d2').onclick = () => go(true);
+  const go = all => { if ($('#dskip')?.checked){ try{ localStorage.setItem(SKIPDEL, Date.now() + 10*60000); }catch{} }
+    snap(); const kill = new Set([id, ...(all ? rest.map(r => r.id) : [])]); DB.sessions = DB.sessions.filter(x => !kill.has(x.id)); save(); closeModal(); renderAll(); SFX.play('del');
+    toast(all ? `ลบ ${kill.size} คาบ · ${st(s.who)?.name} ตั้งแต่ ${dLabel(s.date)}` : `ลบคาบ ${st(s.who)?.name} ${dLabel(s.date)}`, true); };
+  if (skipDel()) return go(false);
+  const money = s.status === 'done' ? `<p class="dwarn">คาบนี้สอนแล้ว · ยอด ${cash(amt(s))}${s.paid ? ' (จ่ายแล้ว)' : ' (ยังค้าง)'} จะหายจากรายได้ด้วย</p>` : '';
+  openModal(`<h2>ลบคาบนี้?</h2><div class="dc" style="margin:6px 0 0">${rw(s, true)}</div><div class="mut" style="font-size:.85rem;margin-top:8px">${dLabel(s.date)}</div>${money}
+    ${rest.length ? `<p class="mut" style="margin:14px 0 0">เป็นคาบประจำ · หลังจากนี้ยังมีอีก ${rest.length} คาบ</p>` : ''}
+    <label class="dskip"><input type="checkbox" id="dskip"><span>ไม่ต้องถามอีก 10 นาที</span><small>ลบทันที · ลบแค่คาบเดียว · ยังกดเลิกทำได้</small></label>
+    <div class="cfoot"><button class="ghostb" onclick="closeModal()">ยกเลิก</button><span class="sp"></span>${rest.length
+      ? `<button class="go sm" id="d1" style="background:var(--card);color:var(--ink)">ลบแค่คาบนี้</button><button class="go sm red" id="d2">ลบคาบนี้ + ทุกคาบหลังจากนี้</button>`
+      : `<button class="go sm red" id="d1">ลบคาบนี้</button>`}</div>`);
+  $('#d1').onclick = () => go(false); if ($('#d2')) $('#d2').onclick = () => go(true);
+  setTimeout(() => $('#d1')?.focus(), 50);
 }
 
 /* ---------- session composer: one ticket bar, one picker at a time ---------- */
