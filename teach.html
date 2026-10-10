@@ -1621,7 +1621,14 @@ function saveWu(){
   }
   if (wu.fb.trim()) p.feed.push([wu.fbk, s.date, wu.fb.trim()]);
   let added = '';
-  if (wu.addNext){ DB.sessions.push({id:uid(), who:s.who, date:wu.nd, time:wu.nt, h:wu.nh, rate:s.rate, status:'plan', paid:false, note: hw ? 'การบ้าน: ' + hw : '', series:null}); added = ` · นัด ${dLabel(wu.nd)} ${wu.nt}`; }
+  const hwNote = hw ? 'การบ้าน: ' + hw : '';
+  const putHw = x => { if (hwNote && !(x.note || '').includes(hwNote)) x.note = x.note ? x.note + ' · ' + hwNote : hwNote; };
+  if (wu.addNext){
+    // that slot already has a class (e.g. the weekly one): reuse it instead of making a second copy
+    const same = DB.sessions.find(x => x.who === s.who && x.date === wu.nd && x.time === wu.nt && x.status !== 'cancel');
+    if (same){ putHw(same); added = ` · มีคาบ ${dLabel(wu.nd)} ${wu.nt} อยู่แล้ว`; }
+    else { DB.sessions.push({id:uid(), who:s.who, date:wu.nd, time:wu.nt, h:wu.nh, rate:s.rate, status:'plan', paid:false, note: hwNote, series:null}); added = ` · นัด ${dLabel(wu.nd)} ${wu.nt}`; }
+  } else if (wu.nextS){ const nx = DB.sessions.find(x => x.id === wu.nextS.id); if (nx) putHw(nx); }   // homework rides on the class that's already booked
   save(); closeModal(); renderAll(); toast(`บันทึกคาบ ${p.name}${added}`, true);
 }
 function togglePaid(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.paid = !s.paid; save(); renderAll(); toast(s.paid ? `✓ ${st(s.who)?.name} จ่ายแล้ว ${cash(amt(s))}` : `${st(s.who)?.name} · กลับเป็นค้างจ่าย`, true); }
