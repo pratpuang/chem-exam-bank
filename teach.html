@@ -1308,9 +1308,16 @@ async function push(){
   if (d.st) await part('settings', async () => {
     const was = base.st ? JSON.parse(base.st) : {}, changed = Object.keys(d.st).filter(k => J(d.st[k]) !== J(was[k]));
     const {data: cur, error} = await sb.from('app_state').select('data').maybeSingle(); if (error) throw error;
-    const merged = {...(cur?.data || {}), ...Object.fromEntries(changed.map(k => [k, d.st[k]]))};
+    // one level deeper for groups (holidays by month, templates by name): only the changed entries win
+    const obj = v => v && typeof v === 'object' && !Array.isArray(v), srv = cur?.data || {}, merged = {...srv};
+    for (const k of changed){
+      if (obj(d.st[k]) && obj(srv[k]) && obj(was[k])){ const g = {...srv[k]};
+        for (const sk of new Set([...Object.keys(d.st[k]), ...Object.keys(was[k])])) if (J(d.st[k][sk]) !== J(was[k][sk])){ if (sk in d.st[k]) g[sk] = d.st[k][sk]; else delete g[sk]; }
+        merged[k] = g; }
+      else merged[k] = d.st[k];
+    }
     await write('app_state', () => sb.from('app_state').upsert({owner:user.id, data:merged}));
-    for (const k in merged) if (!changed.includes(k)) DB[k] = merged[k];   // take the other device's parts too
+    for (const k in merged) DB[k] = merged[k];   // take the other device's parts too (incl. inside merged groups)
     d.st = merged; }, () => base.st = J(rowsOf(DB).st));   // compare in this device's own key order, or it looks unsaved forever
   cacheSave(); pushing = false;
   if (fails.length){ setSync(navigator.onLine ? 'err' : 'off'); clearTimeout(pushT); pushT = setTimeout(push, 15000); }
