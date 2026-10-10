@@ -1066,7 +1066,7 @@ const uid = () => Math.random().toString(36).slice(2,9);
 const NOW = new Date();
 
 // the real data lives in Supabase; this is the empty shape until the first load (or the offline cache) fills it
-const blankDB = () => ({v:4, students:[], archived:[], sessions:[], avail:defAvail(), tpl:defTpl(), rates:{solo:300, group:175}, history:{}, holidays:{}, deadlines:[], expenses:[]});
+const blankDB = () => ({v:4, students:[], archived:[], sessions:[], avail:defAvail(), tpl:defTpl(), rates:{solo:300, group:175}, history:{}, holidays:{}, deadlines:[], expenses:[], skips:[]});
 let DB = blankDB();
 try{ localStorage.removeItem('teach-demo-v3'); }catch{}
 function defAvail(){ return {block:{0:[],1:[8,9,10,11,12,13,14,15,16],2:[8,9,10,11,12,13,14,15,16],3:[8,9,10,11,12,13,14,15,16],4:[8,9,10,11,12,13,14,15,16],5:[8,9,10,11,12,13,14,15,16],6:[]}}; }
@@ -1147,6 +1147,64 @@ addEventListener('message', e => { if (e.source !== parent || e.data?.type !== '
 // arriving from the bank's slide-up: the sheet that grew there is this page's paper; settle the content in
 try{ if (sessionStorage.getItem('teach-from-bank')){ sessionStorage.removeItem('teach-from-bank'); document.body.classList.add('frombank'); setTimeout(() => document.body.classList.remove('frombank'), 900); } }catch{}
 
+
+/* =============================== weekly classes: rolling 8-week top-up =============================== */
+// A "generated" class is one whose series is exactly the slot it came from ('<who>-<weekday>-<HH:MM>'): classes made by
+// hand, "repeat N weeks" series and anything moved (moving clears the series) are never touched. Deleting or moving a
+// generated class leaves a skip note for that slot occurrence, so it is never re-created, by this or any other device.
+const occKey = (who, date, time) => `${who}|${date}|${time}`;
+const wdOf = date => new Date(date + 'T00:00').getDay();
+const isGen = x => !!x.series && x.series === `${x.who}-${wdOf(x.date)}-${x.time}`;
+const untouched = x => x.status === 'plan' && !x.note && !x.log && !x.paid;
+function addSkip(x){ DB.skips ||= []; const key = occKey(x.who, x.date, x.time); if (!DB.skips.some(k => k.key === key)) DB.skips.push({key, date: x.date}); }
+const ROLL_DAYS = 56, MAX_ADD = 300, MAX_DEL = 30;
+let rollWarn = '';
+function rolling(){
+  // only on real data: signed in, skips table present, the real type column loaded (never a guessed type)
+  if (!user || skipsOff || missing.students.has('kind')) return false;
+  const today = isoD(NOW), future = x => x.date > today || (x.date === today && atOf(x) > NOW);
+  const skip = new Set((DB.skips || []).map(k => k.key)), act = new Map(DB.students.map(p => [p.id, p]));
+  const regular = p => p.kind === 'regular' && p.slots?.length;
+  // 1) reconcile untouched future generated classes
+  const del = [], fixH = [];
+  for (const x of DB.sessions){
+    if (!isGen(x) || !untouched(x) || !future(x)) continue;
+    const p = act.get(x.who); if (!p) continue;                       // student not on the active list: setGone already handled it
+    if (skip.has(occKey(x.who, x.date, x.time))){ del.push(x); continue; }
+    if (p.kind !== 'regular'){ if (KINDS[p.kind]) del.push(x); continue; }
+    if (!p.slots?.length) continue;                                    // empty slots look like a glitch, not a decision: leave alone
+    const slot = p.slots.find(([w, t]) => w === wdOf(x.date) && t === x.time);
+    if (!slot) del.push(x); else if (+slot[2] !== +x.h) fixH.push([x, +slot[2]]);
+  }
+  // 2) top up: every slot occurrence in the next 8 weeks that has no class and no skip note
+  const taken = new Set(DB.sessions.map(x => occKey(x.who, x.date, x.time))), dropping = new Set(del), add = [];
+  for (const p of DB.students){
+    if (!regular(p)) continue;
+    for (let k = 0; k < ROLL_DAYS; k++){
+      const d = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + k), date = isoD(d);
+      for (const [w, t, h] of p.slots){
+        if (d.getDay() !== w || new Date(`${date}T${t}:00`) <= NOW) continue;
+        const key = occKey(p.id, date, t); if (skip.has(key) || taken.has(key)) continue;
+        taken.add(key); add.push({id: `r_${p.id}_${date}_${t.replace(':', '')}`, who: p.id, date, time: t, h: +h, rate: p.rate, series: `${p.id}-${w}-${t}`, status: 'plan', paid: false, note: '', log: null});
+      }
+    }
+  }
+  // guard rails: a run that wants to do something huge is almost certainly a bug -> do nothing and say so
+  const warn = del.length > MAX_DEL ? `ระบบจะลบคาบประจำ ${del.length} คาบในครั้งเดียว · หยุดไว้ก่อน` : add.length > MAX_ADD ? `ระบบจะเพิ่มคาบ ${add.length} คาบในครั้งเดียว · หยุดไว้ก่อน` : '';
+  if (warn !== rollWarn){ rollWarn = warn; showMissing(); }
+  if (warn) return false;
+  // keep the skip list small: notes for dates long past can't matter any more
+  const cutoff = isoD(new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() - 30)), oldSkips = (DB.skips || []).filter(k => k.date < cutoff).length;
+  if (!del.length && !fixH.length && !add.length && !oldSkips) return false;
+  if (del.length) DB.sessions = DB.sessions.filter(x => !dropping.has(x));
+  fixH.forEach(([x, h]) => x.h = h);
+  DB.sessions.push(...add);
+  if (oldSkips) DB.skips = DB.skips.filter(k => k.date >= cutoff);
+  cacheSave(); schedulePush();
+  if (add.length || del.length) console.info(`weekly classes: +${add.length} −${del.length} ~${fixH.length}`);
+  return true;
+}
+
 /* =============================== auth + sync =============================== */
 // Supabase is the truth. Every save() diffs DB against the last state the server confirmed (base) and sends only
 // the rows that changed; the cache (DB + base) sits in localStorage so the page opens offline and unsent edits
@@ -1157,17 +1215,18 @@ const pick = (o, cols) => Object.fromEntries(cols.map(k => [k, o[k] ?? null]));
 const sb = window.supabase && window.TEACH_SB ? window.supabase.createClient(TEACH_SB.url, TEACH_SB.key) : null;
 let user = null, base = null, pushing = false, again = false, pushT = 0, lastPull = 0;
 function rowsOf(db){
-  const st = {}; for (const k in db) if (!['students','archived','sessions','logSeeded'].includes(k)) st[k] = db[k];
+  const st = {}; for (const k in db) if (!['students','archived','sessions','skips','logSeeded'].includes(k)) st[k] = db[k];
   return {s: [...db.students.map(x => pick({...x, archived:false}, SCOL)), ...(db.archived || []).map(x => pick({...x, archived:true}, SCOL))],
-          x: db.sessions.map(x => pick(x, XCOL)), st};
+          x: db.sessions.map(x => pick(x, XCOL)), k: (db.skips || []).map(x => ({key:x.key, date:x.date})), st};
 }
-const baseOf = r => ({s: Object.fromEntries(r.s.map(x => [x.id, JSON.stringify(x)])), x: Object.fromEntries(r.x.map(x => [x.id, JSON.stringify(x)])), st: JSON.stringify(r.st)});
+const baseOf = r => ({s: Object.fromEntries(r.s.map(x => [x.id, JSON.stringify(x)])), x: Object.fromEntries(r.x.map(x => [x.id, JSON.stringify(x)])), k: Object.fromEntries(r.k.map(x => [x.key, JSON.stringify(x)])), st: JSON.stringify(r.st)});
 function pending(){
   if (!base) return null;
-  const r = rowsOf(DB), si = new Set(r.s.map(x => x.id)), xi = new Set(r.x.map(x => x.id));
+  const r = rowsOf(DB), si = new Set(r.s.map(x => x.id)), xi = new Set(r.x.map(x => x.id)), ki = new Set(r.k.map(x => x.key)), bk = base.k || {};
   const d = {sUp: r.s.filter(x => base.s[x.id] !== JSON.stringify(x)), xUp: r.x.filter(x => base.x[x.id] !== JSON.stringify(x)),
-    sDel: Object.keys(base.s).filter(id => !si.has(id)), xDel: Object.keys(base.x).filter(id => !xi.has(id)), st: JSON.stringify(r.st) !== base.st ? r.st : null, r};
-  d.n = d.sUp.length + d.xUp.length + d.sDel.length + d.xDel.length + (d.st ? 1 : 0); return d;
+    sDel: Object.keys(base.s).filter(id => !si.has(id)), xDel: Object.keys(base.x).filter(id => !xi.has(id)), st: JSON.stringify(r.st) !== base.st ? r.st : null, r,
+    kUp: skipsOff ? [] : r.k.filter(x => bk[x.key] !== JSON.stringify(x)), kDel: skipsOff ? [] : Object.keys(bk).filter(k => !ki.has(k))};
+  d.n = d.sUp.length + d.xUp.length + d.sDel.length + d.xDel.length + d.kUp.length + d.kDel.length + (d.st ? 1 : 0); return d;
 }
 function cacheSave(){ if (!user) return; try{ localStorage.setItem(CACHE, JSON.stringify({uid:user.id, db:DB, base})); }catch{} }
 function setSync(k, extra){
@@ -1179,15 +1238,17 @@ function schedulePush(){ clearTimeout(pushT); pushT = setTimeout(push, 500); }
 // columns the page knows about but the database doesn't have yet (a UI change shipped before its schema change):
 // reads and writes carry on without them and the footer says so, instead of every save being rejected
 const missing = {students: new Set(), sessions: new Set()};
+let skipsOff = false;   // the skips table isn't in the database yet: no rolling top-up, everything else normal
 const colOf = e => (/'([a-z_]+)' column/.exec(e?.message || '') || /column \w+\.([a-z_]+) does not exist/.exec(e?.message || '') || [])[1];
 const isMissingCol = e => ['PGRST204', '42703'].includes(e?.code) && !!colOf(e);
 const dropMissing = (table, rows) => missing[table].size ? rows.map(x => { const r = {...x}; missing[table].forEach(k => delete r[k]); return r; }) : rows;
 function noteMissing(table, e){ const c = colOf(e); if (!c || missing[table].has(c)) return false; missing[table].add(c); console.warn('db column missing:', table + '.' + c); showMissing(); return true; }
 function showMissing(){
-  const list = [...missing.students].map(c => 'students.' + c).concat([...missing.sessions].map(c => 'sessions.' + c));
+  const list = [...missing.students].map(c => 'students.' + c).concat([...missing.sessions].map(c => 'sessions.' + c), skipsOff ? ['ตาราง skips (คาบประจำต่ออัตโนมัติปิดอยู่)'] : []);
+  if (rollWarn) list.push(rollWarn);
   let el = $('#dbwarn'); if (!list.length){ el?.remove(); return; }
   if (!el){ el = document.createElement('span'); el.id = 'dbwarn'; $('#sync').after(el); }
-  el.textContent = '⚠ ฐานข้อมูลยังไม่มีช่อง ' + list.join(', ') + ' · ส่วนนั้นเก็บในเครื่องเท่านั้น'; el.title = 'รัน SQL เพิ่มคอลัมน์ใน Supabase แล้วรีเฟรช';
+  el.textContent = '⚠ ' + list.join(' · '); el.title = 'รัน SQL เพิ่มคอลัมน์ใน Supabase แล้วรีเฟรช';
 }
 // one write, healed: a missing column is dropped and the write retried (as often as there are missing columns)
 async function write(table, make){
@@ -1210,6 +1271,8 @@ async function push(){
       await write('sessions', () => sb.from('sessions').upsert(dropMissing('sessions', own(chunk)))); chunk.forEach(x => base.x[x.id] = J(x)); } }, () => {});
   if (d.xDel.length) await part('sessions-del', () => write('sessions', () => sb.from('sessions').delete().in('id', d.xDel)), () => d.xDel.forEach(id => delete base.x[id]));
   if (d.sDel.length) await part('students-del', () => write('students', () => sb.from('students').delete().in('id', d.sDel)), () => d.sDel.forEach(id => delete base.s[id]));
+  if (d.kUp.length) await part('skips', () => write('skips', () => sb.from('skips').upsert(own(d.kUp))), () => { base.k ||= {}; d.kUp.forEach(x => base.k[x.key] = J(x)); });
+  if (d.kDel.length) await part('skips-del', () => write('skips', () => sb.from('skips').delete().in('key', d.kDel)), () => d.kDel.forEach(k => delete base.k[k]));
   if (d.st) await part('settings', () => write('app_state', () => sb.from('app_state').upsert({owner:user.id, data:d.st})), () => base.st = J(d.st));
   cacheSave(); pushing = false;
   if (fails.length){ setSync(navigator.onLine ? 'err' : 'off'); clearTimeout(pushT); pushT = setTimeout(push, 15000); }
@@ -1236,13 +1299,15 @@ async function pull(){
   setSync('load');
   try{
     const S = await readTable('students', SCOL);
+    const K = await fetchAll('skips', 'key,date').then(r => { if (skipsOff){ skipsOff = false; showMissing(); } return r; })
+      .catch(e => { if (!['42P01', 'PGRST205'].includes(e.code) && !/skips/.test(e.message || '')) throw e; if (!skipsOff){ skipsOff = true; showMissing(); } return null; });
     const [X, A] = await Promise.all([ readTable('sessions', XCOL), sb.from('app_state').select('data').maybeSingle()]);
     if (A.error) throw A.error;
     const st = A.data?.data || {}, b = blankDB();
     const fix = x => ({...x, slots:x.slots || [], feed:x.feed || [], goal:x.goal || '', contact:x.contact || '', notes:x.notes || ''});
     DB = {...b, ...st, avail: st.avail || b.avail, tpl: {...b.tpl, ...(st.tpl || {})},
       students: S.filter(x => !x.archived).map(fix), archived: S.filter(x => x.archived).map(fix),
-      sessions: X.map(x => ({...x, h:+x.h, note:x.note || ''}))};
+      sessions: X.map(x => ({...x, h:+x.h, note:x.note || ''})), skips: K || (DB.skips || [])};
     base = baseOf(rowsOf(DB)); lastPull = Date.now();
     if (keep?.n){   // re-apply this device's unsent edits on top of what the server has, then try sending again
       const sIdx = id => DB.students.findIndex(x => x.id === id), aIdx = id => DB.archived.findIndex(x => x.id === id);
@@ -1253,10 +1318,13 @@ async function pull(){
       DB.sessions = DB.sessions.filter(x => !keep.xDel.includes(x.id));
       DB.students = DB.students.filter(x => !keep.sDel.includes(x.id)); DB.archived = DB.archived.filter(x => !keep.sDel.includes(x.id));
       if (keep.st) Object.assign(DB, keep.st);
+      for (const r of keep.kUp) if (!DB.skips.some(x => x.key === r.key)) DB.skips.push(r);
+      DB.skips = DB.skips.filter(x => !keep.kDel.includes(x.key));
       schedulePush();
     }
     cacheSave(); setSync(keep?.n ? 'saving' : 'ok', keep?.n ? '' : ' · ' + hhmm(new Date()));
-    if (keep?.n || JSON.stringify(base) !== prevBase) renderAll();   // the 30 s refresh only redraws when something changed
+    const rolled = rolling();   // fresh data: reconcile + top up weekly classes (sends its own changes)
+    if (keep?.n || rolled || JSON.stringify(base) !== prevBase) renderAll();   // the 30 s refresh only redraws when something changed
   }catch(e){ console.warn('pull', e); setSync(navigator.onLine ? 'err' : 'off'); }
 }
 let fromCache = false;
@@ -1527,7 +1595,8 @@ function delSession(id){
   const s = DB.sessions.find(x => x.id === id); if (!s) return;
   const rest = DB.sessions.filter(x => x.series && x.series === s.series && x.date > s.date && x.status === 'plan');
   const go = all => { if ($('#dskip')?.checked){ try{ localStorage.setItem(SKIPDEL, Date.now() + 10*60000); }catch{} }
-    snap(); const kill = new Set([id, ...(all ? rest.map(r => r.id) : [])]); DB.sessions = DB.sessions.filter(x => !kill.has(x.id)); save(); closeModal(); renderAll(); SFX.play('del');
+    snap(); const kill = new Set([id, ...(all ? rest.map(r => r.id) : [])]); DB.sessions.filter(x => kill.has(x.id) && isGen(x)).forEach(addSkip); DB.sessions = DB.sessions.filter(x => !kill.has(x.id));
+    if (all && isGen(s)){ const p = st(s.who); if (p) p.slots = p.slots.filter(([w, t]) => !(w === wdOf(s.date) && t === s.time)); }   // 'this + all after' on a weekly slot = that slot is over save(); closeModal(); renderAll(); SFX.play('del');
     toast(all ? `ลบ ${kill.size} คาบ · ${st(s.who)?.name} ตั้งแต่ ${dLabel(s.date)}` : `ลบคาบ ${st(s.who)?.name} ${dLabel(s.date)}`, true); };
   if (skipDel()) return go(false);
   const money = s.status === 'done' ? `<p class="dwarn">คาบนี้สอนแล้ว · ยอด ${cash(amt(s))}${s.paid ? ' (จ่ายแล้ว)' : ' (ยังค้าง)'} จะหายจากรายได้ด้วย</p>` : '';
@@ -1633,6 +1702,7 @@ function saveSession(){
   snap();
   if (edit.id){
     const s = DB.sessions.find(x => x.id === edit.id), moved = s.date !== v.date || s.time !== v.time;
+    if (moved && isGen(s)) addSkip(s);   // its original slot stays empty on purpose
     Object.assign(s, v); if (moved) s.series = null;
     save(); closeModal(); renderAll();
     toast(moved ? `เลื่อน ${st(v.who).name} → ${dLabel(v.date)} ${v.time}` : 'บันทึกแล้ว', true);
@@ -1814,7 +1884,7 @@ function delStudent(id){
   const asType = k => { snap(); p.kind = k; setGone(p, true); save(); closeModal(); renderAll(); if (k === 'graduated') SFX.play('done');
     toast(k === 'graduated' ? `🎉 ${p.name} เรียนจบแล้ว` : `${p.name} → ไม่เรียนแล้ว`, true); };
   if (!gone){ $('#dstop').onclick = () => asType('stopped'); $('#dgrad').onclick = () => asType('graduated'); }
-  $('#dx').onclick = () => { snap(); DB.sessions = DB.sessions.filter(s => s.who !== id); DB.students = DB.students.filter(x => x.id !== id);
+  $('#dx').onclick = () => { snap(); DB.sessions = DB.sessions.filter(s => s.who !== id); DB.skips = (DB.skips || []).filter(k => !k.key.startsWith(id + '|')); DB.students = DB.students.filter(x => x.id !== id);
     DB.archived = (DB.archived || []).filter(x => x.id !== id); whoF.delete(id); if (openStu === id) openStu = null;
     save(); closeModal(); renderAll(); SFX.play('del'); toast(`ลบ ${p.name} ถาวรแล้ว`, true); };
 }
@@ -2105,6 +2175,7 @@ hook('markDone', () => SFX.play('tick'));
 hook('undone', () => SFX.play('untick'));
 hook('togglePaid', (_, id) => SFX.play(DB.sessions.find(x => x.id === id)?.paid ? 'coin' : 'del'));
 hook('toggleStu', () => SFX.play(openStu ? 'unfold' : 'fold'));
+hook('editStudent', () => $('#psave')?.addEventListener('click', () => setTimeout(() => { if (!modalOpen() && rolling()) renderAll(); }, 0)));
 hook('saveSession', wasOpen => { if (wasOpen && !modalOpen()) SFX.play('save'); }, modalOpen);
 hook('saveWu', () => SFX.play('done'));
 let wuStep = 0;

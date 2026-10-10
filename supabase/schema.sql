@@ -64,3 +64,15 @@ alter table students add column if not exists notes text default '';
 
 -- 003: student type (regular | adhoc | trial | stopped)
 alter table students add column if not exists kind text default 'regular';
+
+-- 004: "removed on purpose" notes for weekly classes (insert-only set; the rolling top-up never recreates these)
+create table if not exists skips (
+  key text not null,                -- "<student id>|YYYY-MM-DD|HH:MM" = one occurrence of a weekly slot
+  owner uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  date date not null,               -- for pruning old notes
+  created_at timestamptz default now(),
+  primary key (owner, key)
+);
+alter table skips enable row level security;
+drop policy if exists own on skips;
+create policy own on skips for all to authenticated using (owner = auth.uid()) with check (owner = auth.uid());

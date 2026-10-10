@@ -12,6 +12,7 @@ cfg = (ROOT / 'supabase' / 'config.js').read_text(encoding='utf-8')
 URL = re.search(r"url:\s*'([^']+)'", cfg).group(1); KEY = re.search(r"key:\s*'([^']+)'", cfg).group(1)
 cols = {t: re.findall(r"'([a-z_]+)'", re.search(rf"const {v} = \[([^\]]+)\]", page).group(1)) for t, v in (('students', 'SCOL'), ('sessions', 'XCOL'))}
 cols['app_state'] = ['owner', 'data']
+cols['skips'] = ['key', 'owner', 'date']   # 004: rolling weekly classes
 bad = []
 for table, cs in cols.items():
     for c in cs:
