@@ -1546,7 +1546,8 @@ function rw(s, pv){
     <span class="cb ${colorOf(s.who)}"></span>
     <span class="ckw">${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" ${pv ? 'tabindex="-1"' : ''} title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" onclick="event.stopPropagation();${pv ? '' : s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}</span>
     <span class="tm">${s.time}<small>ถึง ${endOf(s)}</small></span>
-    <span class="nm"><b>${esc(p?.name ?? '?')}${cw.length ? `<em class="cbadge" title="ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time + '–' + endOf(x)).join(', ')}">⚠ ชน ${cw.map(x => esc(st(x.who)?.name)).join(', ')}</em>` : ''}</b><small>${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</small></span>
+    <span class="nm"><b>${esc(p?.name ?? '?')}${cw.length ? (cw.every(x => x.who === s.who) ? `<em class="cbadge" title="มีคาบของ ${esc(p?.name)} ซ้ำเวลาเดียวกัน · ลบอันที่เกินได้">⚠ ซ้ำ</em>`
+      : `<em class="cbadge" title="ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time + '–' + endOf(x)).join(', ')}">⚠ ชน ${cw.filter(x => x.who !== s.who).map(x => esc(st(x.who)?.name)).join(', ')}</em>`) : ''}</b><small>${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</small></span>
     <span class="st">${stampOf(s, pv)}</span>
     ${pv ? '' : `<span class="tools">${s.status === 'done' ? `<button title="บันทึกการสอน" onclick="event.stopPropagation();wrapUp('${s.id}')">📝</button>` : ''}<button title="แก้ / เลื่อน" onclick="event.stopPropagation();editSession('${s.id}')">✎</button><button class="del" title="ลบ" onclick="event.stopPropagation();delSession('${s.id}')">🗑</button></span>`}
   </div>`;
