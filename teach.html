@@ -1269,8 +1269,16 @@ async function push(){
   // every part on its own; each success is recorded in base right away, so a later failure can't undo it
   const part = async (name, fn, mark) => { try{ await fn(); mark(); } catch(e){ fails.push(name); console.warn('sync ' + name, e); } };
   await part('students', () => write('students', () => sb.from('students').upsert(dropMissing('students', own(d.sUp)))), () => d.sUp.forEach(x => base.s[x.id] = J(x)));
-  await part('sessions', async () => { for (let i = 0; i < d.xUp.length; i += 200){ const chunk = d.xUp.slice(i, i+200);
-      await write('sessions', () => sb.from('sessions').upsert(dropMissing('sessions', own(chunk)))); chunk.forEach(x => base.x[x.id] = J(x)); } }, () => {});
+  await part('sessions', async () => { for (let i = 0; i < d.xUp.length; i += 200){ let chunk = d.xUp.slice(i, i+200);
+      try{ await write('sessions', () => sb.from('sessions').upsert(dropMissing('sessions', own(chunk)))); }
+      catch(e){ if (e.code !== '23503') throw e;
+        // a class points at a student deleted elsewhere: that class can't exist any more — drop it here, send the rest
+        const {data: ids, error} = await sb.from('students').select('id'); if (error) throw e;
+        const live = new Set(ids.map(r => r.id)), orphan = new Set(chunk.filter(x => !live.has(x.who)).map(x => x.id)); if (!orphan.size) throw e;
+        DB.sessions = DB.sessions.filter(x => !orphan.has(x.id)); orphan.forEach(id => delete base.x[id]); chunk = chunk.filter(x => !orphan.has(x.id));
+        if (chunk.length) await write('sessions', () => sb.from('sessions').upsert(dropMissing('sessions', own(chunk))));
+        console.warn('dropped', orphan.size, 'classes of a student deleted on another device'); renderAll(); }
+      chunk.forEach(x => base.x[x.id] = J(x)); } }, () => {});
   if (d.xDel.length) await part('sessions-del', () => write('sessions', () => sb.from('sessions').delete().in('id', d.xDel)), () => d.xDel.forEach(id => delete base.x[id]));
   if (d.sDel.length) await part('students-del', () => write('students', () => sb.from('students').delete().in('id', d.sDel)), () => d.sDel.forEach(id => delete base.s[id]));
   if (d.kUp.length) await part('skips', () => write('skips', () => sb.from('skips').upsert(own(d.kUp))), () => { base.k ||= {}; d.kUp.forEach(x => base.k[x.key] = J(x)); });
@@ -1975,9 +1983,11 @@ function editStudent(id){
     const name = pe.name.trim(); if (!name) return toast('ใส่ชื่อก่อน');
     const v = {name, grade:pe.grade, subj:pe.subj, mode:pe.mode, rate:pe.rate, slots:pe.slots, goal:$('#pgo').value.trim(), contact:$('#pc').value.trim(), notes:$('#pnotes').value.trim(), color:pe.color, kind:pe.kind};
     snap();
-    if (id){ const o = st(id); Object.assign(o, v); const moved = setGone(o, GONE.includes(v.kind)); save(); closeModal(); renderAll();
+    if (id){ const o = st(id), oldRate = o.rate; Object.assign(o, v);
+      let rated = 0; if (v.rate !== oldRate) DB.sessions.forEach(x => { if (x.who === id && x.status === 'plan' && !x.paid && atOf(x) > NOW && x.rate === oldRate){ x.rate = v.rate; rated++; } });
+      const moved = setGone(o, GONE.includes(v.kind)); save(); closeModal(); renderAll();
       if (moved === 'gone' && v.kind === 'graduated') SFX.play('done');
-      toast(moved === 'gone' ? (v.kind === 'graduated' ? `🎉 ${name} เรียนจบแล้ว · ลบคาบที่นัดไว้ข้างหน้า` : `${name} → ไม่เรียนแล้ว · ลบคาบที่นัดไว้ข้างหน้า`) : moved === 'back' ? `${name} กลับมาเรียน` : `บันทึก ${name} แล้ว`, true); }
+      toast(moved === 'gone' ? (v.kind === 'graduated' ? `🎉 ${name} เรียนจบแล้ว · ลบคาบที่นัดไว้ข้างหน้า` : `${name} → ไม่เรียนแล้ว · ลบคาบที่นัดไว้ข้างหน้า`) : moved === 'back' ? `${name} กลับมาเรียน` : `บันทึก ${name} แล้ว` + (rated ? ` · เรทใหม่ใช้กับ ${rated} คาบข้างหน้า` : ''), true); }
     else {
       const np = {...v, id:uid(), map: v.subj==='chem' ? 'tttttttttttttt' : null, feed:[]};
       DB.students.push(np);
