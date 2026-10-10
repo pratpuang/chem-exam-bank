@@ -1303,7 +1303,15 @@ async function push(){
   if (d.sDel.length) await part('students-del', () => write('students', () => sb.from('students').delete().in('id', d.sDel)), () => d.sDel.forEach(id => delete base.s[id]));
   if (d.kUp.length) await part('skips', () => write('skips', () => sb.from('skips').upsert(own(d.kUp))), () => { base.k ||= {}; d.kUp.forEach(x => base.k[x.key] = J(x)); });
   if (d.kDel.length) await part('skips-del', () => write('skips', () => sb.from('skips').delete().in('key', d.kDel)), () => d.kDel.forEach(k => delete base.k[k]));
-  if (d.st) await part('settings', () => write('app_state', () => sb.from('app_state').upsert({owner:user.id, data:d.st})), () => base.st = J(d.st));
+  // settings are one row: send only the parts this device changed, merged over what the server has now, so a
+  // template edited on the iPad and a holiday toggled on the desktop both survive
+  if (d.st) await part('settings', async () => {
+    const was = base.st ? JSON.parse(base.st) : {}, changed = Object.keys(d.st).filter(k => J(d.st[k]) !== J(was[k]));
+    const {data: cur, error} = await sb.from('app_state').select('data').maybeSingle(); if (error) throw error;
+    const merged = {...(cur?.data || {}), ...Object.fromEntries(changed.map(k => [k, d.st[k]]))};
+    await write('app_state', () => sb.from('app_state').upsert({owner:user.id, data:merged}));
+    for (const k in merged) if (!changed.includes(k)) DB[k] = merged[k];   // take the other device's parts too
+    d.st = merged; }, () => base.st = J(rowsOf(DB).st));   // compare in this device's own key order, or it looks unsaved forever
   cacheSave(); pushing = false;
   if (fails.length){ setSync(navigator.onLine ? 'err' : 'off'); clearTimeout(pushT); pushT = setTimeout(push, 15000); }
   else { setSync('ok', ' · ' + hhmm(new Date())); signature().then(x => sig = x).catch(() => {}); }
