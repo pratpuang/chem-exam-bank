@@ -799,6 +799,39 @@ button.fh:hover{transform:translateY(-2px)}
 body.frombank #lock .door,body.frombank #app>:is(header,nav,main){animation:fromBank .45s cubic-bezier(.2,.9,.3,1) both}
 body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-delay:.12s}
 @keyframes fromBank{from{opacity:0;transform:translateY(24px)}}
+
+/* login */
+#login{display:flex;flex-direction:column;gap:12px;margin-top:18px}
+.lf{display:flex;flex-direction:column;gap:4px}
+.lf span{font:700 .72rem "JetBrains Mono";letter-spacing:.08em;color:var(--mut)}
+.lf input{border:3px solid var(--ink);background:var(--paper);font:600 1rem "Anuphan";padding:10px 12px;outline:0}
+.lf input:focus{background:var(--card);box-shadow:4px 4px 0 var(--yel)}
+#login .go{margin-top:6px;justify-content:center;min-height:48px;font-size:1rem}
+#lmsg.bad{color:var(--red);font-weight:700}
+/* sync status */
+.sync{display:inline-flex;align-items:center;gap:7px;font-weight:700}
+.sync i{width:9px;height:9px;border-radius:50%;background:var(--mut)}
+.sync[data-s=ok] i{background:var(--ok)}
+.sync[data-s=saving] i,.sync[data-s=load] i{background:var(--yel);animation:blink 1s infinite}
+.sync[data-s=off] i,.sync[data-s=err] i{background:var(--red)}
+@keyframes blink{50%{opacity:.3}}
+/* notes */
+.onote{margin-top:6px;padding:10px 12px;background:var(--paper);border-left:4px solid var(--yel);font-weight:600;font-size:.9rem;line-height:1.5;white-space:pre-wrap}
+.lastn.note{border-left-color:var(--yel)}
+.pnotes{resize:vertical;min-height:54px;font:inherit;line-height:1.5}
+/* expenses */
+.xhead{padding:6px 0 14px;border-bottom:3px solid var(--ink)}
+.xsum{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.xsum div{display:flex;flex-direction:column}
+.xsum b{font:800 1.35rem "JetBrains Mono";letter-spacing:-.03em}
+.xsum span{font-size:.72rem;font-weight:700;color:var(--mut)}
+.xsum .net b{color:var(--ok)}
+.xlist{display:flex;flex-direction:column}
+.xr{display:grid;grid-template-columns:1fr auto 32px;gap:12px;align-items:center;padding:11px 0;border-bottom:2px solid var(--grid)}
+.xr span{font-weight:700}.xr small{display:block;font:600 .72rem "JetBrains Mono";color:var(--mut)}
+.xr b{font:800 1.05rem "JetBrains Mono"}
+.xadd{display:grid;grid-template-columns:1fr 110px auto;gap:8px;margin-top:14px;align-items:center}
+@media (max-width:560px){.xadd{grid-template-columns:1fr 90px}.xadd .go{grid-column:1/-1}}
 /* ---------- misc ---------- */
 footer.live{display:flex;justify-content:space-between;align-items:center;color:#756149;font:.75rem "JetBrains Mono";margin-top:18px;flex-wrap:wrap;gap:6px}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#887044;margin-right:8px;animation:pulse 2s infinite}
@@ -819,9 +852,12 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
 <div id="lock">
   <div class="door">
     <h2><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>สอนพิเศษ</h2>
-    <div class="mut" style="font-size:.85rem">ส่วนตัว · ใส่รหัส 4 หลัก <span class="mono">(demo: 0000)</span></div>
-    <div class="pins" id="pins"><i></i><i></i><i></i><i></i></div>
-    <div class="keys" id="keys"></div>
+    <div class="mut" style="font-size:.85rem" id="lmsg">ส่วนตัว · เข้าสู่ระบบเพื่อดูข้อมูล</div>
+    <form id="login" autocomplete="on">
+      <label class="lf"><span>อีเมล</span><input id="lem" type="email" autocomplete="username" required></label>
+      <label class="lf"><span>รหัสผ่าน</span><input id="lpw" type="password" autocomplete="current-password" required></label>
+      <button class="go" id="lgo" type="submit">เข้าสู่ระบบ →</button>
+    </form>
   </div>
 </div>
 
@@ -860,6 +896,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
         <div class="fg" style="--i:0"><i class="c-blue"></i><span>ยังจะได้อีก<small>คาบที่นัดไว้เดือนนี้</small></span><strong id="sLeft">฿0</strong></div>
         <button class="fg red" style="--i:1" onclick="openDrawer('stu');stuOwe=true;renderStudents(true)" title="ดูว่าใครค้าง"><i class="c-red"></i><span>ค้างชำระ<small>ทุกเดือนรวมกัน · แตะดู</small></span><strong id="sOwe">฿0</strong></button>
         <div class="fg" style="--i:2"><i class="c-yel"></i><span>รับแล้วทั้งปี<small>ม.ค. ถึงตอนนี้</small></span><strong id="sAll">฿0</strong></div>
+        <button class="fg" style="--i:3" onclick="openExp()" title="รายจ่ายเดือนนี้"><i class="c-lav"></i><span>รายจ่ายเดือนนี้<small id="sNet">เหลือสุทธิ ฿0</small></span><strong id="sExp">฿0</strong></button>
       </div>
     </div>
     <div class="mchart">
@@ -876,7 +913,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
     <div class="who-f" id="whof"></div>
     <div id="slist"></div>
   </section>
-  <footer class="live"><span class="demo-flag">DEMO · ข้อมูลตัวอย่าง</span><span><i class="dot"></i>สด · อัปเดต <span id="clock"></span> · บันทึกในเครื่องนี้</span><span><button class="ghost" id="reset">⟲ ล้างข้อมูลตัวอย่าง</button></span></footer>
+  <footer class="live"><span class="sync" id="sync" data-s="idle"><i></i><b id="synct">กำลังเชื่อมต่อ…</b></span><span>อัปเดต <span id="clock"></span></span><span><button class="ghost" id="logout">ออกจากระบบ</button></span></footer>
 </main>
 </div>
 
@@ -929,9 +966,11 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
 <div class="toast" id="toast" role="status"></div>
 
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="supabase/config.js"></script>
 <script>
 /* =============================== data =============================== */
-const KEY = 'teach-demo-v3';
+const CACHE = 'teach-cache-v1';
 const CH = ['ปฏิบัติการ','อะตอม','ตารางธาตุ','พันธะเคมี','โมล','สารละลาย','ปริมาณสัมพันธ์','แก๊ส','อัตรา','สมดุล','กรด-เบส','ไฟฟ้าเคมี','อินทรีย์','พอลิเมอร์'];
 const TH_M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const TH_MF = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
@@ -944,44 +983,23 @@ const isoD = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}
 const uid = () => Math.random().toString(36).slice(2,9);
 const NOW = new Date();
 
-function seed(){
-  const students = [
-    {id:'pl',name:'ปลื้ม',grade:'ม.6',subj:'chem',mode:'ออนไลน์',rate:300,color:0,slots:[[2,'18:00',1],[4,'20:00',2],[6,'20:00',1]],goal:'TCAS เคมี + เกรดเทอม',contact:'LINE',map:'ddddddddddnttt',feed:[['pro','2026-09-15','อธิบายไฟฟ้าเคมีเข้าใจกว่าที่โรงเรียน'],['con','2026-09-22','ขอเวลาจดก่อนเปลี่ยนหน้า']]},
-    {id:'ro',name:'รอบิตี้',grade:'ม.5',subj:'bio',mode:'ออนไลน์',rate:300,color:3,slots:[[2,'21:00',1]],goal:'เกรดชีวะเทอม 1',contact:'LINE',map:null,feed:[]},
-    {id:'sl',name:'ซีลี่',grade:'ม.4',subj:'chem',mode:'ออนไลน์',rate:300,color:2,slots:[[5,'20:00',1.5]],goal:'ปูพื้นฐาน ม.4',contact:'IG',map:'ddddnttttsssss',feed:[['pro','2026-09-25','ชอบที่ให้ลองทำก่อน']]},
-    {id:'kk',name:'กีกี้',grade:'ม.5',subj:'chem',mode:'ออนไซต์',rate:350,color:4,slots:[[6,'09:00',2]],goal:'เพิ่มเกรด',contact:'ผู้ปกครอง · LINE',map:'ddddddnttttsss',feed:[]},
-    {id:'km',name:'ไข่มุก',grade:'ม.6',subj:'chem',mode:'ออนไลน์',rate:300,color:5,slots:[[6,'12:00',2]],goal:'A-Level เคมี',contact:'LINE',map:'dddddddtdntttt',feed:[]},
-    {id:'lo',name:'ลีโอบดิน',grade:'ม.5',subj:'chem',mode:'ออนไลน์',rate:250,color:1,slots:[[6,'18:00',1.5]],goal:'กรด-เบส ให้รอดสอบ',contact:'LINE',map:'ddddddddddnsss',feed:[['pro','2026-08-30','น้ำเสียงดีแล้ว'],['con','2026-08-30','เขียนเสร็จอย่าเพิ่งเปลี่ยนหน้า รอให้จดก่อน']]},
-  ];
-  const sessions = [];
-  const unpaid = ['lo|2026-10-03','pl|2026-10-01','sl|2026-09-25'];
-  for (let d = new Date(2026,8,1); d <= new Date(2026,10,30); d.setDate(d.getDate()+1)){
-    const date = isoD(d), wd = d.getDay();
-    for (const s of students) for (const [w,t,h] of s.slots) if (w === wd){
-      const past = new Date(`${date}T${t}:00`) <= NOW;
-      const midterm = date >= '2026-10-05' && date <= '2026-10-09';
-      sessions.push({id:uid(), who:s.id, date, time:t, h, rate:s.rate, series:s.id+'-'+w+'-'+t,
-        status: midterm && past ? 'cancel' : past ? 'done' : 'plan', paid: past && !midterm && !unpaid.includes(s.id+'|'+date),
-        note: midterm ? 'สอบกลางภาค' : ''});
-    }
-  }
-  return {v:4, avail:defAvail(), tpl:defTpl(), students, sessions, history:{'2026-4':8500,'2026-5':11500,'2026-6':9800,'2026-7':12400}, holidays:{'2026-9':[5,6,7,8,9]}, rates:{solo:300,group:175}, deadlines:[{d:'2026-10-19',t:'ส่งรายงาน Ceutic 4'},{d:'2026-11-30',t:'สอบปลายภาค'}]};
-}
-let DB;
-try{ DB = JSON.parse(localStorage.getItem(KEY)); }catch{}
-if (!DB || DB.v !== 4) DB = seed();
+// the real data lives in Supabase; this is the empty shape until the first load (or the offline cache) fills it
+const blankDB = () => ({v:4, students:[], archived:[], sessions:[], avail:defAvail(), tpl:defTpl(), rates:{solo:300, group:175}, history:{}, holidays:{}, deadlines:[], expenses:[]});
+let DB = blankDB();
+try{ localStorage.removeItem('teach-demo-v3'); }catch{}
 function defAvail(){ return {block:{0:[],1:[8,9,10,11,12,13,14,15,16],2:[8,9,10,11,12,13,14,15,16],3:[8,9,10,11,12,13,14,15,16],4:[8,9,10,11,12,13,14,15,16],5:[8,9,10,11,12,13,14,15,16],6:[]}}; }
 DB.avail ||= defAvail();
 function defTpl(){ return {free:"ช่วงนี้พี่ว่างประมาณนี้นะครับ\n{วันว่าง}\nสะดวกช่วงไหนบอกพี่ได้เลยครับ 😊", post:"📚 เปิดรับสอนพิเศษวิชาเคมี ระดับมัธยมศึกษา\nสวัสดีครับ 😊\nผมเป็นนักศึกษาเภสัชศาสตร์ ชั้นปีที่ 4 มหาวิทยาลัยมหิดล\nเปิดรับสอนพิเศษวิชาเคมี สำหรับนักเรียนระดับมัธยม ไม่ว่าจะเป็น\n✅ ปูพื้นฐานเคมีในห้องเรียน\n✅ เพิ่มเกรดและเสริมความเข้าใจ\n✅ เตรียมสอบเข้า ม.4 / TCAS / คณะสายวิทยาศาสตร์สุขภาพ\nผลงาน\n🏅 เหรียญทองแดง สอวน. ค่ายระดับชาติ สาขาเคมี\nรูปแบบการสอน\n📍 สอนได้ทั้งออนไลน์ ทั้งนอกสถานที่ในกรุงเทพฯ (สามารถตกลงสถานที่ได้)\n👤 เรียนเดี่ยว หรือ 👥 เรียนเป็นกลุ่ม\nอัตราค่าสอน\nเรียนเดี่ยว {เดี่ยว} บาท/ชั่วโมง\nเรียนกลุ่ม {กลุ่ม} บาท/ชั่วโมง/คน\nหากสนใจ สามารถทักมาสอบถามรายละเอียด รูปแบบการเรียน ตารางสอน หรือสอบถามผลงานเพิ่มเติมได้เลยครับ 😊", dm:"สอนเคมีครับมีทั้งปูพื้นฐาน เพิ่มเกรด สอบเข้า มีรูปแบบออนไลน์ และ ออนไซต์ถ้าไม่ไกลมากครับผม ค่าเรียนชม.ละ {เดี่ยว} บาท (เรียนกลุ่ม {กลุ่ม}/คน) สงสัยตรงไหนสอบถามเพิ่มได้ครับ ถ้าสนใจขอชื่อนักเรียนกับระดับชั้นไว้หน่อยนะครับผม"}; }
 DB.tpl ||= defTpl();
 DB.tpl.free ??= defTpl().free;
 let undoSnap = null;
-function save(){ try{ localStorage.setItem(KEY, JSON.stringify(DB)); }catch{} }
+function save(){ cacheSave(); schedulePush(); }
 function snap(){ undoSnap = JSON.stringify(DB); }
 
 /* =============================== helpers =============================== */
 const $ = s => document.querySelector(s);
 const cash = n => '฿' + Math.round(n).toLocaleString('en-US');
+const subjL = x => x === 'bio' ? 'ชีวะ' : x === 'other' ? 'อื่นๆ' : 'เคมี';
 const st = id => DB.students.find(s => s.id === id) || (DB.archived || []).find(s => s.id === id);
 const colorOf = id => COLORS[(st(id)?.color ?? 0) % COLORS.length];
 const mkey = (y,m) => `${y}-${m}`;
@@ -1036,29 +1054,113 @@ addEventListener('pageshow', () => document.querySelectorAll('.bsheet').forEach(
 // arriving from the bank's slide-up: the sheet that grew there is this page's paper; settle the content in
 try{ if (sessionStorage.getItem('teach-from-bank')){ sessionStorage.removeItem('teach-from-bank'); document.body.classList.add('frombank'); setTimeout(() => document.body.classList.remove('frombank'), 900); } }catch{}
 
-/* =============================== lock =============================== */
-(function(){
-  if (new URLSearchParams(location.search).has('open') || sessionStorage.getItem('teach-ok')) { $('#lock').remove(); return; }
-  let code = '';
-  $('#keys').innerHTML = ['1','2','3','4','5','6','7','8','9','⌫','0','↵'].map(k => `<button data-k="${k}">${k}</button>`).join('');
-  const paint = () => document.querySelectorAll('#pins i').forEach((p,i) => { p.classList.toggle('on', i < code.length); p.textContent = i < code.length ? '●' : ''; });
-  const press = k => {
-    if (k === '⌫') code = code.slice(0,-1); else if (k !== '↵' && code.length < 4) code += k;
-    paint();
-    if (code.length === 4){
-      if (code === '0000'){ try{ sessionStorage.setItem('teach-ok','1'); }catch{} $('#lock').classList.add('out'); setTimeout(() => $('#lock')?.remove(), 460); ['#income','#sLeft','#sOwe','#sAll'].forEach(s => $(s)._v = 0); renderMoney(); }
-      else { $('#lock').classList.add('shake'); setTimeout(() => { $('#lock').classList.remove('shake'); code=''; paint(); }, 380); }
-    }
-  };
-  $('#keys').onclick = e => { const k = e.target.dataset.k; if (k) press(k); };
-  addEventListener('keydown', e => { if (!$('#lock')) return; if (/^\d$/.test(e.key)) press(e.key); if (e.key === 'Backspace') press('⌫'); });
+/* =============================== auth + sync =============================== */
+// Supabase is the truth. Every save() diffs DB against the last state the server confirmed (base) and sends only
+// the rows that changed; the cache (DB + base) sits in localStorage so the page opens offline and unsent edits
+// survive a reload. RLS means the key in the page can't read a thing without this login.
+const SCOL = ['id','name','grade','subj','mode','rate','color','slots','goal','contact','map','feed','archived','notes'];
+const XCOL = ['id','who','date','time','h','rate','series','status','paid','note','log'];
+const pick = (o, cols) => Object.fromEntries(cols.map(k => [k, o[k] ?? null]));
+const sb = window.supabase && window.TEACH_SB ? window.supabase.createClient(TEACH_SB.url, TEACH_SB.key) : null;
+let user = null, base = null, pushing = false, again = false, pushT = 0, lastPull = 0;
+function rowsOf(db){
+  const st = {}; for (const k in db) if (!['students','archived','sessions','logSeeded'].includes(k)) st[k] = db[k];
+  return {s: [...db.students.map(x => pick({...x, archived:false}, SCOL)), ...(db.archived || []).map(x => pick({...x, archived:true}, SCOL))],
+          x: db.sessions.map(x => pick(x, XCOL)), st};
+}
+const baseOf = r => ({s: Object.fromEntries(r.s.map(x => [x.id, JSON.stringify(x)])), x: Object.fromEntries(r.x.map(x => [x.id, JSON.stringify(x)])), st: JSON.stringify(r.st)});
+function pending(){
+  if (!base) return null;
+  const r = rowsOf(DB), si = new Set(r.s.map(x => x.id)), xi = new Set(r.x.map(x => x.id));
+  const d = {sUp: r.s.filter(x => base.s[x.id] !== JSON.stringify(x)), xUp: r.x.filter(x => base.x[x.id] !== JSON.stringify(x)),
+    sDel: Object.keys(base.s).filter(id => !si.has(id)), xDel: Object.keys(base.x).filter(id => !xi.has(id)), st: JSON.stringify(r.st) !== base.st ? r.st : null, r};
+  d.n = d.sUp.length + d.xUp.length + d.sDel.length + d.xDel.length + (d.st ? 1 : 0); return d;
+}
+function cacheSave(){ if (!user) return; try{ localStorage.setItem(CACHE, JSON.stringify({uid:user.id, db:DB, base})); }catch{} }
+function setSync(k, extra){
+  const el = $('#sync'); if (!el) return; el.dataset.s = k;
+  $('#synct').textContent = {ok:'บันทึกแล้ว', saving:'กำลังบันทึก…', off:'ออฟไลน์ · เก็บในเครื่องไว้ก่อน', load:'กำลังโหลด…', err:'บันทึกไม่สำเร็จ · จะลองใหม่'}[k] + (extra || '');
+}
+const chk = async q => { const {error} = await q; if (error) throw error; };
+function schedulePush(){ clearTimeout(pushT); pushT = setTimeout(push, 500); }
+async function push(){
+  if (!sb || !user || !base) return;
+  if (pushing){ again = true; return; }
+  const d = pending(); if (!d.n) return setSync('ok', lastPull ? ' · ' + hhmm(new Date()) : '');
+  if (!navigator.onLine) return setSync('off');
+  pushing = true; setSync('saving');
+  try{
+    const own = rows => rows.map(x => ({...x, owner:user.id}));
+    if (d.sUp.length) await chk(sb.from('students').upsert(own(d.sUp)));
+    if (d.xUp.length) for (let i = 0; i < d.xUp.length; i += 200) await chk(sb.from('sessions').upsert(own(d.xUp.slice(i, i+200))));
+    if (d.xDel.length) await chk(sb.from('sessions').delete().in('id', d.xDel));
+    if (d.sDel.length) await chk(sb.from('students').delete().in('id', d.sDel));
+    if (d.st) await chk(sb.from('app_state').upsert({owner:user.id, data:d.st}));
+    base = baseOf(d.r); cacheSave(); setSync('ok', ' · ' + hhmm(new Date()));
+  }catch(e){ console.warn('sync', e); setSync(navigator.onLine ? 'err' : 'off'); clearTimeout(pushT); pushT = setTimeout(push, 15000); }
+  finally{ pushing = false; if (again){ again = false; schedulePush(); } }
+}
+const hhmm = d => d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+async function fetchAll(table, cols){
+  const out = []; for (let i = 0; ; i += 1000){
+    const {data, error} = await sb.from(table).select(cols).range(i, i + 999); if (error) throw error;
+    out.push(...data); if (data.length < 1000) return out; }
+}
+async function pull(){
+  if (!sb || !user) return;
+  const d = pending(); if (d?.n){ await push(); if (pending()?.n) return; }   // never overwrite edits the server hasn't got
+  setSync('load');
+  try{
+    const [S, X, A] = await Promise.all([fetchAll('students', SCOL.join(',')), fetchAll('sessions', XCOL.join(',')), sb.from('app_state').select('data').maybeSingle()]);
+    if (A.error) throw A.error;
+    const st = A.data?.data || {}, b = blankDB();
+    const fix = x => ({...x, slots:x.slots || [], feed:x.feed || [], goal:x.goal || '', contact:x.contact || '', notes:x.notes || ''});
+    DB = {...b, ...st, avail: st.avail || b.avail, tpl: {...b.tpl, ...(st.tpl || {})},
+      students: S.filter(x => !x.archived).map(fix), archived: S.filter(x => x.archived).map(fix),
+      sessions: X.map(x => ({...x, h:+x.h, note:x.note || ''}))};
+    base = baseOf(rowsOf(DB)); lastPull = Date.now(); cacheSave(); setSync('ok', ' · ' + hhmm(new Date()));
+    ['#income','#sLeft','#sOwe','#sAll','#sExp'].forEach(q => $(q) && ($(q)._v = 0)); renderAll();
+  }catch(e){ console.warn('pull', e); setSync(navigator.onLine ? 'err' : 'off'); }
+}
+function enter(u){
+  user = u;
+  try{ const c = JSON.parse(localStorage.getItem(CACHE)); if (c?.uid === u.id){ DB = {...blankDB(), ...c.db}; base = c.base; renderAll(); } }catch{}
+  const lk = $('#lock'); if (lk){ lk.classList.add('out'); setTimeout(() => lk.remove(), 460); }
+  pull();
+}
+(async function(){
+  await 0;   // let the whole script define itself (money state etc.) before the first render
+  try{ $('#lem').value = localStorage.getItem('teach-email') || ''; }catch{}
+  if (!sb){   // library didn't load (offline): open the cache if this device was signed in
+    try{ const c = JSON.parse(localStorage.getItem(CACHE)); if (c?.uid){ user = {id:c.uid}; DB = {...blankDB(), ...c.db}; base = c.base; $('#lock').remove(); renderAll(); setSync('off'); return; } }catch{}
+    $('#lmsg').textContent = 'ต่อเน็ตไม่ได้ · ต้องออนไลน์ครั้งแรกเพื่อเข้าสู่ระบบ'; return;
+  }
+  const {data} = await sb.auth.getSession();
+  if (data.session) enter(data.session.user); else setTimeout(() => ($('#lem').value ? $('#lpw') : $('#lem')).focus(), 300);
 })();
+$('#login').onsubmit = async e => {
+  e.preventDefault(); if (!sb) return;
+  const em = $('#lem').value.trim(), b = $('#lgo'); b.disabled = true; b.textContent = 'กำลังเข้า…';
+  const {data, error} = await sb.auth.signInWithPassword({email:em, password:$('#lpw').value});
+  b.disabled = false; b.textContent = 'เข้าสู่ระบบ →';
+  if (error){ $('#lmsg').textContent = /invalid/i.test(error.message) ? 'อีเมลหรือรหัสผ่านไม่ถูก' : 'เข้าไม่ได้ · ' + error.message;
+    $('#lmsg').classList.add('bad'); $('#lock').classList.add('shake'); setTimeout(() => $('#lock').classList.remove('shake'), 380); return; }
+  try{ localStorage.setItem('teach-email', em); }catch{}
+  enter(data.user);
+};
+$('#logout').onclick = async () => {
+  if (pending()?.n && !confirm('ยังมีข้อมูลที่ยังไม่ได้ส่งขึ้นเซิร์ฟเวอร์ · ออกเลยไหม?')) return;
+  try{ localStorage.removeItem(CACHE); }catch{} await sb?.auth.signOut(); location.reload();
+};
+addEventListener('online', () => { schedulePush(); });
+addEventListener('offline', () => setSync('off'));
+// back to the tab (phone ↔ PC): refresh if it's been a while and nothing is open mid-edit
+document.addEventListener('visibilitychange', () => { if (!document.hidden && user && Date.now() - lastPull > 60000 && !$('#modal').classList.contains('open')) pull(); });
 
 /* =============================== MONEY =============================== */
 let my = NOW.getFullYear(), mm_ = NOW.getMonth();
 $('#mprev').onclick = () => { mm_--; if (mm_ < 0){ mm_ = 11; my--; } renderMoney(); renderSchedule(); };
 $('#mnext').onclick = () => { mm_++; if (mm_ > 11){ mm_ = 0; my++; } renderMoney(); renderSchedule(); };
-$('#reset').onclick = () => { if (confirm('ล้างทุกอย่างกลับเป็นข้อมูลตัวอย่าง?')){ DB = seed(); save(); renderAll(); toast('รีเซ็ตแล้ว'); } };
 function renderMoney(){
   const isCur = my === NOW.getFullYear() && mm_ === NOW.getMonth();
   $('#mlabel').textContent = `${TH_M[mm_]} ${String(my+543).slice(-2)}`;
@@ -1079,6 +1181,8 @@ function renderMoney(){
   count($('#sOwe'), owedAll().reduce((a,s)=>a+amt(s),0));
   let yr = 0; for (let m = 0; m <= NOW.getMonth(); m++){ const x = monthMoney(NOW.getFullYear(), m); yr += x.n ? x.earned : (DB.history[mkey(NOW.getFullYear(),m)] ?? 0); }
   count($('#sAll'), yr);
+  const ex = expOf(my, mm_); count($('#sExp'), ex);
+  $('#sNet').textContent = ex ? `เหลือสุทธิ ${cash(earned - ex)} · แตะเพื่อดู` : 'ยังไม่มี · แตะเพื่อเพิ่ม';
   const cols = []; for (let k = 5; k >= 0; k--){ let y = my, m = mm_ - k; while (m < 0){ m += 12; y--; } cols.push([y,m]); }
   const maxV = Math.max(...cols.map(([y,m]) => monthTotal(y,m)), avg, 1) * 1.1, H = 204;
   $('#chart').innerHTML = `<div class="average" style="bottom:${26 + avg/maxV*H}px"><span>เฉลี่ย ${cash(avg)}</span></div>` + cols.map(([y,m], i) => {
@@ -1461,16 +1565,16 @@ function renderStudents(anim){
     const mine = DB.sessions.filter(s => s.who === p.id);
     const owe = sorted(mine.filter(s => s.status==='done' && !s.paid)), oweSum = owe.reduce((a,s)=>a+amt(s),0);
     const next = sorted(mine.filter(s => s.status==='plan' && counts(s) && atOf(s) > NOW))[0];
-    const sub = `${esc(p.grade)} · ${p.subj==='bio'?'ชีวะ':'เคมี'} · ${esc(p.mode)}`, c = colorOf(p.id);
+    const sub = `${esc(p.grade)} · ${subjL(p.subj)} · ${esc(p.mode)}`, c = colorOf(p.id);
     if (openStu !== p.id) return `<div class="sc" data-id="${p.id}" style="--i:${i}" role="button" tabindex="0" onclick="toggleStu('${p.id}')" onkeydown="if(event.key==='Enter')toggleStu('${p.id}')">
       <div class="band ${c}"><span class="idx">${pad(i+1)}</span><span class="big">${esc(p.name[0])}</span>${oweSum ? `<span class="otag">ค้าง ${cash(oweSum)}</span>` : ''}<h3>${esc(p.name)}</h3><p>${sub}</p></div>
       <div class="foot"><div class="nx"><span class="lab">ถัดไป</span>${next ? `<b>${next.time}</b><em>${relDay(next.date)}</em>` : '<em>ไม่มีนัด</em>'}</div>
         ${(() => { const cc = p.map ? p.map.indexOf('n') : -1, dn = p.map ? p.map.split('').filter(x => x === 'd').length : 0;
           return p.map ? `<div class="chr"><span class="chn">${cc >= 0 ? 'บท ' + (cc+1) : '—'}</span><span class="chm">${cc >= 0 ? CH[cc] : 'ยังไม่ได้เลือกบท'}</span><span class="chc">${dn}/14</span></div>
             <div class="mstrip">${p.map.split('').map(x => `<i class="${x==='t'?'':x}"></i>`).join('')}</div>`
-            : `<div class="chr"><span class="chn">${p.subj === 'bio' ? 'ชีวะ' : 'เคมี'}</span><span class="chm">${esc(p.goal) || '—'}</span></div><div class="mstrip none"></div>`; })()}
+            : `<div class="chr"><span class="chn">${subjL(p.subj)}</span><span class="chm">${esc(p.goal) || '—'}</span></div><div class="mstrip none"></div>`; })()}
         ${(() => { const lg = sorted(mine.filter(x => x.log?.topic)).pop();
-          return `<div class="lastn ${lg ? '' : 'empty'}"><span class="lab">${lg ? 'คาบล่าสุด · ' + dLabel(lg.date) : 'คาบล่าสุด'}</span><p>${lg ? esc(lg.log.topic) : 'ยังไม่มีบันทึก · ติ๊ก ✓ หลังสอนเพื่อจด'}</p>${lg?.log.hw ? `<small>การบ้าน: ${esc(lg.log.hw)}</small>` : ''}</div>`; })()}</div></div>`;
+          return `<div class="lastn ${lg || p.notes ? '' : 'empty'} ${!lg && p.notes ? 'note' : ''}"><span class="lab">${lg ? 'คาบล่าสุด · ' + dLabel(lg.date) : p.notes ? 'โน้ต' : 'คาบล่าสุด'}</span><p>${lg ? esc(lg.log.topic) : p.notes ? esc(p.notes) : 'ยังไม่มีบันทึก · ติ๊ก ✓ หลังสอนเพื่อจด'}</p>${lg?.log.hw ? `<small>การบ้าน: ${esc(lg.log.hw)}</small>` : ''}</div>`; })()}</div></div>`;
     const mo = mine.filter(s => s.date.startsWith(curP) && counts(s)), moSum = mo.reduce((a,s)=>a+amt(s),0);
     const cur = p.map ? p.map.indexOf('n') : -1, done = p.map ? p.map.split('').filter(x => x==='d').length : 0, k = fbKind[p.id] || 'pro';
     return `<div class="sc open ${popStu?'fresh':''}" data-id="${p.id}" style="--i:${i}">
@@ -1490,6 +1594,7 @@ function renderStudents(anim){
             <div class="segbar">${p.map.split('').map((x,j) => `<button class="${x==='t'?'':x}" onclick="cycle('${p.id}',${j})" title="บท ${j+1} ${CH[j]}">${j+1}</button>`).join('')}</div>
             <div class="hint">แตะช่องเพื่อเปลี่ยน · น้ำเงิน สอนแล้ว · เหลือง กำลังสอน · ลาย ไม่อยู่ในหลักสูตร</div>`
             : `<span class="lab">แผนที่บท</span><button class="addq" onclick="startMap('${p.id}')">＋ ตั้งแผนที่บท</button>`}</div>
+          ${p.notes ? `<div><span class="lab">โน้ต</span><div class="onote">${esc(p.notes)}</div></div>` : ''}
           <div><span class="lab">ค้างจ่าย</span>${owe.length ? `<div class="rcpt">${owe.map(s => `<div class="r"><span>${dLabel(s.date)} · <b>${cash(amt(s))}</b></span><button onclick="togglePaid('${s.id}')">ได้เงินแล้ว ✓</button></div>`).join('')}</div>` : '<div class="clear">✓ เคลียร์หมดแล้ว</div>'}</div>
         </div>
         <div class="col">${(() => { const lg = sorted(mine.filter(x => x.log)).reverse().slice(0, 4); return `<div><span class="lab">บันทึกการสอน</span>${lg.length ? `<div class="logl">${lg.map(x => `<div class="lgi"><b>${dLabel(x.date)}</b> ${esc(x.log.topic || '—')}${x.log.hw ? `<small>การบ้าน: ${esc(x.log.hw)}</small>` : ''}</div>`).join('')}</div>` : '<div class="mut" style="font-size:.85rem;font-weight:600">ยังไม่มี · ขึ้นหลังกด ✓ จบคาบ</div>'}</div>`; })()}</div><div class="col"><div><span class="lab">น้องพูดว่า</span><div class="fbl">
@@ -1517,13 +1622,13 @@ function delStudent(id){
 /* ---------- student editor: the card is the form ---------- */
 let pe = null;
 function editStudent(id){
-  const p = id ? st(id) : {name:'',grade:'ม.4',subj:'chem',mode:'ออนไลน์',rate:DB.rates.solo,slots:[],goal:'',contact:'',color:DB.students.length % 6};
+  const p = id ? st(id) : {name:'',grade:'ม.4',subj:'chem',mode:'ออนไลน์',rate:DB.rates.solo,slots:[],goal:'',contact:'',notes:'',color:DB.students.length % 12};
   pe = {...p, slots:p.slots.map(s => [...s]), gen:true, nd:1, nt:'18:00', nh:1};
   const ch = (k, opts) => `<div class="chips" data-k="${k}">${opts.map(([v,t]) => `<button class="chip" data-v="${v}">${t}</button>`).join('')}</div>`;
   openModal(`<button class="pdx x" onclick="closeModal()" title="ปิด">✕</button>
     <div class="pband" id="pband"><span class="big" id="pbig"></span><span class="eyebrow">${id ? 'แก้ข้อมูลนักเรียน' : 'นักเรียนใหม่'}</span><input class="nmin" id="pn" placeholder="ชื่อเล่น…" value="${esc(p.name)}" autocomplete="off"><p id="pmeta"></p></div>
     <span class="eb2">ชั้น</span>${ch('grade', ['ม.1','ม.2','ม.3','ม.4','ม.5','ม.6','ซิ่ว','มหาลัย'].map(g => [g,g]))}
-    <div class="trow2"><div><span class="eb2">วิชา</span>${ch('subj', [['chem','เคมี'],['bio','ชีวะ']])}</div><div><span class="eb2">เรียนแบบ</span>${ch('mode', ['ออนไลน์','ออนไซต์','ผสม'].map(g => [g,g]))}</div></div>
+    <div class="trow2"><div><span class="eb2">วิชา</span>${ch('subj', [['chem','เคมี'],['bio','ชีวะ'],['other','อื่นๆ']])}</div><div><span class="eb2">เรียนแบบ</span>${ch('mode', ['ออนไลน์','ออนไซต์','ผสม'].map(g => [g,g]))}</div></div>
     <div class="trow2"><div><span class="eb2">เรท / ชม.</span><div class="step"><button data-rate="-25" aria-label="ลดเรท">−</button><b id="prate"></b><button data-rate="25" aria-label="เพิ่มเรท">+</button></div></div>
       <div><span class="eb2">สีประจำตัว</span><div class="sw" id="pcol">${COLORS.map((c,i) => `<button class="${c}" data-c="${i}" aria-label="สี ${i+1}"></button>`).join('')}</div></div></div>
     <span class="eb2">เวลาประจำ · ใช้สร้างตารางสอน</span><div class="slotl" id="pslots"></div>
@@ -1534,6 +1639,7 @@ function editStudent(id){
     ${id ? '' : '<div style="margin-top:12px"><button class="chip" id="pgen"></button></div>'}
     <span class="eb2">เป้าหมาย</span><input class="ln" id="pgo" value="${esc(p.goal)}" placeholder="เช่น TCAS เคมี · เพิ่มเกรด · ปูพื้นฐาน">
     <span class="eb2">ติดต่อ</span><input class="ln" id="pc" value="${esc(p.contact)}" placeholder="LINE / IG / ผู้ปกครอง">
+    <span class="eb2">โน้ต</span><textarea class="ln pnotes" id="pnotes" rows="2" placeholder="สอนถึงไหน · เรื่องที่ต้องจำ · สถานที่">${esc(p.notes || '')}</textarea>
     <div class="cfoot">${id ? `<button class="linkx" onclick="delStudent('${id}')">ลบนักเรียน</button>` : ''}<span class="sp"></span><button class="ghostb" onclick="closeModal()">ยกเลิก</button><button class="go" id="psave">${id ? 'บันทึก' : 'เพิ่มนักเรียน'}</button></div>`, true);
   $('#sheet').onclick = e => {
     const t = e.target.closest('button'); if (!t) return; const d = t.dataset, k = t.parentNode.dataset.k;
@@ -1552,7 +1658,7 @@ function editStudent(id){
   $('#pn').oninput = e => { pe.name = e.target.value; $('#pbig').textContent = (pe.name.trim() || '?')[0]; };
   $('#psave').onclick = () => {
     const name = pe.name.trim(); if (!name) return toast('ใส่ชื่อก่อน');
-    const v = {name, grade:pe.grade, subj:pe.subj, mode:pe.mode, rate:pe.rate, slots:pe.slots, goal:$('#pgo').value.trim(), contact:$('#pc').value.trim(), color:pe.color};
+    const v = {name, grade:pe.grade, subj:pe.subj, mode:pe.mode, rate:pe.rate, slots:pe.slots, goal:$('#pgo').value.trim(), contact:$('#pc').value.trim(), notes:$('#pnotes').value.trim(), color:pe.color};
     snap();
     if (id){ Object.assign(st(id), v); save(); closeModal(); renderAll(); toast(`บันทึก ${name} แล้ว`, true); }
     else {
@@ -1567,7 +1673,7 @@ function editStudent(id){
 function paintStu(){
   $('#pband').className = 'pband ' + COLORS[pe.color % COLORS.length];
   $('#pbig').textContent = (pe.name.trim() || '?')[0];
-  $('#pmeta').textContent = `${pe.grade} · ${pe.subj==='bio'?'ชีวะ':'เคมี'} · ${pe.mode} · ${cash(pe.rate)}/ชม.`;
+  $('#pmeta').textContent = `${pe.grade} · ${subjL(pe.subj)} · ${pe.mode} · ${cash(pe.rate)}/ชม.`;
   qsa('#sheet [data-k]').forEach(g => g.querySelectorAll('[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === String(pe[g.dataset.k]))));
   $('#prate').textContent = cash(pe.rate);
   qsa('#pcol button').forEach(b => b.classList.toggle('on', +b.dataset.c === pe.color));
@@ -1653,23 +1759,38 @@ $('#ratebar').onclick = e => { const b = e.target.closest('[data-r]'); if (!b) r
 $('#r1').oninput = e => { DB.rates.solo = +e.target.value || 0; save(); writeKit(); };
 $('#r2').oninput = e => { DB.rates.group = +e.target.value || 0; save(); writeKit(); };
 
+
+/* =============================== expenses =============================== */
+const ymOf = (y, m) => `${y}-${pad(m+1)}`;
+const expOf = (y, m) => (DB.expenses || []).filter(e => e.d.startsWith(ymOf(y, m))).reduce((a, e) => a + (+e.a || 0), 0);
+function openExp(){
+  DB.expenses ||= [];
+  const ym = ymOf(my, mm_), list = DB.expenses.map((e, i) => [e, i]).filter(([e]) => e.d.startsWith(ym)), M = monthMoney(my, mm_), earned = M.n ? M.earned : (DB.history[mkey(my,mm_)] ?? 0), sum = expOf(my, mm_);
+  openModal(`<button class="pdx x" onclick="closeModal()" title="ปิด">✕</button>
+    <div class="xhead"><span class="eyebrow">รายจ่าย · ${TH_MF[mm_]} ${my+543}</span>
+      <div class="xsum"><div><b>${cash(earned)}</b><span>รับแล้ว</span></div><div><b>− ${cash(sum)}</b><span>รายจ่าย</span></div><div class="net"><b>${cash(earned - sum)}</b><span>เหลือ</span></div></div></div>
+    <div class="xlist">${list.length ? list.map(([e, i]) => `<div class="xr"><span>${esc(e.t || '—')}<small>${dLabel(e.d)}</small></span><b>${cash(e.a)}</b><button class="x" title="ลบ" onclick="delExp(${i})">✕</button></div>`).join('') : '<div class="mut" style="padding:14px 0;font-weight:600">ยังไม่มีรายจ่ายเดือนนี้</div>'}</div>
+    <div class="xadd"><input class="ln" id="xt" placeholder="เช่น ค่า subscription · เก็บลงหุ้น"><input class="ln mono" id="xa" type="number" inputmode="numeric" placeholder="฿"><button class="go sm" id="xgo">＋ เพิ่ม</button></div>`);
+  const add = () => { const t = $('#xt').value.trim(), a = +$('#xa').value; if (!a) return $('#xa').focus();
+    const cur = my === NOW.getFullYear() && mm_ === NOW.getMonth(), d = cur ? isoD(NOW) : isoD(new Date(my, mm_ + 1, 0));
+    snap(); DB.expenses.push({d, t, a}); save(); renderMoney(); openExp(); toast(`เพิ่มรายจ่าย ${cash(a)}`, true); };
+  $('#xgo').onclick = add; $('#xa').onkeydown = $('#xt').onkeydown = e => { if (e.key === 'Enter') add(); };
+  setTimeout(() => $('#xt')?.focus(), 50);
+}
+function delExp(i){ snap(); DB.expenses.splice(i, 1); save(); renderMoney(); openExp(); toast('ลบแล้ว', true); }
+
 /* =============================== boot =============================== */
 window.onerror = m => document.body.setAttribute('data-err', m);
 const tick = () => $('#clock').textContent = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
 tick(); setInterval(tick, 30000);
-if (!DB.logSeeded){
-  const demo = {pl:['กรด-เบส · ไทเทรต + กราฟการไทเทรต','แบบฝึกหัดชีท 11 ข้อ 1–8'], ro:['ระบบหายใจ · การแลกเปลี่ยนแก๊ส',''], sl:['โมล · คำนวณมวลโมเลกุล ถึงข้อ 6','ชีทโมล หน้า 2'], kk:['ปริมาณสัมพันธ์ · สารกำหนดปริมาณ ถึงข้อ 4','ชีท 7 หน้า 1'], km:['สมดุลเคมี · Le Chatelier ถึงข้อ 3',''], lo:['กรด-เบส · pH บัฟเฟอร์ เริ่มไทเทรต','']};
-  for (const [id, [topic, hw]] of Object.entries(demo)){ const last = sorted(DB.sessions.filter(x => x.who === id && x.status === 'done')).pop(); if (last) last.log = {topic, hw}; }
-  DB.logSeeded = true; save();
-}
 renderMoney(); renderSchedule();
 const QP = new URLSearchParams(location.search);
-if (QP.has('stuopen')) openStu = DB.students[0].id;
+if (QP.has('stuopen') && DB.students[0]) openStu = DB.students[0].id;
 if (QP.get('drawer')) openDrawer(QP.get('drawer'));
 if (QP.has('new')) editSession();
-if (QP.has('wrap')) markDone(sorted(DB.sessions.filter(s => s.status==='plan'))[0].id);
+if (QP.has('wrap') && DB.sessions.some(s => s.status==='plan')) markDone(sorted(DB.sessions.filter(s => s.status==='plan'))[0].id);
 if (QP.has('edit')) editSession(DB.sessions.find(s => s.status==='plan')?.id);
-if (QP.has('stuedit')) editStudent(DB.students[0].id);
+if (QP.has('stuedit') && DB.students[0]) editStudent(DB.students[0].id);
 </script>
 </body>
 </html>
