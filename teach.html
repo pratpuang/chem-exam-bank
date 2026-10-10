@@ -815,6 +815,7 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 #login .go{margin-top:6px;justify-content:center;min-height:48px;font-size:1rem}
 #lmsg.bad{color:var(--red);font-weight:700}
 /* sync status */
+#dbwarn{color:var(--red);font-weight:700;font-size:.78rem;margin-left:10px}
 .sync{display:inline-flex;align-items:center;gap:7px;font-weight:700}
 .sync i{width:9px;height:9px;border-radius:50%;background:var(--mut)}
 .sync[data-s=ok] i{background:var(--ok)}
@@ -1118,7 +1119,7 @@ addEventListener('message', e => { if (e.source !== parent || e.data?.type !== '
   document.body.classList.remove('frombank'); void document.body.offsetWidth; document.body.classList.add('frombank');
   setTimeout(() => document.body.classList.remove('frombank'), 900);
   ['#income','#sLeft','#sOwe','#sAll'].forEach(q => $(q) && ($(q)._v = 0)); if (typeof renderMoney === 'function') renderMoney();
-  if (user && Date.now() - lastPull > 60000) pull(); });
+  if (user && Date.now() - lastPull > 5000) pull(); });
 // arriving from the bank's slide-up: the sheet that grew there is this page's paper; settle the content in
 try{ if (sessionStorage.getItem('teach-from-bank')){ sessionStorage.removeItem('teach-from-bank'); document.body.classList.add('frombank'); setTimeout(() => document.body.classList.remove('frombank'), 900); } }catch{}
 
@@ -1151,25 +1152,54 @@ function setSync(k, extra){
 }
 const chk = async q => { const {error} = await q; if (error) throw error; };
 function schedulePush(){ clearTimeout(pushT); pushT = setTimeout(push, 500); }
+// columns the page knows about but the database doesn't have yet (a UI change shipped before its schema change):
+// reads and writes carry on without them and the footer says so, instead of every save being rejected
+const missing = {students: new Set(), sessions: new Set()};
+const colOf = e => (/'([a-z_]+)' column/.exec(e?.message || '') || /column \w+\.([a-z_]+) does not exist/.exec(e?.message || '') || [])[1];
+const isMissingCol = e => ['PGRST204', '42703'].includes(e?.code) && !!colOf(e);
+const dropMissing = (table, rows) => missing[table].size ? rows.map(x => { const r = {...x}; missing[table].forEach(k => delete r[k]); return r; }) : rows;
+function noteMissing(table, e){ const c = colOf(e); if (!c || missing[table].has(c)) return false; missing[table].add(c); console.warn('db column missing:', table + '.' + c); showMissing(); return true; }
+function showMissing(){
+  const list = [...missing.students].map(c => 'students.' + c).concat([...missing.sessions].map(c => 'sessions.' + c));
+  let el = $('#dbwarn'); if (!list.length){ el?.remove(); return; }
+  if (!el){ el = document.createElement('span'); el.id = 'dbwarn'; $('#sync').after(el); }
+  el.textContent = '⚠ ฐานข้อมูลยังไม่มีช่อง ' + list.join(', ') + ' · ส่วนนั้นเก็บในเครื่องเท่านั้น'; el.title = 'รัน SQL เพิ่มคอลัมน์ใน Supabase แล้วรีเฟรช';
+}
+// one write, healed: a missing column is dropped and the write retried (as often as there are missing columns)
+async function write(table, make){
+  for (let tries = 0; tries < 6; tries++){
+    const {error} = await make(); if (!error) return;
+    if (!(table in missing) || !isMissingCol(error) || !noteMissing(table, error)) throw error;
+  }
+}
 async function push(){
   if (!sb || !user || !base) return;
   if (pushing){ again = true; return; }
   const d = pending(); if (!d.n) return setSync('ok', lastPull ? ' · ' + hhmm(new Date()) : '');
   if (!navigator.onLine) return setSync('off');
   pushing = true; setSync('saving');
-  try{
-    const own = rows => rows.map(x => ({...x, owner:user.id}));
-    if (d.sUp.length) await chk(sb.from('students').upsert(own(d.sUp).map(x => { if (noKind){ const {kind, ...r} = x; return r; } return x; })));
-    if (d.xUp.length) for (let i = 0; i < d.xUp.length; i += 200) await chk(sb.from('sessions').upsert(own(d.xUp.slice(i, i+200))));
-    if (d.xDel.length) await chk(sb.from('sessions').delete().in('id', d.xDel));
-    if (d.sDel.length) await chk(sb.from('students').delete().in('id', d.sDel));
-    if (d.st) await chk(sb.from('app_state').upsert({owner:user.id, data:d.st}));
-    base = baseOf(d.r); cacheSave(); setSync('ok', ' · ' + hhmm(new Date()));
-  }catch(e){ console.warn('sync', e); setSync(navigator.onLine ? 'err' : 'off'); clearTimeout(pushT); pushT = setTimeout(push, 15000); }
-  finally{ pushing = false; if (again){ again = false; schedulePush(); } }
+  const own = rows => rows.map(x => ({...x, owner:user.id})), J = JSON.stringify, fails = [];
+  // every part on its own; each success is recorded in base right away, so a later failure can't undo it
+  const part = async (name, fn, mark) => { try{ await fn(); mark(); } catch(e){ fails.push(name); console.warn('sync ' + name, e); } };
+  await part('students', () => write('students', () => sb.from('students').upsert(dropMissing('students', own(d.sUp)))), () => d.sUp.forEach(x => base.s[x.id] = J(x)));
+  await part('sessions', async () => { for (let i = 0; i < d.xUp.length; i += 200){ const chunk = d.xUp.slice(i, i+200);
+      await write('sessions', () => sb.from('sessions').upsert(dropMissing('sessions', own(chunk)))); chunk.forEach(x => base.x[x.id] = J(x)); } }, () => {});
+  if (d.xDel.length) await part('sessions-del', () => write('sessions', () => sb.from('sessions').delete().in('id', d.xDel)), () => d.xDel.forEach(id => delete base.x[id]));
+  if (d.sDel.length) await part('students-del', () => write('students', () => sb.from('students').delete().in('id', d.sDel)), () => d.sDel.forEach(id => delete base.s[id]));
+  if (d.st) await part('settings', () => write('app_state', () => sb.from('app_state').upsert({owner:user.id, data:d.st})), () => base.st = J(d.st));
+  cacheSave(); pushing = false;
+  if (fails.length){ setSync(navigator.onLine ? 'err' : 'off'); clearTimeout(pushT); pushT = setTimeout(push, 15000); }
+  else setSync('ok', ' · ' + hhmm(new Date()));
+  if (again){ again = false; schedulePush(); }
 }
 const hhmm = d => d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-let noKind = false;
+// read a table with every known column; a column the database lacks is noted and the read retried without it
+async function readTable(table, cols){
+  for (let tries = 0; tries < 6; tries++){
+    try{ return await fetchAll(table, cols.filter(k => !missing[table].has(k)).join(',')); }
+    catch(e){ if (!isMissingCol(e) || !noteMissing(table, e)) throw e; }
+  }
+}
 async function fetchAll(table, cols){
   const out = []; for (let i = 0; ; i += 1000){
     const {data, error} = await sb.from(table).select(cols).range(i, i + 999); if (error) throw error;
@@ -1177,19 +1207,32 @@ async function fetchAll(table, cols){
 }
 async function pull(){
   if (!sb || !user) return;
-  const d = pending(); if (d?.n){ await push(); if (pending()?.n) return; }   // never overwrite edits the server hasn't got
+  if (pending()?.n) await push();
+  const keep = pending(), prevBase = base && JSON.stringify(base);   // unsent edits: kept and laid over the server copy below
   setSync('load');
   try{
-    const S = await fetchAll('students', SCOL.filter(k => !(noKind && k === 'kind')).join(',')).catch(async e => { if (e.code !== '42703') throw e; noKind = true; return fetchAll('students', SCOL.filter(k => k !== 'kind').join(',')); });
-    const [X, A] = await Promise.all([ fetchAll('sessions', XCOL.join(',')), sb.from('app_state').select('data').maybeSingle()]);
+    const S = await readTable('students', SCOL);
+    const [X, A] = await Promise.all([ readTable('sessions', XCOL), sb.from('app_state').select('data').maybeSingle()]);
     if (A.error) throw A.error;
     const st = A.data?.data || {}, b = blankDB();
     const fix = x => ({...x, slots:x.slots || [], feed:x.feed || [], goal:x.goal || '', contact:x.contact || '', notes:x.notes || ''});
     DB = {...b, ...st, avail: st.avail || b.avail, tpl: {...b.tpl, ...(st.tpl || {})},
       students: S.filter(x => !x.archived).map(fix), archived: S.filter(x => x.archived).map(fix),
       sessions: X.map(x => ({...x, h:+x.h, note:x.note || ''}))};
-    base = baseOf(rowsOf(DB)); lastPull = Date.now(); cacheSave(); setSync('ok', ' · ' + hhmm(new Date()));
-    renderAll();
+    base = baseOf(rowsOf(DB)); lastPull = Date.now();
+    if (keep?.n){   // re-apply this device's unsent edits on top of what the server has, then try sending again
+      const sIdx = id => DB.students.findIndex(x => x.id === id), aIdx = id => DB.archived.findIndex(x => x.id === id);
+      for (const r of keep.sUp){ const full = keep.r.s.find(x => x.id === r.id) || r, o = {...fix(full)};
+        const i = sIdx(r.id), j = aIdx(r.id); if (i >= 0) DB.students.splice(i, 1); if (j >= 0) DB.archived.splice(j, 1);
+        (full.archived ? DB.archived : DB.students).push({...(DB.students[i] || DB.archived[j] || {}), ...o}); }
+      for (const r of keep.xUp){ const i = DB.sessions.findIndex(x => x.id === r.id), o = {...r, h:+r.h, note:r.note || ''}; i >= 0 ? DB.sessions[i] = {...DB.sessions[i], ...o} : DB.sessions.push(o); }
+      DB.sessions = DB.sessions.filter(x => !keep.xDel.includes(x.id));
+      DB.students = DB.students.filter(x => !keep.sDel.includes(x.id)); DB.archived = DB.archived.filter(x => !keep.sDel.includes(x.id));
+      if (keep.st) Object.assign(DB, keep.st);
+      schedulePush();
+    }
+    cacheSave(); setSync(keep?.n ? 'saving' : 'ok', keep?.n ? '' : ' · ' + hhmm(new Date()));
+    if (keep?.n || JSON.stringify(base) !== prevBase) renderAll();   // the 30 s refresh only redraws when something changed
   }catch(e){ console.warn('pull', e); setSync(navigator.onLine ? 'err' : 'off'); }
 }
 let fromCache = false;
@@ -1235,7 +1278,9 @@ $('#logout').onclick = async () => {
 addEventListener('online', () => { schedulePush(); });
 addEventListener('offline', () => setSync('off'));
 // back to the tab (phone ↔ PC): refresh if it's been a while and nothing is open mid-edit
-document.addEventListener('visibilitychange', () => { if (!document.hidden && user && Date.now() - lastPull > 60000 && !$('#modal').classList.contains('open')) pull(); });
+const idle = () => !$('#modal').classList.contains('open') && !document.getElementById('chpop') && !document.querySelector('#scards input:focus, #scards textarea:focus, .editing');
+document.addEventListener('visibilitychange', () => { if (!document.hidden && user && Date.now() - lastPull > 15000 && idle()) pull(); });
+setInterval(() => { if (!document.hidden && user && sb && navigator.onLine && !pushing && Date.now() - lastPull > 25000 && idle()) pull(); }, 10000);
 
 /* =============================== MONEY =============================== */
 let my = NOW.getFullYear(), mm_ = NOW.getMonth();
