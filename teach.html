@@ -890,6 +890,15 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .dskip span{font-weight:700;font-size:.9rem}.dskip small{font-size:.74rem;color:var(--mut);font-weight:600}
 .dskip:has(input:checked){border-color:var(--ink);background:var(--stbg)}
 .dwarn{margin:12px 0 0;padding:8px 12px;border-left:4px solid var(--red);background:#fbe4dd;font-weight:700;font-size:.86rem}
+/* clashes */
+.rw.clash{background:linear-gradient(90deg,#fbe4dd,transparent 70%)}
+.rw.clash .tm{color:var(--red)}
+.cbadge{display:inline-block;margin-left:8px;font:800 .66rem "Anuphan";font-style:normal;color:#fff;background:var(--red);border:2px solid var(--ink);padding:0 6px;vertical-align:middle}
+.alert.clashal{border-left-color:var(--red);background:#fbe4dd;flex-wrap:wrap}
+.alert.clashal span{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.alert.clashal button{border:2px solid var(--ink);background:var(--card);font:700 .78rem "Anuphan";padding:2px 8px;cursor:pointer}
+.alert.clashal button:hover{background:var(--yel)}
+.mc .ev.clash{outline:2px solid var(--red);outline-offset:-2px}
 /* ---------- misc ---------- */
 footer.live{display:flex;justify-content:space-between;align-items:center;color:#756149;font:.75rem "JetBrains Mono";margin-top:18px;flex-wrap:wrap;gap:6px}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#887044;margin-right:8px;animation:pulse 2s infinite}
@@ -1341,6 +1350,9 @@ function renderHolCal(){
 
 /* =============================== SCHEDULE =============================== */
 const qsa = s => document.querySelectorAll(s);
+// two classes clash when they overlap on the same day (cancelled ones don't count)
+const mins = t => { const [h, m] = t.split(':').map(Number); return h*60 + m; };
+const clashWith = s => s.status === 'cancel' ? [] : DB.sessions.filter(x => x !== s && x.date === s.date && x.status !== 'cancel' && mins(x.time) < mins(s.time) + s.h*60 && mins(x.time) + x.h*60 > mins(s.time));
 const endOf = s => { const [hh,mi] = s.time.split(':').map(Number), t = hh*60+mi+s.h*60; return `${pad(Math.floor(t/60)%24)}:${pad(t%60)}`; };
 const addMin = (t, d) => { const [h,m] = t.split(':').map(Number), x = ((h*60+m+d) % 1440 + 1440) % 1440; return `${pad(Math.floor(x/60))}:${pad(x%60)}`; };
 const relOnly = date => { const r = relDay(date); return r === dLabel(date) ? '' : r; };
@@ -1365,6 +1377,11 @@ function renderSchedule(){
         ${lastCon ? `<div class="rem">⚠ “${esc(lastCon[2])}”</div>` : ''}</div>
       ${cur >= 0 ? `<button class="go-y" onclick="toBank('#ch=${String(cur+1).padStart(2,'0')}')" title="เปิดข้อสอบบทนี้ในคลัง">🎯 ข้อสอบบท ${cur+1}</button>` : '<span></span>'}</div>`;
   }
+  const today = isoD(NOW), seen = new Set(), pairs = [];
+  for (const a of sorted(DB.sessions.filter(x => x.date >= today && x.status === 'plan'))) for (const b of clashWith(a)){
+    const k = [a.id, b.id].sort().join('|'); if (!seen.has(k)){ seen.add(k); pairs.push([a, b]); } }
+  if (pairs.length) nc += `<div class="alert clashal">⚠ <span><b>ตารางชน ${pairs.length} จุด</b> · แตะเพื่อแก้
+    ${pairs.slice(0, 4).map(([a, b]) => `<button onclick="editSession('${a.id}')">${dLabel(a.date)} · ${esc(st(a.who)?.name)} ${a.time} ↔ ${esc(st(b.who)?.name)} ${b.time}</button>`).join('')}${pairs.length > 4 ? ` <small>+ อีก ${pairs.length - 4}</small>` : ''}</span></div>`;
   if (confirmN) nc += `<div class="alert">⏳ <span>มี <b>${confirmN} คาบ</b> ที่เลยเวลาแล้วแต่ยังไม่ได้ยืนยัน · แตะตรา <b>สอนแล้ว?</b></span></div>`;
   $('#nextcard').innerHTML = nc;
   let list = DB.sessions.filter(s => !whoF.size || whoF.has(s.who));
@@ -1382,12 +1399,12 @@ function dayCard(date, items, i = 0){
     ${items.map(s => rw(s)).join('')}</section>`;
 }
 function rw(s, pv){
-  const p = st(s.who), hol = isHolD(s.date) && s.status === 'plan';
-  return `<div class="rw ${pv?'pv':''} ${s.status==='cancel'?'cancel':''} ${hol?'holi':''}" ${pv ? '' : `onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}"`}>
+  const p = st(s.who), hol = isHolD(s.date) && s.status === 'plan', cw = clashWith(s);
+  return `<div class="rw ${pv?'pv':''} ${s.status==='cancel'?'cancel':''} ${hol?'holi':''} ${cw.length?'clash':''}" ${pv ? '' : `onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}"`}>
     <span class="cb ${colorOf(s.who)}"></span>
     <span class="ckw">${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" ${pv ? 'tabindex="-1"' : ''} title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" onclick="event.stopPropagation();${pv ? '' : s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}</span>
     <span class="tm">${s.time}<small>ถึง ${endOf(s)}</small></span>
-    <span class="nm"><b>${esc(p?.name ?? '?')}</b><small>${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</small></span>
+    <span class="nm"><b>${esc(p?.name ?? '?')}${cw.length ? `<em class="cbadge" title="ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time + '–' + endOf(x)).join(', ')}">⚠ ชน ${cw.map(x => esc(st(x.who)?.name)).join(', ')}</em>` : ''}</b><small>${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</small></span>
     <span class="st">${stampOf(s, pv)}</span>
     ${pv ? '' : `<span class="tools">${s.status === 'done' ? `<button title="บันทึกการสอน" onclick="event.stopPropagation();wrapUp('${s.id}')">📝</button>` : ''}<button title="แก้ / เลื่อน" onclick="event.stopPropagation();editSession('${s.id}')">✎</button><button class="del" title="ลบ" onclick="event.stopPropagation();delSession('${s.id}')">🗑</button></span>`}
   </div>`;
@@ -1659,7 +1676,7 @@ function renderCal(anim){
   for (let d = 1; d <= days; d++){
     const iso = `${cy}-${pad(cm+1)}-${pad(d)}`;
     const items = [...DB.deadlines.filter(x => x.d === iso).map(x => `<span class="ev dl">⚑ ${esc(x.t)}</span>`),
-      ...sorted(ses.filter(s => s.date === iso)).map(e => `<span class="ev ${colorOf(e.who)} ${counts(e)?'':'x'}" title="${e.time}"><em>${e.time}</em>${esc(st(e.who)?.name)}</span>`)];
+      ...sorted(ses.filter(s => s.date === iso)).map(e => `<span class="ev ${colorOf(e.who)} ${counts(e)?'':'x'} ${clashWith(e).length?'clash':''}" title="${e.time}${clashWith(e).length ? ' · ⚠ ชน' : ''}"><em>${e.time}</em>${esc(st(e.who)?.name)}</span>`)];
     h += `<button class="mc${iso===isoD(NOW)?' today':''}${isHolD(iso)?' hol':''}${iso===cday?' sel':''}" style="--i:${i++}" data-iso="${iso}"><span class="n">${d}</span><span class="evs">${items.slice(0,2).join('')}${items.length > 2 ? `<span class="more">+${items.length-2} อีก</span>` : ''}</span></button>`;
   }
   const tail = (7 - (off + days) % 7) % 7; for (let k = 1; k <= tail; k++) h += `<div class="mc out" style="--i:${i++}"><span class="n">${k}</span></div>`;
