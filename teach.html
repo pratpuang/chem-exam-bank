@@ -1063,7 +1063,7 @@ const STATUS = {plan:'นัดไว้', done:'สอนแล้ว', cancel:
 const pad = n => String(n).padStart(2,'0');
 const isoD = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const uid = () => Math.random().toString(36).slice(2,9);
-const NOW = new Date();
+let NOW = new Date();   // kept live by tick(): the page (and the bank's layer) can stay open for days
 
 // the real data lives in Supabase; this is the empty shape until the first load (or the offline cache) fills it
 const blankDB = () => ({v:4, students:[], archived:[], sessions:[], avail:defAvail(), tpl:defTpl(), rates:{solo:300, group:175}, history:{}, holidays:{}, deadlines:[], expenses:[], skips:[]});
@@ -1294,6 +1294,9 @@ async function fetchAll(table, cols){
 }
 async function pull(){
   if (!sb || !user) return;
+  // a download without a live login reads nothing (RLS) — never let that blank the app: ask for the login instead
+  const {data: ses} = await sb.auth.getSession();
+  if (!ses?.session){ if (navigator.onLine) sessionLost(); return; }
   if (pending()?.n) await push();
   const keep = pending(), prevBase = base && JSON.stringify(base);   // unsent edits: kept and laid over the server copy below
   setSync('load');
@@ -1303,6 +1306,9 @@ async function pull(){
       .catch(e => { if (!['42P01', 'PGRST205'].includes(e.code) && !/skips/.test(e.message || '')) throw e; if (!skipsOff){ skipsOff = true; showMissing(); } return null; });
     const [X, A] = await Promise.all([ readTable('sessions', XCOL), sb.from('app_state').select('data').maybeSingle()]);
     if (A.error) throw A.error;
+    // sanity: the server saying "no students" while this device has some (and didn't delete them) is a read problem,
+    // not a decision — keep what's on screen and say so instead of wiping it
+    if (!S.length && (DB.students.length + (DB.archived || []).length) && !(keep?.sDel?.length)){ setSync('err', ' · เซิร์ฟเวอร์ส่งข้อมูลว่างมา · ใช้ข้อมูลในเครื่องไว้ก่อน'); return; }
     const st = A.data?.data || {}, b = blankDB();
     const fix = x => ({...x, slots:x.slots || [], feed:x.feed || [], goal:x.goal || '', contact:x.contact || '', notes:x.notes || ''});
     DB = {...b, ...st, avail: st.avail || b.avail, tpl: {...b.tpl, ...(st.tpl || {})},
@@ -1332,6 +1338,19 @@ function loadCache(uid){
   try{ const c = JSON.parse(localStorage.getItem(CACHE)); if (c?.uid && (!uid || c.uid === uid)){ DB = {...blankDB(), ...c.db}; base = c.base; fromCache = true; return c.uid; } }catch{}
   return null;
 }
+function sessionLost(){
+  // the stored login died (expired / revoked): keep the cached data + any unsent edits, just ask to sign in again
+  if (document.getElementById('lock')) return;
+  setSync('off', ' · ต้องเข้าสู่ระบบใหม่');
+  const lk = document.createElement('div'); lk.id = 'lock'; lk.innerHTML = `<div class="door"><h2><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>สอนพิเศษ</h2>
+    <div class="mut" style="font-size:.85rem" id="lmsg">เซสชันหมดอายุ · เข้าสู่ระบบอีกครั้ง (ข้อมูลที่ยังไม่ได้ส่งยังอยู่ในเครื่อง)</div>
+    <form id="login" autocomplete="on"><label class="lf"><span>อีเมล</span><input id="lem" type="email" autocomplete="username" required></label>
+    <label class="lf"><span>รหัสผ่าน</span><input id="lpw" type="password" autocomplete="current-password" required></label>
+    <button class="go" id="lgo" type="submit">เข้าสู่ระบบ →</button></form></div>`;
+  document.body.appendChild(lk); document.documentElement.classList.remove('authed');
+  try{ $('#lem').value = localStorage.getItem('teach-email') || ''; }catch{}
+  $('#login').onsubmit = loginSubmit; setTimeout(() => $('#lpw')?.focus(), 200);
+}
 function enter(u, quiet){
   if (!fromCache || user?.id !== u.id){ fromCache = false; if (loadCache(u.id)) renderAll(); }
   user = u;
@@ -1353,7 +1372,7 @@ function enter(u, quiet){
   document.documentElement.classList.remove('authed');
   setTimeout(() => ($('#lem').value ? $('#lpw') : $('#lem')).focus(), 300);
 })();
-$('#login').onsubmit = async e => {
+async function loginSubmit(e){
   e.preventDefault(); if (!sb) return;
   const em = $('#lem').value.trim(), b = $('#lgo'); b.disabled = true; b.textContent = 'กำลังเข้า…';
   const {data, error} = await sb.auth.signInWithPassword({email:em, password:$('#lpw').value});
@@ -1362,7 +1381,8 @@ $('#login').onsubmit = async e => {
     $('#lmsg').classList.add('bad'); SFX.play('bad'); $('#lock').classList.add('shake'); setTimeout(() => $('#lock').classList.remove('shake'), 380); return; }
   try{ localStorage.setItem('teach-email', em); }catch{}
   SFX.play('open'); enter(data.user);
-};
+}
+$('#login').onsubmit = loginSubmit;
 $('#logout').onclick = async () => {
   if (pending()?.n && !confirm('ยังมีข้อมูลที่ยังไม่ได้ส่งขึ้นเซิร์ฟเวอร์ · ออกเลยไหม?')) return;
   try{ localStorage.removeItem(CACHE); }catch{} await sb?.auth.signOut(); location.reload();
@@ -2205,7 +2225,17 @@ document.addEventListener('click', e => {
 
 /* =============================== boot =============================== */
 window.onerror = m => document.body.setAttribute('data-err', m);
-const tick = () => $('#clock').textContent = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+let lastMin = -1;
+function tick(){
+  const n = new Date(), newDay = isoD(n) !== isoD(NOW), wasCur = my === NOW.getFullYear() && mm_ === NOW.getMonth();
+  NOW = n; $('#clock').textContent = n.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+  if (newDay){   // midnight passed with the page open: follow the calendar, top up the new day, redraw everything
+    if (wasCur){ my = n.getFullYear(); mm_ = n.getMonth(); }
+    rolling(); renderAll(); return;
+  }
+  const m = Math.floor(n.getTime() / 60000);   // once a minute: "next class" / "teaching now" / overdue ticks move on
+  if (m !== lastMin){ lastMin = m; if (idle()) renderSchedule(); }
+}
 tick(); setInterval(tick, 30000);
 if (document.documentElement.classList.contains('authed')){ const uid = loadCache(); if (uid) user = {id: uid}; }
 renderMoney(); renderSchedule();
