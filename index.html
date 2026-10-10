@@ -119,6 +119,12 @@ button.tile:hover:after{opacity:1;transform:none}
 .hero.ready .tup{background:var(--red);color:#fff}
 .tup .b,.hero.ready .tup .a{display:none}.hero.ready .tup .b{display:inline}
 .tportal{position:fixed;inset:0;z-index:999;background:#efe9dc;pointer-events:none;will-change:clip-path}
+/* the teaching page lives in this layer once opened: it grows out of the card and folds back into it */
+#teachwrap{position:fixed;inset:0;z-index:998;background:#efe9dc;visibility:hidden;pointer-events:none;will-change:clip-path}
+#teachwrap.on{visibility:visible;pointer-events:auto}
+#teachwrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#efe9dc;opacity:0;transition:opacity .25s}
+#teachwrap.ready iframe{opacity:1}
+body.teachon{overflow:hidden}
 
 /* cross-page hand-off to teach.html: the browser crossfades the two pages (Chrome 126+, Safari 18.2+;
    others just navigate), so the paper sheet the card grows into melts straight into teach.html's paper */
@@ -2397,14 +2403,40 @@ buildBoard();
 let tdrag=null;
 const TGO=110,EASE="cubic-bezier(.65,0,.35,1)";
 const cardClip=r=>`inset(${r.top}px ${innerWidth-r.right}px ${innerHeight-r.bottom}px ${r.left}px)`;
+/* the layer + its iframe are made once and kept: reopening is instant. Devices that have signed in before (they
+   hold the teaching cache) build it quietly after load, so the first open is instant too; students never load it. */
+let TW=null,twOpen=false,twBusy=false;
+function twMake(){
+  if(TW)return TW;TW=document.createElement("div");TW.id="teachwrap";
+  const f=document.createElement("iframe");f.title="สอนพิเศษ";f.src="teach.html?embed=1";
+  f.onload=()=>{TW.classList.add("ready");if(twOpen)twPost("teach-open");};
+  TW.appendChild(f);document.body.appendChild(TW);return TW;}
+const twPost=type=>{try{TW.querySelector("iframe").contentWindow.postMessage({type},location.origin==="null"?"*":location.origin);}catch(_){}};
 function tLaunch(h){
-  h=h||$("#board .hero");if(!h)return;const r=h.getBoundingClientRect();
-  SFX.play("whoosh");try{sessionStorage.setItem("teach-from-bank","1");}catch(_){}
-  const p=document.createElement("div");p.className="tportal";document.body.appendChild(p);
-  p.animate([{clipPath:cardClip(r)},{clipPath:"inset(0px 0px 0px 0px)"}],{duration:520,easing:EASE,fill:"forwards"})
-   .finished.then(()=>{location.href="teach.html";});
+  h=h||$("#board .hero");if(!h||twBusy)return;const r=h.getBoundingClientRect(),w=twMake();
+  SFX.play("whoosh");twBusy=true;twOpen=true;w.classList.add("on");
+  if(location.hash!=="#teach")history.pushState({teach:1},"","#teach");
+  w.animate([{clipPath:cardClip(r)},{clipPath:"inset(0px 0px 0px 0px)"}],{duration:560,easing:EASE,fill:"forwards"})
+   .finished.then(()=>{twBusy=false;document.body.classList.add("teachon");tReset(h);h.getAnimations().forEach(a=>a.cancel());});
   h.animate([{opacity:1},{opacity:0}],{duration:160,fill:"forwards"});
+  if(w.classList.contains("ready"))twPost("teach-open");
+  setTimeout(()=>{try{w.querySelector("iframe").focus();}catch(_){}},560);
 }
+function tClose(hash){
+  if(!twOpen||twBusy)return;twBusy=true;twOpen=false;
+  document.body.classList.remove("teachon");if(document.body.classList.contains("inapp")&&!hash)$("#home").click();
+  scrollTo(0,0);const h=$("#board .hero"),r=h.getBoundingClientRect();SFX.play("home");
+  TW.animate([{clipPath:"inset(0px 0px 0px 0px)"},{clipPath:cardClip(r)}],{duration:480,easing:EASE,fill:"forwards"})
+   .finished.then(()=>{TW.classList.remove("on");TW.getAnimations().forEach(a=>a.cancel());twBusy=false;
+     h.animate([{opacity:0,scale:.96},{opacity:1,scale:1}],{duration:260,easing:"cubic-bezier(.2,1.3,.4,1)"});
+     if(hash)openChapter(hash);});
+  if(location.hash==="#teach")history.replaceState(null,"",location.pathname+location.search);
+}
+addEventListener("message",e=>{if(!TW||e.source!==TW.querySelector("iframe").contentWindow)return;const d=e.data||{};
+  if(d.type==="teach-close")tClose(d.hash||"");});
+addEventListener("popstate",()=>{if(twOpen&&location.hash!=="#teach")tClose("");else if(!twOpen&&location.hash==="#teach")tLaunch();});
+addEventListener("load",()=>{let mine=false;try{mine=!!localStorage.getItem("teach-cache-v1");}catch(_){}
+  if(mine)(window.requestIdleCallback||setTimeout)(()=>twMake(),{timeout:2500});});
 function tReset(h){h.classList.remove("lift","ready");h.style.translate=h.style.rotate="";}
 $("#board").addEventListener("pointerdown",e=>{const h=e.target.closest(".hero");
   if(!h||e.button>0||e.target.closest("button"))return;
@@ -2439,10 +2471,13 @@ function tReturn(){const h=$("#board .hero");if(!h)return;tReset(h);h.getAnimati
 addEventListener("pageshow",e=>{if(e.persisted)tReturn();});
 tReturn();
 /* #ch=NN opens that chapter (teach.html's 🎯 button) */
-(()=>{const m=location.hash.match(/^#ch=(\d\d)$/);if(!m)return;history.replaceState(null,"",location.pathname+location.search);
-  try{sessionStorage.removeItem("teach-back");}catch(_){}
+function openChapter(hash){const m=(hash||"").match(/^#ch=(\d\d)$/);if(!m)return false;
   if(SUBJ!=="chem"){setSubj("chem");buildBoard();}
   enterApp(innerWidth/2,innerHeight/2,()=>{resetFilters();$("#fsubj").value="chem";populateChapters("chem");
     if(EXN){opt($("#fexam"),EXONLY,EXONLY);$("#fexam").value=EXONLY;}
-    $("#fch").value=m[1];apply();});})();
+    $("#fch").value=m[1];apply();});return true;}
+(()=>{if(location.hash==="#teach"){history.replaceState(null,"",location.pathname+location.search);setTimeout(()=>tLaunch(),50);return;}
+  if(!/^#ch=/.test(location.hash))return;const h=location.hash;history.replaceState(null,"",location.pathname+location.search);
+  try{sessionStorage.removeItem("teach-back");}catch(_){}
+  openChapter(h);})();
 </script></body></html>

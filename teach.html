@@ -838,6 +838,42 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .xr b{font:800 1.05rem "JetBrains Mono"}
 .xadd{display:grid;grid-template-columns:1fr 110px auto;gap:8px;margin-top:14px;align-items:center}
 @media (max-width:560px){.xadd{grid-template-columns:1fr 90px}.xadd .go{grid-column:1/-1}}
+
+/* student type tags + groups */
+.ktag{position:absolute;left:44px;top:10px;font:800 .66rem "Anuphan";letter-spacing:.02em;padding:1px 7px;border:2px solid var(--ink);background:var(--card);color:var(--ink);box-shadow:2px 2px 0 var(--sh)}
+.otags .ktag{position:static;box-shadow:none;border-color:currentColor;background:transparent;color:inherit}
+.ktag.k-reg{background:var(--ink);color:var(--paper)}
+.ktag.k-adh{background:var(--card)}
+.ktag.k-tri{background:var(--yel);color:#141414}
+.ktag.k-stp{background:#d8d1c2;color:#5b5548;border-style:dashed}
+.otags .ktag.k-reg{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.sdiv{grid-column:1/-1;display:flex;align-items:center;gap:10px;font-weight:800;font-size:.86rem;margin:4px 0 -10px}
+.sdiv:before{content:"";width:14px;height:14px;background:var(--ink)}
+.sdiv.k-adh:before{background:var(--card);border:3px solid var(--ink)}
+.sdiv.k-tri:before{background:var(--yel);border:3px solid var(--ink)}
+.sdiv.k-stp:before{background:#d8d1c2;border:3px dashed var(--ink)}
+.sdiv b{font:800 .74rem "JetBrains Mono";color:var(--mut)}
+.sdiv:after{content:"";flex:1;height:2px;background:var(--grid)}
+.gonebar{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;border:2px dashed #b9b1a1;background:transparent;padding:12px 16px;font:800 .9rem "Anuphan";color:var(--mut);cursor:pointer}
+.gonebar:hover{background:var(--card);color:var(--ink)}
+.sc.gone{opacity:.66;filter:saturate(.25)}
+.sc.gone:hover{opacity:1;filter:none}
+/* chapter picker + hover names */
+#chpop{position:fixed;z-index:120;width:250px;background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);padding:6px;animation:pIn .18s cubic-bezier(.2,1.2,.4,1)}
+.cph{padding:6px 8px 8px;font-weight:700;font-size:.84rem;line-height:1.3;border-bottom:2px solid var(--grid);margin-bottom:4px}
+.cph b{display:block;font:800 .72rem "JetBrains Mono";color:var(--mut)}
+.cpo{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:8px;font:700 .9rem "Anuphan";color:var(--ink);text-align:left;cursor:pointer}
+.cpo:hover{background:var(--paper)}
+.cpo i{width:24px;height:24px;display:grid;place-items:center;border:2px solid var(--ink);font-style:normal;font-size:.8rem;background:var(--card);flex:none}
+.cpo.d i{background:var(--blue);color:#fff}.cpo.n i{background:var(--yel)}.cpo.s i{background:repeating-linear-gradient(45deg,var(--card) 0 3px,#e1d9c8 3px 6px);border-style:dashed}
+.cpo.upto{border-top:2px solid var(--grid);margin-top:4px;font-size:.82rem;color:var(--mut)}
+.cpo.on{background:var(--stbg)}.cpo.on:after{content:"✓";margin-left:auto;font-weight:800}
+#chtip{position:fixed;z-index:130;pointer-events:none;background:var(--ink);color:var(--paper);font:700 .8rem "Anuphan";padding:5px 10px;opacity:0;transform:translateY(4px);transition:opacity .1s,transform .1s;white-space:nowrap}
+#chtip.on{opacity:1;transform:none}
+#chtip small{display:block;font:600 .68rem "JetBrains Mono";opacity:.7}
+.hint .lg{display:inline-flex;gap:6px;align-items:center;margin-left:8px;white-space:nowrap}
+.hint .lg i{width:11px;height:11px;border:2px solid var(--ink);background:var(--card);display:inline-block;margin-left:4px}
+.hint .lg i.d{background:var(--blue)}.hint .lg i.n{background:var(--yel)}.hint .lg i.s{background:repeating-linear-gradient(45deg,var(--card) 0 2px,#e1d9c8 2px 4px)}
 /* ---------- misc ---------- */
 footer.live{display:flex;justify-content:space-between;align-items:center;color:#756149;font:.75rem "JetBrains Mono";margin-top:18px;flex-wrap:wrap;gap:6px}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#887044;margin-right:8px;animation:pulse 2s infinite}
@@ -902,7 +938,6 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
         <div class="fg" style="--i:0"><i class="c-blue"></i><span>ยังจะได้อีก<small>คาบที่นัดไว้เดือนนี้</small></span><strong id="sLeft">฿0</strong></div>
         <button class="fg red" style="--i:1" onclick="openDrawer('stu');stuOwe=true;renderStudents(true)" title="ดูว่าใครค้าง"><i class="c-red"></i><span>ค้างชำระ<small>ทุกเดือนรวมกัน · แตะดู</small></span><strong id="sOwe">฿0</strong></button>
         <div class="fg" style="--i:2"><i class="c-yel"></i><span>รับแล้วทั้งปี<small>ม.ค. ถึงตอนนี้</small></span><strong id="sAll">฿0</strong></div>
-        <button class="fg" style="--i:3" onclick="openExp()" title="รายจ่ายเดือนนี้"><i class="c-lav"></i><span>รายจ่ายเดือนนี้<small id="sNet">เหลือสุทธิ ฿0</small></span><strong id="sExp">฿0</strong></button>
       </div>
     </div>
     <div class="mchart">
@@ -977,6 +1012,13 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
 <script>
 /* =============================== data =============================== */
 const CACHE = 'teach-cache-v1';
+const CHF = ['ความปลอดภัยและทักษะปฏิบัติการ','อะตอมและแบบจำลองอะตอม','ตารางธาตุและสมบัติของธาตุ','พันธะเคมี','โมลและสูตรเคมี','สารละลาย','ปริมาณสัมพันธ์','แก๊สและสมบัติของแก๊ส','อัตราการเกิดปฏิกิริยาเคมี','สมดุลเคมี','กรด-เบส','เคมีไฟฟ้า','เคมีอินทรีย์','พอลิเมอร์'];
+const CHS = {d:'สอนแล้ว', n:'กำลังสอน', t:'ยังไม่สอน', s:'ไม่อยู่ในหลักสูตร'};
+// student type: drives the tag on every card and the order of the student page
+const KINDS = {regular:['ประจำ','k-reg'], adhoc:['เป็นครั้งๆ','k-adh'], trial:['ทดลองเรียน','k-tri'], stopped:['ไม่เรียนแล้ว','k-stp']};
+const KORDER = ['regular','adhoc','trial'];
+const kindOf = p => KINDS[p.kind] ? p.kind : (DB.archived || []).includes(p) ? 'stopped' : p.slots?.length ? 'regular' : 'adhoc';
+const ktag = p => { const [t, c] = KINDS[kindOf(p)]; return `<span class="ktag ${c}">${t}</span>`; };
 const CH = ['ปฏิบัติการ','อะตอม','ตารางธาตุ','พันธะเคมี','โมล','สารละลาย','ปริมาณสัมพันธ์','แก๊ส','อัตรา','สมดุล','กรด-เบส','ไฟฟ้าเคมี','อินทรีย์','พอลิเมอร์'];
 const TH_M = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const TH_MF = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
@@ -1049,7 +1091,11 @@ function monthTotal(y, m){ const mm = monthMoney(y, m); return mm.n ? mm.forecas
 
 /* =============================== to / from the bank =============================== */
 // back: a paper sheet drops over the page, the bank fades it away on arrival (sessionStorage "teach-back")
+// inside the bank's layer: ask the bank to fold us back into the card (no page load at all)
+const EMBED = window.parent !== window && /[?&]embed/.test(location.search);
+const toParent = (type, extra) => parent.postMessage({type, ...extra}, location.origin === 'null' ? '*' : location.origin);
 function toBank(hash = ''){
+  if (EMBED){ chClose?.(); closeDrawer(); closeModal(); toParent('teach-close', {hash}); return false; }
   try{ sessionStorage.setItem('teach-back', '1'); }catch{}
   SFX.play('home');
   const p = document.createElement('div'); p.className = 'bsheet'; document.body.appendChild(p);
@@ -1058,6 +1104,12 @@ function toBank(hash = ''){
   return false;
 }
 addEventListener('pageshow', () => document.querySelectorAll('.bsheet').forEach(p => p.remove()));
+// each time the bank opens the layer: replay the entrance (content rises, numbers count up) and refresh if stale
+addEventListener('message', e => { if (e.source !== parent || e.data?.type !== 'teach-open') return;
+  document.body.classList.remove('frombank'); void document.body.offsetWidth; document.body.classList.add('frombank');
+  setTimeout(() => document.body.classList.remove('frombank'), 900);
+  ['#income','#sLeft','#sOwe','#sAll'].forEach(q => $(q) && ($(q)._v = 0)); if (typeof renderMoney === 'function') renderMoney();
+  if (user && Date.now() - lastPull > 60000) pull(); });
 // arriving from the bank's slide-up: the sheet that grew there is this page's paper; settle the content in
 try{ if (sessionStorage.getItem('teach-from-bank')){ sessionStorage.removeItem('teach-from-bank'); document.body.classList.add('frombank'); setTimeout(() => document.body.classList.remove('frombank'), 900); } }catch{}
 
@@ -1065,7 +1117,7 @@ try{ if (sessionStorage.getItem('teach-from-bank')){ sessionStorage.removeItem('
 // Supabase is the truth. Every save() diffs DB against the last state the server confirmed (base) and sends only
 // the rows that changed; the cache (DB + base) sits in localStorage so the page opens offline and unsent edits
 // survive a reload. RLS means the key in the page can't read a thing without this login.
-const SCOL = ['id','name','grade','subj','mode','rate','color','slots','goal','contact','map','feed','archived','notes'];
+const SCOL = ['id','name','grade','subj','mode','rate','color','slots','goal','contact','map','feed','archived','notes','kind'];
 const XCOL = ['id','who','date','time','h','rate','series','status','paid','note','log'];
 const pick = (o, cols) => Object.fromEntries(cols.map(k => [k, o[k] ?? null]));
 const sb = window.supabase && window.TEACH_SB ? window.supabase.createClient(TEACH_SB.url, TEACH_SB.key) : null;
@@ -1098,7 +1150,7 @@ async function push(){
   pushing = true; setSync('saving');
   try{
     const own = rows => rows.map(x => ({...x, owner:user.id}));
-    if (d.sUp.length) await chk(sb.from('students').upsert(own(d.sUp)));
+    if (d.sUp.length) await chk(sb.from('students').upsert(own(d.sUp).map(x => { if (noKind){ const {kind, ...r} = x; return r; } return x; })));
     if (d.xUp.length) for (let i = 0; i < d.xUp.length; i += 200) await chk(sb.from('sessions').upsert(own(d.xUp.slice(i, i+200))));
     if (d.xDel.length) await chk(sb.from('sessions').delete().in('id', d.xDel));
     if (d.sDel.length) await chk(sb.from('students').delete().in('id', d.sDel));
@@ -1108,6 +1160,7 @@ async function push(){
   finally{ pushing = false; if (again){ again = false; schedulePush(); } }
 }
 const hhmm = d => d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+let noKind = false;
 async function fetchAll(table, cols){
   const out = []; for (let i = 0; ; i += 1000){
     const {data, error} = await sb.from(table).select(cols).range(i, i + 999); if (error) throw error;
@@ -1118,7 +1171,8 @@ async function pull(){
   const d = pending(); if (d?.n){ await push(); if (pending()?.n) return; }   // never overwrite edits the server hasn't got
   setSync('load');
   try{
-    const [S, X, A] = await Promise.all([fetchAll('students', SCOL.join(',')), fetchAll('sessions', XCOL.join(',')), sb.from('app_state').select('data').maybeSingle()]);
+    const S = await fetchAll('students', SCOL.filter(k => !(noKind && k === 'kind')).join(',')).catch(async e => { if (e.code !== '42703') throw e; noKind = true; return fetchAll('students', SCOL.filter(k => k !== 'kind').join(',')); });
+    const [X, A] = await Promise.all([ fetchAll('sessions', XCOL.join(',')), sb.from('app_state').select('data').maybeSingle()]);
     if (A.error) throw A.error;
     const st = A.data?.data || {}, b = blankDB();
     const fix = x => ({...x, slots:x.slots || [], feed:x.feed || [], goal:x.goal || '', contact:x.contact || '', notes:x.notes || ''});
@@ -1193,13 +1247,12 @@ function renderMoney(){
   const months = []; for (let k = 1; k <= 6; k++){ let y = NOW.getFullYear(), m = NOW.getMonth()-k; while (m < 0){ m += 12; y--; } months.push(monthTotal(y,m)); }
   const hist = months.filter(v => v > 0), avg = hist.length ? Math.round(hist.reduce((a,b)=>a+b,0)/hist.length) : 0;
   const diff = forecast - avg;
-  $('#mcmp').textContent = `${diff >= 0 ? '▲' : '▼'}${cash(Math.abs(diff))} ${diff >= 0 ? 'เหนือ' : 'ใต้'}ค่าเฉลี่ย ${cash(avg)}`;
+  $('#mcmp').textContent = !avg ? 'ยังไม่มีเดือนก่อนให้เทียบ' : `${diff >= 0 ? '▲ มากกว่า' : '▼ น้อยกว่า'}เดือนปกติ ${cash(Math.abs(diff))} · ปกติได้ราว ${cash(avg)}/เดือน`;
+  $('#mcmp').title = 'เทียบยอดที่คาดว่าจะได้เดือนนี้ กับค่าเฉลี่ย 6 เดือนก่อนหน้า';
   count($('#sLeft'), M.left);
   count($('#sOwe'), owedAll().reduce((a,s)=>a+amt(s),0));
   let yr = 0; for (let m = 0; m <= NOW.getMonth(); m++){ const x = monthMoney(NOW.getFullYear(), m); yr += x.n ? x.earned : (DB.history[mkey(NOW.getFullYear(),m)] ?? 0); }
   count($('#sAll'), yr);
-  const ex = expOf(my, mm_); count($('#sExp'), ex);
-  $('#sNet').textContent = ex ? `เหลือสุทธิ ${cash(earned - ex)} · แตะเพื่อดู` : 'ยังไม่มี · แตะเพื่อเพิ่ม';
   const cols = []; for (let k = 5; k >= 0; k--){ let y = my, m = mm_ - k; while (m < 0){ m += 12; y--; } cols.push([y,m]); }
   const maxV = Math.max(...cols.map(([y,m]) => monthTotal(y,m)), avg, 1) * 1.1, H = 204;
   $('#chart').innerHTML = `<div class="average" style="bottom:${26 + avg/maxV*H}px"><span>เฉลี่ย ${cash(avg)}</span></div>` + cols.map(([y,m], i) => {
@@ -1572,23 +1625,30 @@ function flip(fn){
   });
 }
 function toggleStu(id){ flip(() => { openStu = openStu === id ? null : id; popStu = !!openStu; renderStudents(); }); if (openStu) later(() => document.querySelector('.sc.open')?.scrollIntoView({behavior: reduced ? 'auto' : 'smooth', block:'nearest'})); }
+let showGone = false;
 function renderStudents(anim){
-  $('#stuhov').textContent = `${DB.students.length} คน · ค้างรวม ${cash(owedAll().reduce((a,s)=>a+amt(s),0))} · แตะการ์ดเพื่อเปิด`;
+  chClose();
+  $('#stuhov').textContent = `${DB.students.length} คนที่เรียนอยู่ · ค้างรวม ${cash(owedAll().reduce((a,s)=>a+amt(s),0))} · แตะการ์ดเพื่อเปิด`;
   const curP = `${NOW.getFullYear()}-${pad(NOW.getMonth()+1)}`;
   $('#scards').classList.toggle('still', !anim);
   const oweOf = id => owedAll().filter(s => s.who === id).reduce((a,s)=>a+amt(s),0);
-  const list = stuOwe ? [...DB.students].sort((a,b) => oweOf(b.id) - oweOf(a.id)) : DB.students;
-  $('#scards').innerHTML = list.map((p, i0) => { const i = DB.students.indexOf(p);
+  const byKind = [...DB.students].sort((a, b) => KORDER.indexOf(kindOf(a)) - KORDER.indexOf(kindOf(b)));
+  const list = stuOwe ? [...DB.students].sort((a,b) => oweOf(b.id) - oweOf(a.id)) : [...byKind, ...(showGone ? DB.archived || [] : [])];
+  const head = (p, j) => { if (stuOwe) return ''; const k = kindOf(p), pk = j ? kindOf(list[j-1]) : null; if (k === pk) return '';
+    const n = k === 'stopped' ? (DB.archived || []).length : DB.students.filter(x => kindOf(x) === k).length;
+    return `<div class="sdiv ${KINDS[k][1]}"><span>${KINDS[k][0]}</span><b>${n}</b></div>`; };
+  $('#scards').innerHTML = list.map((p, i0) => { const i = i0, gone = kindOf(p) === 'stopped';
+    return head(p, i0) + (() => {
     const mine = DB.sessions.filter(s => s.who === p.id);
     const owe = sorted(mine.filter(s => s.status==='done' && !s.paid)), oweSum = owe.reduce((a,s)=>a+amt(s),0);
     const next = sorted(mine.filter(s => s.status==='plan' && counts(s) && atOf(s) > NOW))[0];
     const sub = `${esc(p.grade)} · ${subjL(p.subj)} · ${esc(p.mode)}`, c = colorOf(p.id);
-    if (openStu !== p.id) return `<div class="sc" data-id="${p.id}" style="--i:${i}" role="button" tabindex="0" onclick="toggleStu('${p.id}')" onkeydown="if(event.key==='Enter')toggleStu('${p.id}')">
-      <div class="band ${c}"><span class="idx">${pad(i+1)}</span><span class="big">${esc(p.name[0])}</span>${oweSum ? `<span class="otag">ค้าง ${cash(oweSum)}</span>` : ''}<h3>${esc(p.name)}</h3><p>${sub}</p></div>
+    if (openStu !== p.id) return `<div class="sc ${gone ? 'gone' : ''}" data-id="${p.id}" style="--i:${i}" role="button" tabindex="0" onclick="toggleStu('${p.id}')" onkeydown="if(event.key==='Enter')toggleStu('${p.id}')">
+      <div class="band ${c}"><span class="idx">${pad(i+1)}</span>${ktag(p)}<span class="big">${esc(p.name[0])}</span>${oweSum ? `<span class="otag">ค้าง ${cash(oweSum)}</span>` : ''}<h3>${esc(p.name)}</h3><p>${sub}</p></div>
       <div class="foot"><div class="nx"><span class="lab">ถัดไป</span>${next ? `<b>${next.time}</b><em>${relDay(next.date)}</em>` : '<em>ไม่มีนัด</em>'}</div>
         ${(() => { const cc = p.map ? p.map.indexOf('n') : -1, dn = p.map ? p.map.split('').filter(x => x === 'd').length : 0;
           return p.map ? `<div class="chr"><span class="chn">${cc >= 0 ? 'บท ' + (cc+1) : '—'}</span><span class="chm">${cc >= 0 ? CH[cc] : 'ยังไม่ได้เลือกบท'}</span><span class="chc">${dn}/14</span></div>
-            <div class="mstrip">${p.map.split('').map(x => `<i class="${x==='t'?'':x}"></i>`).join('')}</div>`
+            <div class="mstrip">${p.map.split('').map((x, j) => `<i class="${x==='t'?'':x}" data-tip="บท ${j+1} · ${CHF[j]}"></i>`).join('')}</div>`
             : `<div class="chr"><span class="chn">${subjL(p.subj)}</span><span class="chm">${esc(p.goal) || '—'}</span></div><div class="mstrip none"></div>`; })()}
         ${(() => { const lg = sorted(mine.filter(x => x.log?.topic)).pop();
           return `<div class="lastn ${lg || p.notes ? '' : 'empty'} ${!lg && p.notes ? 'note' : ''}"><span class="lab">${lg ? 'คาบล่าสุด · ' + dLabel(lg.date) : p.notes ? 'โน้ต' : 'คาบล่าสุด'}</span><p>${lg ? esc(lg.log.topic) : p.notes ? esc(p.notes) : 'ยังไม่มีบันทึก · ติ๊ก ✓ หลังสอนเพื่อจด'}</p>${lg?.log.hw ? `<small>การบ้าน: ${esc(lg.log.hw)}</small>` : ''}</div>`; })()}</div></div>`;
@@ -1597,7 +1657,7 @@ function renderStudents(anim){
     return `<div class="sc open ${popStu?'fresh':''}" data-id="${p.id}" style="--i:${i}">
       <div class="ohead ${c}"><span class="big">${esc(p.name[0])}</span>
         <div class="l"><h3>${esc(p.name)}</h3><p>${sub} · ${cash(p.rate)}/ชม.</p>
-          <div class="otags">${p.slots.map(([w,t,h]) => `<span class="t">${TH_D[w]}. ${t} · ${h}ชม.</span>`).join('')}${p.goal ? `<span>🎯 ${esc(p.goal)}</span>` : ''}${p.contact ? `<span>☎ ${esc(p.contact)}</span>` : ''}</div>
+          <div class="otags">${ktag(p)}${p.slots.map(([w,t,h]) => `<span class="t">${TH_D[w]}. ${t} · ${h}ชม.</span>`).join('')}${p.goal ? `<span>🎯 ${esc(p.goal)}</span>` : ''}${p.contact ? `<span>☎ ${esc(p.contact)}</span>` : ''}</div>
           </div>
         <div class="r"><button onclick="editStudent('${p.id}')">✎ แก้ข้อมูล</button><button onclick="delStudent('${p.id}')">ลบ</button><button class="shut" title="ปิด" onclick="toggleStu('${p.id}')">✕</button></div></div>
       <div class="ostats">
@@ -1608,8 +1668,8 @@ function renderStudents(anim){
       <div class="obody">
         <div class="col">
           <div>${p.map ? `<div class="now"><span>${cur >= 0 ? `กำลังสอน บท ${cur+1} · ${CH[cur]}` : 'แผนที่บท'}</span><small>${done}/14 บท</small></div>
-            <div class="segbar">${p.map.split('').map((x,j) => `<button class="${x==='t'?'':x}" onclick="cycle('${p.id}',${j})" title="บท ${j+1} ${CH[j]}">${j+1}</button>`).join('')}</div>
-            <div class="hint">แตะช่องเพื่อเปลี่ยน · น้ำเงิน สอนแล้ว · เหลือง กำลังสอน · ลาย ไม่อยู่ในหลักสูตร</div>`
+            <div class="segbar">${p.map.split('').map((x,j) => `<button class="${x==='t'?'':x}" onclick="chPick('${p.id}',${j},this)" data-tip="บท ${j+1} · ${CHF[j]}" aria-label="บท ${j+1} ${CHF[j]} · ${CHS[x]}">${j+1}</button>`).join('')}</div>
+            <div class="hint">แตะบทเพื่อเลือกสถานะ · ชี้ที่บทเพื่อดูชื่อ <span class="lg"><i class="d"></i>สอนแล้ว <i class="n"></i>กำลังสอน <i></i>ยังไม่สอน <i class="s"></i>ข้าม</span></div>`
             : `<span class="lab">แผนที่บท</span><button class="addq" onclick="startMap('${p.id}')">＋ ตั้งแผนที่บท</button>`}</div>
           ${p.notes ? `<div><span class="lab">โน้ต</span><div class="onote">${esc(p.notes)}</div></div>` : ''}
           <div><span class="lab">ค้างจ่าย</span>${owe.length ? `<div class="rcpt">${owe.map(s => `<div class="r"><span>${dLabel(s.date)} · <b>${cash(amt(s))}</b></span><button onclick="togglePaid('${s.id}')">ได้เงินแล้ว ✓</button></div>`).join('')}</div>` : '<div class="clear">✓ เคลียร์หมดแล้ว</div>'}</div>
@@ -1620,8 +1680,13 @@ function renderStudents(anim){
             : `<button class="addq" onclick="fbOpen['${p.id}']=1;renderStudents();document.getElementById('fb-${p.id}').focus()">＋ จดสิ่งที่น้องพูด</button>`}</div></div></div>
       </div>
       <div class="ofoot"><button class="go sm" onclick="closeDrawer();editSession();setTimeout(()=>{edit.who='${p.id}';edit.rate=${p.rate};edit.pick='date';paintEdit(true)},0)">＋ คาบให้ ${esc(p.name)}</button><button class="chip" onclick="closeDrawer();whoF=new Set(['${p.id}']);range='month';qsa('#srange button').forEach(b=>b.classList.toggle('on',b.dataset.r==='month'));renderSchedule();document.getElementById('sched').scrollIntoView({behavior:'smooth'})">ดูตารางของ ${esc(p.name)} →</button></div>
-    </div>`;
-  }).join('') + `<button class="sc addcard" data-id="_add" style="--i:${DB.students.length}" onclick="editStudent()"><b>＋</b>เพิ่มนักเรียน</button>`;
+    </div>`; })();
+  }).join('');
+  // the add card closes the active groups; the stopped ones fold behind a bar underneath
+  const add = `<button class="sc addcard" data-id="_add" style="--i:${DB.students.length}" onclick="editStudent()"><b>＋</b>เพิ่มนักเรียน</button>`;
+  const ng = (DB.archived || []).length, fold = ng && !stuOwe ? `<button class="gonebar" onclick="showGone=!showGone;renderStudents()"><span>ไม่เรียนแล้ว · ${ng} คน</span><b>${showGone ? 'ซ่อน ▴' : 'ดู ▾'}</b></button>` : '';
+  const html = $('#scards').innerHTML, cut = html.indexOf('<div class="sdiv k-stp"');
+  $('#scards').innerHTML = cut < 0 ? html + add + fold : html.slice(0, cut) + add + fold + html.slice(cut);
   popStu = false;
 }
 function setColor(id, c){ st(id).color = c; save(); renderAll(); toast(`เปลี่ยนสี ${st(id).name} แล้ว`); }
@@ -1629,18 +1694,27 @@ function cycle(id, i){ const p = st(id), o = 'tdns'; const a = p.map.split(''); 
 function startMap(id){ st(id).map = 'tttttttttttttt'; save(); renderStudents(); }
 function addFb(id){ const el = $('#fb-'+id), t = el.value.trim(); if (!t) return; st(id).feed.push([fbKind[id] || 'pro', isoD(NOW), t]); fbOpen[id] = 0; save(); renderStudents(); renderSchedule(); toast('จดแล้ว'); }
 function delFb(id, j){ snap(); st(id).feed.splice(j,1); save(); renderStudents(); renderSchedule(); toast('ลบแล้ว', true); }
+
+// ไม่เรียนแล้ว = archived: off the schedule (future planned classes go), history and money stay
+function setGone(p, gone){
+  const inA = (DB.archived ||= []).includes(p);
+  if (gone && !inA){ DB.students = DB.students.filter(x => x !== p); DB.archived.push(p); p.kind = 'stopped';
+    DB.sessions = DB.sessions.filter(s => !(s.who === p.id && s.status === 'plan' && atOf(s) > NOW)); whoF.delete(p.id); if (openStu === p.id) openStu = null; return 'gone'; }
+  if (!gone && inA){ DB.archived = DB.archived.filter(x => x !== p); DB.students.push(p); return 'back'; }
+  return null;
+}
 function delStudent(id){
   const p = st(id), fut = DB.sessions.filter(s => s.who === id && s.status === 'plan' && atOf(s) > NOW).length;
   openModal(`<h2>ลบ ${esc(p.name)}?</h2><p class="mut">คาบในอนาคต ${fut} คาบจะถูกลบด้วย · คาบที่สอนไปแล้วและยอดเงินยังอยู่ในประวัติ</p>
     <div class="cfoot"><span class="sp"></span><button class="ghostb" onclick="closeModal()">ยกเลิก</button><button class="go red" id="dx">ลบนักเรียน</button></div>`);
-  $('#dx').onclick = () => { snap(); DB.sessions = DB.sessions.filter(s => !(s.who === id && s.status === 'plan' && atOf(s) > NOW)); DB.students = DB.students.filter(x => x.id !== id); DB.archived = [...(DB.archived||[]), p]; whoF.delete(id); if (openStu === id) openStu = null; save(); closeModal(); renderAll(); toast(`ลบ ${p.name} แล้ว`, true); };
+  $('#dx').onclick = () => { snap(); DB.sessions = DB.sessions.filter(s => !(s.who === id && s.status === 'plan' && atOf(s) > NOW)); DB.students = DB.students.filter(x => x.id !== id); DB.archived = [...(DB.archived||[]), p]; p.kind = 'stopped'; whoF.delete(id); if (openStu === id) openStu = null; save(); closeModal(); renderAll(); toast(`ลบ ${p.name} แล้ว`, true); };
 }
 
 /* ---------- student editor: the card is the form ---------- */
 let pe = null;
 function editStudent(id){
   const p = id ? st(id) : {name:'',grade:'ม.4',subj:'chem',mode:'ออนไลน์',rate:DB.rates.solo,slots:[],goal:'',contact:'',notes:'',color:DB.students.length % 12};
-  pe = {...p, slots:p.slots.map(s => [...s]), gen:true, nd:1, nt:'18:00', nh:1};
+  pe = {...p, kind: id ? kindOf(p) : 'regular', slots:p.slots.map(s => [...s]), gen:true, nd:1, nt:'18:00', nh:1};
   const ch = (k, opts) => `<div class="chips" data-k="${k}">${opts.map(([v,t]) => `<button class="chip" data-v="${v}">${t}</button>`).join('')}</div>`;
   openModal(`<button class="pdx x" onclick="closeModal()" title="ปิด">✕</button>
     <div class="pband" id="pband"><span class="big" id="pbig"></span><span class="eyebrow">${id ? 'แก้ข้อมูลนักเรียน' : 'นักเรียนใหม่'}</span><input class="nmin" id="pn" placeholder="ชื่อเล่น…" value="${esc(p.name)}" autocomplete="off"><p id="pmeta"></p></div>
@@ -1648,6 +1722,7 @@ function editStudent(id){
     <div class="trow2"><div><span class="eb2">วิชา</span>${ch('subj', [['chem','เคมี'],['bio','ชีวะ'],['other','อื่นๆ']])}</div><div><span class="eb2">เรียนแบบ</span>${ch('mode', ['ออนไลน์','ออนไซต์','ผสม'].map(g => [g,g]))}</div></div>
     <div class="trow2"><div><span class="eb2">เรท / ชม.</span><div class="step"><button data-rate="-25" aria-label="ลดเรท">−</button><b id="prate"></b><button data-rate="25" aria-label="เพิ่มเรท">+</button></div></div>
       <div><span class="eb2">สีประจำตัว</span><div class="sw" id="pcol">${COLORS.map((c,i) => `<button class="${c}" data-c="${i}" aria-label="สี ${i+1}"></button>`).join('')}</div></div></div>
+    <span class="eb2">ประเภท</span>${ch('kind', Object.entries(KINDS).map(([k, [t]]) => [k, t]))}
     <span class="eb2">เวลาประจำ · ใช้สร้างตารางสอน</span><div class="slotl" id="pslots"></div>
     <div class="slotadd"><div class="chips" id="pnd">${[1,2,3,4,5,6,0].map(w => `<button class="chip" data-nd="${w}">${TH_D[w]}.</button>`).join('')}</div>
       <div class="step"><button data-nt="-30" aria-label="ถอย 30 นาที">−</button><b id="pnt"></b><button data-nt="30" aria-label="เลื่อน 30 นาที">+</button></div>
@@ -1675,9 +1750,10 @@ function editStudent(id){
   $('#pn').oninput = e => { pe.name = e.target.value; $('#pbig').textContent = (pe.name.trim() || '?')[0]; };
   $('#psave').onclick = () => {
     const name = pe.name.trim(); if (!name) return toast('ใส่ชื่อก่อน');
-    const v = {name, grade:pe.grade, subj:pe.subj, mode:pe.mode, rate:pe.rate, slots:pe.slots, goal:$('#pgo').value.trim(), contact:$('#pc').value.trim(), notes:$('#pnotes').value.trim(), color:pe.color};
+    const v = {name, grade:pe.grade, subj:pe.subj, mode:pe.mode, rate:pe.rate, slots:pe.slots, goal:$('#pgo').value.trim(), contact:$('#pc').value.trim(), notes:$('#pnotes').value.trim(), color:pe.color, kind:pe.kind};
     snap();
-    if (id){ Object.assign(st(id), v); save(); closeModal(); renderAll(); toast(`บันทึก ${name} แล้ว`, true); }
+    if (id){ const o = st(id); Object.assign(o, v); const moved = setGone(o, v.kind === 'stopped'); save(); closeModal(); renderAll();
+      toast(moved === 'gone' ? `${name} → ไม่เรียนแล้ว · ลบคาบที่นัดไว้ข้างหน้า` : moved === 'back' ? `${name} กลับมาเรียน` : `บันทึก ${name} แล้ว`, true); }
     else {
       const np = {...v, id:uid(), map: v.subj==='chem' ? 'tttttttttttttt' : null, feed:[]};
       DB.students.push(np);
@@ -1776,6 +1852,41 @@ $('#ratebar').onclick = e => { const b = e.target.closest('[data-r]'); if (!b) r
 $('#r1').oninput = e => { DB.rates.solo = +e.target.value || 0; save(); writeKit(); };
 $('#r2').oninput = e => { DB.rates.group = +e.target.value || 0; save(); writeKit(); };
 
+
+
+/* chapter status picker: tap a chapter -> a small menu of the four states (+ "teaching this one, everything before is
+   done"). Only one chapter can be "กำลังสอน": moving it forward marks the old one done, moving it back un-teaches it. */
+function chClose(){ document.getElementById('chpop')?.remove(); }
+function chPick(id, j, el){
+  const was = document.getElementById('chpop'); chClose(); if (was && was.dataset.k === id + j) return;
+  const p = st(id), cur = p.map[j], r = el.getBoundingClientRect(), pop = document.createElement('div');
+  pop.id = 'chpop'; pop.dataset.k = id + j;
+  pop.innerHTML = `<div class="cph"><b>บท ${j+1}</b>${CHF[j]}</div>` +
+    [['d','✓','สอนแล้ว'],['n','●','กำลังสอน'],['t','○','ยังไม่สอน'],['s','⁄','ไม่อยู่ในหลักสูตร']].map(([v, ic, t]) =>
+      `<button class="cpo ${v} ${cur === v ? 'on' : ''}" data-v="${v}"><i>${ic}</i>${t}</button>`).join('') +
+    (j ? `<button class="cpo upto" data-v="upto"><i>⇥</i>สอนบทนี้อยู่ · บท 1–${j} สอนแล้ว</button>` : '');
+  document.body.appendChild(pop);
+  const w = pop.offsetWidth, h = pop.offsetHeight, x = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width/2 - w/2)), below = r.bottom + 8 + h < innerHeight;
+  pop.style.left = x + 'px'; pop.style.top = (below ? r.bottom + 8 : r.top - h - 8) + 'px';
+  pop.onclick = e => { const b = e.target.closest('[data-v]'); if (b) chSet(id, j, b.dataset.v); };
+}
+function chSet(id, j, v){
+  const p = st(id), a = p.map.split('');
+  if (v === 'upto'){ for (let k = 0; k < j; k++) if (a[k] !== 's') a[k] = 'd'; v = 'n'; }
+  if (v === 'n'){ const o = a.indexOf('n'); if (o >= 0 && o !== j) a[o] = o < j ? 'd' : 't'; }
+  a[j] = v; p.map = a.join(''); chClose(); save(); renderStudents(); renderSchedule(); SFX.play(v === 'n' ? 'tick' : 'key');
+}
+addEventListener('mousedown', e => { if (!e.target.closest('#chpop, .segbar')) chClose(); }, true);
+addEventListener('keydown', e => { if (e.key === 'Escape') chClose(); });
+addEventListener('scroll', chClose, true);
+// hover names for the chapter boxes (instant, unlike the native title tooltip)
+(() => { const tip = document.createElement('div'); tip.id = 'chtip'; document.body.appendChild(tip);
+  document.addEventListener('mouseover', e => { const t = e.target.closest('.segbar [data-tip], .mstrip [data-tip]'); if (!t){ tip.classList.remove('on'); return; }
+    const k = ['d','n','s'].find(c => t.classList.contains(c)) || 't';
+    tip.innerHTML = `${t.dataset.tip}<small>${CHS[k]}</small>`; tip.classList.add('on');
+    const r = t.getBoundingClientRect(), w = tip.offsetWidth;
+    tip.style.left = Math.max(6, Math.min(innerWidth - w - 6, r.left + r.width/2 - w/2)) + 'px'; tip.style.top = (r.top - tip.offsetHeight - 8) + 'px'; });
+})();
 
 /* =============================== expenses =============================== */
 const ymOf = (y, m) => `${y}-${pad(m+1)}`;

@@ -61,3 +61,6 @@ drop policy if exists own on app_state; create policy own on app_state for all t
 
 -- 002: free-text notes per student (Notion's หัวข้อย่อย + หมายเหตุ land here)
 alter table students add column if not exists notes text default '';
+
+-- 003: student type (regular | adhoc | trial | stopped)
+alter table students add column if not exists kind text default 'regular';
