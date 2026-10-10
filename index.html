@@ -2427,7 +2427,7 @@ function tClose(hash){
   document.body.classList.remove("teachon");if(document.body.classList.contains("inapp")&&!hash)$("#home").click();
   scrollTo(0,0);const h=$("#board .hero"),r=h.getBoundingClientRect();SFX.play("home");
   TW.animate([{clipPath:"inset(0px 0px 0px 0px)"},{clipPath:cardClip(r)}],{duration:480,easing:EASE,fill:"forwards"})
-   .finished.then(()=>{TW.classList.remove("on");TW.getAnimations().forEach(a=>a.cancel());twBusy=false;
+   .finished.then(()=>{TW.classList.remove("on");TW.getAnimations().forEach(a=>a.cancel());twBusy=false;twPost("teach-hidden");
      h.animate([{opacity:0,scale:.96},{opacity:1,scale:1}],{duration:260,easing:"cubic-bezier(.2,1.3,.4,1)"});
      if(hash)openChapter(hash);});
   if(location.hash==="#teach")history.replaceState(null,"",location.pathname+location.search);

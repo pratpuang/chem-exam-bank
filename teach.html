@@ -1139,7 +1139,9 @@ function toBank(hash = ''){
 }
 addEventListener('pageshow', () => document.querySelectorAll('.bsheet').forEach(p => p.remove()));
 // each time the bank opens the layer: replay the entrance (content rises, numbers count up) and refresh if stale
+addEventListener('message', e => { if (e.source === parent && e.data?.type === 'teach-hidden') layerShown = false; });
 addEventListener('message', e => { if (e.source !== parent || e.data?.type !== 'teach-open') return;
+  layerShown = true;
   document.body.classList.remove('frombank'); void document.body.offsetWidth; document.body.classList.add('frombank');
   setTimeout(() => document.body.classList.remove('frombank'), 900);
   ['#income','#sLeft','#sOwe','#sAll'].forEach(q => $(q) && ($(q)._v = 0)); if (typeof renderMoney === 'function') renderMoney();
@@ -1276,7 +1278,7 @@ async function push(){
   if (d.st) await part('settings', () => write('app_state', () => sb.from('app_state').upsert({owner:user.id, data:d.st})), () => base.st = J(d.st));
   cacheSave(); pushing = false;
   if (fails.length){ setSync(navigator.onLine ? 'err' : 'off'); clearTimeout(pushT); pushT = setTimeout(push, 15000); }
-  else setSync('ok', ' · ' + hhmm(new Date()));
+  else { setSync('ok', ' · ' + hhmm(new Date())); signature().then(x => sig = x).catch(() => {}); }
   if (again){ again = false; schedulePush(); }
 }
 const hhmm = d => d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
@@ -1329,6 +1331,7 @@ async function pull(){
       schedulePush();
     }
     cacheSave(); setSync(keep?.n ? 'saving' : 'ok', keep?.n ? '' : ' · ' + hhmm(new Date()));
+    signature().then(x => sig = x).catch(() => {});
     const rolled = rolling();   // fresh data: reconcile + top up weekly classes (sends its own changes)
     if (keep?.n || rolled || JSON.stringify(base) !== prevBase) renderAll();   // the 30 s refresh only redraws when something changed
   }catch(e){ console.warn('pull', e); setSync(navigator.onLine ? 'err' : 'off'); }
@@ -1391,8 +1394,22 @@ addEventListener('online', () => { schedulePush(); });
 addEventListener('offline', () => setSync('off'));
 // back to the tab (phone ↔ PC): refresh if it's been a while and nothing is open mid-edit
 const idle = () => !$('#modal').classList.contains('open') && !document.getElementById('chpop') && !document.querySelector('#scards input:focus, #scards textarea:focus, .editing');
-document.addEventListener('visibilitychange', () => { if (!document.hidden && user && Date.now() - lastPull > 15000 && idle()) pull(); });
-setInterval(() => { if (!document.hidden && user && sb && navigator.onLine && !pushing && Date.now() - lastPull > 25000 && idle()) pull(); }, 10000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && layerShown && user && Date.now() - lastPull > 15000 && idle()) quickCheck(); });
+// the background refresh asks a tiny question first ("did anything change?": row count + newest edit per table, a few
+// hundred bytes) and only downloads everything when the answer is yes — a full read is ~50 KB, every 25 s all day
+// would eat the free plan's monthly transfer. Inside the bank it also sleeps while the layer is folded away.
+let sig = '', layerShown = !EMBED;
+async function signature(){
+  const one = async (t, col) => { const {data, count, error} = await sb.from(t).select(col, {count: 'exact'}).order(col, {ascending: false}).limit(1);
+    if (error) throw error; return count + ':' + (data[0]?.[col] || ''); };
+  const parts = await Promise.all([one('students', 'updated_at'), one('sessions', 'updated_at'), one('app_state', 'updated_at'), skipsOff ? 'off' : one('skips', 'created_at').catch(() => 'off')]);
+  return parts.join('|');
+}
+async function quickCheck(){
+  try{ const s2 = await signature(); if (s2 === sig) { lastPull = Date.now(); return; } sig = s2; }catch{ /* fall through to a full pull, which reports errors */ }
+  pull();
+}
+setInterval(() => { if (!document.hidden && layerShown && user && sb && navigator.onLine && !pushing && Date.now() - lastPull > 25000 && idle()) quickCheck(); }, 10000);
 
 /* =============================== MONEY =============================== */
 let my = NOW.getFullYear(), mm_ = NOW.getMonth();
@@ -2080,7 +2097,8 @@ addEventListener('mousedown', e => { if (!e.target.closest('#chpop, .segbar')) c
 addEventListener('keydown', e => { if (e.key === 'Escape') chClose(); });
 addEventListener('scroll', chClose, true);
 // hover names for the chapter boxes (instant, unlike the native title tooltip)
-(() => { const tip = document.createElement('div'); tip.id = 'chtip'; document.body.appendChild(tip);
+(() => { if (!matchMedia('(hover: hover)').matches) return;   // touch screens: a tap would leave the tip stuck; the menu header names the chapter
+  const tip = document.createElement('div'); tip.id = 'chtip'; document.body.appendChild(tip);
   document.addEventListener('mouseover', e => { const t = e.target.closest('.segbar [data-tip], .mstrip [data-tip]'); if (!t){ tip.classList.remove('on'); return; }
     const k = ['d','n','s'].find(c => t.classList.contains(c)) || 't';
     tip.innerHTML = `${t.dataset.tip}<small>${CHS[k]}</small>`; tip.classList.add('on');
