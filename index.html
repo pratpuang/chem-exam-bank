@@ -120,6 +120,10 @@ button.tile:hover:after{opacity:1;transform:none}
 .tup .b,.hero.ready .tup .a{display:none}.hero.ready .tup .b{display:inline}
 .tportal{position:fixed;inset:0;z-index:999;background:#efe9dc;pointer-events:none;will-change:clip-path}
 
+/* cross-page hand-off to teach.html: the browser crossfades the two pages (Chrome 126+, Safari 18.2+;
+   others just navigate), so the paper sheet the card grows into melts straight into teach.html's paper */
+@view-transition{navigation:auto}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.32s;animation-timing-function:cubic-bezier(.4,0,.2,1)}
 /* circle reveal between landing and app */
 #app{display:none}
 #app.show{display:block}

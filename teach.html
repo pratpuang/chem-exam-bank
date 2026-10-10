@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>สอนพิเศษ · คลังข้อสอบเคมี</title>
+<meta name="color-scheme" content="light">
+<style>html{background:#efe9dc}html.authed #lock{display:none}@view-transition{navigation:auto}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.32s;animation-timing-function:cubic-bezier(.4,0,.2,1)}</style>
+<script>/* a stored Supabase session + this device's cache = signed in: hide the login before anything paints */
+try{if(localStorage.getItem('sb-qxotevxhlbjvfyidmeyi-auth-token')&&localStorage.getItem('teach-cache-v1'))document.documentElement.classList.add('authed')}catch(e){}</script>
+<link rel="preconnect" href="https://qxotevxhlbjvfyidmeyi.supabase.co" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--ok:#2f8f4e;--stbg:#fcebb8;--grid:#e6dfcf;--orange:#f28c28;--lav:#9fb0e8;--dash:#d9d2c1}
@@ -796,7 +802,7 @@ button.fh:hover{transform:translateY(-2px)}
 /* bank hand-off */
 .bsheet{position:fixed;inset:0;z-index:999;background:var(--paper);opacity:0;transition:opacity .26s ease;pointer-events:none}
 .bsheet.on{opacity:1}
-body.frombank #lock .door,body.frombank #app>:is(header,nav,main){animation:fromBank .45s cubic-bezier(.2,.9,.3,1) both}
+body.frombank #lock .door,body.frombank #app>:is(header,nav,main){animation:fromBank .5s cubic-bezier(.2,.9,.3,1) .08s both}
 body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-delay:.12s}
 @keyframes fromBank{from{opacity:0;transform:translateY(24px)}}
 
@@ -1045,6 +1051,7 @@ function monthTotal(y, m){ const mm = monthMoney(y, m); return mm.n ? mm.forecas
 // back: a paper sheet drops over the page, the bank fades it away on arrival (sessionStorage "teach-back")
 function toBank(hash = ''){
   try{ sessionStorage.setItem('teach-back', '1'); }catch{}
+  SFX.play('home');
   const p = document.createElement('div'); p.className = 'bsheet'; document.body.appendChild(p);
   requestAnimationFrame(() => p.classList.add('on'));
   setTimeout(() => { location.href = 'index.html' + hash; }, 280);
@@ -1119,13 +1126,19 @@ async function pull(){
       students: S.filter(x => !x.archived).map(fix), archived: S.filter(x => x.archived).map(fix),
       sessions: X.map(x => ({...x, h:+x.h, note:x.note || ''}))};
     base = baseOf(rowsOf(DB)); lastPull = Date.now(); cacheSave(); setSync('ok', ' · ' + hhmm(new Date()));
-    ['#income','#sLeft','#sOwe','#sAll','#sExp'].forEach(q => $(q) && ($(q)._v = 0)); renderAll();
+    renderAll();
   }catch(e){ console.warn('pull', e); setSync(navigator.onLine ? 'err' : 'off'); }
 }
-function enter(u){
+let fromCache = false;
+function loadCache(uid){
+  try{ const c = JSON.parse(localStorage.getItem(CACHE)); if (c?.uid && (!uid || c.uid === uid)){ DB = {...blankDB(), ...c.db}; base = c.base; fromCache = true; return c.uid; } }catch{}
+  return null;
+}
+function enter(u, quiet){
+  if (!fromCache || user?.id !== u.id){ fromCache = false; if (loadCache(u.id)) renderAll(); }
   user = u;
-  try{ const c = JSON.parse(localStorage.getItem(CACHE)); if (c?.uid === u.id){ DB = {...blankDB(), ...c.db}; base = c.base; renderAll(); } }catch{}
-  const lk = $('#lock'); if (lk){ lk.classList.add('out'); setTimeout(() => lk.remove(), 460); }
+  const lk = $('#lock'); if (lk){ if (quiet) lk.remove(); else { lk.classList.add('out'); setTimeout(() => lk.remove(), 460); } }
+  document.documentElement.classList.remove('authed');
   pull();
 }
 (async function(){
@@ -1136,7 +1149,11 @@ function enter(u){
     $('#lmsg').textContent = 'ต่อเน็ตไม่ได้ · ต้องออนไลน์ครั้งแรกเพื่อเข้าสู่ระบบ'; return;
   }
   const {data} = await sb.auth.getSession();
-  if (data.session) enter(data.session.user); else setTimeout(() => ($('#lem').value ? $('#lpw') : $('#lem')).focus(), 300);
+  if (data.session) return enter(data.session.user, true);
+  // the stored session turned out dead: drop what the boot render showed and ask for the login
+  if (fromCache){ fromCache = false; user = null; base = null; DB = blankDB(); renderAll(); }
+  document.documentElement.classList.remove('authed');
+  setTimeout(() => ($('#lem').value ? $('#lpw') : $('#lem')).focus(), 300);
 })();
 $('#login').onsubmit = async e => {
   e.preventDefault(); if (!sb) return;
@@ -1144,9 +1161,9 @@ $('#login').onsubmit = async e => {
   const {data, error} = await sb.auth.signInWithPassword({email:em, password:$('#lpw').value});
   b.disabled = false; b.textContent = 'เข้าสู่ระบบ →';
   if (error){ $('#lmsg').textContent = /invalid/i.test(error.message) ? 'อีเมลหรือรหัสผ่านไม่ถูก' : 'เข้าไม่ได้ · ' + error.message;
-    $('#lmsg').classList.add('bad'); $('#lock').classList.add('shake'); setTimeout(() => $('#lock').classList.remove('shake'), 380); return; }
+    $('#lmsg').classList.add('bad'); SFX.play('bad'); $('#lock').classList.add('shake'); setTimeout(() => $('#lock').classList.remove('shake'), 380); return; }
   try{ localStorage.setItem('teach-email', em); }catch{}
-  enter(data.user);
+  SFX.play('open'); enter(data.user);
 };
 $('#logout').onclick = async () => {
   if (pending()?.n && !confirm('ยังมีข้อมูลที่ยังไม่ได้ส่งขึ้นเซิร์ฟเวอร์ · ออกเลยไหม?')) return;
@@ -1779,10 +1796,126 @@ function openExp(){
 }
 function delExp(i){ snap(); DB.expenses.splice(i, 1); save(); renderMoney(); openExp(); toast('ลบแล้ว', true); }
 
+
+/* =============================== sound fx =============================== */
+// Same synthesized voice as the bank (Web Audio, no files): crisp transient over a soft body, consonant steps rising
+// for doing and falling for undoing, a few % of random variation so repeats never sound robotic. The on/off and
+// volume are the bank's own settings (cqb_sfx / cqb_vol), so muting one mutes both.
+const SFX = (() => {
+  const lsg = (k, d) => { try{ const v = localStorage.getItem(k); return v === null ? d : v; }catch{ return d; } };
+  let ctx = null, master = null, verb = null, nbuf = null, on = lsg('cqb_sfx', '1') !== '0';
+  const vol = Math.max(0, Math.min(100, parseInt(lsg('cqb_vol', '70'), 10) || 0)), gain = Math.pow(vol / 100, 1.6) * 1.35;
+  function ac(){
+    if (!ctx){ const A = window.AudioContext || window.webkitAudioContext; if (!A) return null; ctx = new A();
+      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.knee.value = 14; comp.ratio.value = 4; comp.attack.value = .003; comp.release.value = .18;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 7500;
+      master = ctx.createGain(); master.gain.value = gain; master.connect(lp); lp.connect(comp); comp.connect(ctx.destination);
+      const len = Math.floor(ctx.sampleRate * 1.2), ir = ctx.createBuffer(2, len, ctx.sampleRate);
+      for (let c = 0; c < 2; c++){ const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 3.4); }
+      const cv = ctx.createConvolver(); cv.buffer = ir; verb = ctx.createGain(); verb.gain.value = .9; verb.connect(cv); cv.connect(master);
+      nbuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate); const nd = nbuf.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random()*2-1; }
+    if (ctx.state === 'suspended') ctx.resume(); return ctx; }
+  const rnd = Math.random, pick = a => a[Math.floor(rnd() * a.length)], vary = (x, p = .03) => x * (1 + (rnd()*2-1) * p);
+  const PENTA = [0,2,4,7,9], note = (r, i) => { i |= 0; return r * Math.pow(2, (PENTA[(i%5+5)%5] + 12*Math.floor(i/5)) / 12); };
+  function route(g, wet){ g.connect(master); if (wet){ const x = ctx.createGain(); x.gain.value = wet; g.connect(x); x.connect(verb); } }
+  function env(g, t, v, a, dur){ g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vary(v, .07), t + a); g.gain.exponentialRampToValueAtTime(.0001, t + dur); }
+  function tone(f, dur, o = {}){ const c = ac(); if (!c) return; const t = c.currentTime + (o.delay || 0), os = c.createOscillator(), g = c.createGain();
+    os.type = o.type || 'sine'; os.frequency.setValueAtTime(f, t); if (o.slide) os.frequency.exponentialRampToValueAtTime(Math.max(20, f * o.slide), t + (o.slideT || dur));
+    let n = os; if (o.lp){ const fl = c.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = o.lp; os.connect(fl); n = fl; }
+    env(g, t, o.vol || .12, o.attack || .004, dur); n.connect(g); route(g, o.wet); os.start(t); os.stop(t + dur + .05); }
+  function noise(dur, o = {}){ const c = ac(); if (!c) return; const t = c.currentTime + (o.delay || 0); dur = Math.min(dur, 1);
+    const src = c.createBufferSource(); src.buffer = nbuf; const f = c.createBiquadFilter(); f.type = o.type || 'bandpass';
+    f.frequency.setValueAtTime(o.freq || 1800, t); if (o.sweep) f.frequency.exponentialRampToValueAtTime((o.freq || 1800) * o.sweep, t + dur); f.Q.value = o.q || .8;
+    const g = c.createGain(); env(g, t, o.vol || .1, o.attack || .002, dur); src.connect(f); f.connect(g); route(g, o.wet); src.start(t, rnd() * (2 - dur - .1)); src.stop(t + dur + .05); }
+  function bell(f, dur, o = {}){ const c = ac(); if (!c) return; const t = c.currentTime + (o.delay || 0), car = c.createOscillator(), mod = c.createOscillator(), mg = c.createGain(), g = c.createGain();
+    car.frequency.value = f; mod.frequency.value = f * (o.ratio || 3.5); mg.gain.setValueAtTime(f * (o.index || 1.6), t); mg.gain.exponentialRampToValueAtTime(1, t + dur);
+    mod.connect(mg); mg.connect(car.frequency); env(g, t, o.vol || .08, .003, dur); car.connect(g); route(g, o.wet == null ? .5 : o.wet);
+    car.start(t); mod.start(t); car.stop(t + dur + .05); mod.stop(t + dur + .05); }
+  const mallet = (f, o = {}) => { const v = o.vol || .14; tone(f, .42, {vol:v, wet:.25, delay:o.delay, attack:.002}); tone(f*3.98, .07, {vol:v*.22, delay:o.delay, attack:.001}); noise(.012, {vol:v*.3, freq:3000, q:1, delay:o.delay}); };
+  const thock = (o = {}) => { const v = o.vol || .15, d = o.delay || 0; tone(vary(o.f || 190), .1, {vol:v, slide:.5, slideT:.07, attack:.001, delay:d, lp:1400}); noise(.016, {vol:v*.55, freq:vary(o.nf || 3000, .1), q:1.3, delay:d}); };
+  const wood = (f, o = {}) => { const v = o.vol || .1, d = o.delay || 0; tone(f, .08, {vol:v, slide:.93, slideT:.05, attack:.001, delay:d, wet:o.wet}); tone(f*2.72, .03, {vol:v*.25, attack:.001, delay:d}); noise(.008, {vol:v*.35, freq:Math.min(f*3, 4200), q:2.5, delay:d}); };
+  const pop = (f, o = {}) => { const T = o.dur || .07; tone(f, T, {vol:o.vol || .1, slide:o.rise || 1.8, slideT:T*.8, attack:.002, delay:o.delay, wet:o.wet == null ? .12 : o.wet}); };
+  const glass = (f, o = {}) => { const v = o.vol || .06, d = o.delay || 0, T = o.dur || .5; tone(f, T, {vol:v, delay:d, attack:.002, wet:.4}); tone(f*2.32, T*.5, {vol:v*.3, delay:d, attack:.001, wet:.4}); tone(f*4.25, T*.22, {vol:v*.1, delay:d, attack:.001}); };
+  const paper = (dir, o = {}) => { const v = o.vol || .1, fwd = dir > 0; noise(.07, {freq:vary(fwd ? 2300 : 1500, .08), sweep:fwd ? 1.6 : .62, q:1.2, vol:v*.5, attack:.004});
+    noise(.16, {freq:vary(fwd ? 700 : 1900, .08), sweep:fwd ? 2.6 : .4, q:.8, vol:v, attack:.05, delay:.02, wet:.12}); thock({f:vary(125), vol:v*.75, nf:1800, delay:.15}); };
+  const P = {
+    // drawers: a soft slide that lands on felt, each with its own accent
+    drawer: w => { noise(.16, {type:'lowpass', freq:500, sweep:4, q:.7, vol:.08, attack:.07, wet:.15}); thock({f:vary(150), vol:.09, delay:.14});
+      if (w === 'cal'){ wood(1175, {vol:.06, delay:.14}); wood(880, {vol:.06, delay:.26}); }                                   // tick-tock
+      else if (w === 'stu'){ pop(vary(440, .02), {vol:.07, rise:1.5, dur:.06, delay:.15}); pop(vary(660, .02), {vol:.075, rise:1.3, dur:.07, delay:.2}); }
+      else glass(vary(1568, .01), {vol:.04, delay:.15, dur:.4}); },                                                          // ข้อความ: a glassy ding
+    undrawer: () => { noise(.13, {type:'lowpass', freq:1800, sweep:.3, q:.7, vol:.07, attack:.03}); thock({f:vary(130), vol:.09, delay:.1}); },
+    sheet: () => { noise(.09, {freq:900, sweep:2.2, q:.8, vol:.05, attack:.03}); wood(vary(784, .02), {vol:.06, delay:.07}); },
+    // the tick box: marker swipe, then a rising mallet + bell; unticking falls back down
+    tick: () => { noise(.05, {freq:2000, sweep:1.5, q:1.1, vol:.045, attack:.01}); thock({f:vary(230), vol:.09, delay:.03}); mallet(vary(659, .01), {vol:.1, delay:.035}); bell(1319, .45, {vol:.026, delay:.06, index:1.1, wet:.35}); },
+    untick: () => { thock({f:vary(170), vol:.09}); tone(vary(620), .11, {vol:.06, slide:.62, slideT:.09, attack:.002, wet:.12}); },
+    step: i => { const f = note(392, i + 2); wood(vary(f, .015), {vol:.08}); wood(vary(f * 1.5, .015), {vol:.07, delay:.05}); },
+    done: () => { const c = pick([[784,988,1175,1568],[698,880,1047,1397]]); noise(.12, {freq:1200, sweep:2, q:.8, vol:.04, attack:.03});
+      c.forEach((f, i) => bell(vary(f, .005), .55 + i*.1, {vol:.05, delay:i*.06, ratio:1, index:.9, wet:.45})); tone(c[0]/2, .5, {vol:.06, delay:.18, wet:.3}); },
+    coin: () => { bell(vary(1568, .005), .35, {vol:.05, ratio:1.4, index:1.2, wet:.3}); bell(vary(2093, .005), .5, {vol:.045, ratio:1.4, index:1.2, delay:.07, wet:.35}); thock({f:vary(240), vol:.06}); },
+    save: () => { mallet(vary(523, .015)); mallet(vary(784, .015), {delay:.065, vol:.12}); },
+    del: () => { thock({f:vary(170), vol:.09}); tone(vary(660, .02), .08, {vol:.06, slide:.68, slideT:.06, lp:1500, attack:.002}); tone(vary(440, .02), .09, {vol:.055, slide:.7, lp:1100, delay:.05, attack:.002}); },
+    on: () => { thock({f:vary(210), vol:.1}); pop(vary(440, .02), {vol:.07, rise:1.5, dur:.06}); pop(vary(660, .02), {vol:.075, rise:1.3, dur:.07, delay:.05}); },
+    off: () => P.del(),
+    select: () => { pop(vary(pick([440,523,587]), .02), {vol:.12, rise:1.5, dur:.06}); thock({f:vary(210), vol:.07}); },
+    key: () => { tone(vary(330, .03), .035, {vol:.08, type:'triangle', lp:1200, attack:.001}); thock({f:vary(185), vol:.09, nf:2600}); },
+    unfold: () => { noise(.09, {freq:900, sweep:2.2, q:.8, vol:.06, attack:.03}); mallet(vary(392, .01), {vol:.08}); mallet(vary(523, .01), {vol:.075, delay:.05}); },
+    fold: () => { noise(.08, {freq:1800, sweep:.45, q:.8, vol:.05, attack:.02}); mallet(vary(523, .01), {vol:.075}); mallet(vary(392, .01), {vol:.075, delay:.05}); },
+    flip: d => paper(d),
+    copy: () => { pop(vary(587, .02), {vol:.1, rise:1.6, dur:.06}); bell(vary(1175, .01), .3, {vol:.03, ratio:1, index:.6, delay:.05, wet:.3}); },
+    undo: () => { tone(vary(880), .09, {vol:.07, slide:.55, slideT:.08, type:'triangle', lp:2000, attack:.002}); thock({f:180, vol:.06, delay:.085}); },
+    bad: () => { wood(vary(330, .02), {vol:.08}); wood(vary(262, .02), {vol:.085, delay:.1}); tone(131, .22, {vol:.05, lp:400, delay:.1}); },
+    open: () => { const c = pick([[392,494,587],[349,440,523]]); noise(.26, {type:'lowpass', freq:400, sweep:5, q:.6, vol:.07, attack:.12, wet:.3});
+      c.forEach((f, i) => mallet(vary(f, .01), {delay:.05 + i*.07, vol:.11})); bell(c[2]*2, .7, {vol:.03, delay:.24, index:1.1}); },
+    home: () => { const [a, b] = pick([[587,392],[659,440]]); noise(.38, {freq:2600, sweep:.18, q:.7, vol:.09, attack:.05, wet:.3}); mallet(vary(a, .01), {delay:.22, vol:.1}); mallet(vary(b, .01), {delay:.3, vol:.1}); }
+  };
+  let n = 0;
+  return { play(k, a){ n++; if (!on || !vol) return; try{ P[k] && P[k](a); }catch{} }, get n(){ return n; },
+           get on(){ return on; }, set(v){ on = v; try{ localStorage.setItem('cqb_sfx', v ? '1' : '0'); }catch{} } };
+})();
+// hook the sounds onto the app's own actions (classic-script functions are window properties, so wrapping them
+// reroutes every caller, inline onclick handlers included)
+function hook(name, after, before){ const f = window[name]; if (typeof f !== 'function') return;
+  window[name] = function(...a){ const pre = before ? before(...a) : undefined; const r = f.apply(this, a); try{ after(pre, ...a); }catch{} return r; }; }
+const modalOpen = () => $('#modal').classList.contains('open');
+hook('openDrawer', (was, k) => { if (was !== k) SFX.play('drawer', k); }, () => openD);
+hook('closeDrawer', was => { if (was) SFX.play('undrawer'); }, () => openD);
+hook('markDone', () => SFX.play('tick'));
+hook('undone', () => SFX.play('untick'));
+hook('togglePaid', (_, id) => SFX.play(DB.sessions.find(x => x.id === id)?.paid ? 'coin' : 'del'));
+hook('toggleStu', () => SFX.play(openStu ? 'unfold' : 'fold'));
+hook('saveSession', wasOpen => { if (wasOpen && !modalOpen()) SFX.play('save'); }, modalOpen);
+hook('saveWu', () => SFX.play('done'));
+let wuStep = 0;
+hook('wrapUp', () => { wuStep = wu ? wu.step : 0; });
+hook('renderWu', () => { if (wu && wu.step !== wuStep){ SFX.play('step', wu.step); wuStep = wu.step; } });
+hook('toggleHol', (_, iso) => { const [y, m, d] = iso.split('-').map(Number); SFX.play((DB.holidays[mkey(y, m-1)] || []).includes(d) ? 'on' : 'off'); });
+hook('cycle', () => SFX.play('key'));
+hook('startMap', () => SFX.play('select'));
+hook('addFb', () => SFX.play('select'));
+hook('delFb', () => SFX.play('del'));
+hook('delExp', () => SFX.play('del'));
+hook('copy', () => SFX.play('copy'));
+// a sheet opening gets its own sound only when nothing else spoke for the same action (tick -> wizard, save -> re-render)
+hook('openModal', was => { if (was) return; const n0 = SFX.n; setTimeout(() => { if (SFX.n === n0) SFX.play('sheet'); }, 0); }, modalOpen);
+hook('editStudent', () => $('#psave')?.addEventListener('click', () => setTimeout(() => { if (!modalOpen()) SFX.play('save'); }, 0)));
+hook('openExp', () => $('#xgo')?.addEventListener('click', () => SFX.play('save')));
+['#mprev', '#mnext'].forEach((q, i) => $(q)?.addEventListener('click', () => SFX.play('flip', i ? 1 : -1)));
+document.addEventListener('click', e => {
+  if (e.target.closest('#toast button')) SFX.play('undo');
+  else if (e.target.closest('#agrid .fh, #agrid .fck')) SFX.play('key');
+  else if (e.target.closest('#srange button, #kweek button, #sheet .chip, #sheet .pc')) SFX.play('select');
+}, true);
+// the mute toggle sits in the footer, next to the sync status
+(() => { const b = document.createElement('button'); b.className = 'ghost'; b.id = 'sndb';
+  const paint = () => { b.textContent = SFX.on ? '🔊 เสียง' : '🔇 ปิดเสียง'; b.title = SFX.on ? 'ปิดเสียงเอฟเฟกต์' : 'เปิดเสียงเอฟเฟกต์'; };
+  b.onclick = () => { SFX.set(!SFX.on); paint(); SFX.play('on'); }; paint(); $('#logout').before(b, ' '); })();
+
 /* =============================== boot =============================== */
 window.onerror = m => document.body.setAttribute('data-err', m);
 const tick = () => $('#clock').textContent = new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
 tick(); setInterval(tick, 30000);
+if (document.documentElement.classList.contains('authed')){ const uid = loadCache(); if (uid) user = {id: uid}; }
 renderMoney(); renderSchedule();
 const QP = new URLSearchParams(location.search);
 if (QP.has('stuopen') && DB.students[0]) openStu = DB.students[0].id;
