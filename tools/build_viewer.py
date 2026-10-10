@@ -628,21 +628,17 @@ button.tile:hover:after{opacity:1;transform:none}
 @media(max-width:560px){.board{--cols:2;grid-auto-rows:130px}.tile.w2,.hero{grid-column:span 2}.lhead h1{font-size:1.8rem}.tile.big .no{font-size:3.2rem}}
 
 
-/* hold the subject card, slide it up -> the teaching page (teach.html). The card lifts after a hold, follows the
-   finger up, and past the line it grows into a paper sheet that becomes teach.html's own lock screen */
-.hero{-webkit-touch-callout:none;transition:translate .35s cubic-bezier(.2,.9,.3,1),rotate .35s,box-shadow .2s}
-.hero.lift{z-index:5;transition:box-shadow .2s;box-shadow:0 18px 0 -4px var(--ink),0 0 0 3px var(--ink);cursor:grabbing}
+/* slide the subject card up -> the teaching page (teach.html). The card follows the finger; past the line (or a
+   quick flick) a paper sheet opens out of the card's own rectangle to full screen -- teach.html's paper -- and the
+   page loads under it. Coming back runs the same sheet in reverse, closing into the card. */
+.hero{-webkit-touch-callout:none;touch-action:none;transition:translate .4s cubic-bezier(.2,1.3,.4,1),rotate .4s,box-shadow .2s}
+.hero.lift{z-index:5;transition:box-shadow .2s;box-shadow:0 14px 0 -4px var(--ink),0 0 0 3px var(--ink);cursor:grabbing}
 .hero .tup{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--yel);border-top:3px solid var(--ink);display:flex;align-items:center;justify-content:center;gap:8px;
-  font:800 .82rem "Anuphan",sans-serif;color:#141414;overflow:hidden;opacity:0;transition:opacity .15s,height .15s;z-index:3;pointer-events:none}
+  font:800 .82rem "Anuphan",sans-serif;color:#141414;overflow:hidden;opacity:0;transition:opacity .15s,height .15s,background .15s;z-index:3;pointer-events:none}
 .hero.lift .tup{opacity:1;height:38px}
 .hero.ready .tup{background:var(--red);color:#fff}
 .tup .b,.hero.ready .tup .a{display:none}.hero.ready .tup .b{display:inline}
-.tportal{position:fixed;z-index:999;background:#efe9dc;border:3px solid #141414;box-shadow:6px 6px 0 #141414;display:grid;place-items:center;overflow:hidden;
-  transition:all .55s cubic-bezier(.7,0,.2,1);pointer-events:none}
-.tportal b{font:800 1.6rem "Anuphan",sans-serif;color:#141414;transition:transform .55s cubic-bezier(.7,0,.2,1),opacity .3s}
-.tportal.full{left:0!important;top:0!important;width:100vw!important;height:100vh!important;border-width:0;box-shadow:none}
-.tportal.full b{transform:scale(1.4);opacity:0}
-.tportal.back{transition:opacity .45s ease;opacity:0}
+.tportal{position:fixed;inset:0;z-index:999;background:#efe9dc;pointer-events:none;will-change:clip-path}
 
 /* circle reveal between landing and app */
 #app{display:none}
@@ -2651,7 +2647,7 @@ function heroHtml(){
   const yrs=bio.map(q=>q.year).filter(Boolean).sort(),yr=yrs.length?` ปี ${yrs[0]}${yrs[0]!==yrs[yrs.length-1]?"–"+yrs[yrs.length-1]:""}`:"";
   const nav=SUBJS.length<2?"":`<div class="hnav"><button class="hdot${si===0?" on":""}" data-s="0">${ICON.chem}เคมี</button><button class="hdot${si===1?" on":""}" data-s="1">${ICON.bio}ชีววิทยา</button>
     <button class="harr hsp" data-d="-1" title="วิชาก่อนหน้า (←)">‹</button><button class="harr" data-d="1" title="วิชาถัดไป (→)">›</button></div>`;
-  return `<div class="tile hero" tabindex="0" aria-label="เลือกวิชา · ปัดหรือกด ← →">${nav}<div class="tup"><span class="a">⇡ ลากขึ้น → สอนพิเศษ</span><span class="b">ปล่อยเลย ✓</span></div><div class="htrack">
+  return `<div class="tile hero" tabindex="0" aria-label="เลือกวิชา · ปัดหรือกด ← →">${nav}<div class="tup"><span class="a">⇡ ปัดขึ้น → สอนพิเศษ</span><span class="b">ปล่อยเลย ✓</span></div><div class="htrack">
     <div class="hpanel"><b>${DATA.chemcount}${ICON.chem}</b><span>ข้อสอบเคมี<br>แยกตามบท</span><small>สอวน. · PAT2 · A-Level · 9 วิชาสามัญ<br>เลือกบทด้านข้าง หรือกด ทุกบท</small></div>
     ${SUBJS.length>1?`<div class="hpanel"><b>${DATA.biocount}${ICON.bio}</b><span>ข้อสอบชีววิทยา<br>แยกตามหัวข้อ</span><small>${bex}${yr}<br>เลือกหัวข้อด้านข้าง หรือกด ทุกหัวข้อ</small></div>`:""}</div></div>`;}
 /* every tile that depends on the chosen subject (rebuilt on a switch; hero + recent stay put) */
@@ -2910,49 +2906,57 @@ $("#board").addEventListener("click",e=>{
 $("#home").onclick=()=>{SFX.play("home");dwell(null);document.body.classList.remove("inapp");$("#app").classList.remove("show");window.scrollTo(0,0);buildBoard();};
 buildBoard();
 
-/* ---------- hold + slide up on the subject card -> teaching page ----------
-   a still hold (420ms) arms it; then only vertical-up travel counts and page scroll is blocked (touchmove is
-   cancelled while lifted). Release past 110px -> launch; less -> the card drops back. A move before the hold
-   fires cancels it, so the sideways subject swipe and normal scrolling are untouched. Keyboard: ↑ on the card. */
-let thold=null;
-const THOLD=420,TGO=110;
-function tLaunch(){
-  const h=$("#board .hero");if(!h)return;const r=h.getBoundingClientRect();
+/* ---------- slide the subject card up -> teaching page ----------
+   the card takes its own touches (touch-action:none): the first 10px decide the axis -- sideways is the subject
+   swipe (hdrag, untouched), up is this, down scrolls the page by hand. Release past TGO px, or a flick faster
+   than .6px/ms, launches; anything less springs back. Keyboard: ↑ on the card. */
+let tdrag=null;
+const TGO=110,EASE="cubic-bezier(.65,0,.35,1)";
+const cardClip=r=>`inset(${r.top}px ${innerWidth-r.right}px ${innerHeight-r.bottom}px ${r.left}px)`;
+function tLaunch(h){
+  h=h||$("#board .hero");if(!h)return;const r=h.getBoundingClientRect();
   SFX.play("whoosh");try{sessionStorage.setItem("teach-from-bank","1");}catch(_){}
-  const p=document.createElement("div");p.className="tportal";p.innerHTML="<b>สอนพิเศษ</b>";
-  Object.assign(p.style,{left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px"});
-  document.body.appendChild(p);void p.offsetWidth;p.classList.add("full");
-  h.style.translate=h.style.rotate="";h.classList.remove("lift","ready");
-  setTimeout(()=>{location.href="teach.html";},560);
+  const p=document.createElement("div");p.className="tportal";document.body.appendChild(p);
+  p.animate([{clipPath:cardClip(r)},{clipPath:"inset(0px 0px 0px 0px)"}],{duration:520,easing:EASE,fill:"forwards"})
+   .finished.then(()=>{location.href="teach.html";});
+  h.animate([{opacity:1},{opacity:0}],{duration:160,fill:"forwards"});
 }
-function tDrop(){const t=thold;thold=null;if(!t)return;clearTimeout(t.timer);
-  if(t.on){t.h.classList.remove("lift","ready");t.h.style.translate=t.h.style.rotate="";}}
+function tReset(h){h.classList.remove("lift","ready");h.style.translate=h.style.rotate="";}
 $("#board").addEventListener("pointerdown",e=>{const h=e.target.closest(".hero");
   if(!h||e.button>0||e.target.closest("button"))return;
-  const t={x:e.clientX,y:e.clientY,id:e.pointerId,h,on:false,dy:0};
-  t.timer=setTimeout(()=>{if(thold!==t)return;t.on=true;hdrag=null;
-    try{h.setPointerCapture(t.id);}catch(_){}
-    h.classList.add("lift");navigator.vibrate?.(12);SFX.play("tile",0);},THOLD);
-  thold=t;});
-$("#board").addEventListener("pointermove",e=>{const t=thold;if(!t||e.pointerId!==t.id)return;
-  if(!t.on){if(Math.hypot(e.clientX-t.x,e.clientY-t.y)>8)tDrop();return;}
-  t.dy=Math.min(0,e.clientY-t.y);const k=-t.dy;
-  t.h.style.translate=`0 ${t.dy}px`;t.h.style.rotate=`${Math.max(-2,-k/90)}deg`;
-  t.h.classList.toggle("ready",k>TGO);});
-function tEnd(e){const t=thold;if(!t||e.pointerId!==t.id)return;
-  if(t.on&&e.type==="pointerup"&&-t.dy>TGO){thold=null;clearTimeout(t.timer);tLaunch();return;}
-  tDrop();}
+  tdrag={x:e.clientX,y:e.clientY,id:e.pointerId,h,mode:null,dy:0,sy:scrollY,t:performance.now(),v:0};});
+$("#board").addEventListener("pointermove",e=>{const t=tdrag;if(!t||e.pointerId!==t.id)return;
+  const dx=e.clientX-t.x,dy=e.clientY-t.y;
+  if(!t.mode){if(Math.hypot(dx,dy)<10)return;
+    if(Math.abs(dx)>Math.abs(dy)){tdrag=null;return;}   // sideways: the subject swipe owns it
+    t.mode=dy<0?"up":"scroll";hdrag=null;try{t.h.setPointerCapture(t.id);}catch(_){}
+    if(t.mode==="up")t.h.classList.add("lift");}
+  if(t.mode==="scroll"){scrollTo(0,t.sy-dy);return;}
+  const now=performance.now(),ny=Math.min(0,dy);t.v=(ny-t.dy)/Math.max(1,now-t.t);t.t=now;t.dy=ny;
+  t.h.style.translate=`0 ${ny}px`;t.h.style.rotate=`${Math.max(-2,ny/90)}deg`;
+  t.h.classList.toggle("ready",-ny>TGO);});
+function tEnd(e){const t=tdrag;if(!t||e.pointerId!==t.id)return;tdrag=null;
+  if(t.mode!=="up")return;
+  const v=performance.now()-t.t>90?0:t.v;   // a pause before letting go is not a flick
+  if(e.type==="pointerup"&&(-t.dy>TGO||(v<-.6&&-t.dy>30))){t.h.classList.remove("ready");tLaunch(t.h);return;}
+  tReset(t.h);}
 $("#board").addEventListener("pointerup",tEnd);
 $("#board").addEventListener("pointercancel",tEnd);
-$("#board").addEventListener("touchmove",e=>{if(thold?.on)e.preventDefault();},{passive:false});
 $("#board").addEventListener("contextmenu",e=>{if(e.target.closest(".hero"))e.preventDefault();});
 $("#board").addEventListener("keydown",e=>{if(e.key==="ArrowUp"&&e.target.closest(".hero")){e.preventDefault();tLaunch();}});
-/* coming back from teach.html: fade its sheet away; #ch=NN opens that chapter (teach.html's 🎯 button) */
-addEventListener("pageshow",()=>{document.querySelectorAll(".tportal").forEach(p=>p.remove());});
-(()=>{let back=false;try{back=sessionStorage.getItem("teach-back")==="1";sessionStorage.removeItem("teach-back");}catch(_){}
-  if(back){const p=document.createElement("div");p.className="tportal full";p.style.transition="none";document.body.appendChild(p);
-    requestAnimationFrame(()=>{p.style.transition="";p.classList.add("back");setTimeout(()=>p.remove(),500);});}
-  const m=location.hash.match(/^#ch=(\d\d)$/);if(!m)return;history.replaceState(null,"",location.pathname+location.search);
+/* back from teach.html (bfcache or a fresh load): the paper sheet closes back into the card */
+function tReturn(){const h=$("#board .hero");if(!h)return;tReset(h);h.getAnimations().forEach(a=>a.cancel());
+  document.querySelectorAll(".tportal").forEach(p=>p.remove());
+  let back=false;try{back=sessionStorage.getItem("teach-back")==="1";sessionStorage.removeItem("teach-back");}catch(_){}
+  if(!back||document.body.classList.contains("inapp")||location.hash)return;
+  scrollTo(0,0);const r=h.getBoundingClientRect(),p=document.createElement("div");p.className="tportal";document.body.appendChild(p);
+  p.animate([{clipPath:"inset(0px 0px 0px 0px)"},{clipPath:cardClip(r),opacity:1},{clipPath:cardClip(r),opacity:0}],{duration:640,easing:EASE,fill:"forwards"})
+   .finished.then(()=>p.remove());}
+addEventListener("pageshow",e=>{if(e.persisted)tReturn();});
+tReturn();
+/* #ch=NN opens that chapter (teach.html's 🎯 button) */
+(()=>{const m=location.hash.match(/^#ch=(\d\d)$/);if(!m)return;history.replaceState(null,"",location.pathname+location.search);
+  try{sessionStorage.removeItem("teach-back");}catch(_){}
   if(SUBJ!=="chem"){setSubj("chem");buildBoard();}
   enterApp(innerWidth/2,innerHeight/2,()=>{resetFilters();$("#fsubj").value="chem";populateChapters("chem");
     if(EXN){opt($("#fexam"),EXONLY,EXONLY);$("#fexam").value=EXONLY;}
