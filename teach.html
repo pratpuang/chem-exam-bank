@@ -301,7 +301,7 @@ button.mc:hover{background:#fbf3dc}
 .agenda .acts{display:flex;gap:10px;padding:10px 14px 16px;flex-wrap:wrap;align-items:center}
 
 /* students drawer: same-size cards, tap one to open it */
-.scards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:24px;align-items:start;grid-auto-flow:dense}
+.scards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:24px;align-items:start;grid-auto-flow:row}
 .sc{background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);position:relative;overflow:hidden;height:226px;display:flex;flex-direction:column;cursor:pointer;text-align:left;padding:0;font:inherit;color:inherit;transition:transform .18s,box-shadow .18s}
 .sc:hover{transform:translate(-3px,-3px);box-shadow:9px 9px 0 var(--sh)}
 .drawer.open .sc{animation:cardIn .55s cubic-bezier(.2,1.1,.4,1) both;animation-delay:calc(.15s + var(--i,0)*60ms)}
@@ -842,16 +842,25 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 /* student type tags + groups */
 .ktag{position:absolute;left:44px;top:10px;font:800 .66rem "Anuphan";letter-spacing:.02em;padding:1px 7px;border:2px solid var(--ink);background:var(--card);color:var(--ink);box-shadow:2px 2px 0 var(--sh)}
 .otags .ktag{position:static;box-shadow:none;border-color:currentColor;background:transparent;color:inherit}
-.ktag.k-reg{background:var(--ink);color:var(--paper)}
-.ktag.k-adh{background:var(--card)}
-.ktag.k-tri{background:var(--yel);color:#141414}
-.ktag.k-stp{background:#d8d1c2;color:#5b5548;border-style:dashed}
-.otags .ktag.k-reg{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+/* type colours: green ประจำ · blue เป็นครั้งๆ · orange ทดลองเรียน · grey ไม่เรียนแล้ว (same on tags, open card, group heads) */
+:root{--k-reg:#2f8f4e;--k-adh:#1f3fbf;--k-tri:#f28c28;--k-stp:#b8b0a0}
+.ktag{display:inline-flex;align-items:center;gap:5px}
+.ktag:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.85}
+.ktag.k-reg,.otags .ktag.k-reg{background:var(--k-reg);color:#fff;border-color:var(--ink)}
+.ktag.k-adh,.otags .ktag.k-adh{background:var(--k-adh);color:#fff;border-color:var(--ink)}
+.ktag.k-tri,.otags .ktag.k-tri{background:var(--k-tri);color:#141414;border-color:var(--ink)}
+.ktag.k-stp,.otags .ktag.k-stp{background:#e4ded1;color:#5b5548;border:2px dashed #5b5548}
+.otags .ktag{box-shadow:2px 2px 0 var(--ink)}
+.sdiv:before{content:"";width:14px;height:14px;border:3px solid var(--ink);background:var(--k-reg)}
+.sdiv.k-adh:before{background:var(--k-adh)}
+.sdiv.k-tri:before{background:var(--k-tri)}
+.sdiv.k-stp:before{background:#e4ded1;border-style:dashed}
+.sdiv.k-reg span{color:var(--k-reg)}.sdiv.k-adh span{color:var(--k-adh)}.sdiv.k-tri span{color:#c4660a}.sdiv.k-stp span{color:var(--mut)}
+#sheet [data-k="kind"] .chip.on[data-v="regular"]{background:var(--k-reg);color:#fff;border-color:var(--ink)}
+#sheet [data-k="kind"] .chip.on[data-v="adhoc"]{background:var(--k-adh);color:#fff;border-color:var(--ink)}
+#sheet [data-k="kind"] .chip.on[data-v="trial"]{background:var(--k-tri);color:#141414;border-color:var(--ink)}
+#sheet [data-k="kind"] .chip.on[data-v="stopped"]{background:#e4ded1;color:#5b5548;border-style:dashed}
 .sdiv{grid-column:1/-1;display:flex;align-items:center;gap:10px;font-weight:800;font-size:.86rem;margin:4px 0 -10px}
-.sdiv:before{content:"";width:14px;height:14px;background:var(--ink)}
-.sdiv.k-adh:before{background:var(--card);border:3px solid var(--ink)}
-.sdiv.k-tri:before{background:var(--yel);border:3px solid var(--ink)}
-.sdiv.k-stp:before{background:#d8d1c2;border:3px dashed var(--ink)}
 .sdiv b{font:800 .74rem "JetBrains Mono";color:var(--mut)}
 .sdiv:after{content:"";flex:1;height:2px;background:var(--grid)}
 .gonebar{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;border:2px dashed #b9b1a1;background:transparent;padding:12px 16px;font:800 .9rem "Anuphan";color:var(--mut);cursor:pointer}
@@ -1633,12 +1642,13 @@ function renderStudents(anim){
   $('#scards').classList.toggle('still', !anim);
   const oweOf = id => owedAll().filter(s => s.who === id).reduce((a,s)=>a+amt(s),0);
   const byKind = [...DB.students].sort((a, b) => KORDER.indexOf(kindOf(a)) - KORDER.indexOf(kindOf(b)));
-  const list = stuOwe ? [...DB.students].sort((a,b) => oweOf(b.id) - oweOf(a.id)) : [...byKind, ...(showGone ? DB.archived || [] : [])];
-  const head = (p, j) => { if (stuOwe) return ''; const k = kindOf(p), pk = j ? kindOf(list[j-1]) : null; if (k === pk) return '';
+  const active = stuOwe ? [...DB.students].sort((a,b) => oweOf(b.id) - oweOf(a.id)) : byKind;
+  // a header wherever the type changes (the stopped group's header is its fold bar)
+  const head = (p, j, L) => { if (stuOwe) return ''; const k = kindOf(p), pk = j ? kindOf(L[j-1]) : null; if (k === pk || k === 'stopped') return '';
     const n = k === 'stopped' ? (DB.archived || []).length : DB.students.filter(x => kindOf(x) === k).length;
     return `<div class="sdiv ${KINDS[k][1]}"><span>${KINDS[k][0]}</span><b>${n}</b></div>`; };
-  $('#scards').innerHTML = list.map((p, i0) => { const i = i0, gone = kindOf(p) === 'stopped';
-    return head(p, i0) + (() => {
+  const cardsOf = (L, off = 0) => L.map((p, i0) => { const i = i0 + off, gone = kindOf(p) === 'stopped';
+    return head(p, i0, L) + (() => {
     const mine = DB.sessions.filter(s => s.who === p.id);
     const owe = sorted(mine.filter(s => s.status==='done' && !s.paid)), oweSum = owe.reduce((a,s)=>a+amt(s),0);
     const next = sorted(mine.filter(s => s.status==='plan' && counts(s) && atOf(s) > NOW))[0];
@@ -1685,8 +1695,8 @@ function renderStudents(anim){
   // the add card closes the active groups; the stopped ones fold behind a bar underneath
   const add = `<button class="sc addcard" data-id="_add" style="--i:${DB.students.length}" onclick="editStudent()"><b>＋</b>เพิ่มนักเรียน</button>`;
   const ng = (DB.archived || []).length, fold = ng && !stuOwe ? `<button class="gonebar" onclick="showGone=!showGone;renderStudents()"><span>ไม่เรียนแล้ว · ${ng} คน</span><b>${showGone ? 'ซ่อน ▴' : 'ดู ▾'}</b></button>` : '';
-  const html = $('#scards').innerHTML, cut = html.indexOf('<div class="sdiv k-stp"');
-  $('#scards').innerHTML = cut < 0 ? html + add + fold : html.slice(0, cut) + add + fold + html.slice(cut);
+  // order is fixed: active groups → ＋ card → the fold bar → (when open) the stopped students underneath it
+  $('#scards').innerHTML = cardsOf(active) + add + fold + (showGone && !stuOwe ? cardsOf(DB.archived || [], active.length) : '');
   popStu = false;
 }
 function setColor(id, c){ st(id).color = c; save(); renderAll(); toast(`เปลี่ยนสี ${st(id).name} แล้ว`); }
