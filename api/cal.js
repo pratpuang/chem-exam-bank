@@ -19,7 +19,7 @@ module.exports = async (req, res) => {
   if (tok.length < 32){ res.status(404).send('not found'); return; }
   const r = await fetch(`${SB}/rest/v1/rpc/teach_cal`, { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ tok }) });
   if (!r.ok){ res.status(502).send('calendar source unavailable'); return; }
-  const rows = await r.json();
+  const rows = (await r.json()).map(x => ({ id: x.sid, name: x.who_name, date: x.day, time: x.at_time, h: x.hours, status: x.st, note: x.memo, updated_at: x.changed }));
   if (!rows.length){ res.status(404).send('not found'); return; }
   const stamp = utc(new Date().toISOString().slice(0, 10), '07:00');
   const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//teach//chem-exam-bank//TH', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',

@@ -86,12 +86,12 @@ create table if not exists cal_tokens (
 );
 alter table cal_tokens enable row level security;
 create or replace function teach_cal(tok text)
-returns table(id text, name text, date date, "time" text, h numeric, status text, note text, updated_at timestamptz)
-language sql stable security definer set search_path = public as $$
+returns table(sid text, who_name text, day date, at_time text, hours numeric, st text, memo text, changed timestamptz)
+as $$
   select s.id, coalesce(st.name, '?'), s.date, s.time, s.h, s.status, coalesce(s.note, ''), s.updated_at
   from cal_tokens c join sessions s on s.owner = c.owner left join students st on st.id = s.who
   where c.token = tok and length(tok) >= 32 and s.status <> 'cancel' and s.date >= current_date - 60
-$$;
+$$ language sql stable security definer set search_path = public;
 revoke all on function teach_cal(text) from public;
 grant execute on function teach_cal(text) to anon, authenticated;
 -- then, once, with a fresh random token (never commit the real one):
