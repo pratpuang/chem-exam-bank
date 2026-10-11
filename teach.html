@@ -579,6 +579,7 @@ button.fg:hover{background:#fbf3dc}
 .dch .dadd{border:2px solid currentColor;background:transparent;color:inherit;width:32px;height:32px;font-weight:800;font-size:1rem;opacity:.55;transition:opacity .15s}
 .dch .dadd:hover{opacity:1}
 .dc.today .dch{background:var(--red);color:#fff}
+.dc.owe .dch{background:var(--yel)}.dc.owe .dch b{color:var(--red)}
 .dc.today .dch small,.dc.today .dch .dsum{color:#fff;opacity:.85}
 .dc.hol .dch{background:#fbe4dd}.dc.hol .dch .htag{color:var(--red)}
 .dc.today.hol .dch{background:var(--red)}.dc.today.hol .dch .htag{color:#fff}
@@ -1595,8 +1596,12 @@ function renderSchedule(){
   else if (range === 'month'){ const p = `${my}-${pad(mm_+1)}`; list = sorted(list.filter(s => s.date.startsWith(p))); }
   else list = [...list.filter(s => atOf(s) <= NOW)].sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time)).slice(0, 40);
   const groups = []; for (const s of list){ const g = groups[groups.length-1]; if (g && g.date === s.date) g.items.push(s); else groups.push({date:s.date, items:[s]}); }
-  $('#slist').innerHTML = groups.length ? groups.map((g, gi) => dayCard(g.date, g.items, gi)).join('')
-    : `<div class="empty">ไม่มีคาบในช่วงนี้ · <button class="go sm" onclick="editSession()">＋ เพิ่มคาบ</button></div>`;
+  // unpaid classes ride on top of the 7-day view so nobody's debt hides behind the drawer; tap the stamp when paid
+  const owe = range === 'week' ? sorted(owedAll().filter(s => !whoF.size || whoF.has(s.who))) : [];
+  const oweCard = owe.length ? `<section class="dc owe" style="--i:0"><header class="dch"><b>฿</b><span class="dw">ค้างชำระ<small>แตะตรา <b>ค้างจ่าย</b> เมื่อได้เงินแล้ว</small></span><span class="sp"></span><span class="dsum">${owe.length} คาบ · ${cash(owe.reduce((a, x) => a + amt(x), 0))}</span></header>
+    ${owe.map(x => rw(x, false, true)).join('')}</section>` : '';
+  $('#slist').innerHTML = oweCard + (groups.length ? groups.map((g, gi) => dayCard(g.date, g.items, gi + !!oweCard)).join('')
+    : `<div class="empty">ไม่มีคาบในช่วงนี้ · <button class="go sm" onclick="editSession()">＋ เพิ่มคาบ</button></div>`);
 }
 function dayCard(date, items, i = 0){
   const hol = isHolD(date), x = new Date(date+'T00:00'), sum = items.filter(counts).reduce((a,s)=>a+amt(s),0), rel = relOnly(date);
@@ -1604,12 +1609,12 @@ function dayCard(date, items, i = 0){
     <header class="dch"><b>${x.getDate()}</b><span class="dw">${TH_DF[x.getDay()]}<small>${TH_MF[x.getMonth()]}${rel ? ' · '+rel : ''}</small></span>${hol ? '<span class="htag">วันหยุด</span>' : ''}<span class="sp"></span><span class="dsum">${items.length} คาบ · ${cash(sum)}</span><button class="dadd" title="เพิ่มคาบวันนี้" onclick="editSession(null,'${date}')">＋</button></header>
     ${items.map(s => rw(s)).join('')}</section>`;
 }
-function rw(s, pv){
+function rw(s, pv, withDate){
   const p = st(s.who), hol = isHolD(s.date) && s.status === 'plan', cw = clashWith(s);
   return `<div class="rw ${pv?'pv':''} ${s.status==='cancel'?'cancel':''} ${hol?'holi':''} ${cw.length?'clash':''}" ${pv ? '' : `onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}"`}>
     <span class="cb ${colorOf(s.who)}"></span>
     <span class="ckw">${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" ${pv ? 'tabindex="-1"' : ''} title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" onclick="event.stopPropagation();${pv ? '' : s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}</span>
-    <span class="tm">${s.time}<small>ถึง ${endOf(s)}</small></span>
+    <span class="tm">${s.time}<small>${withDate ? dLabel(s.date) : `ถึง ${endOf(s)}`}</small></span>
     <span class="nm"><b>${esc(p?.name ?? '?')}${cw.length ? (cw.every(x => x.who === s.who) ? `<em class="cbadge" title="มีคาบของ ${esc(p?.name)} ซ้ำเวลาเดียวกัน · ลบอันที่เกินได้">⚠ ซ้ำ</em>`
       : `<em class="cbadge" title="ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time + '–' + endOf(x)).join(', ')}">⚠ ชน ${cw.filter(x => x.who !== s.who).map(x => esc(st(x.who)?.name)).join(', ')}</em>`) : ''}</b><small>${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</small></span>
     <span class="st">${stampOf(s, pv)}</span>
