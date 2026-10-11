@@ -126,7 +126,9 @@ main{max-width:1180px;margin:0 auto;padding:22px 16px 80px 56px}
 .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}
 .wd{text-align:center;font-size:.7rem;font-weight:700;color:var(--mut)}
 .day{aspect-ratio:1;border:2px solid var(--ink);background:var(--card);font:700 .82rem "JetBrains Mono";display:flex;align-items:center;justify-content:center;position:relative;transition:background .18s,transform .18s,border-radius .25s,box-shadow .18s;padding:0}
-.day:hover{transform:translateY(-2px);box-shadow:2px 2px 0 var(--ink)}
+@media (hover:hover){.day:hover{transform:translateY(-2px);box-shadow:2px 2px 0 var(--ink)}}
+.day{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.chart.calm .bar{animation:none}.chart.calm .bar .actual{transition:none}
 .day.past{border-color:#c9c2b2;color:#a39d90}
 .day.today{background:var(--blue);color:#fff}
 .day.has:after{content:"";position:absolute;bottom:3px;width:5px;height:5px;background:var(--red);border-radius:50%}
@@ -1471,7 +1473,7 @@ async function quickCheck(){
 setInterval(() => { if (!document.hidden && layerShown && user && sb && navigator.onLine && !pushing && Date.now() - lastPull > 25000 && idle()) quickCheck(); }, 10000);
 
 /* =============================== MONEY =============================== */
-let my = NOW.getFullYear(), mm_ = NOW.getMonth();
+let my = NOW.getFullYear(), mm_ = NOW.getMonth(), calm = false;   // calm = re-render without the intro animations
 $('#mprev').onclick = () => { mm_--; if (mm_ < 0){ mm_ = 11; my--; } renderMoney(); renderSchedule(); };
 $('#mnext').onclick = () => { mm_++; if (mm_ > 11){ mm_ = 0; my++; } renderMoney(); renderSchedule(); };
 // swipe the money card sideways to flip months (left = next, right = previous). The card follows the finger, then
@@ -1537,7 +1539,7 @@ function renderMoney(){
   if (!M.n){ forecast = DB.history[mkey(my,mm_)] ?? 0; earned = forecast; }
   count($('#income'), earned);
   const pct = forecast ? Math.round(earned/forecast*100) : 0;
-  $('#mfill').style.width = '0'; later(() => $('#mfill').style.width = pct + '%');
+  if (calm) $('#mfill').style.width = pct + '%'; else { $('#mfill').style.width = '0'; later(() => $('#mfill').style.width = pct + '%'); }
   $('#mpct').textContent = `ได้แล้ว ${pct}%`;
   $('#mfc').textContent = cash(forecast);
   const months = []; for (let k = 1; k <= 6; k++){ let y = my, m = mm_-k; while (m < 0){ m += 12; y--; } months.push(monthTotal(y,m)); }
@@ -1557,7 +1559,9 @@ function renderMoney(){
     const v = monthTotal(y,m), x = monthMoney(y,m), open = x.n && x.left > 0, sel = (y === my && m === mm_);
     return `<button class="column ${sel?'sel':''}" title="${TH_M[m]}: ${cash(v)}" onclick="my=${y};mm_=${m};renderMoney();renderSchedule()"><div class="bar ${open?'forecast':''}" style="height:${Math.max(4, v/maxV*H)}px;--i:${i}"><span class="value">${open?'คาด ':''}${(v/1000).toFixed(1)}k</span>${open?`<div class="actual" style="height:0" data-h="${v ? x.earned/v*100 : 0}"></div>`:''}</div><span class="label">${TH_M[m]}</span></button>`;
   }).join('');
-  later(() => document.querySelectorAll('#chart .actual').forEach(e => e.style.height = e.dataset.h + '%'));
+  $('#chart').classList.toggle('calm', calm);
+  const fillBars = () => document.querySelectorAll('#chart .actual').forEach(e => e.style.height = e.dataset.h + '%');
+  calm ? fillBars() : later(fillBars);
   renderHolCal();
 }
 function renderHolCal(){
@@ -1907,7 +1911,7 @@ function toggleHol(iso){
   const i = list.indexOf(d); i >= 0 ? list.splice(i,1) : list.push(d); save();
   const lost = DB.sessions.filter(s => s.date === iso && s.status === 'plan').reduce((a,s)=>a+amt(s),0);
   toast(`${i>=0?'ยกเลิกวันหยุด':'ตั้งเป็นวันหยุด'} · ${d} ${TH_M[m-1]}${lost?` · คาด ${i>=0?'+':'−'}${cash(lost)}`:''}`);
-  renderAll();
+  calm = true; try { renderAll(); } finally { calm = false; }   // a tap on a day shouldn't replay the chart/progress intro
 }
 
 /* ---------- calendar drawer ---------- */
