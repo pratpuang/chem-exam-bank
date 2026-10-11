@@ -76,3 +76,23 @@ create table if not exists skips (
 alter table skips enable row level security;
 drop policy if exists own on skips;
 create policy own on skips for all to authenticated using (owner = auth.uid()) with check (owner = auth.uid());
+
+-- 005: live calendar feed. A calendar app can't log in, so it reads through one function that takes a secret token
+-- (in the subscription URL). The token table has RLS on and no policy = unreadable from the API. Only upcoming /
+-- last-60-days classes, only name + time + status: no money, no notes beyond the class note.
+create table if not exists cal_tokens (
+  token text primary key,
+  owner uuid not null references auth.users(id) on delete cascade
+);
+alter table cal_tokens enable row level security;
+create or replace function teach_cal(tok text)
+returns table(id text, name text, date date, "time" text, h numeric, status text, note text, updated_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select s.id, coalesce(st.name, '?'), s.date, s.time, s.h, s.status, coalesce(s.note, ''), s.updated_at
+  from cal_tokens c join sessions s on s.owner = c.owner left join students st on st.id = s.who
+  where c.token = tok and length(tok) >= 32 and s.status <> 'cancel' and s.date >= current_date - 60
+$$;
+revoke all on function teach_cal(text) from public;
+grant execute on function teach_cal(text) to anon, authenticated;
+-- then, once, with a fresh random token (never commit the real one):
+-- insert into cal_tokens(token, owner) select '<TOKEN>', owner from students limit 1;
