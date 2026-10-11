@@ -521,6 +521,8 @@ main{padding-top:30px}
 .sh .rule{flex:1;height:3px;background:var(--ink);min-width:30px}
 .lab{font:700 .7rem "JetBrains Mono";letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
 .money{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);background:var(--card);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);margin-bottom:22px;animation:enter .6s both}
+@keyframes swl{from{transform:translateX(26px);opacity:.4}to{transform:none;opacity:1}}@keyframes swr{from{transform:translateX(-26px);opacity:.4}to{transform:none;opacity:1}}
+.money{touch-action:pan-y}.money.swl .mhero{animation:swl .28s ease-out}.money.swr .mhero{animation:swr .28s ease-out}
 .money .mhero{position:relative;padding:22px 28px 24px 36px;border:0;border-right:3px solid var(--ink);box-shadow:none;margin:0;background:none;animation:none}
 .money .mhero:before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:var(--red)}
 .money .amount{margin:4px 0 14px}
@@ -1462,6 +1464,16 @@ setInterval(() => { if (!document.hidden && layerShown && user && sb && navigato
 let my = NOW.getFullYear(), mm_ = NOW.getMonth();
 $('#mprev').onclick = () => { mm_--; if (mm_ < 0){ mm_ = 11; my--; } renderMoney(); renderSchedule(); };
 $('#mnext').onclick = () => { mm_++; if (mm_ > 11){ mm_ = 0; my++; } renderMoney(); renderSchedule(); };
+// swipe the money card sideways to flip months (left = next, right = previous); vertical drags stay page scroll
+{ const card = document.querySelector('.money'); let x0 = null, y0 = 0;
+  card.addEventListener('touchstart', e => { if (e.touches.length !== 1) return x0 = null; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive: true});
+  card.addEventListener('touchend', e => {
+    if (x0 === null) return; const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    (dx < 0 ? $('#mnext') : $('#mprev')).click();
+    card.classList.remove('swl', 'swr'); void card.offsetWidth; card.classList.add(dx < 0 ? 'swl' : 'swr');
+  }, {passive: true});
+}
 function renderMoney(){
   const isCur = my === NOW.getFullYear() && mm_ === NOW.getMonth();
   $('#mlabel').textContent = `${TH_M[mm_]} ${String(my+543).slice(-2)}`;
