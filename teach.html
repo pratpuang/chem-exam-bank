@@ -522,7 +522,7 @@ main{padding-top:30px}
 .lab{font:700 .7rem "JetBrains Mono";letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
 .money{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);background:var(--card);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);margin-bottom:22px;animation:enter .6s both}
 @keyframes swl{from{transform:translateX(26px);opacity:.4}to{transform:none;opacity:1}}@keyframes swr{from{transform:translateX(-26px);opacity:.4}to{transform:none;opacity:1}}
-.money{touch-action:pan-y}.money.swl .mhero{animation:swl .28s ease-out}.money.swr .mhero{animation:swr .28s ease-out}
+.money{touch-action:pan-y}.money .mhero{user-select:none;-webkit-user-select:none}.money.swl .mhero{animation:swl .28s ease-out}.money.swr .mhero{animation:swr .28s ease-out}
 .money .mhero{position:relative;padding:22px 28px 24px 36px;border:0;border-right:3px solid var(--ink);box-shadow:none;margin:0;background:none;animation:none}
 .money .mhero:before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:var(--red)}
 .money .amount{margin:4px 0 14px}
@@ -1470,9 +1470,21 @@ $('#mnext').onclick = () => { mm_++; if (mm_ > 11){ mm_ = 0; my++; } renderMoney
   card.addEventListener('touchend', e => {
     if (x0 === null) return; const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
     if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    (dx < 0 ? $('#mnext') : $('#mprev')).click();
-    card.classList.remove('swl', 'swr'); void card.offsetWidth; card.classList.add(dx < 0 ? 'swl' : 'swr');
+    flip(dx < 0);
   }, {passive: true});
+  function flip(next){ (next ? $('#mnext') : $('#mprev')).click(); card.classList.remove('swl', 'swr'); void card.offsetWidth; card.classList.add(next ? 'swl' : 'swr'); }
+  // PC: two-finger trackpad swipe (horizontal wheel) — one flip per gesture, then wait for the gesture to die out
+  let acc = 0, quiet;
+  card.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; e.preventDefault();
+    clearTimeout(quiet); quiet = setTimeout(() => acc = 0, 250);
+    if (acc === null) return; acc += e.deltaX;
+    if (Math.abs(acc) > 60){ flip(acc > 0); acc = null; }
+  }, {passive: false});
+  // PC: mouse drag sideways
+  let mx = null;
+  card.addEventListener('mousedown', e => { if (e.button === 0 && !e.target.closest('button,a,input')) mx = e.clientX; });
+  addEventListener('mouseup', e => { if (mx === null) return; const dx = e.clientX - mx; mx = null; if (Math.abs(dx) >= 60 && !getSelection().toString()) flip(dx < 0); });
 }
 function renderMoney(){
   const isCur = my === NOW.getFullYear() && mm_ === NOW.getMonth();
