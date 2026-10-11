@@ -521,6 +521,12 @@ main{padding-top:30px}
 .sh .rule{flex:1;height:3px;background:var(--ink);min-width:30px}
 .lab{font:700 .7rem "JetBrains Mono";letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
 .money{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);background:var(--card);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);margin-bottom:22px;animation:enter .6s both}
+.owes{position:relative;z-index:1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:-8px 0 20px;font-size:.78rem}
+.owes .ol{color:var(--mut);font-weight:700;background:var(--paper);padding:2px 4px}
+.owes .oc{display:inline-flex;align-items:center;gap:5px;background:var(--card);border:1.5px dashed var(--dash);padding:2px 9px;font:600 .78rem "Anuphan",sans-serif;color:var(--ink);cursor:pointer;border-radius:999px}
+.owes .oc i{width:7px;height:7px;border-radius:50%;display:inline-block}
+.owes .oc small{color:var(--mut);font-size:.72rem}
+.owes .oc.late{color:var(--red)}.owes .oc:hover{border-color:var(--ink)}
 .money{touch-action:pan-y;overflow:hidden}.money .mhero{user-select:none;-webkit-user-select:none;will-change:transform;cursor:grab}
 .money .mhero{position:relative;padding:22px 28px 24px 36px;border:0;border-right:3px solid var(--ink);box-shadow:none;margin:0;background:none;animation:none}
 .money .mhero:before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:var(--red)}
@@ -579,7 +585,6 @@ button.fg:hover{background:#fbf3dc}
 .dch .dadd{border:2px solid currentColor;background:transparent;color:inherit;width:32px;height:32px;font-weight:800;font-size:1rem;opacity:.55;transition:opacity .15s}
 .dch .dadd:hover{opacity:1}
 .dc.today .dch{background:var(--red);color:#fff}
-.dc.owe .dch{background:var(--yel)}.dc.owe .dch b{color:var(--red)}
 .dc.today .dch small,.dc.today .dch .dsum{color:#fff;opacity:.85}
 .dc.hol .dch{background:#fbe4dd}.dc.hol .dch .htag{color:var(--red)}
 .dc.today.hol .dch{background:var(--red)}.dc.today.hol .dch .htag{color:#fff}
@@ -975,6 +980,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
         <div class="fg" style="--i:2"><i class="c-yel"></i><span>รับแล้วทั้งปี<small>ม.ค. ถึงตอนนี้</small></span><strong id="sAll">฿0</strong></div>
       </div>
     </div>
+    <div class="owes" id="owes"></div>
     <div class="mchart">
       <div class="chart-wrap"><div class="lab">6 เดือนล่าสุด · แตะแท่งเพื่อดูเดือนนั้น</div><div class="chart" id="chart"></div></div>
       <div class="holwrap"><div class="lab" id="ctitle"></div><div class="calendar" id="calendar"></div><div class="cnote" id="cnote"></div></div>
@@ -1506,7 +1512,15 @@ $('#mnext').onclick = () => { mm_++; if (mm_ > 11){ mm_ = 0; my++; } renderMoney
     if (Math.abs(acc) > 60){ flip(acc > 0); acc = null; }
   }, {passive: false});
 }
+// quiet strip under the money card: one small chip per unpaid class (oldest first); tap a chip when that class is paid
+function renderOwe(){
+  const owe = sorted(owedAll()), el = $('#owes');
+  el.innerHTML = owe.length ? `<span class="ol">ค้างชำระ</span>` + owe.map(s => { const d = Math.floor((NOW - atOf(s)) / 864e5);
+    return `<button class="oc ${d > 7 ? 'late' : ''}" onclick="togglePaid('${s.id}')" title="แตะเมื่อได้เงินแล้ว${d > 7 ? ` · ค้าง ${d} วัน` : ''}"><i class="${colorOf(s.who)}"></i>${esc(st(s.who)?.name ?? '?')} <small>${dLabel(s.date).replace(/^\S+ /, '')}</small> ${cash(amt(s))}</button>`; }).join('') : '';
+  el.style.display = owe.length ? '' : 'none';
+}
 function renderMoney(){
+  renderOwe();
   const isCur = my === NOW.getFullYear() && mm_ === NOW.getMonth();
   $('#mlabel').textContent = `${TH_M[mm_]} ${String(my+543).slice(-2)}`;
   $('#mtitle').textContent = isCur ? 'รายได้เดือนนี้' : `รายได้ ${TH_MF[mm_]} ${my+543}`;
@@ -1596,12 +1610,8 @@ function renderSchedule(){
   else if (range === 'month'){ const p = `${my}-${pad(mm_+1)}`; list = sorted(list.filter(s => s.date.startsWith(p))); }
   else list = [...list.filter(s => atOf(s) <= NOW)].sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time)).slice(0, 40);
   const groups = []; for (const s of list){ const g = groups[groups.length-1]; if (g && g.date === s.date) g.items.push(s); else groups.push({date:s.date, items:[s]}); }
-  // unpaid classes ride on top of the 7-day view so nobody's debt hides behind the drawer; tap the stamp when paid
-  const owe = range === 'week' ? sorted(owedAll().filter(s => !whoF.size || whoF.has(s.who))) : [];
-  const oweCard = owe.length ? `<section class="dc owe" style="--i:0"><header class="dch"><b>฿</b><span class="dw">ค้างชำระ<small>แตะตรา <b>ค้างจ่าย</b> เมื่อได้เงินแล้ว</small></span><span class="sp"></span><span class="dsum">${owe.length} คาบ · ${cash(owe.reduce((a, x) => a + amt(x), 0))}</span></header>
-    ${owe.map(x => rw(x, false, true)).join('')}</section>` : '';
-  $('#slist').innerHTML = oweCard + (groups.length ? groups.map((g, gi) => dayCard(g.date, g.items, gi + !!oweCard)).join('')
-    : `<div class="empty">ไม่มีคาบในช่วงนี้ · <button class="go sm" onclick="editSession()">＋ เพิ่มคาบ</button></div>`);
+  $('#slist').innerHTML = groups.length ? groups.map((g, gi) => dayCard(g.date, g.items, gi)).join('')
+    : `<div class="empty">ไม่มีคาบในช่วงนี้ · <button class="go sm" onclick="editSession()">＋ เพิ่มคาบ</button></div>`;
 }
 function dayCard(date, items, i = 0){
   const hol = isHolD(date), x = new Date(date+'T00:00'), sum = items.filter(counts).reduce((a,s)=>a+amt(s),0), rel = relOnly(date);
@@ -1609,12 +1619,12 @@ function dayCard(date, items, i = 0){
     <header class="dch"><b>${x.getDate()}</b><span class="dw">${TH_DF[x.getDay()]}<small>${TH_MF[x.getMonth()]}${rel ? ' · '+rel : ''}</small></span>${hol ? '<span class="htag">วันหยุด</span>' : ''}<span class="sp"></span><span class="dsum">${items.length} คาบ · ${cash(sum)}</span><button class="dadd" title="เพิ่มคาบวันนี้" onclick="editSession(null,'${date}')">＋</button></header>
     ${items.map(s => rw(s)).join('')}</section>`;
 }
-function rw(s, pv, withDate){
+function rw(s, pv){
   const p = st(s.who), hol = isHolD(s.date) && s.status === 'plan', cw = clashWith(s);
   return `<div class="rw ${pv?'pv':''} ${s.status==='cancel'?'cancel':''} ${hol?'holi':''} ${cw.length?'clash':''}" ${pv ? '' : `onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}"`}>
     <span class="cb ${colorOf(s.who)}"></span>
     <span class="ckw">${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" ${pv ? 'tabindex="-1"' : ''} title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" onclick="event.stopPropagation();${pv ? '' : s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}</span>
-    <span class="tm">${s.time}<small>${withDate ? dLabel(s.date) : `ถึง ${endOf(s)}`}</small></span>
+    <span class="tm">${s.time}<small>ถึง ${endOf(s)}</small></span>
     <span class="nm"><b>${esc(p?.name ?? '?')}${cw.length ? (cw.every(x => x.who === s.who) ? `<em class="cbadge" title="มีคาบของ ${esc(p?.name)} ซ้ำเวลาเดียวกัน · ลบอันที่เกินได้">⚠ ซ้ำ</em>`
       : `<em class="cbadge" title="ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time + '–' + endOf(x)).join(', ')}">⚠ ชน ${cw.filter(x => x.who !== s.who).map(x => esc(st(x.who)?.name)).join(', ')}</em>`) : ''}</b><small>${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</small></span>
     <span class="st">${stampOf(s, pv)}</span>
