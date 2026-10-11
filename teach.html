@@ -1738,7 +1738,8 @@ function delSession(id){
   const rest = DB.sessions.filter(x => x.series && x.series === s.series && x.date > s.date && x.status === 'plan');
   const go = all => { if ($('#dskip')?.checked){ try{ localStorage.setItem(SKIPDEL, Date.now() + 10*60000); }catch{} }
     snap(); const kill = new Set([id, ...(all ? rest.map(r => r.id) : [])]); DB.sessions.filter(x => kill.has(x.id) && isGen(x)).forEach(addSkip); DB.sessions = DB.sessions.filter(x => !kill.has(x.id));
-    if (all && isGen(s)){ const p = st(s.who); if (p) p.slots = p.slots.filter(([w, t]) => !(w === wdOf(s.date) && t === s.time)); }   // 'this + all after' on a weekly slot = that slot is over save(); closeModal(); renderAll(); SFX.play('del');
+    if (all && isGen(s)){ const p = st(s.who); if (p) p.slots = p.slots.filter(([w, t]) => !(w === wdOf(s.date) && t === s.time)); }   // 'this + all after' on a weekly slot = that slot is over
+    save(); closeModal(); renderAll(); SFX.play('del');
     toast(all ? `ลบ ${kill.size} คาบ · ${st(s.who)?.name} ตั้งแต่ ${dLabel(s.date)}` : `ลบคาบ ${st(s.who)?.name} ${dLabel(s.date)}`, true); };
   if (skipDel()) return go(false);
   const money = s.status === 'done' ? `<p class="dwarn">คาบนี้สอนแล้ว · ยอด ${cash(amt(s))}${s.paid ? ' (จ่ายแล้ว)' : ' (ยังค้าง)'} จะหายจากรายได้ด้วย</p>` : '';
