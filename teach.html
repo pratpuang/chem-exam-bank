@@ -1162,17 +1162,21 @@ function addSkip(x){ DB.skips ||= []; const key = occKey(x.who, x.date, x.time);
 const ROLL_DAYS = 56, MAX_ADD = 300, MAX_DEL = 30;
 // one-time baseline: classes deleted BEFORE skip notes existed left plain gaps. The first run with the skips table
 // records every gap up to the end of the imported range as deliberate, then writes a permanent marker into the same
-// insert-only table (so no device can undo it, and any device running it twice writes the same keys)
+// insert-only table (so no device can undo it, and any device running it twice writes the same keys).
+// Only a HOLE counts (a later class on the same slot exists). Gaps after a slot's last class were never created
+// (Notion stopped generating), so the top-up fills them - Leo's Sundays after 11 Oct were that, not deletions.
 const LEGACY_END = '2026-11-29', BASELINE = '__baseline__|v1|', BASE_DATE = '2099-12-31';
 function baseline(skip){
   if (skip.has(BASELINE)) return 0;
-  const taken = new Set(DB.sessions.map(x => occKey(x.who, x.date, x.time))); let n = 0;
+  const taken = new Set(DB.sessions.map(x => occKey(x.who, x.date, x.time))), last = {}; let n = 0;
+  for (const x of DB.sessions){ const k = x.who + '|' + new Date(x.date + 'T00:00').getDay() + '|' + x.time; if (!(x.date <= last[k])) last[k] = x.date; }
   for (const p of DB.students){
     if (p.kind !== 'regular' || !p.slots?.length) continue;
     for (let k = 0; ; k++){
       const d = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + k), date = isoD(d); if (date > LEGACY_END) break;
       for (const [w, t] of p.slots){ if (d.getDay() !== w || new Date(`${date}T${t}:00`) <= NOW) continue;
-        const key = occKey(p.id, date, t); if (!taken.has(key) && !skip.has(key)){ DB.skips.push({key, date}); skip.add(key); n++; } }
+        const key = occKey(p.id, date, t); if (!(date < last[p.id + '|' + w + '|' + t])) continue;
+        if (!taken.has(key) && !skip.has(key)){ DB.skips.push({key, date}); skip.add(key); n++; } }
     }
   }
   DB.skips.push({key: BASELINE, date: BASE_DATE}); skip.add(BASELINE);
