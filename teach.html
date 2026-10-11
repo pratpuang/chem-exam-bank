@@ -1474,11 +1474,13 @@ function renderMoney(){
   $('#mfill').style.width = '0'; later(() => $('#mfill').style.width = pct + '%');
   $('#mpct').textContent = `ได้แล้ว ${pct}%`;
   $('#mfc').textContent = cash(forecast);
-  const months = []; for (let k = 1; k <= 6; k++){ let y = NOW.getFullYear(), m = NOW.getMonth()-k; while (m < 0){ m += 12; y--; } months.push(monthTotal(y,m)); }
+  const months = []; for (let k = 1; k <= 6; k++){ let y = my, m = mm_-k; while (m < 0){ m += 12; y--; } months.push(monthTotal(y,m)); }
   const hist = months.filter(v => v > 0), avg = hist.length ? Math.round(hist.reduce((a,b)=>a+b,0)/hist.length) : 0;
   const diff = forecast - avg;
+  // the "vs a normal month" verdict only means something once a month is over; the running month hides it
+  $('#mcmp').style.display = isCur ? 'none' : '';
   $('#mcmp').textContent = !avg ? 'ยังไม่มีเดือนก่อนให้เทียบ' : `${diff >= 0 ? '▲ มากกว่า' : '▼ น้อยกว่า'}เดือนปกติ ${cash(Math.abs(diff))} · ปกติได้ราว ${cash(avg)}/เดือน`;
-  $('#mcmp').title = 'เทียบยอดที่คาดว่าจะได้เดือนนี้ กับค่าเฉลี่ย 6 เดือนก่อนหน้า';
+  $('#mcmp').title = 'เทียบยอดเดือนนี้ กับค่าเฉลี่ย 6 เดือนก่อนหน้า';
   count($('#sLeft'), M.left);
   count($('#sOwe'), owedAll().reduce((a,s)=>a+amt(s),0));
   let yr = 0; for (let m = 0; m <= NOW.getMonth(); m++){ const x = monthMoney(NOW.getFullYear(), m); yr += x.n ? x.earned : (DB.history[mkey(NOW.getFullYear(),m)] ?? 0); }
