@@ -1592,7 +1592,7 @@ function renderSchedule(){
   if (confirmN) nc += `<div class="alert">⏳ <span>มี <b>${confirmN} คาบ</b> ที่เลยเวลาแล้วแต่ยังไม่ได้ยืนยัน · แตะตรา <b>สอนแล้ว?</b></span></div>`;
   $('#nextcard').innerHTML = nc;
   let list = DB.sessions.filter(s => !whoF.size || whoF.has(s.who));
-  if (range === 'week'){ const end = new Date(NOW); end.setDate(end.getDate()+7); list = sorted(list.filter(s => (atOf(s) > NOW || needsConfirm(s)) && atOf(s) < end)); }
+  if (range === 'week'){ const end = new Date(NOW); end.setDate(end.getDate()+7); list = sorted(list.filter(s => (s.date >= today || needsConfirm(s)) && atOf(s) < end)); }   // all of today, even classes already taught
   else if (range === 'month'){ const p = `${my}-${pad(mm_+1)}`; list = sorted(list.filter(s => s.date.startsWith(p))); }
   else list = [...list.filter(s => atOf(s) <= NOW)].sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time)).slice(0, 40);
   const groups = []; for (const s of list){ const g = groups[groups.length-1]; if (g && g.date === s.date) g.items.push(s); else groups.push({date:s.date, items:[s]}); }
