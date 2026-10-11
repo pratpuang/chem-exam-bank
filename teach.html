@@ -521,8 +521,7 @@ main{padding-top:30px}
 .sh .rule{flex:1;height:3px;background:var(--ink);min-width:30px}
 .lab{font:700 .7rem "JetBrains Mono";letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
 .money{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);background:var(--card);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);margin-bottom:22px;animation:enter .6s both}
-@keyframes swl{from{transform:translateX(26px);opacity:.4}to{transform:none;opacity:1}}@keyframes swr{from{transform:translateX(-26px);opacity:.4}to{transform:none;opacity:1}}
-.money{touch-action:pan-y}.money .mhero{user-select:none;-webkit-user-select:none}.money.swl .mhero{animation:swl .28s ease-out}.money.swr .mhero{animation:swr .28s ease-out}
+.money{touch-action:pan-y;overflow:hidden}.money .mhero{user-select:none;-webkit-user-select:none;will-change:transform;cursor:grab}
 .money .mhero{position:relative;padding:22px 28px 24px 36px;border:0;border-right:3px solid var(--ink);box-shadow:none;margin:0;background:none;animation:none}
 .money .mhero:before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:var(--red)}
 .money .amount{margin:4px 0 14px}
@@ -1464,16 +1463,40 @@ setInterval(() => { if (!document.hidden && layerShown && user && sb && navigato
 let my = NOW.getFullYear(), mm_ = NOW.getMonth();
 $('#mprev').onclick = () => { mm_--; if (mm_ < 0){ mm_ = 11; my--; } renderMoney(); renderSchedule(); };
 $('#mnext').onclick = () => { mm_++; if (mm_ > 11){ mm_ = 0; my++; } renderMoney(); renderSchedule(); };
-// swipe the money card sideways to flip months (left = next, right = previous); vertical drags stay page scroll
-{ const card = document.querySelector('.money'); let x0 = null, y0 = 0;
-  card.addEventListener('touchstart', e => { if (e.touches.length !== 1) return x0 = null; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, {passive: true});
-  card.addEventListener('touchend', e => {
-    if (x0 === null) return; const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
-    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    flip(dx < 0);
-  }, {passive: true});
-  function flip(next){ (next ? $('#mnext') : $('#mprev')).click(); card.classList.remove('swl', 'swr'); void card.offsetWidth; card.classList.add(next ? 'swl' : 'swr'); }
-  // PC: two-finger trackpad swipe (horizontal wheel) — one flip per gesture, then wait for the gesture to die out
+// swipe the money card sideways to flip months (left = next, right = previous). The card follows the finger, then
+// either flies off and the new month slides in from the other side, or springs back. Vertical drags stay page scroll.
+{ const card = document.querySelector('.money'), hero = card.querySelector('.mhero'); let busy = false;
+  const ease = 'cubic-bezier(.2,.8,.2,1)', pose = dx => `translateX(${dx}px) rotate(${dx / 40}deg)`;
+  const fade = dx => 1 - Math.min(Math.abs(dx) / hero.offsetWidth, 1) * .6;
+  async function flip(next, from = 0){
+    if (busy) return; busy = true; const w = hero.offsetWidth * 1.1, out = next ? -w : w;
+    if (!reduced) await hero.animate([{transform: pose(from), opacity: fade(from)}, {transform: pose(out), opacity: 0}], {duration: 170, easing: 'ease-in'}).finished;
+    (next ? $('#mnext') : $('#mprev')).click();
+    if (!reduced) await hero.animate([{transform: pose(-out * .6), opacity: 0}, {transform: 'none', opacity: 1}], {duration: 320, easing: ease}).finished;
+    hero.style.transform = hero.style.opacity = ''; busy = false;
+  }
+  let x0 = null, y0 = 0, dx = 0, lock = null;   // lock: 'x' = we own this drag, 'y' = page scroll, null = undecided
+  const start = (x, y) => { if (busy) return; x0 = x; y0 = y; dx = 0; lock = null; };
+  const move = (x, y, e) => {
+    if (x0 === null) return; dx = x - x0; const dy = y - y0;
+    if (!lock && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) lock = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    if (lock !== 'x') return; if (e.cancelable) e.preventDefault();
+    hero.style.transform = pose(dx); hero.style.opacity = fade(dx);
+  };
+  const end = () => {
+    if (x0 === null) return; x0 = null; if (lock !== 'x') return;
+    if (Math.abs(dx) >= Math.min(80, hero.offsetWidth * .22)) return flip(dx < 0, dx);
+    hero.animate([{transform: pose(dx), opacity: fade(dx)}, {transform: 'none', opacity: 1}], {duration: 260, easing: ease});
+    hero.style.transform = hero.style.opacity = '';
+  };
+  card.addEventListener('touchstart', e => e.touches.length === 1 ? start(e.touches[0].clientX, e.touches[0].clientY) : (x0 = null), {passive: true});
+  card.addEventListener('touchmove', e => move(e.touches[0].clientX, e.touches[0].clientY, e), {passive: false});
+  card.addEventListener('touchend', end); card.addEventListener('touchcancel', end);
+  // PC mouse: same drag
+  card.addEventListener('mousedown', e => { if (e.button === 0 && !e.target.closest('button,a,input')) start(e.clientX, e.clientY); });
+  addEventListener('mousemove', e => move(e.clientX, e.clientY, e));
+  addEventListener('mouseup', end);
+  // PC trackpad: two-finger swipe (horizontal wheel) — one flip per gesture, then wait for the gesture to die out
   let acc = 0, quiet;
   card.addEventListener('wheel', e => {
     if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; e.preventDefault();
@@ -1481,10 +1504,6 @@ $('#mnext').onclick = () => { mm_++; if (mm_ > 11){ mm_ = 0; my++; } renderMoney
     if (acc === null) return; acc += e.deltaX;
     if (Math.abs(acc) > 60){ flip(acc > 0); acc = null; }
   }, {passive: false});
-  // PC: mouse drag sideways
-  let mx = null;
-  card.addEventListener('mousedown', e => { if (e.button === 0 && !e.target.closest('button,a,input')) mx = e.clientX; });
-  addEventListener('mouseup', e => { if (mx === null) return; const dx = e.clientX - mx; mx = null; if (Math.abs(dx) >= 60 && !getSelection().toString()) flip(dx < 0); });
 }
 function renderMoney(){
   const isCur = my === NOW.getFullYear() && mm_ === NOW.getMonth();
