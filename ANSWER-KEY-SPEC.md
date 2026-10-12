@@ -5,6 +5,7 @@
 > (both added 2026-08-16, Prat's pick — "the สมดุล and อัตรา, this one is small cuz it has no สอวน paper";
 > correct, neither chapter has a single POSN question) · `ch04` 40/135 (POSN, paused).
 > Total solved: 238 / 1,104.**
+> **2026-10-12: `ch12` เคมีไฟฟ้า 39/39 added (Prat's ask, single solve, 2 ⚠️ — Q-1085 paper prints swapped E° values, Q-0793). ch05/06/11/13 also exist in `solutions/` — this status block predates them.**
 > Prat picked ch07 first (not ch10) and merged this with the น้องมิล problem-set job: the solutions
 > ARE the source of her sheet, "so it's not a separate job."
 >
