@@ -653,6 +653,8 @@ button.fg:hover{background:#fbf3dc}
 .rw .nm{min-width:0}
 .rw .nm b{display:block;font-size:1.08rem;font-weight:800}
 .rw .nm small{display:block;font-size:.8rem;color:var(--mut);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rw .nm small.pch,.sc2 .cp.pch{color:var(--ink);font-weight:800}
+.sc2 .cp{padding:0 16px;font-size:.85rem;font-weight:600;color:var(--mut);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .rw .st{display:flex;justify-content:flex-end;min-width:96px}
 .rw .tools{position:absolute;right:128px;top:50%;transform:translateY(-50%);display:flex;gap:4px;opacity:0;transition:opacity .15s}
 .rw:hover .tools,.rw:focus-within .tools{opacity:1}
@@ -1671,6 +1673,14 @@ $('#sview').innerHTML = Object.entries(SVIEWS).map(([k, v]) => `<button data-v="
 $('#sview').onclick = e => { const v = e.target.dataset.v; if (!v || !SVIEWS[v]) return; sview = v; try{ localStorage.setItem('teach-sview', v); }catch{}
   qsa('#sview button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); renderSchedule(); };
 $('#whof').onclick = e => { const w = e.target.closest('button')?.dataset.w; if (!w) return; if (w === '*') whoF.clear(); else whoF.has(w) ? whoF.delete(w) : whoF.add(w); renderSchedule(); };
+// what to teach: the student's current chapter + what the last taught class before this one left behind (topic / homework / note)
+function prevOf(s){ const t = atOf(s); return DB.sessions.filter(x => x.who === s.who && x.id !== s.id && x.status === 'done' && atOf(x) < t && (x.log?.topic || x.log?.hw || x.note)).sort((a, b) => atOf(b) - atOf(a))[0]; }
+function prepOf(s){
+  const p = st(s.who), cur = p?.map ? p.map.indexOf('n') : -1, pv = prevOf(s);
+  const last = pv ? (pv.log ? [pv.log.topic && '📘 ' + pv.log.topic, pv.log.hw && !(s.note || '').includes(pv.log.hw) && 'การบ้าน: ' + pv.log.hw].filter(Boolean).join(' · ') : pv.note) : '';
+  return {ch: cur >= 0 ? `บท ${cur+1} · ${CH[cur]}` : '', last: last ? `ครั้งก่อน ${dLabel(pv.date)} · ${last}` : ''};
+}
+function prepHtml(s, tag, cls){ const r = prepOf(s); return (r.ch ? `<${tag} class="${cls} pch" title="${esc(r.ch)}">🎯 ${esc(r.ch)}</${tag}>` : '') + (r.last ? `<${tag} class="${cls} plast" title="${esc(r.last)}">↩ ${esc(r.last)}</${tag}>` : ''); }
 function strip(map){ return `<div class="strip">${map.split('').map(c => `<i class="${c==='t'?'':c}"></i>`).join('')}</div>`; }
 function renderSchedule(){
   $('#whof').innerHTML = DB.students.map(s => `<button class="${whoF.has(s.id)?'on':''}" data-w="${s.id}"><i class="${colorOf(s.id)}"></i>${esc(s.name)}</button>`).join('') + (whoF.size ? `<button data-w="*">ล้าง ✕</button>` : '');
@@ -1686,6 +1696,7 @@ function renderSchedule(){
       <div style="position:relative;min-width:0"><div class="nm"><i class="${colorOf(nx.who)}"></i>${esc(s?.name)}</div>
         <div class="meta">${esc(s?.grade)} · ${esc(s?.mode)} · ${nx.h} ชม. · ${cash(amt(nx))}</div>
         ${cur >= 0 ? `<div class="ch">บท ${cur+1} · ${CH[cur]}${nx.note ? ` · ${esc(nx.note)}` : ''}</div>` : (nx.note || s?.goal ? `<div class="ch">${esc(nx.note || s?.goal)}</div>` : '')}
+        ${(pl => pl ? `<div class="rem">↩ ${esc(pl)}</div>` : '')(prepOf(nx).last)}
         ${lastCon ? `<div class="rem">⚠ “${esc(lastCon[2])}”</div>` : ''}</div>
       ${cur >= 0 ? `<button class="go-y" onclick="toBank('#ch=${String(cur+1).padStart(2,'0')}')" title="เปิดข้อสอบบทนี้ในคลัง">🎯 ข้อสอบบท ${cur+1}</button>` : '<span></span>'}</div>`;
   }
@@ -1762,6 +1773,7 @@ function sCard(s){
     <div class="ct">${s.time}<small>– ${endOf(s)}</small></div>
     <div class="cm"><i class="${colorOf(s.who)}"></i>${esc(p?.name ?? '?')}${cw.length ? ' ⚠' : ''}</div>
     <div class="cd">${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</div>
+    ${prepHtml(s, 'div', 'cp')}
     <div class="cf">${stampOf(s)}</div></div>`;
 }
 function dayCard(date, items, i = 0){
@@ -1777,7 +1789,7 @@ function rw(s, pv){
     <span class="ckw">${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" ${pv ? 'tabindex="-1"' : ''} title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" aria-pressed="${s.status==='done'}" onclick="event.stopPropagation();${pv ? '' : s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}</span>
     <span class="tm">${s.time}<small>ถึง ${endOf(s)}</small></span>
     <span class="nm"><b>${esc(p?.name ?? '?')}${cw.length ? (cw.every(x => x.who === s.who) ? `<em class="cbadge" title="มีคาบของ ${esc(p?.name)} ซ้ำเวลาเดียวกัน · ลบอันที่เกินได้">⚠ ซ้ำ</em>`
-      : `<em class="cbadge" title="ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time + '–' + endOf(x)).join(', ')}">⚠ ชน ${cw.filter(x => x.who !== s.who).map(x => esc(st(x.who)?.name)).join(', ')}</em>`) : ''}</b><small>${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</small></span>
+      : `<em class="cbadge" title="ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time + '–' + endOf(x)).join(', ')}">⚠ ชน ${cw.filter(x => x.who !== s.who).map(x => esc(st(x.who)?.name)).join(', ')}</em>`) : ''}</b><small>${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</small>${prepHtml(s, 'small', 'pp')}</span>
     <span class="st">${stampOf(s, pv)}</span>
     ${pv ? '' : `<span class="tools">${s.status === 'done' ? `<button title="บันทึกการสอน" onclick="event.stopPropagation();wrapUp('${s.id}')">📝</button>` : ''}<button title="แก้ / เลื่อน" onclick="event.stopPropagation();editSession('${s.id}')">✎</button><button class="del" title="ลบ" onclick="event.stopPropagation();delSession('${s.id}')">🗑</button></span>`}
   </div>`;
