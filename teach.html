@@ -645,15 +645,21 @@ button.fg:hover{background:#fbf3dc}
 .dc.today .dch small,.dc.today .dch .dsum{color:#fff;opacity:.85}
 .dc.hol .dch{background:#fbe4dd}.dc.hol .dch .htag{color:var(--red)}
 .dc.today.hol .dch{background:var(--red)}.dc.today.hol .dch .htag{color:#fff}
-.rw{position:relative;display:grid;grid-template-columns:8px 30px 86px minmax(0,1fr) auto;align-items:center;gap:0 16px;padding:13px 18px 13px 0;border-top:2px solid var(--grid);cursor:pointer;transition:background .15s}
+.rw{position:relative;display:grid;grid-template-columns:8px 30px 150px 125px 175px 60px minmax(0,1fr) auto;align-items:center;gap:0 16px;padding:13px 18px 13px 0;border-top:2px solid var(--grid);cursor:pointer;transition:background .15s}
 .dch + .rw,.rw:first-child{border-top:0}
 .rw:hover{background:#fbf5e6}
 .rw .cb{align-self:stretch;margin:-13px 0}
-.rw .tm{font:800 1.5rem/1 "JetBrains Mono";letter-spacing:-.04em}
-.rw .tm small{display:block;font-size:.68rem;color:var(--mut);margin-top:4px;font-weight:700;letter-spacing:0}
-.rw .nm{min-width:0}
-.rw .nm b{display:block;font-size:1.5rem;line-height:1.2;font-weight:800;letter-spacing:-.01em}
-.rw .nm .chp{font-size:.95rem;padding:2px 12px 3px 26px;margin-left:12px;vertical-align:.15em;box-shadow:3px 3px 0 var(--blue);letter-spacing:0}.rw .nm .chp::before{width:13px}
+.rw .tm{font:800 1.5rem/1 "JetBrains Mono";letter-spacing:-.04em;white-space:nowrap}
+.rw .tm small{font-size:.8rem;color:var(--mut);margin-left:6px;font-weight:700;letter-spacing:0}
+.rw .nm{min-width:0;display:flex;align-items:center;gap:6px}
+.rw .nm b{font-size:1.5rem;line-height:1.2;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.rw .nm .cbadge{margin:0;flex:none}
+.rw .chc{min-width:0;display:flex;align-items:center}
+.rw .hr{font-weight:700;color:var(--mut);font-size:.9rem;white-space:nowrap}
+.rw .nt{min-width:0;display:flex;align-items:center;font-size:.85rem;white-space:nowrap;overflow:hidden}
+.rw .nt>b{min-width:0;overflow:hidden;text-overflow:ellipsis;font-weight:700;color:var(--ink)}
+.rw .nt .plast{min-width:0;font-size:.85rem}
+.rw .chp{max-width:100%;overflow:hidden;text-overflow:ellipsis;margin:0;font-size:.95rem;padding:2px 12px 3px 26px;box-shadow:3px 3px 0 var(--blue);letter-spacing:0}.rw .chp::before{width:13px}
 .rw .nm small{display:block;font-size:.8rem;color:var(--mut);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .chp{position:relative;display:inline-block;vertical-align:.12em;margin-left:10px;padding:2px 10px 3px 22px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font:800 .82rem "Anuphan",sans-serif;line-height:1.3;box-shadow:3px 3px 0 var(--blue);white-space:nowrap}
 .chp::before{content:"";position:absolute;left:0;top:0;bottom:0;width:11px;background:var(--yel);border-right:2px solid var(--ink)}
@@ -672,7 +678,9 @@ button.fg:hover{background:#fbf3dc}
 .rw.cancel .tm,.rw.cancel .nm b{text-decoration:line-through}
 .rw.pv{cursor:default}.rw.pv:hover{background:none}
 .st .amt{font:800 1.05rem "JetBrains Mono";color:var(--mut)}
-@media (max-width:560px){.rw{grid-template-columns:6px 28px 62px minmax(0,1fr) auto;gap:0 10px;padding-right:10px}.rw .tm{font-size:1.2rem}.rw .nm b{font-size:1.2rem}.rw .nm .chp{font-size:.8rem;padding:1px 9px 2px 21px;margin-left:8px}.rw .nm .chp::before{width:10px}.rw .st{min-width:0}.dch{gap:10px}.dch b{font-size:1.7rem}}
+@media (max-width:1000px){.rw{grid-template-columns:8px 30px 80px 120px 165px minmax(0,1fr) auto;gap:0 12px}.rw .hr,.rw .tm small{display:none}}
+@media (max-width:700px){.rw{grid-template-columns:6px 28px auto auto minmax(0,1fr) auto;row-gap:6px}.rw .cb,.rw .ckw{grid-row:1 / span 2}.rw .st{grid-row:1 / span 2;grid-column:6}.rw .nt{grid-row:2;grid-column:3 / 6}.rw .nm b{max-width:9em}}
+@media (max-width:560px){.rw .tm small{display:none}.rw{grid-template-columns:6px 28px auto auto minmax(0,1fr) auto;gap:0 10px;padding-right:10px}.rw .tm{font-size:1.2rem}.rw .nm b{font-size:1.2rem}.rw .chp{font-size:.8rem;padding:1px 9px 2px 21px}.rw .chp::before{width:10px}.rw .st{min-width:0}.dch{gap:10px}.dch b{font-size:1.7rem}}
 .agenda .ab{padding:0;gap:0}
 .agenda .ab .dlr{margin:12px 14px 0}
 .agenda .ab .free{padding:26px 0}
@@ -1684,7 +1692,7 @@ $('#whof').onclick = e => { const w = e.target.closest('button')?.dataset.w; if 
 function prevOf(s){ const t = atOf(s); return DB.sessions.filter(x => x.who === s.who && x.id !== s.id && x.status === 'done' && atOf(x) < t && (x.log?.topic || x.log?.hw || x.note)).sort((a, b) => atOf(b) - atOf(a))[0]; }
 function prepOf(s){
   const p = st(s.who), cur = p?.map ? p.map.indexOf('n') : -1, pv = prevOf(s);
-  const last = pv ? (pv.log ? [pv.log.topic, pv.log.hw && !(s.note || '').includes(pv.log.hw) && 'การบ้าน ' + pv.log.hw].filter(Boolean).join(' · ') : pv.note) : '';
+  const last = pv ? (pv.log ? [pv.log.topic, pv.log.hw && 'การบ้าน ' + pv.log.hw].filter(Boolean).join(' · ') : pv.note) : '';
   return {ch: cur >= 0 ? `บท ${cur+1} ${CH[cur]}` : '', last};
 }
 const chipOf = s => { const c = prepOf(s).ch; return c ? `<span class="chp" title="กำลังเรียน${esc(c)}">${esc(c)}</span>` : ''; };
@@ -1795,9 +1803,12 @@ function rw(s, pv){
   return `<div class="rw ${pv?'pv':''} ${s.status==='cancel'?'cancel':''} ${hol?'holi':''} ${cw.length?'clash':''}" ${pv ? '' : `onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}"`}>
     <span class="cb ${colorOf(s.who)}"></span>
     <span class="ckw">${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" ${pv ? 'tabindex="-1"' : ''} title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" aria-pressed="${s.status==='done'}" onclick="event.stopPropagation();${pv ? '' : s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}</span>
-    <span class="tm">${s.time}<small>ถึง ${endOf(s)}</small></span>
-    <span class="nm"><b>${esc(p?.name ?? '?')}${chipOf(s)}${cw.length ? (cw.every(x => x.who === s.who) ? `<em class="cbadge" title="มีคาบของ ${esc(p?.name)} ซ้ำเวลาเดียวกัน · ลบอันที่เกินได้">⚠ ซ้ำ</em>`
-      : `<em class="cbadge" title="ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time + '–' + endOf(x)).join(', ')}">⚠ ชน ${cw.filter(x => x.who !== s.who).map(x => esc(st(x.who)?.name)).join(', ')}</em>`) : ''}</b><small>${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</small>${lastOf(s, 'small', 'plast')}</span>
+    <span class="tm">${s.time}<small>– ${endOf(s)}</small></span>
+    <span class="nm"><b>${esc(p?.name ?? '?')}</b>${cw.length ? (cw.every(x => x.who === s.who) ? `<em class="cbadge" title="มีคาบของ ${esc(p?.name)} ซ้ำเวลาเดียวกัน · ลบอันที่เกินได้">⚠ ซ้ำ</em>`
+      : `<em class="cbadge" title="ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time + '–' + endOf(x)).join(', ')}">⚠ ชน ${cw.filter(x => x.who !== s.who).map(x => esc(st(x.who)?.name)).join(', ')}</em>`) : ''}</span>
+    <span class="chc">${chipOf(s)}</span>
+    <span class="hr">${s.h} ชม.</span>
+    <span class="nt">${s.status === 'done' && s.log?.topic ? `<b>📘 ${esc(s.log.topic)}</b>` : lastOf(s, 'span', 'plast') || (s.note ? `<b>${esc(s.note)}</b>` : '')}</span>
     <span class="st">${stampOf(s, pv)}</span>
     ${pv ? '' : `<span class="tools">${s.status === 'done' ? `<button title="บันทึกการสอน" onclick="event.stopPropagation();wrapUp('${s.id}')">📝</button>` : ''}<button title="แก้ / เลื่อน" onclick="event.stopPropagation();editSession('${s.id}')">✎</button><button class="del" title="ลบ" onclick="event.stopPropagation();delSession('${s.id}')">🗑</button></span>`}
   </div>`;
