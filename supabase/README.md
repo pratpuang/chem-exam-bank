@@ -9,3 +9,5 @@
   footer) and saves each table independently — but that's the safety net, not the plan.
 - Why: 2026-10-11 the `kind` field shipped before its column; every students write was rejected, and the old
   engine refused to download while it had unsent edits, so iPad and desktop each froze on their own copy.
+- `003_reviews_storage.sql` — private `reviews` Storage bucket + per-user policies for the collage maker (images at
+  `reviews/<uid>/<uuid>.jpg`). Run it in the SQL editor before pushing; `check_teach_schema.py` also probes for the bucket.
