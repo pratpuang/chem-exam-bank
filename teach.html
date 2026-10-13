@@ -653,7 +653,9 @@ button.fg:hover{background:#fbf3dc}
 .rw .nm{min-width:0}
 .rw .nm b{display:block;font-size:1.08rem;font-weight:800}
 .rw .nm small{display:block;font-size:.8rem;color:var(--mut);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chp{display:inline-block;vertical-align:.18em;margin-left:8px;padding:1px 7px 2px;border:2px solid var(--ink);background:var(--yel);color:#141414;font:800 .7rem "Anuphan",sans-serif;letter-spacing:.01em;line-height:1.3;box-shadow:2px 2px 0 var(--sh);white-space:nowrap}
+.chp{position:relative;display:inline-block;vertical-align:.12em;margin-left:10px;padding:2px 10px 3px 22px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font:800 .82rem "Anuphan",sans-serif;line-height:1.3;box-shadow:3px 3px 0 var(--blue);white-space:nowrap}
+.chp::before{content:"";position:absolute;left:0;top:0;bottom:0;width:11px;background:var(--yel);border-right:2px solid var(--ink)}
+.nb .chp{margin:0 10px 0 0;font-size:1.05rem;padding:3px 14px 4px 30px;border-width:3px;box-shadow:4px 4px 0 var(--blue)}.nb .chp::before{width:15px;border-right-width:3px}
 .plast{display:block;font-size:.8rem;font-weight:600;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .plast em{font-style:normal;font-weight:800;color:var(--blue);margin-right:6px}
 .sc2 .plast{padding:0 16px;font-size:.85rem}
@@ -1699,7 +1701,7 @@ function renderSchedule(){
       <div><div class="eb">${live ? `● กำลังสอนอยู่ · ถึง ${endOf(nx)}` : `คาบถัดไป · ${relDay(nx.date)}`}</div><div class="tm">${nx.time}</div></div>
       <div style="position:relative;min-width:0"><div class="nm"><i class="${colorOf(nx.who)}"></i>${esc(s?.name)}</div>
         <div class="meta">${esc(s?.grade)} · ${esc(s?.mode)} · ${nx.h} ชม. · ${cash(amt(nx))}</div>
-        ${cur >= 0 ? `<div class="ch">บท ${cur+1} · ${CH[cur]}${nx.note ? ` · ${esc(nx.note)}` : ''}</div>` : (nx.note || s?.goal ? `<div class="ch">${esc(nx.note || s?.goal)}</div>` : '')}
+        ${cur >= 0 ? `<div class="ch">${chipOf(nx)}${nx.note ? esc(nx.note) : ''}</div>` : (nx.note || s?.goal ? `<div class="ch">${esc(nx.note || s?.goal)}</div>` : '')}
         ${lastOf(nx, 'div', 'plast')}
         ${lastCon ? `<div class="rem">⚠ “${esc(lastCon[2])}”</div>` : ''}</div>
       ${cur >= 0 ? `<button class="go-y" onclick="toBank('#ch=${String(cur+1).padStart(2,'0')}')" title="เปิดข้อสอบบทนี้ในคลัง">🎯 ข้อสอบบท ${cur+1}</button>` : '<span></span>'}</div>`;
