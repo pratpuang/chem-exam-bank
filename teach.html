@@ -1730,9 +1730,11 @@ function fitCrow(){
   r.style.marginLeft = -L + 'px'; r.style.width = W + 'px'; r.style.paddingLeft = r.style.scrollPaddingLeft = L + 'px';   // scroll-padding so the snap keeps that left gutter
 }
 addEventListener('resize', fitCrow);
+// the row also has to follow layout shifts that aren't a window resize (drawer, font load): refit when #slist's width changes
+{ let w0 = -1; try{ new ResizeObserver(([e]) => { const w = Math.round(e.contentRect.width); if (w !== w0){ w0 = w; fitCrow(); } }).observe($('#slist')); }catch{} document.fonts?.ready.then(fitCrow); }
 // plain vertical wheel over the row scrolls it sideways, but hands the wheel back to the page at either end
 $('#slist').addEventListener('wheel', e => {
-  const r = e.target.closest?.('.crow'); if (!r || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+  const r = e.target.closest?.('.crow'); if (!r || e.ctrlKey || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
   const max = r.scrollWidth - r.clientWidth, dx = e.deltaY * (e.deltaMode === 1 ? 32 : 1);
   if ((dx < 0 && r.scrollLeft <= 0) || (dx > 0 && r.scrollLeft >= max - 1)) return;
   e.preventDefault(); r.scrollLeft += dx;
@@ -1746,7 +1748,7 @@ function sCard(s){
   const p = st(s.who), hol = isHolD(s.date) && s.status === 'plan', cw = clashWith(s);
   return `<div class="sc2 ${s.status==='cancel'?'cancel':''} ${hol?'holi':''} ${cw.length?'clash':''}" onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}">
     <div class="cs ${colorOf(s.who)}"></div>
-    ${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" onclick="event.stopPropagation();${s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}
+    ${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" aria-pressed="${s.status==='done'}" onclick="event.stopPropagation();${s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}
     <div class="ct">${s.time}<small>– ${endOf(s)}</small></div>
     <div class="cm"><i class="${colorOf(s.who)}"></i>${esc(p?.name ?? '?')}${cw.length ? ' ⚠' : ''}</div>
     <div class="cd">${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</div>
@@ -1762,7 +1764,7 @@ function rw(s, pv){
   const p = st(s.who), hol = isHolD(s.date) && s.status === 'plan', cw = clashWith(s);
   return `<div class="rw ${pv?'pv':''} ${s.status==='cancel'?'cancel':''} ${hol?'holi':''} ${cw.length?'clash':''}" ${pv ? '' : `onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}"`}>
     <span class="cb ${colorOf(s.who)}"></span>
-    <span class="ckw">${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" ${pv ? 'tabindex="-1"' : ''} title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" onclick="event.stopPropagation();${pv ? '' : s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}</span>
+    <span class="ckw">${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" ${pv ? 'tabindex="-1"' : ''} title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" aria-pressed="${s.status==='done'}" onclick="event.stopPropagation();${pv ? '' : s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}</span>
     <span class="tm">${s.time}<small>ถึง ${endOf(s)}</small></span>
     <span class="nm"><b>${esc(p?.name ?? '?')}${cw.length ? (cw.every(x => x.who === s.who) ? `<em class="cbadge" title="มีคาบของ ${esc(p?.name)} ซ้ำเวลาเดียวกัน · ลบอันที่เกินได้">⚠ ซ้ำ</em>`
       : `<em class="cbadge" title="ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time + '–' + endOf(x)).join(', ')}">⚠ ชน ${cw.filter(x => x.who !== s.who).map(x => esc(st(x.who)?.name)).join(', ')}</em>`) : ''}</b><small>${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</small></span>
