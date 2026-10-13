@@ -878,6 +878,15 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 /* sync status */
 #dbwarn{color:var(--red);font-weight:700;font-size:.78rem;margin-left:10px}
 .sync{display:inline-flex;align-items:center;gap:7px;font-weight:700}
+/* save status lives as a dot at the header's right end; hover (mouse) or tap opens the details */
+.stw{position:relative;display:flex}
+.stw>.sync{border:0;border-left:3px solid var(--paper);background:var(--ink);padding:0 16px;cursor:pointer;justify-content:center}
+.stw>.sync i{width:12px;height:12px}
+.stpop{display:none;position:absolute;right:0;top:100%;z-index:60;min-width:230px;flex-direction:column;gap:8px;padding:12px 14px;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);font:.78rem "JetBrains Mono"}
+.stpop b{font-weight:800}.stpop .strow{display:flex;flex-wrap:wrap;gap:8px}
+.stw.open .stpop{display:flex}
+.stw.warn>.sync i{box-shadow:0 0 0 3px var(--red)}
+@media (hover:hover){.stw:hover .stpop{display:flex}}
 .sync i{width:9px;height:9px;border-radius:50%;background:var(--mut)}
 .sync[data-s=ok] i{background:var(--ok)}
 .sync[data-s=saving] i,.sync[data-s=load] i{background:var(--yel);animation:blink 1s infinite}
@@ -1007,6 +1016,10 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
       <span class="hbtn mon" id="mlabel"></span>
       <button class="hbtn" id="mnext" aria-label="เดือนถัดไป">▶</button>
       <button class="hbtn y" onclick="editSession()">＋ คาบ</button>
+      <div class="stw" id="stw">
+        <button class="sync" id="sync" data-s="idle" aria-label="สถานะการบันทึก" aria-haspopup="true"><i></i></button>
+        <div class="stpop" role="status"><b id="synct">กำลังเชื่อมต่อ…</b><span>อัปเดต <span id="clock"></span></span><span class="strow"><button class="ghost" id="logout">ออกจากระบบ</button></span></div>
+      </div>
     </div>
   </div>
 </header>
@@ -1050,7 +1063,6 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
     <div class="who-f" id="whof"></div>
     <div id="slist"></div>
   </section>
-  <footer class="live"><span class="sync" id="sync" data-s="idle"><i></i><b id="synct">กำลังเชื่อมต่อ…</b></span><span>อัปเดต <span id="clock"></span></span><span><button class="ghost" id="logout">ออกจากระบบ</button></span></footer>
 </main>
 </div>
 
@@ -1340,8 +1352,8 @@ function noteMissing(table, e){ const c = colOf(e); if (!c || missing[table].has
 function showMissing(){
   const list = [...missing.students].map(c => 'students.' + c).concat([...missing.sessions].map(c => 'sessions.' + c), skipsOff ? ['ตาราง skips (คาบประจำต่ออัตโนมัติปิดอยู่)'] : []);
   if (rollWarn) list.push(rollWarn);
-  let el = $('#dbwarn'); if (!list.length){ el?.remove(); return; }
-  if (!el){ el = document.createElement('span'); el.id = 'dbwarn'; $('#sync').after(el); }
+  let el = $('#dbwarn'); $('#stw')?.classList.toggle('warn', !!list.length); if (!list.length){ el?.remove(); return; }
+  if (!el){ el = document.createElement('span'); el.id = 'dbwarn'; $('#synct').after(el); }   // inside the status popover; the dot gets a red ring
   el.textContent = '⚠ ' + list.join(' · '); el.title = 'รัน SQL เพิ่มคอลัมน์ใน Supabase แล้วรีเฟรช';
 }
 // one write, healed: a missing column is dropped and the write retried (as often as there are missing columns)
@@ -2554,7 +2566,11 @@ document.addEventListener('click', e => {
   else if (e.target.closest('#agrid .fh, #agrid .fck')) SFX.play('key');
   else if (e.target.closest('#srange button, #kweek button, #sheet .chip, #sheet .pc')) SFX.play('select');
 }, true);
-// the mute toggle sits in the footer, next to the sync status
+// status dot: tap toggles the details (touch has no hover); a tap elsewhere or Esc closes them
+$('#sync').onclick = e => { e.stopPropagation(); $('#stw').classList.toggle('open'); };
+document.addEventListener('click', e => { if (!e.target.closest('#stw')) $('#stw').classList.remove('open'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#stw').classList.remove('open'); });
+// the mute toggle sits in the status popover, next to the logout button
 (() => { const b = document.createElement('button'); b.className = 'ghost'; b.id = 'sndb';
   const paint = () => { b.textContent = SFX.on ? '🔊 เสียง' : '🔇 ปิดเสียง'; b.title = SFX.on ? 'ปิดเสียงเอฟเฟกต์' : 'เปิดเสียงเอฟเฟกต์'; };
   b.onclick = () => { SFX.set(!SFX.on); paint(); SFX.play('on'); }; paint(); $('#logout').before(b, ' '); })();
