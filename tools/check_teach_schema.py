@@ -5,6 +5,7 @@ database doesn't have: apply the SQL in supabase/schema.sql first, then push. Us
 all rows, but an unknown column still fails loudly), so it needs no secrets.
 2026-10-11: a UI change shipped before its column (students.kind) and every save from every device was rejected."""
 import json, re, sys, urllib.request, urllib.error
+sys.stdout.reconfigure(encoding='utf-8')   # Windows cp874 console can't print Thai
 from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 page = (ROOT / 'teach.html').read_text(encoding='utf-8')

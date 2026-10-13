@@ -1535,7 +1535,7 @@ async function loginSubmit(e){
 $('#login').onsubmit = loginSubmit;
 $('#logout').onclick = async () => {
   if (pending()?.n && !confirm('ยังมีข้อมูลที่ยังไม่ได้ส่งขึ้นเซิร์ฟเวอร์ · ออกเลยไหม?')) return;
-  try{ localStorage.removeItem(CACHE); }catch{} await sb?.auth.signOut(); location.reload();
+  try{ localStorage.removeItem(CACHE); }catch{} RV.img.forEach(m => URL.revokeObjectURL(m.url)); RV.img.clear(); RV.bad.clear(); await sb?.auth.signOut(); location.reload();
 };
 addEventListener('online', () => { schedulePush(); });
 addEventListener('offline', () => setSync('off'));
@@ -1773,7 +1773,7 @@ function tk(s, o = {}){
     ${o.pv ? '' : `<span class="tools"><button title="แก้ / เลื่อน" onclick="event.stopPropagation();editSession('${s.id}')">✎</button><button class="del" title="ลบ" onclick="event.stopPropagation();delSession('${s.id}')">🗑</button></span>`}
   </div>`;
 }
-function renderAll(){ renderMoney(); renderSchedule(); if (openD === 'cal') renderCal(); if (openD === 'stu') renderStudents(); if (openD === 'kit') writeKit(); }
+function renderAll(){ renderMoney(); renderSchedule(); if (openD === 'cal') renderCal(); if (openD === 'stu') renderStudents(); if (openD === 'kit'){ writeKit(); renderCollage(); } }
 function markDone(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.status = 'done'; save(); renderAll(); wrapUp(id); }
 let wu = null;
 function undone(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.status = 'plan'; s.paid = false; save(); renderAll(); toast(`${st(s.who)?.name} · กลับเป็นนัดไว้`, true); }
@@ -2294,7 +2294,7 @@ function renderAvail(){
   const days = weekDays(), bf = DB.buffer;
   $('#bfb').value = bf.before; $('#bfa').value = bf.after; const lk = $('#bflk'); lk.classList.toggle('on', bf.linked); lk.textContent = bf.linked ? '🔗' : '⛓'; lk.setAttribute('aria-pressed', bf.linked);
   lk.title = bf.linked ? 'ก่อน-หลังเท่ากัน (กดเพื่อแยกตั้งเอง)' : 'แยกตั้งก่อน/หลัง (กดเพื่อให้เท่ากัน)'; $('#bufrow').classList.toggle('lkd', bf.linked);
-  document.querySelectorAll('#bufpre button').forEach(x => x.classList.toggle('on', bf.before === +x.dataset.bp && (!bf.linked || bf.after === +x.dataset.bp)));
+  document.querySelectorAll('#bufpre button').forEach(x => x.classList.toggle('on', bf.before === +x.dataset.bp && bf.after === +x.dataset.bp));
   $('#bufdia').innerHTML = `<i style="flex:${bf.before} 1 0"></i><b style="flex:60 1 0">คาบ 1 ชม.</b><i style="flex:${bf.after} 1 0"></i>`;
   if (pickInit !== isoD(days[0])){ pickedD.clear(); days.forEach(d => freeOf(d).length && pickedD.add(isoD(d))); pickInit = isoD(days[0]); kOpen = null; }
   $('#agrid').innerHTML = days.map(d => {
@@ -2324,7 +2324,8 @@ const pickedLines = days => days.filter(d => pickedD.has(isoD(d))).map(d => { co
 // buffer settings: minutes before / after each class; linked = editing one sets both
 function setBuf(k, v){
   const b = DB.buffer; v = Math.max(0, Math.min(240, Math.round(+v) || 0));
-  if (k === 'lk'){ b.linked = !b.linked; if (b.linked) b.after = b.before; }
+  if (k === 'preset'){ b.before = b.after = v; }
+  else if (k === 'lk'){ b.linked = !b.linked; if (b.linked) b.after = b.before; }
   else { b[k] = v; if (b.linked) b[k === 'before' ? 'after' : 'before'] = v; }
   save(); renderAvail();
 }
@@ -2451,11 +2452,11 @@ async function rvFonts(){ try{ await Promise.all(['800 40px Anuphan', '700 28px 
 function rvLoad(id){
   if (RV.img.has(id) || RV.bad.has(id) || RV.loading.has(id) || RV.missing || !user || !sb) return; RV.loading.add(id);
   rvBucket().download(`${user.id}/${id}.jpg`).then(async ({data, error}) => {
-    if (error || !data){ if (rvNoBucket(error)) RV.missing = true; else RV.bad.add(id); return; }
+    if (error || !data){ if (rvNoBucket(error)) RV.missing = true; else if (/not.?found|404/i.test((error?.message || '') + (error?.error || '') + (error?.statusCode || ''))) RV.bad.add(id); return; }   // only a truly absent object is sticky; offline etc. retries next render
     await rvSet(id, data);
-  }).catch(() => RV.bad.add(id)).finally(() => { RV.loading.delete(id); clearTimeout(RV.t); RV.t = setTimeout(renderCollage, 120); });
+  }).catch(() => {}).finally(() => { RV.loading.delete(id); clearTimeout(RV.t); RV.t = setTimeout(renderCollage, 120); });
 }
-function rvSet(id, blob){ return new Promise(ok => { const url = URL.createObjectURL(blob), el = new Image(); el.onload = () => { RV.img.set(id, {url, el, w: el.naturalWidth, h: el.naturalHeight}); ok(); }; el.onerror = () => { RV.bad.add(id); ok(); }; el.src = url; }); }
+function rvSet(id, blob){ return new Promise(ok => { const url = URL.createObjectURL(blob), el = new Image(); el.onload = () => { RV.img.set(id, {url, el, w: el.naturalWidth, h: el.naturalHeight}); ok(); }; el.onerror = () => { URL.revokeObjectURL(url); RV.bad.add(id); ok(); }; el.src = url; }); }
 function renderCollage(){
   if (!$('#rv')) return; const c = rvDB(), ons = c.items.filter(x => x.on).length;
   if (document.activeElement !== $('#rv-title')) $('#rv-title').value = c.title;
@@ -2477,7 +2478,7 @@ const rvSave = () => { save(); renderCollage(); };
 
 // ---- upload: shrink to <=1600px long edge, JPEG 0.85, white behind transparency
 async function rvShrink(file){
-  let bmp; try{ bmp = await createImageBitmap(file, {imageOrientation: 'from-image'}); }catch{ bmp = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = URL.createObjectURL(file); }); }
+  let bmp; try{ bmp = await createImageBitmap(file, {imageOrientation: 'from-image'}); }catch{ bmp = await new Promise((ok, no) => { const i = new Image(); const u = URL.createObjectURL(file); i.onload = () => { URL.revokeObjectURL(u); ok(i); }; i.onerror = () => { URL.revokeObjectURL(u); no(); }; i.src = u; }); }
   const w0 = bmp.width || bmp.naturalWidth, h0 = bmp.height || bmp.naturalHeight, k = Math.min(1, 1600 / Math.max(w0, h0)), cv = document.createElement('canvas');
   cv.width = Math.round(w0*k); cv.height = Math.round(h0*k); const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.imageSmoothingQuality = 'high'; g.drawImage(bmp, 0, 0, cv.width, cv.height);
   return new Promise(r => cv.toBlob(r, 'image/jpeg', 0.85));
@@ -2486,24 +2487,26 @@ async function rvAdd(files){
   files = [...files].filter(f => f.type.startsWith('image/')); if (!files.length) return;
   if (!sb || !user || !navigator.onLine) return toast('ต้องออนไลน์และล็อกอินก่อนถึงจะอัปโหลดรูปได้');
   if (RV.missing) return renderCollage();
-  const c = rvDB(); let done = 0, fail = 0;
+  let done = 0, fail = 0;
   for (const f of files){
     RV.busy = `กำลังอัปโหลด ${done + fail + 1}/${files.length}`; renderCollage();
     try{
       const blob = await rvShrink(f); if (!blob) throw new Error('encode'); const id = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
       const {error} = await rvBucket().upload(`${user.id}/${id}.jpg`, blob, {contentType: 'image/jpeg', upsert: false});
       if (error){ if (rvNoBucket(error)){ RV.missing = true; break; } throw error; }
-      await rvSet(id, blob); c.items.push({id, on: true}); done++;
+      await rvSet(id, blob); rvDB().items.push({id, on: true}); save(); done++;   // re-read the live array (a pull/sync may have replaced it during the awaits); save per image so a closed tab loses at most one
     }catch(e){ fail++; }
   }
-  RV.busy = ''; if (done) save(); renderCollage();
+  RV.busy = ''; renderCollage();
   toast(RV.missing ? 'ยังไม่ได้สร้างที่เก็บรูป (bucket reviews) ใน Supabase' : `เพิ่มรูปแล้ว ${done} รูป${fail ? ` · ไม่สำเร็จ ${fail}` : ''}`);
 }
 function rvMove(id, to){ const a = rvDB().items, i = a.findIndex(x => x.id === id); if (i < 0) return; to = Math.max(0, Math.min(a.length - 1, to)); a.splice(to, 0, a.splice(i, 1)[0]); rvSave(); }
 async function rvDel(id){
   if (!confirm('ลบรูปนี้ออกจากคลังถาวร? (ถ้าแค่ไม่อยากให้อยู่ในโปสเตอร์ ให้กด “✓ ใน” เป็น “พัก” แทน)')) return;
+  if (!sb || !user || !navigator.onLine) return toast('ต้องออนไลน์ก่อนถึงจะลบรูปได้');
+  let err; try{ ({error: err} = await rvBucket().remove([`${user.id}/${id}.jpg`])); }catch(e){ err = e; }
+  if (err && !/not.?found|404/i.test((err.message || '') + (err.statusCode || ''))) return toast('ลบรูปไม่สำเร็จ · รูปยังอยู่ในคลัง ลองใหม่อีกครั้ง');   // keep the item: never orphan the file
   const c = rvDB(); c.items = c.items.filter(x => x.id !== id); const im = RV.img.get(id); if (im) URL.revokeObjectURL(im.url); RV.img.delete(id); rvSave();
-  try{ if (sb && user) await rvBucket().remove([`${user.id}/${id}.jpg`]); }catch{}
 }
 $('#rv-file').onchange = e => { rvAdd(e.target.files); e.target.value = ''; };
 const rvText = (k, v) => { rvDB()[k] = v; save(); clearTimeout(RV.t2); RV.t2 = setTimeout(renderCollage, 250); };
@@ -2528,7 +2531,7 @@ const rvIOS = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.max
 async function rvRender(S){ await rvFonts(); const pages = RV.pages; return pages.map((p, i) => { const cv = document.createElement('canvas'); rvDraw(cv, p, i+1, pages.length, S); return cv; }); }
 function rvDeliver(items, title){   // items: [{blob, name, label}]
   const urls = items.map(x => URL.createObjectURL(x.blob));
-  if (rvIOS()){   // iOS/iPadOS Safari mostly ignores download on blob links: show it, long-press to save
+  if (rvIOS()){   setTimeout(() => urls.forEach(u => URL.revokeObjectURL(u)), 6e5);   // iOS/iPadOS Safari mostly ignores download on blob links: show it, long-press to save
     openModal(`<h3 class="wq">${esc(title)}</h3>${items.map((x, i) => x.blob.type === 'application/pdf' ? `<p style="text-align:center"><a class="cpy" href="${urls[i]}" target="_blank" rel="noopener">เปิด PDF</a></p><p class="mut" style="text-align:center;font-weight:600">เปิดแล้วกดปุ่มแชร์ → บันทึกลงไฟล์</p>` : `<img class="rvm" src="${urls[i]}" alt="${esc(x.label)}">`).join('')}${items[0].blob.type === 'application/pdf' ? '' : '<p class="mut" style="text-align:center;font-weight:600">กดค้างที่รูป → บันทึกรูปภาพ</p>'}`, true);
   } else { items.forEach((x, i) => setTimeout(() => { const l = document.createElement('a'); l.href = urls[i]; l.download = x.name; document.body.append(l); l.click(); l.remove(); }, i * 350)); setTimeout(() => urls.forEach(u => URL.revokeObjectURL(u)), 6e4); toast(items.length > 1 ? `บันทึก ${items.length} ไฟล์แล้ว ✓` : 'บันทึกแล้ว ✓'); }
 }
@@ -2549,7 +2552,7 @@ async function rvPdf(){
 $('#rv-png').onclick = rvPng; $('#rv-pdf').onclick = rvPdf;
 $('#bfb').onchange = e => setBuf('before', e.target.value); $('#bfa').onchange = e => setBuf('after', e.target.value); $('#bflk').onclick = () => setBuf('lk');
 $('#bufrow').addEventListener('click', e => { const t = e.target.closest('[data-bd]'); if (!t) return; const [k, d] = t.dataset.bd.split(':'); setBuf(k, DB.buffer[k] + +d); });
-$('#bufpre').addEventListener('click', e => { const t = e.target.closest('[data-bp]'); if (t) setBuf('before', +t.dataset.bp); });
+$('#bufpre').addEventListener('click', e => { const t = e.target.closest('[data-bp]'); if (t) setBuf('preset', +t.dataset.bp); });
 $('#kweek').onclick = e => { const k = e.target.dataset.k; if (k === undefined) return; kweek = +k; qsa('#kweek button').forEach(b => b.classList.toggle('on', b.dataset.k === k)); renderAvail(); };
 $('#agrid').onclick = e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return;
