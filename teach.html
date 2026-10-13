@@ -582,7 +582,7 @@ button.fg:hover{background:#fbf3dc}
 /* sessions: view switcher + horizontal day-grouped cards */
 .vbar{margin:-6px 0 14px}.vbar .seg button{padding:5px 11px;font-size:.78rem}
 #slist{min-width:0;max-width:100%}
-.crow{display:flex;align-items:stretch;gap:14px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:2px 24px 18px 0;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px,#000 calc(100% - 56px),transparent);mask-image:linear-gradient(90deg,transparent,#000 36px,#000 calc(100% - 56px),transparent)}
+.crow{display:flex;align-items:stretch;gap:14px;overflow-x:auto;overscroll-behavior-x:contain;padding:2px 24px 18px 0;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px,#000 calc(100% - 56px),transparent);mask-image:linear-gradient(90deg,transparent,#000 36px,#000 calc(100% - 56px),transparent)}
 .crow::-webkit-scrollbar{display:none}
 .crow{cursor:grab;-webkit-user-select:none;user-select:none}.crow.drag{cursor:grabbing;scroll-snap-type:none}.crow.drag .sc2{pointer-events:none}
 .cday{flex:none;width:96px;scroll-snap-align:start;border:3px solid var(--ink);background:var(--ink);color:var(--paper);box-shadow:5px 5px 0 var(--sh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:10px 4px;text-align:center;margin-left:8px}
@@ -1696,10 +1696,13 @@ function renderSchedule(){
   if (range === 'next') list = sorted(list.filter(s => s.date >= today || needsConfirm(s)));   // all of today (even classes already taught) + every upcoming one, no cap
   else list = [...list.filter(s => atOf(s) <= NOW)].sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time)).slice(0, 40);
   const groups = []; for (const s of list){ const g = groups[groups.length-1]; if (g && g.date === s.date) g.items.push(s); else groups.push({date:s.date, items:[s]}); }
+  const keepX = rowKey === range + sview ? $('#slist .crow')?.scrollLeft : null; rowKey = range + sview;   // a sync re-render must not throw the row back to its first card
   $('#slist').innerHTML = groups.length ? SVIEWS[sview].render(groups)
     : `<div class="empty">ไม่มีคาบในช่วงนี้ · <button class="go sm" onclick="editSession()">＋ เพิ่มคาบ</button></div>`;
   fitCrow();
+  const nr = $('#slist .crow'); if (nr && keepX != null){ nr.scrollLeft = keepX; if (RG?.raf) RG.r = nr; }
 }
+var rowKey = '';   // var, not let: renderSchedule may run before this line on boot
 // cards row breaks out of the content column to the full viewport; padding-left keeps the first card on the content's left edge at rest
 function fitCrow(){
   const r = $('#slist .crow'); if (!r) return;
@@ -1713,17 +1716,33 @@ addEventListener('resize', fitCrow);
 // plain vertical wheel over the row scrolls it sideways, but hands the wheel back to the page at either end
 $('#slist').addEventListener('wheel', e => {
   const r = e.target.closest?.('.crow'); if (!r || e.ctrlKey || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
-  const max = r.scrollWidth - r.clientWidth, dx = e.deltaY * (e.deltaMode === 1 ? 32 : 1);
-  if ((dx < 0 && r.scrollLeft <= 0) || (dx > 0 && r.scrollLeft >= max - 1)) return;
-  e.preventDefault(); r.scrollLeft += dx;
+  const max = r.scrollWidth - r.clientWidth, dx = e.deltaY * (e.deltaMode === 1 ? 32 : 1), at = RG.raf && RG.r === r ? RG.t : r.scrollLeft;
+  if ((dx < 0 && at <= 0) || (dx > 0 && at >= max - 1)) return;
+  e.preventDefault(); if (RG.r !== r || !RG.raf) RG.t = r.scrollLeft; RG.r = r; RG.v = 0; RG.t = Math.max(0, Math.min(max, RG.t + dx)); rgRun();
 }, {passive:false});
 // mouse drag scrolls the row too (touch already swipes natively); a real drag swallows the click so it doesn't open a card
+// the row glides instead of jumping: wheel steps ease toward a target, a mouse drag flicks on release with momentum
+var RG = {r: null, t: 0, v: 0, raf: 0};
+function rgRun(){ if (!RG.raf) RG.raf = requestAnimationFrame(rgTick); }
+function rgStop(){ cancelAnimationFrame(RG.raf); RG.raf = 0; RG.v = 0; }
+function rgTick(){
+  RG.raf = 0; const r = RG.r; if (!r || !r.isConnected) return;
+  const max = r.scrollWidth - r.clientWidth;
+  if (RG.v){ RG.t = Math.max(0, Math.min(max, RG.t + RG.v)); RG.v *= .94; if (Math.abs(RG.v) < .4 || RG.t <= 0 || RG.t >= max) RG.v = 0; }
+  const d = RG.t - r.scrollLeft; if (Math.abs(d) < .5 && !RG.v){ r.scrollLeft = RG.t; return; }
+  r.scrollLeft += d * .22; RG.raf = requestAnimationFrame(rgTick);
+}
 { let d = null, ate = false;
-  $('#slist').addEventListener('pointerdown', e => { const r = e.target.closest?.('.crow'); if (r && e.pointerType === 'mouse' && e.button === 0) d = {r, x: e.clientX, s: r.scrollLeft, moved: false}; });
-  addEventListener('pointermove', e => { if (!d) return; const dx = e.clientX - d.x;
+  $('#slist').addEventListener('pointerdown', e => { const r = e.target.closest?.('.crow'); if (r) rgStop(); if (r && e.pointerType === 'mouse' && e.button === 0) d = {r, x: e.clientX, s: r.scrollLeft, moved: false, lx: e.clientX, lt: e.timeStamp, vel: 0}; });
+  addEventListener('pointermove', e => { if (!d) return; if (!d.r.isConnected){ const n = $('#slist .crow'); if (!n){ d = null; return; } d.s += n.scrollLeft - d.r.scrollLeft; d.r = n; }
+    const dx = e.clientX - d.x;
     if (!d.moved){ if (Math.abs(dx) < 6) return; d.moved = true; d.r.classList.add('drag'); }
+    const dt = Math.max(1, e.timeStamp - d.lt); d.vel = .8 * ((d.lx - e.clientX) / dt) + .2 * d.vel; d.lx = e.clientX; d.lt = e.timeStamp;
     d.r.scrollLeft = d.s - dx; });
-  const end = () => { if (!d) return; if (d.moved){ d.r.classList.remove('drag'); ate = true; setTimeout(() => ate = false, 0); } d = null; };
+  const end = e => { if (!d) return;
+    if (d.moved){ const r = d.r; r.classList.remove('drag'); ate = true; setTimeout(() => ate = false, 0);
+      if (e.timeStamp - d.lt < 80 && Math.abs(d.vel) > .1){ RG.r = r; RG.t = r.scrollLeft; RG.v = d.vel * 16; rgRun(); } }   // released while still moving -> coast
+    d = null; };
   addEventListener('pointerup', end); addEventListener('pointercancel', end);
   $('#slist').addEventListener('click', e => { if (ate){ e.stopPropagation(); e.preventDefault(); ate = false; } }, true); }
 function cardGroup(g){
