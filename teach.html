@@ -602,11 +602,25 @@ button.fg:hover{background:#fbf3dc}
 /* buffer: hours eaten by the before/after padding */
 .fbar i{position:relative;overflow:hidden}
 .fbar i b.hz{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,rgba(20,20,20,.55) 0 2px,transparent 2px 5px)}
-.bufrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:10px 0 12px;padding:8px 10px;border:3px solid var(--ink);background:var(--card);box-shadow:4px 4px 0 var(--sh);font-size:.85rem;font-weight:700}
-.bufrow label{display:flex;align-items:center;gap:5px}
-.bufrow input{width:58px;border:2px solid var(--ink);background:var(--paper);padding:4px 6px;font:800 .9rem "JetBrains Mono";text-align:center}
-.bufrow .lk{border:2px solid var(--ink);background:var(--card);font-weight:800;padding:4px 9px}.bufrow .lk.on{background:var(--ink);color:var(--paper)}
-.bufrow small{flex-basis:100%;color:var(--mut);font-weight:600;font-size:.76rem}
+.bufwrap{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:0 6px;margin:0 0 10px}
+.buft{border:3px solid var(--ink);background:var(--card);box-shadow:4px 4px 0 var(--sh);padding:8px 8px 7px;text-align:center}
+.buft .bl{font-size:.8rem;font-weight:800}
+.buft .bv{display:flex;align-items:center;justify-content:center;gap:4px;margin:2px 0}
+.buft .bv button{width:34px;height:34px;border:3px solid var(--ink);background:var(--paper);font:800 1.2rem "JetBrains Mono";line-height:1;padding:0}
+.buft .bv input{width:3.2ch;min-width:0;border:0;border-bottom:3px solid var(--ink);background:transparent;color:var(--ink);font:800 2.1rem "JetBrains Mono";text-align:center;padding:0;-moz-appearance:textfield;appearance:textfield}
+.buft .bv input::-webkit-outer-spin-button,.buft .bv input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.buft .bu{font-size:.72rem;color:var(--mut);font-weight:700}
+.bufwrap .lk{width:36px;height:36px;border:3px solid var(--ink);background:var(--paper);font-size:1rem;padding:0;line-height:1;box-shadow:3px 3px 0 var(--sh)}
+.bufwrap .lk.on{background:var(--yel)}
+.bufwrap.lkd .buft{background:var(--paper)}
+.bufpre{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.bufpre button{border:3px solid var(--ink);background:var(--card);padding:4px 11px;font:800 .8rem "JetBrains Mono";box-shadow:3px 3px 0 var(--sh)}
+.bufpre button.on{background:var(--ink);color:var(--paper)}
+.bufdia{display:flex;height:22px;border:3px solid var(--ink);background:var(--card);margin:0 0 4px}
+.bufdia i{display:block;min-width:0;background:repeating-linear-gradient(45deg,rgba(20,20,20,.55) 0 2px,transparent 2px 5px)}
+.bufdia b{background:var(--blue);color:#fff;font-size:.62rem;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.bufnote{display:block;margin:0 0 12px;color:var(--mut);font-weight:600;font-size:.76rem}
+@media(max-width:520px){.bufwrap{grid-template-columns:1fr;gap:4px 0}.bufwrap .lk{justify-self:center}}
 .hzkey{display:inline-block;width:14px;height:10px;border:2px solid var(--ink);vertical-align:-1px;background:repeating-linear-gradient(45deg,rgba(20,20,20,.55) 0 2px,transparent 2px 5px)}
 #imgprev{max-width:100%;border:3px solid var(--ink);display:block;margin:0 auto 10px}
 
@@ -1064,8 +1078,11 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
     </div>
     <div class="agwrap">
       <section>
+        <h3 class="kh">เวลาพักระหว่างคาบ <small>กันเวลาก่อน-หลังคาบ ไม่ให้คาบติดกัน</small></h3>
+        <div class="bufwrap" id="bufrow"><div class="buft"><div class="bl">ก่อนคาบ</div><div class="bv"><button type="button" data-bd="before:-5" aria-label="ลดก่อนคาบ">−</button><input id="bfb" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="เวลาพักก่อนคาบ (นาที)"><button type="button" data-bd="before:5" aria-label="เพิ่มก่อนคาบ">+</button></div><div class="bu">นาที</div></div><button class="lk" id="bflk" type="button"></button><div class="buft"><div class="bl">หลังคาบ</div><div class="bv"><button type="button" data-bd="after:-5" aria-label="ลดหลังคาบ">−</button><input id="bfa" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3" aria-label="เวลาพักหลังคาบ (นาที)"><button type="button" data-bd="after:5" aria-label="เพิ่มหลังคาบ">+</button></div><div class="bu">นาที</div></div></div>
+        <div class="bufpre" id="bufpre"><button type="button" data-bp="0">0</button><button type="button" data-bp="10">10</button><button type="button" data-bp="15">15</button><button type="button" data-bp="30">30</button><button type="button" data-bp="60">60</button></div>
+        <div class="bufdia" id="bufdia" title="ตัวอย่าง: พัก | คาบ 1 ชม. | พัก"></div><span class="bufnote">ช่วงลายเฉียง = เผื่อไว้ ไม่นับเป็นเวลาว่าง · ช่วงว่างสั้นกว่า 30 นาทีจะไม่แสดง</span>
         <h3 class="kh">ว่างวันไหน <small>ติ๊กวันที่จะส่ง · ✎ ปรับชั่วโมงที่ไม่ว่าง</small></h3>
-        <div class="bufrow" id="bufrow"><label>เผื่อก่อนคาบ <input id="bfb" type="number" min="0" max="240" step="5" inputmode="numeric" aria-label="เผื่อเวลาก่อนคาบ (นาที)"> นาที</label><label>หลังคาบ <input id="bfa" type="number" min="0" max="240" step="5" inputmode="numeric" aria-label="เผื่อเวลาหลังคาบ (นาที)"> นาที</label><button class="lk" id="bflk" type="button"></button><small><i class="hzkey"></i> = ช่วงที่เผื่อไว้ ไม่นับเป็นเวลาว่าง · ช่วงว่างสั้นกว่า 30 นาทีจะไม่แสดง</small></div>
         <div class="agbar"><span class="seg" id="kweek"><button data-k="0" class="on">สัปดาห์นี้</button><button data-k="1">สัปดาห์หน้า</button><button data-k="2">อีก 2 สัปดาห์</button></span></div>
         <div class="ag" id="agrid"></div>
               </section>
@@ -2240,7 +2257,10 @@ function hatchOf(date, h, fr){
 }
 function renderAvail(){
   const days = weekDays(), bf = DB.buffer;
-  $('#bfb').value = bf.before; $('#bfa').value = bf.after; $('#bflk').classList.toggle('on', bf.linked); $('#bflk').textContent = bf.linked ? '🔗 เท่ากัน' : '⛓ แยกกัน';
+  $('#bfb').value = bf.before; $('#bfa').value = bf.after; const lk = $('#bflk'); lk.classList.toggle('on', bf.linked); lk.textContent = bf.linked ? '🔗' : '⛓'; lk.setAttribute('aria-pressed', bf.linked);
+  lk.title = bf.linked ? 'ก่อน-หลังเท่ากัน (กดเพื่อแยกตั้งเอง)' : 'แยกตั้งก่อน/หลัง (กดเพื่อให้เท่ากัน)'; $('#bufrow').classList.toggle('lkd', bf.linked);
+  document.querySelectorAll('#bufpre button').forEach(x => x.classList.toggle('on', bf.before === +x.dataset.bp && (!bf.linked || bf.after === +x.dataset.bp)));
+  $('#bufdia').innerHTML = `<i style="flex:${bf.before} 1 0"></i><b style="flex:60 1 0">คาบ 1 ชม.</b><i style="flex:${bf.after} 1 0"></i>`;
   if (pickInit !== isoD(days[0])){ pickedD.clear(); days.forEach(d => freeOf(d).length && pickedD.add(isoD(d))); pickInit = isoD(days[0]); kOpen = null; }
   $('#agrid').innerHTML = days.map(d => {
     const i = isoD(d), fr = freeOf(d), hol = isHolD(i), past = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23) < NOW, on = pickedD.has(i), open = kOpen === i;
@@ -2308,6 +2328,8 @@ async function freePic(){
   } else { const l = document.createElement('a'); l.href = url; l.download = name; document.body.append(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(url), 4e4); toast('บันทึกรูปแล้ว ✓'); }
 }
 $('#bfb').onchange = e => setBuf('before', e.target.value); $('#bfa').onchange = e => setBuf('after', e.target.value); $('#bflk').onclick = () => setBuf('lk');
+$('#bufrow').addEventListener('click', e => { const t = e.target.closest('[data-bd]'); if (!t) return; const [k, d] = t.dataset.bd.split(':'); setBuf(k, DB.buffer[k] + +d); });
+$('#bufpre').addEventListener('click', e => { const t = e.target.closest('[data-bp]'); if (t) setBuf('before', +t.dataset.bp); });
 $('#kweek').onclick = e => { const k = e.target.dataset.k; if (k === undefined) return; kweek = +k; qsa('#kweek button').forEach(b => b.classList.toggle('on', b.dataset.k === k)); renderAvail(); };
 $('#agrid').onclick = e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return;
