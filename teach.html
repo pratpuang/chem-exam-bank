@@ -582,23 +582,25 @@ button.fg:hover{background:#fbf3dc}
 /* sessions: view switcher + horizontal day-grouped cards */
 .vbar{margin:-6px 0 14px}.vbar .seg button{padding:5px 11px;font-size:.78rem}
 #slist{min-width:0;max-width:100%}
-.crow{display:flex;align-items:stretch;gap:12px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:2px 6px 16px 2px;-webkit-overflow-scrolling:touch}
-.cday{flex:none;width:84px;scroll-snap-align:start;border:3px solid var(--ink);background:var(--ink);color:var(--paper);box-shadow:5px 5px 0 var(--sh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:10px 4px;text-align:center;margin-left:8px}
+.crow{display:flex;align-items:stretch;gap:14px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:2px 24px 18px 0;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px,#000 calc(100% - 56px),transparent);mask-image:linear-gradient(90deg,transparent,#000 36px,#000 calc(100% - 56px),transparent)}
+.crow::-webkit-scrollbar{display:none}
+.cday{flex:none;width:96px;scroll-snap-align:start;border:3px solid var(--ink);background:var(--ink);color:var(--paper);box-shadow:5px 5px 0 var(--sh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:10px 4px;text-align:center;margin-left:8px}
 .crow>.cday:first-child{margin-left:0}
 .cday.today{background:var(--red);color:#fff}.cday.hol{background:#fbe4dd;color:var(--ink)}
 .cday b{font-size:2.3rem;line-height:1;font-weight:800}.cday .cw{font-weight:800;font-size:.9rem}.cday small{font-size:.72rem;font-weight:700;opacity:.85}
 .cday .cn{font:800 .68rem "JetBrains Mono";opacity:.85;margin-top:4px}
 .cday button{margin-top:6px;border:2px solid currentColor;background:transparent;color:inherit;font-weight:800;width:30px;height:28px;padding:0}
-.sc2{flex:none;width:230px;scroll-snap-align:start;position:relative;border:3px solid var(--ink);background:var(--card);box-shadow:5px 5px 0 var(--sh);padding:0 0 10px;cursor:pointer;display:flex;flex-direction:column;gap:4px;text-align:left}
-.sc2 .cs{height:10px;border-bottom:3px solid var(--ink)}
-.sc2 .ct{font-size:1.7rem;font-weight:800;line-height:1.1;padding:8px 12px 0}.sc2 .ct small{font-size:.78rem;font-weight:700;color:var(--mut);margin-left:6px}
-.sc2 .cm{padding:0 12px;font-weight:800;font-size:1rem;overflow-wrap:anywhere}
+.sc2{flex:none;width:330px;scroll-snap-align:start;position:relative;border:3px solid var(--ink);background:var(--card);box-shadow:5px 5px 0 var(--sh);padding:0 0 10px;cursor:pointer;display:flex;flex-direction:column;gap:4px;text-align:left}
+.sc2 .cs{height:12px;border-bottom:3px solid var(--ink)}
+.sc2 .ct{font-size:2.3rem;font-weight:800;line-height:1.1;padding:12px 16px 0;letter-spacing:-.02em}.sc2 .ct small{font-size:1rem;font-weight:700;color:var(--mut);margin-left:6px}
+.sc2 .cm{padding:0 16px;font-weight:800;font-size:1.3rem;overflow-wrap:anywhere}
 .sc2 .cm i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;border:2px solid var(--ink)}
-.sc2 .cd{padding:0 12px;font-size:.82rem;font-weight:600;color:var(--mut);overflow-wrap:anywhere;min-height:1.2em}
-.sc2 .cf{padding:4px 12px 0;margin-top:auto;display:flex;justify-content:flex-start}
+.sc2 .cd{padding:0 16px;font-size:.95rem;font-weight:600;color:var(--mut);overflow-wrap:anywhere;min-height:1.2em}
+.sc2 .cf{padding:6px 16px 0;margin-top:auto;display:flex;justify-content:flex-start}
+.sc2 .ck{position:absolute;top:24px;right:14px;width:42px;height:42px;font-size:1.4rem}
 .sc2.cancel{opacity:.55}.sc2.cancel .ct{text-decoration:line-through}.sc2.holi{background:#fbe4dd}.sc2.clash{border-color:var(--red)}
 .sc2:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
-@media (max-width:560px){.sc2{width:78vw;max-width:260px}.cday{width:72px}}
+@media (max-width:560px){.sc2{width:80vw;max-width:310px}.cday{width:76px}}
 /* buffer: hours eaten by the before/after padding */
 .fbar i{position:relative;overflow:hidden}
 .fbar i b.hz{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,rgba(20,20,20,.55) 0 2px,transparent 2px 5px)}
@@ -1718,7 +1720,23 @@ function renderSchedule(){
   const groups = []; for (const s of list){ const g = groups[groups.length-1]; if (g && g.date === s.date) g.items.push(s); else groups.push({date:s.date, items:[s]}); }
   $('#slist').innerHTML = groups.length ? SVIEWS[sview].render(groups)
     : `<div class="empty">ไม่มีคาบในช่วงนี้ · <button class="go sm" onclick="editSession()">＋ เพิ่มคาบ</button></div>`;
+  fitCrow();
 }
+// cards row breaks out of the content column to the full viewport; padding-left keeps the first card on the content's left edge at rest
+function fitCrow(){
+  const r = $('#slist .crow'); if (!r) return;
+  r.style.marginLeft = r.style.width = r.style.paddingLeft = r.style.scrollPaddingLeft = '';
+  const L = r.getBoundingClientRect().left, W = document.documentElement.clientWidth;
+  r.style.marginLeft = -L + 'px'; r.style.width = W + 'px'; r.style.paddingLeft = r.style.scrollPaddingLeft = L + 'px';   // scroll-padding so the snap keeps that left gutter
+}
+addEventListener('resize', fitCrow);
+// plain vertical wheel over the row scrolls it sideways, but hands the wheel back to the page at either end
+$('#slist').addEventListener('wheel', e => {
+  const r = e.target.closest?.('.crow'); if (!r || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+  const max = r.scrollWidth - r.clientWidth, dx = e.deltaY * (e.deltaMode === 1 ? 32 : 1);
+  if ((dx < 0 && r.scrollLeft <= 0) || (dx > 0 && r.scrollLeft >= max - 1)) return;
+  e.preventDefault(); r.scrollLeft += dx;
+}, {passive:false});
 function cardGroup(g){
   const x = new Date(g.date+'T00:00'), rel = relOnly(g.date), hol = isHolD(g.date);
   return `<div class="cday ${g.date===isoD(NOW)?'today':''} ${hol?'hol':''}"><span class="cw">${TH_DF[x.getDay()]}</span><b>${x.getDate()}</b><small>${TH_M[x.getMonth()]}${rel ? '<br>'+rel : ''}</small><span class="cn">${g.items.length} คาบ</span><button title="เพิ่มคาบวันนี้" aria-label="เพิ่มคาบ" onclick="editSession(null,'${g.date}')">＋</button></div>`
@@ -1728,6 +1746,7 @@ function sCard(s){
   const p = st(s.who), hol = isHolD(s.date) && s.status === 'plan', cw = clashWith(s);
   return `<div class="sc2 ${s.status==='cancel'?'cancel':''} ${hol?'holi':''} ${cw.length?'clash':''}" onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}">
     <div class="cs ${colorOf(s.who)}"></div>
+    ${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" onclick="event.stopPropagation();${s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}
     <div class="ct">${s.time}<small>– ${endOf(s)}</small></div>
     <div class="cm"><i class="${colorOf(s.who)}"></i>${esc(p?.name ?? '?')}${cw.length ? ' ⚠' : ''}</div>
     <div class="cd">${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</div>
