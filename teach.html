@@ -579,6 +579,37 @@ button.fg:hover{background:#fbf3dc}
 #whof.who-f button.on{color:var(--ink);background:none;border-bottom-color:var(--ink)}
 #whof.who-f button:not(.on){color:var(--mut)}
 
+/* sessions: view switcher + horizontal day-grouped cards */
+.vbar{margin:-6px 0 14px}.vbar .seg button{padding:5px 11px;font-size:.78rem}
+#slist{min-width:0;max-width:100%}
+.crow{display:flex;align-items:stretch;gap:12px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:2px 6px 16px 2px;-webkit-overflow-scrolling:touch}
+.cday{flex:none;width:84px;scroll-snap-align:start;border:3px solid var(--ink);background:var(--ink);color:var(--paper);box-shadow:5px 5px 0 var(--sh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:10px 4px;text-align:center;margin-left:8px}
+.crow>.cday:first-child{margin-left:0}
+.cday.today{background:var(--red);color:#fff}.cday.hol{background:#fbe4dd;color:var(--ink)}
+.cday b{font-size:2.3rem;line-height:1;font-weight:800}.cday .cw{font-weight:800;font-size:.9rem}.cday small{font-size:.72rem;font-weight:700;opacity:.85}
+.cday .cn{font:800 .68rem "JetBrains Mono";opacity:.85;margin-top:4px}
+.cday button{margin-top:6px;border:2px solid currentColor;background:transparent;color:inherit;font-weight:800;width:30px;height:28px;padding:0}
+.sc2{flex:none;width:230px;scroll-snap-align:start;position:relative;border:3px solid var(--ink);background:var(--card);box-shadow:5px 5px 0 var(--sh);padding:0 0 10px;cursor:pointer;display:flex;flex-direction:column;gap:4px;text-align:left}
+.sc2 .cs{height:10px;border-bottom:3px solid var(--ink)}
+.sc2 .ct{font-size:1.7rem;font-weight:800;line-height:1.1;padding:8px 12px 0}.sc2 .ct small{font-size:.78rem;font-weight:700;color:var(--mut);margin-left:6px}
+.sc2 .cm{padding:0 12px;font-weight:800;font-size:1rem;overflow-wrap:anywhere}
+.sc2 .cm i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;border:2px solid var(--ink)}
+.sc2 .cd{padding:0 12px;font-size:.82rem;font-weight:600;color:var(--mut);overflow-wrap:anywhere;min-height:1.2em}
+.sc2 .cf{padding:4px 12px 0;margin-top:auto;display:flex;justify-content:flex-start}
+.sc2.cancel{opacity:.55}.sc2.cancel .ct{text-decoration:line-through}.sc2.holi{background:#fbe4dd}.sc2.clash{border-color:var(--red)}
+.sc2:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+@media (max-width:560px){.sc2{width:78vw;max-width:260px}.cday{width:72px}}
+/* buffer: hours eaten by the before/after padding */
+.fbar i{position:relative;overflow:hidden}
+.fbar i b.hz{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,rgba(20,20,20,.55) 0 2px,transparent 2px 5px)}
+.bufrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:10px 0 12px;padding:8px 10px;border:3px solid var(--ink);background:var(--card);box-shadow:4px 4px 0 var(--sh);font-size:.85rem;font-weight:700}
+.bufrow label{display:flex;align-items:center;gap:5px}
+.bufrow input{width:58px;border:2px solid var(--ink);background:var(--paper);padding:4px 6px;font:800 .9rem "JetBrains Mono";text-align:center}
+.bufrow .lk{border:2px solid var(--ink);background:var(--card);font-weight:800;padding:4px 9px}.bufrow .lk.on{background:var(--ink);color:var(--paper)}
+.bufrow small{flex-basis:100%;color:var(--mut);font-weight:600;font-size:.76rem}
+.hzkey{display:inline-block;width:14px;height:10px;border:2px solid var(--ink);vertical-align:-1px;background:repeating-linear-gradient(45deg,rgba(20,20,20,.55) 0 2px,transparent 2px 5px)}
+#imgprev{max-width:100%;border:3px solid var(--ink);display:block;margin:0 auto 10px}
+
 /* day card + rows */
 .dc{background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);margin-bottom:18px;animation:enter .45s both;animation-delay:calc(var(--i,0)*40ms)}
 .dch{display:flex;align-items:center;gap:14px;padding:10px 12px 10px 16px;border-bottom:3px solid var(--ink)}
@@ -995,8 +1026,9 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
 
   <section class="sec sched" id="sched">
     <header class="sh"><span class="no">02</span><h2>ตารางสอน</h2><span class="rule"></span>
-      <span class="seg" id="srange"><button data-r="week" class="on">7 วัน</button><button data-r="month">ทั้งเดือน</button><button data-r="past">ที่ผ่านมา</button></span>
+      <span class="seg" id="srange"><button data-r="next" class="on">คาบถัดไป</button><button data-r="past">คาบที่ผ่านมา</button></span>
       <button class="go sm" onclick="editSession()">＋ เพิ่มคาบ</button></header>
+    <div class="vbar"><span class="seg" id="sview" aria-label="มุมมอง"></span></div>
     <div id="nextcard"></div>
     <div class="who-f" id="whof"></div>
     <div id="slist"></div>
@@ -1033,12 +1065,13 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
     <div class="agwrap">
       <section>
         <h3 class="kh">ว่างวันไหน <small>ติ๊กวันที่จะส่ง · ✎ ปรับชั่วโมงที่ไม่ว่าง</small></h3>
+        <div class="bufrow" id="bufrow"><label>เผื่อก่อนคาบ <input id="bfb" type="number" min="0" max="240" step="5" inputmode="numeric" aria-label="เผื่อเวลาก่อนคาบ (นาที)"> นาที</label><label>หลังคาบ <input id="bfa" type="number" min="0" max="240" step="5" inputmode="numeric" aria-label="เผื่อเวลาหลังคาบ (นาที)"> นาที</label><button class="lk" id="bflk" type="button"></button><small><i class="hzkey"></i> = ช่วงที่เผื่อไว้ ไม่นับเป็นเวลาว่าง · ช่วงว่างสั้นกว่า 30 นาทีจะไม่แสดง</small></div>
         <div class="agbar"><span class="seg" id="kweek"><button data-k="0" class="on">สัปดาห์นี้</button><button data-k="1">สัปดาห์หน้า</button><button data-k="2">อีก 2 สัปดาห์</button></span></div>
         <div class="ag" id="agrid"></div>
               </section>
       <section>
         <h3 class="kh">ข้อความเวลาว่าง <small>ส่งให้น้องที่ถามเวลา</small></h3>
-        <div class="bub me"><div class="bt" id="free"></div><textarea class="tpl-e" aria-label="แก้ข้อความเวลาว่าง"></textarea><div class="bf"><span><span id="freeinfo"></span><span class="tplhint">{วันว่าง} = รายการวันที่ติ๊ก</span></span><span><button class="ghostb" onclick="editTpl('free',this)">✎ แก้</button><button class="cpy" onclick="copy('free')">คัดลอก</button></span></div></div>
+        <div class="bub me"><div class="bt" id="free"></div><textarea class="tpl-e" aria-label="แก้ข้อความเวลาว่าง"></textarea><div class="bf"><span><span id="freeinfo"></span><span class="tplhint">{วันว่าง} = รายการวันที่ติ๊ก</span></span><span><button class="ghostb" onclick="editTpl('free',this)">✎ แก้</button><button class="ghostb" onclick="freePic()">🖼 บันทึกเป็นรูป</button><button class="cpy" onclick="copy('free')">คัดลอก</button></span></div></div>
         <h3 class="kh" style="margin-top:34px">ตอบแชท <small>ตอนมีคนทักมาถาม</small></h3>
         <div class="bub me"><div class="bt" id="dm"></div><textarea class="tpl-e" aria-label="แก้ข้อความตอบแชท"></textarea><div class="bf"><span class="tplhint">ใช้ {เดี่ยว} {กลุ่ม} แทนเรท</span><span><button class="ghostb" onclick="editTpl('dm',this)">✎ แก้</button><button class="cpy" onclick="copy('dm')">คัดลอก</button></span></div></div>
       </section>
@@ -1080,11 +1113,12 @@ const uid = () => Math.random().toString(36).slice(2,9);
 let NOW = new Date();   // kept live by tick(): the page (and the bank's layer) can stay open for days
 
 // the real data lives in Supabase; this is the empty shape until the first load (or the offline cache) fills it
-const blankDB = () => ({v:4, students:[], archived:[], sessions:[], avail:defAvail(), tpl:defTpl(), rates:{solo:300, group:175}, history:{}, holidays:{}, deadlines:[], expenses:[], skips:[]});
+const blankDB = () => ({v:4, students:[], archived:[], sessions:[], avail:defAvail(), tpl:defTpl(), rates:{solo:300, group:175}, buffer:{before:0, after:0, linked:true}, history:{}, holidays:{}, deadlines:[], expenses:[], skips:[]});
 let DB = blankDB();
 try{ localStorage.removeItem('teach-demo-v3'); }catch{}
 function defAvail(){ return {block:{0:[],1:[8,9,10,11,12,13,14,15,16],2:[8,9,10,11,12,13,14,15,16],3:[8,9,10,11,12,13,14,15,16],4:[8,9,10,11,12,13,14,15,16],5:[8,9,10,11,12,13,14,15,16],6:[]}}; }
 DB.avail ||= defAvail();
+DB.buffer ||= {before:0, after:0, linked:true};
 function defTpl(){ return {free:"ช่วงนี้พี่ว่างประมาณนี้นะครับ\n{วันว่าง}\nสะดวกช่วงไหนบอกพี่ได้เลยครับ 😊", post:"📚 เปิดรับสอนพิเศษวิชาเคมี ระดับมัธยมศึกษา\nสวัสดีครับ 😊\nผมเป็นนักศึกษาเภสัชศาสตร์ ชั้นปีที่ 4 มหาวิทยาลัยมหิดล\nเปิดรับสอนพิเศษวิชาเคมี สำหรับนักเรียนระดับมัธยม ไม่ว่าจะเป็น\n✅ ปูพื้นฐานเคมีในห้องเรียน\n✅ เพิ่มเกรดและเสริมความเข้าใจ\n✅ เตรียมสอบเข้า ม.4 / TCAS / คณะสายวิทยาศาสตร์สุขภาพ\nผลงาน\n🏅 เหรียญทองแดง สอวน. ค่ายระดับชาติ สาขาเคมี\nรูปแบบการสอน\n📍 สอนได้ทั้งออนไลน์ ทั้งนอกสถานที่ในกรุงเทพฯ (สามารถตกลงสถานที่ได้)\n👤 เรียนเดี่ยว หรือ 👥 เรียนเป็นกลุ่ม\nอัตราค่าสอน\nเรียนเดี่ยว {เดี่ยว} บาท/ชั่วโมง\nเรียนกลุ่ม {กลุ่ม} บาท/ชั่วโมง/คน\nหากสนใจ สามารถทักมาสอบถามรายละเอียด รูปแบบการเรียน ตารางสอน หรือสอบถามผลงานเพิ่มเติมได้เลยครับ 😊", dm:"สอนเคมีครับมีทั้งปูพื้นฐาน เพิ่มเกรด สอบเข้า มีรูปแบบออนไลน์ และ ออนไซต์ถ้าไม่ไกลมากครับผม ค่าเรียนชม.ละ {เดี่ยว} บาท (เรียนกลุ่ม {กลุ่ม}/คน) สงสัยตรงไหนสอบถามเพิ่มได้ครับ ถ้าสนใจขอชื่อนักเรียนกับระดับชั้นไว้หน่อยนะครับผม"}; }
 DB.tpl ||= defTpl();
 DB.tpl.free ??= defTpl().free;
@@ -1374,7 +1408,7 @@ async function pull(){
     if (!S.length && (DB.students.length + (DB.archived || []).length) && !(keep?.sDel?.length)){ setSync('err', ' · เซิร์ฟเวอร์ส่งข้อมูลว่างมา · ใช้ข้อมูลในเครื่องไว้ก่อน'); return; }
     const st = A.data?.data || {}, b = blankDB();
     const fix = x => ({...x, slots:x.slots || [], feed:x.feed || [], goal:x.goal || '', contact:x.contact || '', notes:x.notes || ''});
-    DB = {...b, ...st, avail: st.avail || b.avail, tpl: {...b.tpl, ...(st.tpl || {})},
+    DB = {...b, ...st, avail: st.avail || b.avail, buffer: {...b.buffer, ...(st.buffer || {})}, tpl: {...b.tpl, ...(st.tpl || {})},
       students: S.filter(x => !x.archived).map(fix), archived: S.filter(x => x.archived).map(fix),
       sessions: X.map(x => ({...x, h:+x.h, note:x.note || ''})), skips: K || (DB.skips || [])};
     base = baseOf(rowsOf(DB)); lastPull = Date.now();
@@ -1589,8 +1623,17 @@ const clashWith = s => s.status === 'cancel' ? [] : DB.sessions.filter(x => x !=
 const endOf = s => { const [hh,mi] = s.time.split(':').map(Number), t = hh*60+mi+s.h*60; return `${pad(Math.floor(t/60)%24)}:${pad(t%60)}`; };
 const addMin = (t, d) => { const [h,m] = t.split(':').map(Number), x = ((h*60+m+d) % 1440 + 1440) % 1440; return `${pad(Math.floor(x/60))}:${pad(x%60)}`; };
 const relOnly = date => { const r = relDay(date); return r === dLabel(date) ? '' : r; };
-let range = 'week', whoF = new Set();
+let range = 'next', whoF = new Set();
 $('#srange').onclick = e => { const r = e.target.dataset.r; if (!r) return; range = r; qsa('#srange button').forEach(b => b.classList.toggle('on', b.dataset.r === r)); renderSchedule(); };
+// views of the sessions list: add a 3rd by adding an entry here (label + render(groups) -> html); nothing else changes
+const SVIEWS = {
+  list:  {label:'☰ รายการ',  render: gs => gs.map((g, gi) => dayCard(g.date, g.items, gi)).join('')},
+  cards: {label:'▭ การ์ด', render: gs => `<div class="crow" tabindex="-1">${gs.map(cardGroup).join('')}</div>`},
+};
+let sview = 'list'; try{ const v = localStorage.getItem('teach-sview'); if (SVIEWS[v]) sview = v; }catch{}
+$('#sview').innerHTML = Object.entries(SVIEWS).map(([k, v]) => `<button data-v="${k}" class="${k===sview?'on':''}">${v.label}</button>`).join('');
+$('#sview').onclick = e => { const v = e.target.dataset.v; if (!v || !SVIEWS[v]) return; sview = v; try{ localStorage.setItem('teach-sview', v); }catch{}
+  qsa('#sview button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); renderSchedule(); };
 $('#whof').onclick = e => { const w = e.target.closest('button')?.dataset.w; if (!w) return; if (w === '*') whoF.clear(); else whoF.has(w) ? whoF.delete(w) : whoF.add(w); renderSchedule(); };
 function strip(map){ return `<div class="strip">${map.split('').map(c => `<i class="${c==='t'?'':c}"></i>`).join('')}</div>`; }
 function renderSchedule(){
@@ -1618,12 +1661,25 @@ function renderSchedule(){
   if (confirmN) nc += `<div class="alert">⏳ <span>มี <b>${confirmN} คาบ</b> ที่เลยเวลาแล้วแต่ยังไม่ได้ยืนยัน · แตะตรา <b>สอนแล้ว?</b></span></div>`;
   $('#nextcard').innerHTML = nc;
   let list = DB.sessions.filter(s => !whoF.size || whoF.has(s.who));
-  if (range === 'week'){ const end = new Date(NOW); end.setDate(end.getDate()+7); list = sorted(list.filter(s => (s.date >= today || needsConfirm(s)) && atOf(s) < end)); }   // all of today, even classes already taught
-  else if (range === 'month'){ const p = `${my}-${pad(mm_+1)}`; list = sorted(list.filter(s => s.date.startsWith(p))); }
+  if (range === 'next') list = sorted(list.filter(s => s.date >= today || needsConfirm(s)));   // all of today (even classes already taught) + every upcoming one, no cap
   else list = [...list.filter(s => atOf(s) <= NOW)].sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time)).slice(0, 40);
   const groups = []; for (const s of list){ const g = groups[groups.length-1]; if (g && g.date === s.date) g.items.push(s); else groups.push({date:s.date, items:[s]}); }
-  $('#slist').innerHTML = groups.length ? groups.map((g, gi) => dayCard(g.date, g.items, gi)).join('')
+  $('#slist').innerHTML = groups.length ? SVIEWS[sview].render(groups)
     : `<div class="empty">ไม่มีคาบในช่วงนี้ · <button class="go sm" onclick="editSession()">＋ เพิ่มคาบ</button></div>`;
+}
+function cardGroup(g){
+  const x = new Date(g.date+'T00:00'), rel = relOnly(g.date), hol = isHolD(g.date);
+  return `<div class="cday ${g.date===isoD(NOW)?'today':''} ${hol?'hol':''}"><span class="cw">${TH_DF[x.getDay()]}</span><b>${x.getDate()}</b><small>${TH_M[x.getMonth()]}${rel ? '<br>'+rel : ''}</small><span class="cn">${g.items.length} คาบ</span><button title="เพิ่มคาบวันนี้" aria-label="เพิ่มคาบ" onclick="editSession(null,'${g.date}')">＋</button></div>`
+    + g.items.map(sCard).join('');
+}
+function sCard(s){
+  const p = st(s.who), hol = isHolD(s.date) && s.status === 'plan', cw = clashWith(s);
+  return `<div class="sc2 ${s.status==='cancel'?'cancel':''} ${hol?'holi':''} ${cw.length?'clash':''}" onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}">
+    <div class="cs ${colorOf(s.who)}"></div>
+    <div class="ct">${s.time}<small>– ${endOf(s)}</small></div>
+    <div class="cm"><i class="${colorOf(s.who)}"></i>${esc(p?.name ?? '?')}${cw.length ? ' ⚠' : ''}</div>
+    <div class="cd">${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</div>
+    <div class="cf">${stampOf(s)}</div></div>`;
 }
 function dayCard(date, items, i = 0){
   const hol = isHolD(date), x = new Date(date+'T00:00'), sum = items.filter(counts).reduce((a,s)=>a+amt(s),0), rel = relOnly(date);
@@ -2021,7 +2077,7 @@ function renderStudents(anim){
           ${fbOpen[p.id] ? `<div class="qin"><span class="chips"><button class="chip ${k==='pro'?'on':''}" onclick="fbKind['${p.id}']='pro';renderStudents()">ดี</button><button class="chip ${k==='con'?'on':''}" onclick="fbKind['${p.id}']='con';renderStudents()">แก้</button></span><input class="ln" id="fb-${p.id}" placeholder="น้องพูดว่า…" onkeydown="if(event.key==='Enter')addFb('${p.id}');if(event.key==='Escape'){event.stopPropagation();fbOpen['${p.id}']=0;renderStudents()}"><button class="cpy" onclick="addFb('${p.id}')">จด</button></div>`
             : `<button class="addq" onclick="fbOpen['${p.id}']=1;renderStudents();document.getElementById('fb-${p.id}').focus()">＋ จดสิ่งที่น้องพูด</button>`}</div></div></div>
       </div>
-      <div class="ofoot"><button class="go sm" onclick="closeDrawer();editSession();setTimeout(()=>{edit.who='${p.id}';edit.rate=${p.rate};edit.pick='date';paintEdit(true)},0)">＋ คาบให้ ${esc(p.name)}</button><button class="chip" onclick="closeDrawer();whoF=new Set(['${p.id}']);range='month';qsa('#srange button').forEach(b=>b.classList.toggle('on',b.dataset.r==='month'));renderSchedule();document.getElementById('sched').scrollIntoView({behavior:'smooth'})">ดูตารางของ ${esc(p.name)} →</button></div>
+      <div class="ofoot"><button class="go sm" onclick="closeDrawer();editSession();setTimeout(()=>{edit.who='${p.id}';edit.rate=${p.rate};edit.pick='date';paintEdit(true)},0)">＋ คาบให้ ${esc(p.name)}</button><button class="chip" onclick="closeDrawer();whoF=new Set(['${p.id}']);range='next';qsa('#srange button').forEach(b=>b.classList.toggle('on',b.dataset.r==='next'));renderSchedule();document.getElementById('sched').scrollIntoView({behavior:'smooth'})">ดูตารางของ ${esc(p.name)} →</button></div>
     </div>`; })();
   }).join('');
   // the add card closes the active groups; the stopped ones fold behind a bar underneath
@@ -2140,6 +2196,26 @@ function weekDays(){
   mon.setDate(t.getDate() - (t.getDay()+6)%7 + 7*kweek);
   return [...Array(7)].map((_, k) => { const x = new Date(mon); x.setDate(mon.getDate()+k); return x; });
 }
+const MIN_FREE = 30;   // free stretches shorter than this are dropped (not worth offering)
+// one day as a minute grid: 0 free · 1 class · 2 blocked hour · 3 buffer around a class (cancelled classes ignored)
+function dayMask(date){
+  const iso = isoD(date), m = new Uint8Array(1440), b = DB.buffer;
+  for (const h of DB.avail.block[date.getDay()] || []) m.fill(2, h*60, Math.min(1440, (h+1)*60));
+  const ses = DB.sessions.filter(x => x.date === iso && x.status !== 'cancel').map(x => { const [a, c] = x.time.split(':').map(Number), s0 = a*60+c; return [s0, s0 + Math.round(x.h*60)]; });
+  for (const [a, e] of ses){ for (let k = Math.max(0, a-b.before); k < Math.min(1440, e+b.after); k++) if (m[k] !== 1) m[k] = 3; }
+  for (const [a, e] of ses) m.fill(1, Math.max(0, a), Math.min(1440, e));
+  return m;
+}
+// free intervals [startMin, endMin] inside H0..H1: past + holidays excluded, slivers < MIN_FREE dropped
+function freeOf(date){
+  const iso = isoD(date); if (isHolD(iso)) return [];
+  const m = dayMask(date), lo = Math.max(H0*60, iso < isoD(NOW) ? 1440 : iso === isoD(NOW) ? Math.ceil((NOW.getHours()*60 + NOW.getMinutes())/5)*5 : 0), out = []; let a = -1;
+  for (let k = lo; k <= H1*60; k++){
+    const fr = k < H1*60 && m[k] === 0;
+    if (fr && a < 0) a = k; else if (!fr && a >= 0){ if (k - a >= MIN_FREE) out.push([a, k]); a = -1; }
+  }
+  return out;
+}
 function cellState(date, h){
   const iso = isoD(date);
   if (isHolD(iso)) return {t:'hol'};
@@ -2149,21 +2225,27 @@ function cellState(date, h){
   if ((DB.avail.block[date.getDay()] || []).includes(h)) return {t:'blk'};
   return {t:'free'};
 }
-function freeOf(date){
-  const out = []; let run = null;
-  for (let h = H0; h < H1; h++){ if (cellState(date, h).t === 'free'){ if (run) run[1] = h+1; else run = [h, h+1]; } else if (run){ out.push(run); run = null; } }
-  if (run) out.push(run);
+let kOpen = null;
+const fmtM = n => `${pad(Math.floor(n/60))}:${pad(n%60)}`;
+const rng = ([a,b]) => `${fmtM(a)}–${fmtM(b)}`;
+// hatched stretches inside an otherwise-free hour: buffer eaten (or a sliver); the already-past minutes of the current hour don't count
+function hatchOf(date, h, fr){
+  const nowM = isoD(date) === isoD(NOW) ? NOW.getHours()*60 + NOW.getMinutes() : -1, out = []; let a = -1;
+  const inFree = k => fr.some(([x, y]) => k >= x && k < y);
+  for (let k = h*60; k <= h*60+60; k++){
+    const hz = k < h*60+60 && !inFree(k) && k >= nowM;
+    if (hz && a < 0) a = k; else if (!hz && a >= 0){ out.push([a - h*60, k - h*60]); a = -1; }
+  }
   return out;
 }
-let kOpen = null;
-const rng = ([a,b]) => `${pad(a)}:00–${pad(b)}:00`;
 function renderAvail(){
-  const days = weekDays();
+  const days = weekDays(), bf = DB.buffer;
+  $('#bfb').value = bf.before; $('#bfa').value = bf.after; $('#bflk').classList.toggle('on', bf.linked); $('#bflk').textContent = bf.linked ? '🔗 เท่ากัน' : '⛓ แยกกัน';
   if (pickInit !== isoD(days[0])){ pickedD.clear(); days.forEach(d => freeOf(d).length && pickedD.add(isoD(d))); pickInit = isoD(days[0]); kOpen = null; }
   $('#agrid').innerHTML = days.map(d => {
     const i = isoD(d), fr = freeOf(d), hol = isHolD(i), past = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23) < NOW, on = pickedD.has(i), open = kOpen === i;
     const cells = []; for (let h = H0; h < H1; h++) cells.push(cellState(d, h));
-    const bar = cells.map(c => `<i class="${c.t} ${c.t==='ses' ? colorOf(c.s.who) : ''}"></i>`).join('');
+    const bar = cells.map((c, n) => `<i class="${c.t} ${c.t==='ses' ? colorOf(c.s.who) : ''}">${c.t === 'free' ? hatchOf(d, H0+n, fr).map(([x, y]) => `<b class="hz" style="left:${x/.6}%;width:${(y-x)/.6}%"></b>`).join('') : ''}</i>`).join('');
     const txt = hol ? 'วันหยุด' : past ? 'ผ่านไปแล้ว' : fr.length ? fr.map(rng).join('<br>') : 'ไม่ว่าง';
     return `<div class="fd ${on?'on':''} ${fr.length?'':'none'} ${open?'open':''}">
       <button class="fck" data-day="${i}" ${fr.length ? '' : 'disabled'} aria-label="ใส่วันนี้ในข้อความ">${on ? '✓' : ''}</button>
@@ -2178,11 +2260,54 @@ function renderAvail(){
         <div class="fnote">แตะชั่วโมงเพื่อสลับ ว่าง / ไม่ว่าง · ใช้กับทุกวัน${TH_DF[d.getDay()]} · ช่องสีคือคาบที่นัดแล้ว</div></div>` : ''}
     </div>`;
   }).join('');
-  const lines = days.filter(d => pickedD.has(isoD(d))).map(d => { const f = freeOf(d); return f.length ? `• ${TH_DF[d.getDay()]} ${d.getDate()} ${TH_M[d.getMonth()]}  ${f.map(rng).join(', ')}` : null; }).filter(Boolean);
+  const lines = pickedLines(days);
   $('#free').textContent = lines.length ? fillTpl(DB.tpl.free).replace('{วันว่าง}', lines.join('\n')) : 'ติ๊กวันด้านซ้าย แล้วข้อความจะขึ้นตรงนี้';
   $('#free').classList.toggle('hint', !lines.length);
-  $('#freeinfo').textContent = `${lines.length} วัน · หักคาบที่นัดไว้ + วันหยุดให้แล้ว`;
+  $('#freeinfo').textContent = `${lines.length} วัน · หักคาบที่นัดไว้${bf.before || bf.after ? ` + เผื่อเวลา ${bf.before}/${bf.after} นาที` : ''} + วันหยุดให้แล้ว`;
 }
+const pickedLines = days => days.filter(d => pickedD.has(isoD(d))).map(d => { const f = freeOf(d); return f.length ? `• ${TH_DF[d.getDay()]} ${d.getDate()} ${TH_M[d.getMonth()]}  ${f.map(rng).join(', ')}` : null; }).filter(Boolean);
+// buffer settings: minutes before / after each class; linked = editing one sets both
+function setBuf(k, v){
+  const b = DB.buffer; v = Math.max(0, Math.min(240, Math.round(+v) || 0));
+  if (k === 'lk'){ b.linked = !b.linked; if (b.linked) b.after = b.before; }
+  else { b[k] = v; if (b.linked) b[k === 'before' ? 'after' : 'before'] = v; }
+  save(); renderAvail();
+}
+// the free times as a PNG card (canvas; Thai text uses the page's own Anuphan, so wait for the fonts)
+async function freePic(){
+  const days = weekDays().filter(d => pickedD.has(isoD(d)) && freeOf(d).length);
+  if (!days.length) return toast('ติ๊กวันที่ว่างก่อนนะ');
+  try{ await Promise.all(['800 40px Anuphan', '700 28px Anuphan', '800 30px "JetBrains Mono"'].map(f => document.fonts.load(f, 'ก0'))); await document.fonts.ready; }catch{}
+  const W = 1080, P = 56, HEAD = 250, FOOT = 120, rows = days.map(d => freeOf(d)), RH = r => Math.max(110, 34 + r.length*54);
+  const H = HEAD + rows.reduce((a, r) => a + RH(r) + 22, 0) + FOOT, S = 2, c = document.createElement('canvas'); c.width = W*S; c.height = H*S;
+  const g = c.getContext('2d'); g.scale(S, S);
+  const INK = '#141414', PAPER = '#efe9dc', YEL = '#f2b705', BLUE = '#1f3fbf', RED = '#e4412b', MUT = '#6b6457', F = 'Anuphan, Sarabun, sans-serif';
+  const box = (x, y, w, h, fill, sh = 8) => { g.fillStyle = INK; g.fillRect(x+sh, y+sh, w, h); g.fillStyle = fill; g.fillRect(x, y, w, h); g.lineWidth = 6; g.strokeStyle = INK; g.strokeRect(x+3, y+3, w-6, h-6); };
+  const txt = (t, x, y, font, col, al = 'left') => { g.font = font; g.fillStyle = col; g.textAlign = al; g.textBaseline = 'alphabetic'; g.fillText(t, x, y); };
+  g.fillStyle = PAPER; g.fillRect(0, 0, W, H);
+  box(P, 48, W-2*P-8, 170, YEL);
+  txt('เวลาว่าง' + ['สัปดาห์นี้', 'สัปดาห์หน้า', 'อีก 2 สัปดาห์'][kweek], P+36, 138, `800 76px ${F}`, INK);
+  const a = days[0], z = days[days.length-1];
+  txt(`${a.getDate()} ${TH_M[a.getMonth()]} – ${z.getDate()} ${TH_M[z.getMonth()]}  ·  พี่ปราช สอนเคมี`, P+36, 192, `700 32px ${F}`, INK);
+  let y = HEAD;
+  days.forEach((d, n) => {
+    const r = rows[n], h = RH(r), we = d.getDay() === 0 || d.getDay() === 6;
+    box(P, y, W-2*P-8, h, '#fffdf7', 6);
+    g.fillStyle = we ? RED : BLUE; g.fillRect(P+3, y+3, 194, h-6);
+    txt(TH_DF[d.getDay()], P+100, y+h/2-2, `800 36px ${F}`, '#fff', 'center');
+    txt(`${d.getDate()} ${TH_M[d.getMonth()]}`, P+100, y+h/2+36, `700 28px ${F}`, '#fff', 'center');
+    r.forEach((iv, k) => txt(rng(iv), P+240, y + 34 + 54*k + 38, `800 46px "JetBrains Mono", monospace`, INK));
+    y += h + 22;
+  });
+  txt('สะดวกช่วงไหนบอกพี่ได้เลยครับ', W/2, H-52, `700 32px ${F}`, MUT, 'center');
+  const blob = await new Promise(r => c.toBlob(r, 'image/png')); if (!blob) return toast('สร้างรูปไม่สำเร็จ');
+  const url = URL.createObjectURL(blob), name = `เวลาว่าง-${isoD(days[0])}.png`;
+  if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform))){
+    // iOS/iPadOS Safari mostly ignores download on blob links: show the picture, long-press to save
+    openModal(`<h3 class="wq">เวลาว่าง</h3><img id="imgprev" src="${url}" alt="เวลาว่าง"><p class="mut" style="text-align:center;font-weight:600">กดค้างที่รูป → บันทึกรูปภาพ · หรือ <a href="${url}" download="${name}" target="_blank" rel="noopener">เปิดรูปในแท็บใหม่</a></p>`);
+  } else { const l = document.createElement('a'); l.href = url; l.download = name; document.body.append(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(url), 4e4); toast('บันทึกรูปแล้ว ✓'); }
+}
+$('#bfb').onchange = e => setBuf('before', e.target.value); $('#bfa').onchange = e => setBuf('after', e.target.value); $('#bflk').onclick = () => setBuf('lk');
 $('#kweek').onclick = e => { const k = e.target.dataset.k; if (k === undefined) return; kweek = +k; qsa('#kweek button').forEach(b => b.classList.toggle('on', b.dataset.k === k)); renderAvail(); };
 $('#agrid').onclick = e => {
   const b = e.target.closest('button'); if (!b || b.disabled) return;
