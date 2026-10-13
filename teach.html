@@ -623,26 +623,6 @@ button.fg:hover{background:#fbf3dc}
 .bufdia b{background:var(--blue);color:#fff;font-size:.62rem;display:flex;align-items:center;justify-content:center;padding:0 6px}
 .bufnote{display:block;margin:0 0 12px;color:var(--mut);font-weight:600;font-size:.76rem}
 @media(max-width:520px){.bufwrap{grid-template-columns:1fr;gap:4px 0}.bufwrap .lk{justify-self:center}}
-.rvwarn{border:3px solid var(--ink);background:var(--stbg);padding:8px 12px;margin:0 0 10px;font-weight:700;font-size:.82rem}
-.rvbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end;margin:0 0 6px}
-.rvbar .rvf{display:flex;flex-direction:column;gap:2px;font-size:.74rem;font-weight:700;color:var(--mut);flex:1 1 180px}
-.rvbar .rvf input{border:3px solid var(--ink);background:var(--card);color:var(--ink);padding:6px 8px;font:700 .9rem Anuphan,sans-serif;min-width:0}
-.rvck{display:flex;align-items:center;gap:6px;font-weight:800;font-size:.84rem;min-height:40px}.rvck input{width:20px;height:20px;accent-color:var(--ink)}
-.rvadd{cursor:pointer;display:inline-flex;align-items:center;min-height:40px}.rvadd.dis{opacity:.4;pointer-events:none}
-.rvinfo{font-size:.78rem;font-weight:700;color:var(--mut);margin:0 0 8px;min-height:1em}
-.rvpool{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;margin:0 0 12px}
-.rvempty{grid-column:1/-1;margin:0;font-weight:600}
-.rvc{border:3px solid var(--ink);background:var(--card);box-shadow:4px 4px 0 var(--sh);display:flex;flex-direction:column}
-.rvc.off{opacity:.5}.rvc.drag{opacity:.35}.rvc.over{outline:4px solid var(--blue);outline-offset:2px}
-.rvi{position:relative;height:130px;background:repeating-linear-gradient(45deg,var(--card) 0 5px,#e8e1d0 5px 10px);display:grid;place-items:center;overflow:hidden;cursor:grab}
-.rvi img{max-width:100%;max-height:100%;object-fit:contain;display:block}.rvph{font-size:.72rem;font-weight:700;color:var(--mut);text-align:center;padding:4px}
-.rvn{position:absolute;left:0;top:0;background:var(--ink);color:var(--paper);font:800 .72rem "JetBrains Mono";padding:2px 6px}
-.rvb{display:grid;grid-template-columns:1fr 1fr 1.5fr 1fr;border-top:3px solid var(--ink)}
-.rvb button{border:0;border-right:2px solid var(--ink);background:transparent;color:var(--ink);min-height:40px;font-weight:800;font-size:.78rem;padding:0}.rvb button:last-child{border-right:0}
-.rvb button:disabled{opacity:.25}.rvc.on .rvt{background:var(--yel)}
-.rvout{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.rvout .cpy{min-height:40px}
-.rvprev{display:flex;flex-wrap:wrap;gap:14px}.rvprev canvas{width:min(100%,240px);height:auto;aspect-ratio:210/297;border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);background:#fff}
-.rvm{display:block;width:100%;margin:0 0 10px;border:3px solid var(--ink)}
 .hzkey{display:inline-block;width:14px;height:10px;border:2px solid var(--ink);vertical-align:-1px;background:repeating-linear-gradient(45deg,rgba(20,20,20,.55) 0 2px,transparent 2px 5px)}
 #imgprev{max-width:100%;border:3px solid var(--ink);display:block;margin:0 auto 10px}
 
@@ -1119,20 +1099,6 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
       <h3 class="kh">โพสต์หานักเรียน <small>FB group / LINE OpenChat</small></h3>
       <div class="post"><div class="ph"><span class="av"><span class="shapes"><i class="c"></i><i class="s"></i></span></span><div><b>พี่ปราช · สอนเคมี</b><small>โพสต์ · สาธารณะ</small></div><span style="margin-left:auto;display:flex;gap:6px;align-items:center"><button class="ghostb" onclick="editTpl('post',this)">✎ แก้</button><button class="cpy" onclick="copy('post')">คัดลอก</button></span></div><div class="pb" id="post"></div><textarea class="tpl-e" style="min-height:320px" aria-label="แก้โพสต์"></textarea><button class="pmore" onclick="const p=this.parentNode;p.classList.toggle('full');this.textContent=p.classList.contains('full')?'ย่อ ▴':'ดูทั้งโพสต์ ▾'">ดูทั้งโพสต์ ▾</button></div>
     </section>
-    <section style="grid-column:1/-1" id="rv">
-      <h3 class="kh">โปสเตอร์รีวิว <small>รูปแคปรีวิวหลายรูป → โปสเตอร์ A4 ไม่ครอป · โพสต์ได้เลย</small></h3>
-      <div class="rvwarn" id="rv-warn" hidden>⚠ ยังไม่ได้สร้างที่เก็บรูปใน Supabase (bucket <b>reviews</b>) · เอาไฟล์ <b>supabase/003_reviews_storage.sql</b> ไปวางใน SQL Editor แล้วกด Run ก่อน แล้วรีเฟรชหน้านี้</div>
-      <div class="rvbar">
-        <label class="cpy rvadd" id="rv-add">＋ เพิ่มรูปรีวิว<input type="file" id="rv-file" accept="image/*" multiple hidden></label>
-        <label class="rvf"><span>หัวข้อ</span><input id="rv-title" maxlength="40" aria-label="หัวข้อโปสเตอร์"></label>
-        <label class="rvf"><span>ท้ายโปสเตอร์ (ชื่อ / LINE)</span><input id="rv-foot" maxlength="60" aria-label="ข้อความท้ายโปสเตอร์"></label>
-        <label class="rvck"><input type="checkbox" id="rv-f1"> บังคับให้อยู่หน้าเดียว</label>
-      </div>
-      <div class="rvinfo" id="rv-info"></div>
-      <div class="rvpool" id="rv-pool"></div>
-      <div class="rvout" id="rv-out" hidden><button class="cpy" id="rv-png">🖼 บันทึกเป็นรูป PNG</button><button class="cpy" id="rv-pdf">📄 บันทึกเป็น PDF</button></div>
-      <div class="rvprev" id="rv-prev"></div>
-    </section>
   </div>
 </aside>
 
@@ -1166,13 +1132,12 @@ const uid = () => Math.random().toString(36).slice(2,9);
 let NOW = new Date();   // kept live by tick(): the page (and the bank's layer) can stay open for days
 
 // the real data lives in Supabase; this is the empty shape until the first load (or the offline cache) fills it
-const blankDB = () => ({v:4, students:[], archived:[], sessions:[], avail:defAvail(), tpl:defTpl(), rates:{solo:300, group:175}, buffer:{before:0, after:0, linked:true}, collage:{title:'รีวิวจากน้องๆ', foot:'พี่ปราช · สอนเคมี', items:[], force1:false}, history:{}, holidays:{}, deadlines:[], expenses:[], skips:[]});
+const blankDB = () => ({v:4, students:[], archived:[], sessions:[], avail:defAvail(), tpl:defTpl(), rates:{solo:300, group:175}, buffer:{before:0, after:0, linked:true}, history:{}, holidays:{}, deadlines:[], expenses:[], skips:[]});
 let DB = blankDB();
 try{ localStorage.removeItem('teach-demo-v3'); }catch{}
 function defAvail(){ return {block:{0:[],1:[8,9,10,11,12,13,14,15,16],2:[8,9,10,11,12,13,14,15,16],3:[8,9,10,11,12,13,14,15,16],4:[8,9,10,11,12,13,14,15,16],5:[8,9,10,11,12,13,14,15,16],6:[]}}; }
 DB.avail ||= defAvail();
 DB.buffer ||= {before:0, after:0, linked:true};
-DB.collage ||= blankDB().collage;
 function defTpl(){ return {free:"ช่วงนี้พี่ว่างประมาณนี้นะครับ\n{วันว่าง}\nสะดวกช่วงไหนบอกพี่ได้เลยครับ 😊", post:"📚 เปิดรับสอนพิเศษวิชาเคมี ระดับมัธยมศึกษา\nสวัสดีครับ 😊\nผมเป็นนักศึกษาเภสัชศาสตร์ ชั้นปีที่ 4 มหาวิทยาลัยมหิดล\nเปิดรับสอนพิเศษวิชาเคมี สำหรับนักเรียนระดับมัธยม ไม่ว่าจะเป็น\n✅ ปูพื้นฐานเคมีในห้องเรียน\n✅ เพิ่มเกรดและเสริมความเข้าใจ\n✅ เตรียมสอบเข้า ม.4 / TCAS / คณะสายวิทยาศาสตร์สุขภาพ\nผลงาน\n🏅 เหรียญทองแดง สอวน. ค่ายระดับชาติ สาขาเคมี\nรูปแบบการสอน\n📍 สอนได้ทั้งออนไลน์ ทั้งนอกสถานที่ในกรุงเทพฯ (สามารถตกลงสถานที่ได้)\n👤 เรียนเดี่ยว หรือ 👥 เรียนเป็นกลุ่ม\nอัตราค่าสอน\nเรียนเดี่ยว {เดี่ยว} บาท/ชั่วโมง\nเรียนกลุ่ม {กลุ่ม} บาท/ชั่วโมง/คน\nหากสนใจ สามารถทักมาสอบถามรายละเอียด รูปแบบการเรียน ตารางสอน หรือสอบถามผลงานเพิ่มเติมได้เลยครับ 😊", dm:"สอนเคมีครับมีทั้งปูพื้นฐาน เพิ่มเกรด สอบเข้า มีรูปแบบออนไลน์ และ ออนไซต์ถ้าไม่ไกลมากครับผม ค่าเรียนชม.ละ {เดี่ยว} บาท (เรียนกลุ่ม {กลุ่ม}/คน) สงสัยตรงไหนสอบถามเพิ่มได้ครับ ถ้าสนใจขอชื่อนักเรียนกับระดับชั้นไว้หน่อยนะครับผม"}; }
 DB.tpl ||= defTpl();
 DB.tpl.free ??= defTpl().free;
@@ -1462,7 +1427,7 @@ async function pull(){
     if (!S.length && (DB.students.length + (DB.archived || []).length) && !(keep?.sDel?.length)){ setSync('err', ' · เซิร์ฟเวอร์ส่งข้อมูลว่างมา · ใช้ข้อมูลในเครื่องไว้ก่อน'); return; }
     const st = A.data?.data || {}, b = blankDB();
     const fix = x => ({...x, slots:x.slots || [], feed:x.feed || [], goal:x.goal || '', contact:x.contact || '', notes:x.notes || ''});
-    DB = {...b, ...st, avail: st.avail || b.avail, buffer: {...b.buffer, ...(st.buffer || {})}, collage: {...b.collage, ...(st.collage || {})}, tpl: {...b.tpl, ...(st.tpl || {})},
+    DB = {...b, ...st, avail: st.avail || b.avail, buffer: {...b.buffer, ...(st.buffer || {})}, tpl: {...b.tpl, ...(st.tpl || {})},
       students: S.filter(x => !x.archived).map(fix), archived: S.filter(x => x.archived).map(fix),
       sessions: X.map(x => ({...x, h:+x.h, note:x.note || ''})), skips: K || (DB.skips || [])};
     base = baseOf(rowsOf(DB)); lastPull = Date.now();
@@ -1537,7 +1502,7 @@ async function loginSubmit(e){
 $('#login').onsubmit = loginSubmit;
 $('#logout').onclick = async () => {
   if (pending()?.n && !confirm('ยังมีข้อมูลที่ยังไม่ได้ส่งขึ้นเซิร์ฟเวอร์ · ออกเลยไหม?')) return;
-  try{ localStorage.removeItem(CACHE); }catch{} RV.img.forEach(m => URL.revokeObjectURL(m.url)); RV.img.clear(); RV.bad.clear(); await sb?.auth.signOut(); location.reload();
+  try{ localStorage.removeItem(CACHE); }catch{} await sb?.auth.signOut(); location.reload();
 };
 addEventListener('online', () => { schedulePush(); });
 addEventListener('offline', () => setSync('off'));
@@ -1794,7 +1759,7 @@ function tk(s, o = {}){
     ${o.pv ? '' : `<span class="tools"><button title="แก้ / เลื่อน" onclick="event.stopPropagation();editSession('${s.id}')">✎</button><button class="del" title="ลบ" onclick="event.stopPropagation();delSession('${s.id}')">🗑</button></span>`}
   </div>`;
 }
-function renderAll(){ renderMoney(); renderSchedule(); if (openD === 'cal') renderCal(); if (openD === 'stu') renderStudents(); if (openD === 'kit'){ writeKit(); renderCollage(); } }
+function renderAll(){ renderMoney(); renderSchedule(); if (openD === 'cal') renderCal(); if (openD === 'stu') renderStudents(); if (openD === 'kit'){ writeKit(); } }
 function markDone(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.status = 'done'; save(); renderAll(); wrapUp(id); }
 let wu = null;
 function undone(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.status = 'plan'; s.paid = false; save(); renderAll(); toast(`${st(s.who)?.name} · กลับเป็นนัดไว้`, true); }
@@ -2384,198 +2349,6 @@ async function freePic(){
     openModal(`<h3 class="wq">เวลาว่าง</h3><img id="imgprev" src="${url}" alt="เวลาว่าง"><p class="mut" style="text-align:center;font-weight:600">กดค้างที่รูป → บันทึกรูปภาพ · หรือ <a href="${url}" download="${name}" target="_blank" rel="noopener">เปิดรูปในแท็บใหม่</a></p>`);
   } else { const l = document.createElement('a'); l.href = url; l.download = name; document.body.append(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(url), 4e4); toast('บันทึกรูปแล้ว ✓'); }
 }
-/* =============================== review collage (ข้อความ drawer) =============================== */
-// DB.collage = {title, foot, items:[{id,on}], force1}; the pictures themselves live in the private Storage bucket 'reviews' at <uid>/<id>.jpg
-const RV = {img: new Map(), bad: new Set(), missing: false, busy: '', loading: new Set(), jspdf: null, pages: []};
-const RVPW = 1240, RVPH = 1754, RVM = 48, RVHEAD = 150, RVFOOT = 80, RVGAP = 16, RVW = RVPW - 2*RVM;
-const RVTOP = RVM + RVHEAD + 26, RVA = RVPH - RVM - RVFOOT - 26 - RVTOP;   // content box: width RVW, height RVA
-const RVMINW = 0.28 * RVW;   // narrowest image >= 28% of the content width (~5.5 cm on the A4): smaller and chat text stops being readable -> spill to the next page
-const rvBucket = () => sb.storage.from('reviews');
-const rvNoBucket = e => /bucket not found|NoSuchBucket/i.test((e?.message || '') + (e?.error || ''));
-function rvDB(){ DB.collage = {title:'รีวิวจากน้องๆ', foot:'พี่ปราช · สอนเคมี', items:[], force1:false, ...(DB.collage || {})}; return DB.collage; }
-
-// ---- packing: bands of "column-justified masonry". A band is a block that spans the full page width: its items go top-to-bottom into the
-// currently shortest of c columns (keeps reading order), and each column gets its OWN width so every column ends at exactly the same
-// height H and together they fill the width. Nothing is cropped, no ragged bottom, no gap on the right (plain equal-width masonry leaves both,
-// and justified rows turn a wide shot next to a tall one into a sliver). With sum_j w_j = W and w_j = (H - g_j)/S_j
-// (S_j = sum of 1/aspect in column j, g_j = its gaps):  H = (W + sum g_j/S_j) / sum(1/S_j).
-// A page is a stack of bands in the user's order; a small DP picks where the bands break (and 1/2/3 columns per band) so the stack is shortest,
-// so tall chat shots share a multi-column band and wide comment shots get a full-width band of their own, instead of one mixed sliver.
-function rvBand(items, c){
-  const cols = Array.from({length: Math.min(c, items.length)}, () => ({S: 0, it: []}));
-  for (const it of items){ let k = 0; cols.forEach((x, i) => { if (x.S < cols[k].S) k = i; }); cols[k].S += 1/it.ar; cols[k].it.push(it); }
-  const g = x => (x.it.length - 1) * RVGAP, Wn = RVW - RVGAP * (cols.length - 1);
-  const H = (Wn + cols.reduce((a, x) => a + g(x)/x.S, 0)) / cols.reduce((a, x) => a + 1/x.S, 0);
-  cols.forEach(x => x.w = (H - g(x)) / x.S);
-  return {H, minw: Math.min(...cols.map(x => x.w)), cols};
-}
-function rvBands(items, m, maxC){   // cheapest stack of bands whose narrowest column is >= m
-  const n = items.length, best = Array(n + 1).fill(Infinity), from = Array(n + 1); best[0] = 0;
-  for (let j = 1; j <= n; j++) for (let i = Math.max(0, j - 3*maxC); i < j; i++) for (let c = 1; c <= Math.min(maxC, j - i); c++){
-    const b = rvBand(items.slice(i, j), c), t = best[i] + b.H + (i ? RVGAP : 0);
-    if (b.minw >= m - 1e-6 && t < best[j]){ best[j] = t; from[j] = {i, b}; } }
-  const bands = []; for (let j = n; j > 0; j = from[j].i) bands.unshift(from[j].b);
-  return {T: best[n], bands};
-}
-function rvPage(items, loose){   // best arrangement of these items on ONE page: shrink to fit; score = narrowest image's final width (px of 1144)
-  const maxC = loose ? 6 : 3, ms = [0.95, 0.7, 0.55, 0.45, 0.36, 0.28, ...(loose ? [0.2, 0.14, 0.09, 0.05] : [])].map(f => f * RVW); let best = null;
-  for (const m of ms){ const r = rvBands(items, m, maxC); if (!isFinite(r.T)) continue;
-    const s = Math.min(1, RVA / r.T), minw = Math.min(...r.bands.map(b => b.minw)) * s;
-    if (!best || minw > best.score + 1e-6) best = {...r, s, score: minw}; }
-  const {bands, s} = best, rects = [], x0 = RVM + (RVW - RVW*s)/2; let y = RVTOP + (RVA - best.T*s)/2;
-  for (const b of bands){ let x = x0; for (const col of b.cols){ let yy = y; const w = col.w * s;
-      for (const it of col.it){ const h = w / it.ar; rects.push({id: it.id, x, y: yy, w, h}); yy += h + RVGAP*s; } x += w + RVGAP*s; } y += b.H*s + RVGAP*s; }
-  return {s, score: best.score, rects};
-}
-function rvSplit(items, p){   // p consecutive groups of about equal total height-weight
-  const tot = items.reduce((a, x) => a + 1/x.ar, 0), out = []; let i = 0, acc = 0;
-  for (let g = 0; g < p; g++){ const grp = [], left = p - g - 1;
-    while (i < items.length && (!grp.length || g === p-1 || (items.length - i > left && acc + 0.5/items[i].ar <= (g+1)*tot/p))){ acc += 1/items[i].ar; grp.push(items[i++]); }
-    out.push(grp); }
-  return out;
-}
-function rvPages(items, force1){
-  if (!items.length) return [];
-  if (force1) return [rvPage(items, true)];
-  const ok = (r, n) => n === 1 || r.score >= RVMINW, cuts = []; let i = 0;
-  while (i < items.length){ let j = i + 1; while (j < items.length && ok(rvPage(items.slice(i, j + 1)), j + 1 - i)) j++; cuts.push(items.slice(i, j)); i = j; }   // spill only when the next image would be too small
-  if (cuts.length > 1){ const eq = rvSplit(items, cuts.length), pg = eq.map(g => rvPage(g)); if (pg.every((r, k) => ok(r, eq[k].length))) return pg; }   // same page count, evenly filled
-  return cuts.map(g => rvPage(g));
-}
-function rvLayout(){
-  const c = rvDB(), items = c.items.filter(x => x.on && RV.img.has(x.id)).map(x => ({id: x.id, ar: RV.img.get(x.id).w / RV.img.get(x.id).h}));
-  return rvPages(items, c.force1);
-}
-
-// ---- drawing (one function for the on-screen preview and the 2x export)
-function rvDraw(cv, page, n, N, S){
-  const c = rvDB(), g = cv.getContext('2d'); cv.width = RVPW*S; cv.height = RVPH*S; g.setTransform(S, 0, 0, S, 0, 0); g.imageSmoothingQuality = 'high';
-  const INK = '#141414', PAPER = '#efe9dc', YEL = '#f2b705', BLUE = '#1f3fbf', RED = '#e4412b', F = 'Anuphan, Sarabun, sans-serif';
-  g.fillStyle = PAPER; g.fillRect(0, 0, RVPW, RVPH);
-  const box = (x, y, w, h, fill, sh) => { g.fillStyle = INK; g.fillRect(x+sh, y+sh, w, h); g.fillStyle = fill; g.fillRect(x, y, w, h); g.lineWidth = 6; g.strokeStyle = INK; g.strokeRect(x+3, y+3, w-6, h-6); };
-  const fit = (font, t, maxw) => { let px = +font.match(/(\d+)px/)[1]; for (; px > 24; px -= 2){ g.font = font.replace(/\d+px/, px + 'px'); if (g.measureText(t).width <= maxw) return; } g.font = font.replace(/\d+px/, '24px'); };
-  box(RVM, RVM, RVW - 10, RVHEAD, YEL, 10);
-  g.fillStyle = RED; g.beginPath(); g.arc(RVPW - RVM - 100, RVM + RVHEAD/2, 38, 0, 7); g.fill(); g.lineWidth = 5; g.strokeStyle = INK; g.stroke();
-  g.fillStyle = BLUE; g.fillRect(RVPW - RVM - 80, RVM + RVHEAD/2 - 8, 46, 46); g.strokeRect(RVPW - RVM - 80, RVM + RVHEAD/2 - 8, 46, 46);
-  const ttl = c.title || 'รีวิว'; g.fillStyle = INK; g.textBaseline = 'middle'; g.textAlign = 'left'; fit(`800 80px ${F}`, ttl, RVW - 330); g.fillText(ttl, RVM + 40, RVM + RVHEAD/2 + 4);
-  for (const r of page.rects){
-    g.fillStyle = INK; g.fillRect(r.x + 6, r.y + 6, r.w, r.h);
-    g.fillStyle = '#fff'; g.fillRect(r.x, r.y, r.w, r.h); g.drawImage(RV.img.get(r.id).el, r.x, r.y, r.w, r.h);
-    g.lineWidth = 4; g.strokeStyle = INK; g.strokeRect(r.x - 2, r.y - 2, r.w + 4, r.h + 4);
-  }
-  const fy = RVPH - RVM - RVFOOT; box(RVM, fy, RVW - 10, RVFOOT, BLUE, 10);
-  g.fillStyle = '#fff'; g.textBaseline = 'middle'; g.textAlign = 'left'; fit(`700 38px ${F}`, c.foot || '', RVW - 260); g.fillText(c.foot || '', RVM + 36, fy + RVFOOT/2 + 2);
-  if (N > 1){ g.textAlign = 'right'; g.font = `800 34px "JetBrains Mono", monospace`; g.fillText(`${n}/${N}`, RVPW - RVM - 46, fy + RVFOOT/2 + 2); }
-}
-async function rvFonts(){ try{ await Promise.all(['800 40px Anuphan', '700 28px Anuphan', '800 30px "JetBrains Mono"'].map(f => document.fonts.load(f, 'ก0'))); await document.fonts.ready; }catch{} }
-
-// ---- pool rendering
-function rvLoad(id){
-  const rt = (RV.retry ||= new Map()), r = rt.get(id);
-  if (RV.img.has(id) || RV.bad.has(id) || RV.loading.has(id) || RV.missing || !user || !sb || (r && r.at > Date.now())) return; RV.loading.add(id);
-  // a transient failure (offline etc.) backs off 2s→4s→…→30s and gives up after 6 tries, so a missing image can't hot-loop the drawer
-  const soft = () => { const n = (rt.get(id)?.n || 0) + 1; if (n >= 6){ rt.delete(id); RV.bad.add(id); return true; }
-    const wait = Math.min(30000, 1000 * 2 ** n); rt.set(id, {n, at: Date.now() + wait}); setTimeout(renderCollage, wait + 50); return false; };
-  let changed = false;
-  rvBucket().download(`${user.id}/${id}.jpg`).then(async ({data, error}) => {
-    if (error || !data){ if (rvNoBucket(error)){ RV.missing = true; changed = true; } else if (/not.?found|404/i.test((error?.message || '') + (error?.error || '') + (error?.statusCode || ''))){ RV.bad.add(id); changed = true; } else changed = soft(); return; }   // only a truly absent object is sticky at once
-    rt.delete(id); await rvSet(id, data); changed = true;
-  }).catch(() => { changed = soft(); }).finally(() => { RV.loading.delete(id); if (changed){ clearTimeout(RV.t); RV.t = setTimeout(renderCollage, 120); } });
-}
-function rvSet(id, blob){ return new Promise(ok => { const url = URL.createObjectURL(blob), el = new Image(); el.onload = () => { RV.img.set(id, {url, el, w: el.naturalWidth, h: el.naturalHeight}); ok(); }; el.onerror = () => { URL.revokeObjectURL(url); RV.bad.add(id); ok(); }; el.src = url; }); }
-function renderCollage(){
-  if (!$('#rv')) return; const c = rvDB(), ons = c.items.filter(x => x.on).length;
-  if (document.activeElement !== $('#rv-title')) $('#rv-title').value = c.title;
-  if (document.activeElement !== $('#rv-foot')) $('#rv-foot').value = c.foot;
-  $('#rv-f1').checked = c.force1; $('#rv-warn').hidden = !RV.missing; $('#rv-add').classList.toggle('dis', RV.missing || !sb);
-  c.items.forEach(x => rvLoad(x.id));
-  $('#rv-pool').innerHTML = c.items.length ? c.items.map((x, i) => { const im = RV.img.get(x.id);
-    return `<div class="rvc ${x.on ? 'on' : 'off'}" draggable="true" data-id="${x.id}">
-      <div class="rvi">${im ? `<img src="${im.url}" alt="รีวิว ${i+1}" draggable="false">` : `<span class="rvph">${RV.bad.has(x.id) ? 'โหลดรูปไม่ได้' : RV.missing ? 'ยังไม่มีที่เก็บรูป' : 'กำลังโหลด…'}</span>`}<b class="rvn">${i+1}</b></div>
-      <div class="rvb"><button data-a="L" ${i ? '' : 'disabled'} aria-label="เลื่อนไปก่อน" title="เลื่อนไปก่อน">◀</button><button data-a="R" ${i < c.items.length-1 ? '' : 'disabled'} aria-label="เลื่อนไปหลัง" title="เลื่อนไปหลัง">▶</button><button data-a="T" class="rvt" title="${x.on ? 'เอาออกจากโปสเตอร์ (รูปยังอยู่ในคลัง)' : 'ใส่กลับเข้าโปสเตอร์'}">${x.on ? '✓ ใน' : '○ พัก'}</button><button data-a="D" aria-label="ลบรูป" title="ลบรูปนี้ถาวร">✕</button></div></div>`; }).join('')
-    : '<p class="mut rvempty">ยังไม่มีรูป · กด “＋ เพิ่มรูปรีวิว” (เลือกได้หลายรูป) หรือวางรูป / ลากไฟล์มาที่นี่</p>';
-  const pages = RV.pages = rvLayout();
-  $('#rv-info').textContent = c.items.length ? `${c.items.length} รูปในคลัง · ${ons} ในโปสเตอร์ → ${pages.length} หน้า A4${RV.busy ? ' · ' + RV.busy : ''}` : RV.busy;
-  $('#rv-out').hidden = !pages.length;
-  const box = $('#rv-prev'); box.innerHTML = ''; pages.forEach((p, i) => { const cv = document.createElement('canvas'); rvDraw(cv, p, i+1, pages.length, 0.36); box.append(cv); });
-  if (pages.length) rvFonts().then(() => { if (RV.pages === pages) [...box.children].forEach((cv, i) => rvDraw(cv, pages[i], i+1, pages.length, 0.36)); });   // redraw once the Thai font is in
-}
-const rvSave = () => { save(); renderCollage(); };
-
-// ---- upload: shrink to <=1600px long edge, JPEG 0.85, white behind transparency
-async function rvShrink(file){
-  let bmp; try{ bmp = await createImageBitmap(file, {imageOrientation: 'from-image'}); }catch{ bmp = await new Promise((ok, no) => { const i = new Image(); const u = URL.createObjectURL(file); i.onload = () => { URL.revokeObjectURL(u); ok(i); }; i.onerror = () => { URL.revokeObjectURL(u); no(); }; i.src = u; }); }
-  const w0 = bmp.width || bmp.naturalWidth, h0 = bmp.height || bmp.naturalHeight, k = Math.min(1, 1600 / Math.max(w0, h0)), cv = document.createElement('canvas');
-  cv.width = Math.round(w0*k); cv.height = Math.round(h0*k); const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height); g.imageSmoothingQuality = 'high'; g.drawImage(bmp, 0, 0, cv.width, cv.height);
-  return new Promise(r => cv.toBlob(r, 'image/jpeg', 0.85));
-}
-async function rvAdd(files){
-  files = [...files].filter(f => f.type.startsWith('image/')); if (!files.length) return;
-  if (!sb || !user || !navigator.onLine) return toast('ต้องออนไลน์และล็อกอินก่อนถึงจะอัปโหลดรูปได้');
-  if (RV.missing) return renderCollage();
-  let done = 0, fail = 0;
-  for (const f of files){
-    RV.busy = `กำลังอัปโหลด ${done + fail + 1}/${files.length}`; renderCollage();
-    try{
-      const blob = await rvShrink(f); if (!blob) throw new Error('encode'); const id = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
-      const {error} = await rvBucket().upload(`${user.id}/${id}.jpg`, blob, {contentType: 'image/jpeg', upsert: false});
-      if (error){ if (rvNoBucket(error)){ RV.missing = true; break; } throw error; }
-      await rvSet(id, blob); rvDB().items.push({id, on: true}); save(); done++;   // re-read the live array (a pull/sync may have replaced it during the awaits); save per image so a closed tab loses at most one
-    }catch(e){ fail++; }
-  }
-  RV.busy = ''; renderCollage();
-  toast(RV.missing ? 'ยังไม่ได้สร้างที่เก็บรูป (bucket reviews) ใน Supabase' : `เพิ่มรูปแล้ว ${done} รูป${fail ? ` · ไม่สำเร็จ ${fail}` : ''}`);
-}
-function rvMove(id, to){ const a = rvDB().items, i = a.findIndex(x => x.id === id); if (i < 0) return; to = Math.max(0, Math.min(a.length - 1, to)); a.splice(to, 0, a.splice(i, 1)[0]); rvSave(); }
-async function rvDel(id){
-  if (!confirm('ลบรูปนี้ออกจากคลังถาวร? (ถ้าแค่ไม่อยากให้อยู่ในโปสเตอร์ ให้กด “✓ ใน” เป็น “พัก” แทน)')) return;
-  if (!sb || !user || !navigator.onLine) return toast('ต้องออนไลน์ก่อนถึงจะลบรูปได้');
-  let err; try{ ({error: err} = await rvBucket().remove([`${user.id}/${id}.jpg`])); }catch(e){ err = e; }
-  if (err && !/not.?found|404/i.test((err.message || '') + (err.statusCode || ''))) return toast('ลบรูปไม่สำเร็จ · รูปยังอยู่ในคลัง ลองใหม่อีกครั้ง');   // keep the item: never orphan the file
-  const c = rvDB(); c.items = c.items.filter(x => x.id !== id); const im = RV.img.get(id); if (im) URL.revokeObjectURL(im.url); RV.img.delete(id); rvSave();
-}
-$('#rv-file').onchange = e => { rvAdd(e.target.files); e.target.value = ''; };
-const rvText = (k, v) => { rvDB()[k] = v; save(); clearTimeout(RV.t2); RV.t2 = setTimeout(renderCollage, 250); };
-$('#rv-title').oninput = e => rvText('title', e.target.value); $('#rv-foot').oninput = e => rvText('foot', e.target.value);
-$('#rv-f1').onchange = e => { rvDB().force1 = e.target.checked; rvSave(); };
-$('#rv-pool').onclick = e => {
-  const b = e.target.closest('button[data-a]'); if (!b || b.disabled) return; const id = b.closest('.rvc').dataset.id, a = rvDB().items, i = a.findIndex(x => x.id === id);
-  ({L: () => rvMove(id, i - 1), R: () => rvMove(id, i + 1), T: () => { a[i].on = !a[i].on; rvSave(); }, D: () => rvDel(id)})[b.dataset.a]();
-};
-// desktop drag: drop a card on another to take its place; image files dropped on the section (or pasted) are uploaded
-let rvDrag = null;
-$('#rv-pool').addEventListener('dragstart', e => { const c = e.target.closest('.rvc'); if (!c) return; rvDrag = c.dataset.id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', rvDrag); c.classList.add('drag'); });
-$('#rv-pool').addEventListener('dragend', () => { rvDrag = null; qsa('.rvc.drag,.rvc.over').forEach(x => x.classList.remove('drag', 'over')); });
-$('#rv-pool').addEventListener('dragover', e => { if (!rvDrag) return; e.preventDefault(); qsa('.rvc.over').forEach(x => x.classList.remove('over')); e.target.closest('.rvc')?.classList.add('over'); });
-$('#rv-pool').addEventListener('drop', e => { if (!rvDrag) return; e.preventDefault(); e.stopPropagation(); const t = e.target.closest('.rvc'); if (t && t.dataset.id !== rvDrag) rvMove(rvDrag, rvDB().items.findIndex(x => x.id === t.dataset.id)); rvDrag = null; });
-$('#rv').addEventListener('dragover', e => { if (!rvDrag && e.dataTransfer?.types?.includes('Files')) e.preventDefault(); });
-$('#rv').addEventListener('drop', e => { if (!rvDrag && e.dataTransfer?.files?.length){ e.preventDefault(); rvAdd(e.dataTransfer.files); } });
-addEventListener('paste', e => { if (openD !== 'kit') return; const fs = [...(e.clipboardData?.files || [])].filter(f => f.type.startsWith('image/')); if (fs.length){ e.preventDefault(); rvAdd(fs); } });
-
-// ---- export: PNG per page, or one PDF (jsPDF 2.5.1 is fetched, integrity-pinned, only when you ask for a PDF)
-const rvIOS = () => /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
-async function rvRender(S){ await rvFonts(); const pages = RV.pages; return pages.map((p, i) => { const cv = document.createElement('canvas'); rvDraw(cv, p, i+1, pages.length, S); return cv; }); }
-function rvDeliver(items, title){   // items: [{blob, name, label}]
-  const urls = items.map(x => URL.createObjectURL(x.blob));
-  if (rvIOS()){   setTimeout(() => urls.forEach(u => URL.revokeObjectURL(u)), 6e5);   // iOS/iPadOS Safari mostly ignores download on blob links: show it, long-press to save
-    openModal(`<h3 class="wq">${esc(title)}</h3>${items.map((x, i) => x.blob.type === 'application/pdf' ? `<p style="text-align:center"><a class="cpy" href="${urls[i]}" target="_blank" rel="noopener">เปิด PDF</a></p><p class="mut" style="text-align:center;font-weight:600">เปิดแล้วกดปุ่มแชร์ → บันทึกลงไฟล์</p>` : `<img class="rvm" src="${urls[i]}" alt="${esc(x.label)}">`).join('')}${items[0].blob.type === 'application/pdf' ? '' : '<p class="mut" style="text-align:center;font-weight:600">กดค้างที่รูป → บันทึกรูปภาพ</p>'}`, true);
-  } else { items.forEach((x, i) => setTimeout(() => { const l = document.createElement('a'); l.href = urls[i]; l.download = x.name; document.body.append(l); l.click(); l.remove(); }, i * 350)); setTimeout(() => urls.forEach(u => URL.revokeObjectURL(u)), 6e4); toast(items.length > 1 ? `บันทึก ${items.length} ไฟล์แล้ว ✓` : 'บันทึกแล้ว ✓'); }
-}
-async function rvPng(){
-  if (!RV.pages.length) return toast('ยังไม่มีรูปในโปสเตอร์'); toast('กำลังสร้างรูป…');
-  const blobs = await Promise.all((await rvRender(2)).map(c => new Promise(r => c.toBlob(r, 'image/png')))); if (blobs.some(b => !b)) return toast('สร้างรูปไม่สำเร็จ');
-  rvDeliver(blobs.map((b, i) => ({blob: b, name: `รีวิว-${i+1}.png`, label: `หน้า ${i+1}`})), 'โปสเตอร์รีวิว');
-}
-async function rvPdf(){
-  if (!RV.pages.length) return toast('ยังไม่มีรูปในโปสเตอร์'); toast('กำลังสร้าง PDF…');
-  try{
-    if (!window.jspdf) await (RV.jspdf ||= new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; s.integrity = 'sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk'; s.crossOrigin = 'anonymous'; s.onload = ok; s.onerror = () => { RV.jspdf = null; no(new Error('load')); }; document.head.append(s); }));
-    const cvs = await rvRender(2), pdf = new window.jspdf.jsPDF({unit: 'mm', format: 'a4', orientation: 'portrait'});
-    cvs.forEach((c, i) => { if (i) pdf.addPage('a4', 'portrait'); pdf.addImage(c.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, 210, 297); });
-    rvDeliver([{blob: pdf.output('blob'), name: 'รีวิว.pdf', label: 'PDF'}], 'โปสเตอร์รีวิว (PDF)');
-  }catch(e){ toast('สร้าง PDF ไม่สำเร็จ · เช็กเน็ตแล้วลองใหม่ หรือใช้ปุ่มรูป PNG'); }
-}
-$('#rv-png').onclick = rvPng; $('#rv-pdf').onclick = rvPdf;
 $('#bfb').onchange = e => setBuf('before', e.target.value); $('#bfa').onchange = e => setBuf('after', e.target.value); $('#bflk').onclick = () => setBuf('lk');
 $('#bufrow').addEventListener('click', e => { const t = e.target.closest('[data-bd]'); if (!t) return; const [k, d] = t.dataset.bd.split(':'); setBuf(k, DB.buffer[k] + +d); });
 $('#bufpre').addEventListener('click', e => { const t = e.target.closest('[data-bp]'); if (t) setBuf('preset', +t.dataset.bp); });
@@ -2588,7 +2361,7 @@ $('#agrid').onclick = e => {
   k >= 0 ? list.splice(k, 1) : list.push(hr); save(); renderAvail();
 };
 const fillTpl = t => t.replaceAll('{เดี่ยว}', DB.rates.solo).replaceAll('{กลุ่ม}', DB.rates.group);
-function renderKit(){ $('#r1').value = DB.rates.solo; $('#r2').value = DB.rates.group; writeKit(); renderCollage(); }
+function renderKit(){ $('#r1').value = DB.rates.solo; $('#r2').value = DB.rates.group; writeKit(); }
 function writeKit(){ $('#post').textContent = fillTpl(DB.tpl.post); $('#dm').textContent = fillTpl(DB.tpl.dm); renderAvail(); }
 function editTpl(k, btn){
   const box = btn.closest('.bub,.post'), on = box.classList.toggle('editing'), ta = box.querySelector('.tpl-e');

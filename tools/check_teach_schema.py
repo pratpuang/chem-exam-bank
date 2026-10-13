@@ -22,13 +22,8 @@ for table, cs in cols.items():
         except urllib.error.HTTPError as e:
             msg = json.loads(e.read() or b'{}').get('message', e.code); bad.append(f'{table}.{c}: {msg}')
         except Exception as e: print('could not reach Supabase:', e); sys.exit(2)
-# 003: the review-collage bucket. An anonymous probe tells "bucket missing" (NoSuchBucket) from "exists, you may not read it"
-try: urllib.request.urlopen(urllib.request.Request(f'{URL}/storage/v1/object/authenticated/reviews/_/_.jpg', headers={'apikey': KEY, 'Authorization': 'Bearer ' + KEY}), timeout=15)
-except urllib.error.HTTPError as e:
-    if b'NoSuchBucket' in (e.read() or b''): bad.append("storage bucket 'reviews': does not exist (run supabase/003_reviews_storage.sql)")
-except Exception as e: print('could not reach Supabase:', e); sys.exit(2)
 if bad:
     print('✗ teach.html expects things the database does not have:'); [print('   ', b) for b in bad]
     print('  -> run the matching ALTER TABLE from supabase/schema.sql in the Supabase SQL editor, then push again.')
     sys.exit(1)
-print(f'✓ schema OK · students {len(cols["students"])} · sessions {len(cols["sessions"])} columns all exist · reviews bucket exists')
+print(f'✓ schema OK · students {len(cols["students"])} · sessions {len(cols["sessions"])} columns all exist')
