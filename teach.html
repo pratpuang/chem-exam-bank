@@ -584,6 +584,7 @@ button.fg:hover{background:#fbf3dc}
 #slist{min-width:0;max-width:100%}
 .crow{display:flex;align-items:stretch;gap:14px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:2px 24px 18px 0;scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;-webkit-mask-image:linear-gradient(90deg,transparent,#000 36px,#000 calc(100% - 56px),transparent);mask-image:linear-gradient(90deg,transparent,#000 36px,#000 calc(100% - 56px),transparent)}
 .crow::-webkit-scrollbar{display:none}
+.crow{cursor:grab;-webkit-user-select:none;user-select:none}.crow.drag{cursor:grabbing;scroll-snap-type:none}.crow.drag .sc2{pointer-events:none}
 .cday{flex:none;width:96px;scroll-snap-align:start;border:3px solid var(--ink);background:var(--ink);color:var(--paper);box-shadow:5px 5px 0 var(--sh);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:10px 4px;text-align:center;margin-left:8px}
 .crow>.cday:first-child{margin-left:0}
 .cday.today{background:var(--red);color:#fff}.cday.hol{background:#fbe4dd;color:var(--ink)}
@@ -1704,6 +1705,15 @@ $('#slist').addEventListener('wheel', e => {
   if ((dx < 0 && r.scrollLeft <= 0) || (dx > 0 && r.scrollLeft >= max - 1)) return;
   e.preventDefault(); r.scrollLeft += dx;
 }, {passive:false});
+// mouse drag scrolls the row too (touch already swipes natively); a real drag swallows the click so it doesn't open a card
+{ let d = null, ate = false;
+  $('#slist').addEventListener('pointerdown', e => { const r = e.target.closest?.('.crow'); if (r && e.pointerType === 'mouse' && e.button === 0) d = {r, x: e.clientX, s: r.scrollLeft, moved: false}; });
+  addEventListener('pointermove', e => { if (!d) return; const dx = e.clientX - d.x;
+    if (!d.moved){ if (Math.abs(dx) < 6) return; d.moved = true; d.r.classList.add('drag'); }
+    d.r.scrollLeft = d.s - dx; });
+  const end = () => { if (!d) return; if (d.moved){ d.r.classList.remove('drag'); ate = true; setTimeout(() => ate = false, 0); } d = null; };
+  addEventListener('pointerup', end); addEventListener('pointercancel', end);
+  $('#slist').addEventListener('click', e => { if (ate){ e.stopPropagation(); e.preventDefault(); ate = false; } }, true); }
 function cardGroup(g){
   const x = new Date(g.date+'T00:00'), rel = relOnly(g.date), hol = isHolD(g.date);
   return `<div class="cday ${g.date===isoD(NOW)?'today':''} ${hol?'hol':''}"><span class="cw">${TH_DF[x.getDay()]}</span><b>${x.getDate()}</b><small>${TH_M[x.getMonth()]}${rel ? '<br>'+rel : ''}</small><span class="cn">${g.items.length} คาบ</span><button title="เพิ่มคาบวันนี้" aria-label="เพิ่มคาบ" onclick="editSession(null,'${g.date}')">＋</button></div>`
