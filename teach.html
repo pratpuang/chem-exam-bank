@@ -2450,11 +2450,16 @@ async function rvFonts(){ try{ await Promise.all(['800 40px Anuphan', '700 28px 
 
 // ---- pool rendering
 function rvLoad(id){
-  if (RV.img.has(id) || RV.bad.has(id) || RV.loading.has(id) || RV.missing || !user || !sb) return; RV.loading.add(id);
+  const rt = (RV.retry ||= new Map()), r = rt.get(id);
+  if (RV.img.has(id) || RV.bad.has(id) || RV.loading.has(id) || RV.missing || !user || !sb || (r && r.at > Date.now())) return; RV.loading.add(id);
+  // a transient failure (offline etc.) backs off 2s→4s→…→30s and gives up after 6 tries, so a missing image can't hot-loop the drawer
+  const soft = () => { const n = (rt.get(id)?.n || 0) + 1; if (n >= 6){ rt.delete(id); RV.bad.add(id); return true; }
+    const wait = Math.min(30000, 1000 * 2 ** n); rt.set(id, {n, at: Date.now() + wait}); setTimeout(renderCollage, wait + 50); return false; };
+  let changed = false;
   rvBucket().download(`${user.id}/${id}.jpg`).then(async ({data, error}) => {
-    if (error || !data){ if (rvNoBucket(error)) RV.missing = true; else if (/not.?found|404/i.test((error?.message || '') + (error?.error || '') + (error?.statusCode || ''))) RV.bad.add(id); return; }   // only a truly absent object is sticky; offline etc. retries next render
-    await rvSet(id, data);
-  }).catch(() => {}).finally(() => { RV.loading.delete(id); clearTimeout(RV.t); RV.t = setTimeout(renderCollage, 120); });
+    if (error || !data){ if (rvNoBucket(error)){ RV.missing = true; changed = true; } else if (/not.?found|404/i.test((error?.message || '') + (error?.error || '') + (error?.statusCode || ''))){ RV.bad.add(id); changed = true; } else changed = soft(); return; }   // only a truly absent object is sticky at once
+    rt.delete(id); await rvSet(id, data); changed = true;
+  }).catch(() => { changed = soft(); }).finally(() => { RV.loading.delete(id); if (changed){ clearTimeout(RV.t); RV.t = setTimeout(renderCollage, 120); } });
 }
 function rvSet(id, blob){ return new Promise(ok => { const url = URL.createObjectURL(blob), el = new Image(); el.onload = () => { RV.img.set(id, {url, el, w: el.naturalWidth, h: el.naturalHeight}); ok(); }; el.onerror = () => { URL.revokeObjectURL(url); RV.bad.add(id); ok(); }; el.src = url; }); }
 function renderCollage(){
