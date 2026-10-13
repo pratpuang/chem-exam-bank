@@ -227,6 +227,8 @@ button.stamp:hover{transform:rotate(-5deg) scale(1.1)}
 .step button{border:0;background:transparent;width:38px;height:42px;font:800 1.2rem "JetBrains Mono"}
 .step button:hover{background:var(--yel)}
 .step b{font:800 1.45rem "JetBrains Mono";padding:0 6px;min-width:3.4ch;text-align:center}
+.step .tin{font:800 1.45rem "JetBrains Mono";width:5.6ch;box-sizing:content-box;padding:0 4px;text-align:center;border:0;border-bottom:2px dashed var(--ink);background:transparent;color:inherit;outline:0}
+.step .tin:focus{background:var(--yel)}
 .trow2{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-end}
 .go{border:3px solid var(--ink);background:var(--ink);color:var(--paper);font-weight:800;font-size:1.05rem;padding:10px 22px;box-shadow:4px 4px 0 var(--red);transition:transform .1s,box-shadow .1s}
 .go:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--red)}
@@ -511,7 +513,7 @@ button.mc:hover{background:#fbf3dc}
 .slc button{border:0;background:var(--ink);color:var(--paper);width:24px;height:24px;font-size:.7rem}
 .slc button:hover{background:var(--red)}
 .slotadd{display:flex;flex-wrap:wrap;gap:12px;align-items:center;background:var(--paper);padding:12px;border-left:6px solid var(--yel)}
-.slotadd .step b{font-size:1.15rem}
+.slotadd .step b,.slotadd .step .tin{font-size:1.15rem}
 .slotadd .step button{height:36px;width:32px}
 
 /* ================= v7 design layer ================= */
@@ -1653,6 +1655,8 @@ const qsa = s => document.querySelectorAll(s);
 const mins = t => { const [h, m] = t.split(':').map(Number); return h*60 + m; };
 const clashWith = s => s.status === 'cancel' ? [] : DB.sessions.filter(x => x !== s && x.date === s.date && x.status !== 'cancel' && mins(x.time) < mins(s.time) + s.h*60 && mins(x.time) + x.h*60 > mins(s.time));
 const endOf = s => { const [hh,mi] = s.time.split(':').map(Number), t = hh*60+mi+s.h*60; return `${pad(Math.floor(t/60)%24)}:${pad(t%60)}`; };
+const parseT = x => { const m = String(x).trim().match(/^(\d{1,2})(?:[:.\s]?(\d{2}))?$/); return m && +m[1] < 24 && +(m[2]||0) < 60 ? `${pad(+m[1])}:${m[2]||'00'}` : null; };
+function tIn(el, set){ const v = parseT(el.value); if (v) set(v); else el.value = el.defaultValue; }
 const addMin = (t, d) => { const [h,m] = t.split(':').map(Number), x = ((h*60+m+d) % 1440 + 1440) % 1440; return `${pad(Math.floor(x/60))}:${pad(x%60)}`; };
 const relOnly = date => { const r = relDay(date); return r === dLabel(date) ? '' : r; };
 let range = 'next', whoF = new Set();
@@ -1839,7 +1843,7 @@ function wuBody(k, s, p){
   if (k === 'next') return `<h3 class="wq">นัดครั้งหน้า?</h3>${wu.nextS ? `<div class="nxs">✓ มีนัดแล้ว · <b>${dLabel(wu.nextS.date)} ${wu.nextS.time}</b></div>` : ''}
     <div class="wpick"><button class="wopt ${wu.addNext?'on':''}" data-act="more">${wu.nextS ? '＋ นัดเพิ่มอีกคาบ' : '＋ นัดเลย'}</button><button class="wopt ${!wu.addNext?'on':''}" data-act="none">${wu.nextS ? 'พอแล้ว' : 'ไว้ทีหลัง'}</button></div>
     ${wu.addNext ? `<div class="dstrip" id="wstrip">${stripFrom(shift(s.date, 1), s.who)}</div>
-      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:4px"><div class="step"><button data-nt="-15" aria-label="ถอย 15 นาที">−</button><b>${wu.nt}</b><button data-nt="15" aria-label="เลื่อน 15 นาที">+</button></div><span class="mut" style="font-weight:700">${dLabel(wu.nd)} · ${wu.nh} ชม.</span></div>` : ''}`;
+      <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:4px"><div class="step"><button data-nt="-15" aria-label="ถอย 15 นาที">−</button><input class="tin" inputmode="numeric" maxlength="5" onfocus="this.select()" aria-label="พิมพ์เวลา" value="${wu.nt}" onchange="tIn(this, v => { wu.nt = v; renderWu(true); })"><button data-nt="15" aria-label="เลื่อน 15 นาที">+</button></div><span class="mut" style="font-weight:700">${dLabel(wu.nd)} · ${wu.nh} ชม.</span></div>` : ''}`;
   if (k === 'fb') return `<h3 class="wq">น้องพูดอะไรไหม? <small>ไม่มีก็ข้ามได้</small></h3><div class="chips" style="margin-bottom:10px"><button class="chip ${wu.fbk==='pro'?'on':''}" data-k="pro">ชม · ดีแล้ว</button><button class="chip ${wu.fbk==='con'?'on':''}" data-k="con">อยากให้แก้</button></div>
     <input class="ln big" id="wfb" value="${esc(wu.fb)}" placeholder="น้องพูดว่า…" oninput="wu.fb=this.value">`;
   const L = [];
@@ -1976,7 +1980,7 @@ function picker(){
   if (k === 'date') return `<div class="dstrip" id="estrip">${stripFrom(edit.from)}</div><div class="sub"><label class="other" style="margin:0">📅 วันอื่น<input type="date" id="edate"></label></div>`;
   if (k === 'time'){
     const usual = [...new Set((st(edit.who)?.slots || []).map(x => x[1]))];
-    return `<div class="row"><div class="step"><button data-tm="-15" aria-label="ถอย 15 นาที">−</button><b>${edit.time}</b><button data-tm="15" aria-label="เลื่อน 15 นาที">+</button></div>
+    return `<div class="row"><div class="step"><button data-tm="-15" aria-label="ถอย 15 นาที">−</button><input class="tin" inputmode="numeric" maxlength="5" onfocus="this.select()" aria-label="พิมพ์เวลา" value="${edit.time}" onchange="tIn(this, v => { edit.time = v; paintEdit(false); })"><button data-tm="15" aria-label="เลื่อน 15 นาที">+</button></div>
       ${usual.length ? `<div class="chips">${usual.map(t => `<button class="chip mono ${t===edit.time?'on':''}" data-t="${t}">${t}</button>`).join('')}</div>` : ''}</div>
 `;
   }
@@ -2213,7 +2217,7 @@ function editStudent(id){
     <span class="eb2">ประเภท</span>${ch('kind', Object.entries(KINDS).map(([k, [t]]) => [k, t]))}
     <span class="eb2">เวลาประจำ · ใช้สร้างตารางสอน</span><div class="slotl" id="pslots"></div>
     <div class="slotadd"><div class="chips" id="pnd">${[1,2,3,4,5,6,0].map(w => `<button class="chip" data-nd="${w}">${TH_D[w]}.</button>`).join('')}</div>
-      <div class="step"><button data-nt="-30" aria-label="ถอย 30 นาที">−</button><b id="pnt"></b><button data-nt="30" aria-label="เลื่อน 30 นาที">+</button></div>
+      <div class="step"><button data-nt="-30" aria-label="ถอย 30 นาที">−</button><input id="pnt" class="tin" inputmode="numeric" maxlength="5" onfocus="this.select()" aria-label="พิมพ์เวลา" onchange="tIn(this, v => { pe.nt = v; paintStu(); })"><button data-nt="30" aria-label="เลื่อน 30 นาที">+</button></div>
       <div class="chips" id="pnh">${[1,1.5,2].map(h => `<button class="chip mono" data-nh="${h}">${h} ชม.</button>`).join('')}</div>
       <button class="go sm" id="paddslot">＋ เพิ่มเวลานี้</button></div>
     ${id ? '' : '<div style="margin-top:12px"><button class="chip" id="pgen"></button></div>'}
@@ -2263,7 +2267,7 @@ function paintStu(){
   qsa('#pcol button').forEach(b => b.classList.toggle('on', +b.dataset.c === pe.color));
   $('#pslots').innerHTML = pe.slots.length ? pe.slots.map(([w,t,h], i) => `<span class="slc">${TH_DF[w]} <b>${t}</b> · ${h} ชม.<button data-rm="${i}" title="ลบเวลานี้">✕</button></span>`).join('') : '<span class="mut" style="font-size:.85rem;font-weight:600">ยังไม่มี · เลือกวัน เวลา แล้วกดเพิ่มด้านล่าง</span>';
   qsa('#pnd [data-nd]').forEach(b => b.classList.toggle('on', +b.dataset.nd === pe.nd));
-  $('#pnt').textContent = pe.nt;
+  $('#pnt').value = $('#pnt').defaultValue = pe.nt;
   qsa('#pnh [data-nh]').forEach(b => b.classList.toggle('on', +b.dataset.nh === pe.nh));
   const g = $('#pgen'); if (g){ g.classList.toggle('on', pe.gen); g.textContent = (pe.gen ? '✓ ' : '') + 'สร้างคาบตามเวลาประจำ 8 สัปดาห์ข้างหน้า'; }
 }
