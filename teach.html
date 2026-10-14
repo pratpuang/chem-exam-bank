@@ -535,10 +535,25 @@ main{padding-top:30px}
 .owes .on{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .owes .stamp{font-size:.72rem;padding:2px 8px}
 @media (max-width:560px){.owes .orw{grid-template-columns:5px 96px minmax(0,1fr) auto;gap:0 10px}}
-.money{touch-action:pan-y;overflow:hidden}.money .mhero{user-select:none;-webkit-user-select:none;will-change:transform;cursor:grab}
+.money{touch-action:pan-y;overflow:hidden;user-select:none;-webkit-user-select:none;will-change:transform;cursor:grab}
 .money .mhero{position:relative;padding:22px 28px 24px 36px;border:0;border-right:3px solid var(--ink);box-shadow:none;margin:0;background:none;animation:none}
 .money .mhero:before{content:"";position:absolute;left:0;top:0;bottom:0;width:14px;background:var(--red)}
 .money .amount{margin:4px 0 14px}
+/* which month am I looking at: red = this month (live dot), grey = past, blue hatched = still to come.
+   The hero stripe, the tag on top and the header month pill all wear the same colour */
+.mwhen{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-4px 0 12px}
+.mwhen .mwt{display:inline-flex;align-items:center;gap:7px;font:700 .74rem "JetBrains Mono";letter-spacing:.06em;padding:4px 11px;border:2px solid var(--ink);background:var(--wc);color:var(--wf)}
+.mwhen .mwt i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.money[data-when=cur]{--wc:var(--red);--wf:#fff}.money[data-when=past]{--wc:var(--dash);--wf:var(--ink)}.money[data-when=next]{--wc:var(--blue);--wf:#fff}
+.money[data-when=cur] .mwhen .mwt i{animation:wpulse 1.6s ease-in-out infinite}
+@keyframes wpulse{50%{opacity:.25}}
+.money[data-when=past] .mhero:before{background:var(--mut)}
+.money[data-when=next] .mhero:before{background:repeating-linear-gradient(45deg,var(--blue) 0 6px,color-mix(in srgb,var(--blue) 35%,var(--card)) 6px 12px)}
+.money[data-when=next]{border-style:dashed}
+.mwhen .mwb{border:2px solid var(--ink);background:var(--card);color:var(--ink);font:700 .74rem "Anuphan",sans-serif;padding:3px 10px;cursor:pointer;box-shadow:2px 2px 0 var(--sh)}
+.mwhen .mwb:hover{background:var(--yel);color:#141414}
+.hbtn.mon[data-when=past]{background:var(--mut)}.hbtn.mon[data-when=next]{background:var(--blue);color:#fff}.hbtn.mon[data-when=cur]{background:var(--red);color:#fff}
+@media(prefers-reduced-motion:reduce){.money[data-when=cur] .mwhen .mwt i{animation:none}}
 .mfig{display:flex;flex-direction:column}
 .fg{flex:1;display:grid;grid-template-columns:10px 1fr auto;gap:16px;align-items:center;padding:14px 22px 14px 18px;border:0;border-bottom:2px solid var(--grid);background:none;text-align:left;font:inherit;color:inherit;animation:enter .6s both;animation-delay:calc(.15s + var(--i,0)*80ms)}
 .fg:last-child{border-bottom:0}
@@ -1119,6 +1134,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
     <header class="sh"><span class="no">01</span><h2 id="mtitle">รายได้เดือนนี้</h2><span class="rule"></span></header>
     <div class="money">
       <div class="mhero">
+        <div class="mwhen" id="mwhen"></div>
         <div class="lab">ได้รับแล้ว</div>
         <div class="amount" id="income">฿0</div>
         <div class="progress big" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="fill" id="mfill"></div></div>
@@ -1625,18 +1641,21 @@ setInterval(() => { if (!document.hidden && layerShown && user && sb && navigato
 /* =============================== MONEY =============================== */
 let my = NOW.getFullYear(), mm_ = NOW.getMonth(), calm = false;   // calm = re-render without the intro animations
 $('#mprev').onclick = () => { mm_--; if (mm_ < 0){ mm_ = 11; my--; } renderMoney(); renderSchedule(); };
+function toNowMonth(){ my = NOW.getFullYear(); mm_ = NOW.getMonth(); renderMoney(); renderSchedule(); }
 $('#mnext').onclick = () => { mm_++; if (mm_ > 11){ mm_ = 0; my++; } renderMoney(); renderSchedule(); };
 // swipe the money card sideways to flip months (left = next, right = previous). The card follows the finger, then
 // either flies off and the new month slides in from the other side, or springs back. Vertical drags stay page scroll.
-{ const card = document.querySelector('.money'), hero = card.querySelector('.mhero'); let busy = false;
-  const ease = 'cubic-bezier(.2,.8,.2,1)', pose = dx => `translateX(${dx}px) rotate(${dx / 40}deg)`;
-  const fade = dx => 1 - Math.min(Math.abs(dx) / hero.offsetWidth, 1) * .6;
+{ const card = document.querySelector('.money'); let busy = false;   // the whole card travels: hero + the three tiles
+  const ease = 'cubic-bezier(.2,.8,.2,1)', pose = dx => `translateX(${dx}px) rotate(${dx / 90}deg)`;
+  const fade = dx => 1 - Math.min(Math.abs(dx) / card.offsetWidth, 1) * .6;
+  // the card's own intro animation (fill: both) outranks inline styles, so the finger-follow would do nothing
+  card.addEventListener('animationend', () => card.style.animation = 'none', {once: true});
   async function flip(next, from = 0){
-    if (busy) return; busy = true; const w = hero.offsetWidth * 1.1, out = next ? -w : w;
-    if (!reduced) await hero.animate([{transform: pose(from), opacity: fade(from)}, {transform: pose(out), opacity: 0}], {duration: 170, easing: 'ease-in'}).finished;
+    if (busy) return; busy = true; card.style.animation = 'none'; const w = card.offsetWidth * 1.1, out = next ? -w : w;
+    if (!reduced) await card.animate([{transform: pose(from), opacity: fade(from)}, {transform: pose(out), opacity: 0}], {duration: 170, easing: 'ease-in'}).finished;
     (next ? $('#mnext') : $('#mprev')).click();
-    if (!reduced) await hero.animate([{transform: pose(-out * .6), opacity: 0}, {transform: 'none', opacity: 1}], {duration: 320, easing: ease}).finished;
-    hero.style.transform = hero.style.opacity = ''; busy = false;
+    if (!reduced) await card.animate([{transform: pose(-out * .6), opacity: 0}, {transform: 'none', opacity: 1}], {duration: 320, easing: ease}).finished;
+    card.style.transform = card.style.opacity = ''; busy = false;
   }
   let x0 = null, y0 = 0, dx = 0, lock = null;   // lock: 'x' = we own this drag, 'y' = page scroll, null = undecided
   const start = (x, y) => { if (busy) return; x0 = x; y0 = y; dx = 0; lock = null; };
@@ -1644,13 +1663,13 @@ $('#mnext').onclick = () => { mm_++; if (mm_ > 11){ mm_ = 0; my++; } renderMoney
     if (x0 === null) return; dx = x - x0; const dy = y - y0;
     if (!lock && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) lock = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
     if (lock !== 'x') return; if (e.cancelable) e.preventDefault();
-    hero.style.transform = pose(dx); hero.style.opacity = fade(dx);
+    card.style.animation = 'none'; card.style.transform = pose(dx); card.style.opacity = fade(dx);
   };
   const end = () => {
     if (x0 === null) return; x0 = null; if (lock !== 'x') return;
-    if (Math.abs(dx) >= Math.min(80, hero.offsetWidth * .22)) return flip(dx < 0, dx);
-    hero.animate([{transform: pose(dx), opacity: fade(dx)}, {transform: 'none', opacity: 1}], {duration: 260, easing: ease});
-    hero.style.transform = hero.style.opacity = '';
+    if (Math.abs(dx) >= Math.min(80, card.offsetWidth * .22)) return flip(dx < 0, dx);
+    card.animate([{transform: pose(dx), opacity: fade(dx)}, {transform: 'none', opacity: 1}], {duration: 260, easing: ease});
+    card.style.transform = card.style.opacity = '';
   };
   card.addEventListener('touchstart', e => e.touches.length === 1 ? start(e.touches[0].clientX, e.touches[0].clientY) : (x0 = null), {passive: true});
   card.addEventListener('touchmove', e => move(e.touches[0].clientX, e.touches[0].clientY, e), {passive: false});
@@ -1684,6 +1703,12 @@ function renderMoney(){
   const isCur = my === NOW.getFullYear() && mm_ === NOW.getMonth();
   $('#mlabel').textContent = `${TH_M[mm_]} ${String(my+543).slice(-2)}`;
   $('#mtitle').textContent = isCur ? 'รายได้เดือนนี้' : `รายได้ ${TH_MF[mm_]} ${my+543}`;
+  const gap = (my - NOW.getFullYear()) * 12 + mm_ - NOW.getMonth(), when = gap < 0 ? 'past' : gap > 0 ? 'next' : 'cur';
+  document.querySelector('.money').dataset.when = $('#mlabel').dataset.when = when;
+  $('#mwhen').innerHTML = (when === 'cur' ? `<span class="mwt"><i></i>เดือนนี้ · กำลังเดินอยู่</span>`
+    : when === 'past' ? `<span class="mwt">ย้อนหลัง · ${-gap === 1 ? 'เดือนที่แล้ว' : `${-gap} เดือนก่อน`}</span>`
+    : `<span class="mwt">ล่วงหน้า · ${gap === 1 ? 'เดือนหน้า' : `อีก ${gap} เดือน`}</span>`)
+    + (when === 'cur' ? '' : `<button class="mwb" onclick="toNowMonth()">↩ กลับเดือนนี้</button>`);
   const M = monthMoney(my, mm_);
   let earned = M.earned, forecast = M.forecast;
   if (!M.n){ forecast = DB.history[mkey(my,mm_)] ?? 0; earned = forecast; }
