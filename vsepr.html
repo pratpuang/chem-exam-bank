@@ -301,7 +301,7 @@ function faceCam(d){d.g.updateMatrixWorld(true);_c.copy(cam.position);d.g.worldT
     _u.addScaledVector(_c,-_u.dot(_c));if(_u.lengthSq()<1e-4)_u.set(_c.z,0,-_c.x);_u.normalize();_w.crossVectors(_c,_u).normalize();   // so the face is always upright on screen
     lpFace(d);}}
 
-const TURN_PX=130;let spawnHint=null,fr=0,doms=[],nb=4,nl=0,t0=0,mode="spring",pairs=[],selected=null,held=null,showLp=true,W=[0,4,0,0],newOrders=[];
+const TURN_PX=130,TURN_FULL=240;let spawnHint=null,fr=0,doms=[],nb=4,nl=0,t0=0,mode="spring",pairs=[],selected=null,held=null,showLp=true,W=[0,4,0,0],newOrders=[];
 function alive(){return doms.filter(d=>!d.dying);}
 function setShape(b,l,instant){b=Math.max(1,Math.min(6,b));l=Math.max(0,Math.min(6-b,l));
   let cb=alive().filter(d=>!d.lp).length,cl=alive().filter(d=>d.lp).length;
@@ -415,6 +415,13 @@ function detach(d){const w=W.slice();let l=nl;if(d.lp)l--;else w[d.o]--;
   d.dying=true;if(selected===d)select(null);
   if(!setMol(w,l)){d.dying=false;return false;}
   held=null;d.fly=.07;d.tn=1;SND.play("snap");if(d.lp)SND.play("whee");return true;}
+function steer(){if(!held||!down||down.dead||held.dying)return;const now=performance.now(),rad=held.lp?.9:L;
+  const dist=Math.hypot(down.px-down.x,down.py-down.y),b=down.b=Math.max(down.b||0,sm((dist-TURN_PX)/(TURN_FULL-TURN_PX)));   // 0 = twig, 1 = turning (never slides back mid-drag)
+  if(b>.5&&!down.clk){down.clk=1;held.pop=now;SND.play("click");}
+  if(b>0){const p=aimAt(down.px,down.py,rad).p.normalize(),turn=new THREE.Quaternion().setFromUnitVectors(held.target.clone().normalize(),p);
+    G.quaternion.multiply(new THREE.Quaternion().slerp(turn,.14*b));idle=now;}          // glide, a bit per frame
+  const want=held.target.clone().lerp(aimAt(down.px,down.py,rad).p.normalize(),1-b).normalize();
+  held.dir.lerp(want,.3).normalize();t0=now;}
 let down=null,zoom=1,pinch=null;const pts=new Map();
 function setZoom(z){zoom=Math.max(.55,Math.min(2.8,z));cam.zoom=zoom;cam.updateProjectionMatrix();}
 const pdist=()=>{const [a,b]=[...pts.values()];return Math.hypot(a.x-b.x,a.y-b.y)||1;};
@@ -433,11 +440,6 @@ stage.addEventListener("pointermove",e=>{ptr={x:e.clientX,y:e.clientY,t:performa
   if(down.h&&down.h!=="center"){if(!held){SND.play(down.h.lp?"eep":"grab");held=down.h;held.spd=0;}
     // pull the arm: aim it where the pointer ray meets the sphere it lives on; past the sphere's edge it stretches
     const a=aimAt(e.clientX,e.clientY,held.lp?.9:L),now=performance.now(),dt=Math.max(4,now-down.t);
-    if(!down.turn&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>TURN_PX){down.turn=true;held.pop=now;SND.play("click");}
-    if(down.turn){   // big drag: the whole model turns so this atom's seat points where your finger is
-      const turn=new THREE.Quaternion().setFromUnitVectors(held.target.clone().normalize(),a.p.normalize());
-      G.quaternion.multiply(new THREE.Quaternion().slerp(turn,.5));held.dir.lerp(held.target,.35).normalize();idle=now;}
-    else{held.dir.lerp(a.p.normalize(),.6).normalize();t0=now;}                                                     // small twig: bend this arm, it springs back
     held.vel.set(0,0,0);
     held.spd=held.spd*.6+Math.hypot(e.clientX-down.px,e.clientY-down.py)/dt*.4;down.t=now;
     // resistance: the atom only gives a little (it lags behind the finger like a stiff spring), and it takes
@@ -524,5 +526,5 @@ document.querySelectorAll(".cnt .row").forEach(row=>{const k=row.querySelector("
 function size(){const w=stage.clientWidth,h=stage.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
 new ResizeObserver(size).observe(stage);size();
 setMol([0,4,0,0],0,true);
-(function loop(){physics();if(!down&&performance.now()-idle>3000&&!selected)G.rotation.y+=.0035;buildHull();R.render(scene,cam);labels();live();requestAnimationFrame(loop);})();
+(function loop(){steer();physics();if(!down&&performance.now()-idle>3000&&!selected)G.rotation.y+=.0035;buildHull();R.render(scene,cam);labels();live();requestAnimationFrame(loop);})();
 </script></body></html>
