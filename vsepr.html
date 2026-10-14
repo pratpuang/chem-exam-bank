@@ -107,8 +107,8 @@ body.embed{overflow:hidden}body.embed .wrap{height:100vh}body.embed .stage{heigh
   body.embed{overflow:auto}body.embed .wrap{height:auto}body.embed .stage{height:min(440px,60vh)}}
 </style></head><body><div class="page">
 <h1>รูปร่างโมเลกุล 3D</h1>
-<p class="sub">กด + / − หรือ<b>ลากพันธะ / คู่โดดเดี่ยวจากแผงมาแปะที่โมเลกุล</b> · <b>กดค้างที่อะตอมแล้วลาก</b>เพื่อหมุนโมเลกุลตาม · ปัดเร็วๆ อะตอมจะเด้งกลับ · <b>ดึงออกแรงๆ</b> เพื่อถอด (ปล่อยก่อนจะเด้งกลับ) · <b>แตะ</b>เพื่อเลือกดูมุม · ลากที่ว่างเพื่อหมุน</p>
-<div class="wrap"><div class="stage" id="stage"><div class="lab" id="lab"></div><div class="hint">ลากจากแผง = เพิ่ม · กดค้างที่อะตอมแล้วลาก = หมุนตาม · ปัดอะตอม = เด้งกลับ · ดึงออกแรงๆ = ถอด · แตะ = ชี้ให้ดู · ลากที่ว่าง = หมุน · สกรอลล์ / ถ่างสองนิ้ว = ซูม · ดับเบิลคลิก = ขนาดเดิม</div></div>
+<p class="sub">กด + / − หรือ<b>ลากพันธะ / คู่โดดเดี่ยวจากแผงมาแปะที่โมเลกุล</b> · <b>ลากอะตอมไปตรงไหน โมเลกุลจะหมุนให้อะตอมนั้นไปอยู่ตรงนั้น</b> · ขยับนิดเดียวอะตอมจะเด้งกลับ · <b>ดึงออกแรงๆ</b> เพื่อถอด (ปล่อยก่อนจะเด้งกลับ) · <b>แตะ</b>เพื่อเลือกดูมุม · ลากที่ว่างเพื่อหมุน</p>
+<div class="wrap"><div class="stage" id="stage"><div class="lab" id="lab"></div><div class="hint">ลากจากแผง = เพิ่ม · ลากอะตอมไกลๆ = หมุนให้อะตอมไปตรงนั้น · ขยับนิดเดียว = เด้งกลับ · ดึงออกแรงๆ = ถอด · แตะ = ชี้ให้ดู · ลากที่ว่าง = หมุน · สกรอลล์ / ถ่างสองนิ้ว = ซูม · ดับเบิลคลิก = ขนาดเดิม</div></div>
 <div class="panel">
  <div class="shape"><div class="ax" id="ax"></div><div class="nm" id="nm"></div><div class="en" id="en"></div></div>
  <div class="cnt">
@@ -284,9 +284,7 @@ function gaze(d,now){let tw=null;
   const g=d.gz||(d.gz=[0,0]);g[0]+=(Math.max(-1,Math.min(1,gx))-g[0])*.18;g[1]+=(Math.max(-1,Math.min(1,gy))-g[1])*.18;return g;}
 function lpFace(d){const now=performance.now(),F=mood(d,now),v=d.fv||(d.fv={ew:1,eh:1,lift:0});
   for(const k in v)v[k]+=((F[k]||0)-v[k])*.25;
-  if(!d.nbk)d.nbk=now+600+Math.random()*3000;let bl=1;                                                   // blink now and then (sometimes twice)
-  if(now>d.nbk){if(now-d.nbk<130)bl=.1;else d.nbk=now+(Math.random()<.2?170:1800+Math.random()*3800);}
-  if(F.still)bl=1;
+  const bl=1;
   const g=gaze(d,now),sh=F.shake?(Math.random()-.5)*.025:0,U=d.dots.userData;
   _m4.makeBasis(_u,_w,_c);_q4.setFromRotationMatrix(_m4);
   U.eyes.forEach(m=>{m.position.copy(_p).multiplyScalar(.95).addScaledVector(_u,m.userData.k*.1+g[0]*.03+sh).addScaledVector(_w,.035+v.lift+g[1]*.03);
@@ -303,7 +301,7 @@ function faceCam(d){d.g.updateMatrixWorld(true);_c.copy(cam.position);d.g.worldT
     _u.addScaledVector(_c,-_u.dot(_c));if(_u.lengthSq()<1e-4)_u.set(_c.z,0,-_c.x);_u.normalize();_w.crossVectors(_c,_u).normalize();   // so the face is always upright on screen
     lpFace(d);}}
 
-const HOLD=350;let spawnHint=null,fr=0,doms=[],nb=4,nl=0,t0=0,mode="spring",pairs=[],selected=null,held=null,showLp=true,W=[0,4,0,0],newOrders=[];
+const TURN_PX=70;let spawnHint=null,fr=0,doms=[],nb=4,nl=0,t0=0,mode="spring",pairs=[],selected=null,held=null,showLp=true,W=[0,4,0,0],newOrders=[];
 function alive(){return doms.filter(d=>!d.dying);}
 function setShape(b,l,instant){b=Math.max(1,Math.min(6,b));l=Math.max(0,Math.min(6-b,l));
   let cb=alive().filter(d=>!d.lp).length,cl=alive().filter(d=>d.lp).length;
@@ -425,7 +423,7 @@ stage.addEventListener("pointerdown",e=>{pts.set(e.pointerId,{x:e.clientX,y:e.cl
     if(held){held.vel.set(0,0,0);held=null;}down=null;pinch={d0:pdist(),z0:zoom};stage.classList.remove("grab");return;}
   if(pts.size>2)return;
   const h=hitAt(e),dn=down={x:e.clientX,y:e.clientY,h,moved:false,px:e.clientX,py:e.clientY,t:performance.now()};
-  if(h&&h!=="center")setTimeout(()=>{if(down===dn&&!dn.moved){dn.turn=true;h.pop=performance.now();SND.play("click");}},HOLD);stage.setPointerCapture(e.pointerId);stage.classList.add("grab");});
+stage.setPointerCapture(e.pointerId);stage.classList.add("grab");});
 stage.addEventListener("pointerleave",()=>ptr=null);
 stage.addEventListener("pointermove",e=>{ptr={x:e.clientX,y:e.clientY,t:performance.now()};if(pts.has(e.pointerId))pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(pinch&&pts.size>=2){setZoom(pinch.z0*pdist()/pinch.d0);idle=performance.now();return;}
@@ -435,9 +433,11 @@ stage.addEventListener("pointermove",e=>{ptr={x:e.clientX,y:e.clientY,t:performa
   if(down.h&&down.h!=="center"){if(!held){SND.play(down.h.lp?"eep":"grab");held=down.h;held.spd=0;}
     // pull the arm: aim it where the pointer ray meets the sphere it lives on; past the sphere's edge it stretches
     const a=aimAt(e.clientX,e.clientY,held.lp?.9:L),now=performance.now(),dt=Math.max(4,now-down.t);
-    if(down.turn){const turn=new THREE.Quaternion().setFromUnitVectors(held.dir.clone().normalize(),a.p.normalize());   // held first: the whole model follows the atom
-      G.quaternion.multiply(new THREE.Quaternion().slerp(turn,.9));idle=now;}
-    else{held.dir.lerp(a.p.normalize(),.6).normalize();t0=now;}                                                     // quick flick: bend this arm, it springs back
+    if(!down.turn&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>TURN_PX){down.turn=true;held.pop=now;SND.play("click");}
+    if(down.turn){   // big drag: the whole model turns so this atom's seat points where your finger is
+      const turn=new THREE.Quaternion().setFromUnitVectors(held.target.clone().normalize(),a.p.normalize());
+      G.quaternion.multiply(new THREE.Quaternion().slerp(turn,.5));held.dir.lerp(held.target,.35).normalize();idle=now;}
+    else{held.dir.lerp(a.p.normalize(),.6).normalize();t0=now;}                                                     // small twig: bend this arm, it springs back
     held.vel.set(0,0,0);
     held.spd=held.spd*.6+Math.hypot(e.clientX-down.px,e.clientY-down.py)/dt*.4;down.t=now;
     // resistance: the atom only gives a little (it lags behind the finger like a stiff spring), and it takes
