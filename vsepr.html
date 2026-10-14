@@ -301,7 +301,7 @@ function faceCam(d){d.g.updateMatrixWorld(true);_c.copy(cam.position);d.g.worldT
     _u.addScaledVector(_c,-_u.dot(_c));if(_u.lengthSq()<1e-4)_u.set(_c.z,0,-_c.x);_u.normalize();_w.crossVectors(_c,_u).normalize();   // so the face is always upright on screen
     lpFace(d);}}
 
-const TURN_PX=70;let spawnHint=null,fr=0,doms=[],nb=4,nl=0,t0=0,mode="spring",pairs=[],selected=null,held=null,showLp=true,W=[0,4,0,0],newOrders=[];
+const TURN_PX=130;let spawnHint=null,fr=0,doms=[],nb=4,nl=0,t0=0,mode="spring",pairs=[],selected=null,held=null,showLp=true,W=[0,4,0,0],newOrders=[];
 function alive(){return doms.filter(d=>!d.dying);}
 function setShape(b,l,instant){b=Math.max(1,Math.min(6,b));l=Math.max(0,Math.min(6-b,l));
   let cb=alive().filter(d=>!d.lp).length,cl=alive().filter(d=>d.lp).length;
