@@ -174,6 +174,11 @@ const SND=(()=>{let ctx=null,out=null;
     nope:()=>{tone(160,.14,{to:120,vol:.14,type:"triangle"});tone(150,.14,{to:110,vol:.1,type:"triangle",delay:.1});},
     tog:()=>tick({f:2400,vol:.1}),
     creak:k=>{tick({f:1400+k*520,vol:.05+k*.012});if(k>=4)tone(vary(140+k*30),.07,{vol:.05,type:"triangle"});},   // strain, getting tighter
+    eep:()=>{const f=vary(900,.06);tone(f,.1,{to:f*1.7,slideT:.07,vol:.11});},                                   // lone pair: grabbed
+    chirp:()=>{tone(vary(1250,.05),.07,{to:1500,vol:.09});tone(vary(1650,.05),.09,{to:1950,vol:.08,delay:.08});},  // tapped
+    whimper:()=>{const f=vary(760,.04);tone(f,.34,{to:f*.6,slideT:.3,vol:.09,type:"triangle"});tone(f*1.5,.2,{to:f,slideT:.2,vol:.03,delay:.04});},
+    whee:()=>tone(vary(1500,.04),.6,{to:240,slideT:.55,vol:.1}),                                                   // snapped off, flying away
+    hi:k=>{const f=vary(880,.06);tone(f,.08,{to:f*1.25,vol:.08,delay:k||0});tone(f*1.5,.12,{to:f*1.9,vol:.08,delay:(k||0)+.09});},
     click:()=>{tick({f:3600,vol:.12});tone(vary(1320),.06,{vol:.06});},                                          // magnet catches
     snap:()=>{tone(vary(980),.14,{to:180,slideT:.11,vol:.15,type:"triangle"});tick({f:4400,vol:.16});tick({f:900,vol:.1,delay:.02});}};
   return{play:(n,a)=>{if(get("cqb_sfx","1")==="0")return;try{if(ac())P[n](a);}catch(e){}}};})();
@@ -248,16 +253,53 @@ const DOTG=sph(.062,14),DOTM=flat(INK),_red=new THREE.Color(RED);
 function mkArm(lp,o){const g=new THREE.Group();let pick,dots=null;
   if(lp){pick=outlined(sph(.37,30),C.e,.08);pick.scale.set(.78,1.25,.78);pick.position.y=.66;g.add(pick);
     // the two electrons of the pair: two ink dots on the side of the lobe that faces you
-    dots=new THREE.Group();dots.position.y=.66;[-1,1].forEach(k=>{const m=new THREE.Mesh(DOTG,DOTM);m.userData.k=k;dots.add(m);});g.add(dots);}
+    dots=new THREE.Group();dots.position.y=.66;[-1,1].forEach(k=>{const m=new THREE.Mesh(DOTG,DOTM);m.userData.k=k;dots.add(m);});
+    const mouth=new THREE.Group(),smile=new THREE.Mesh(SMILEG,DOTM),ring=new THREE.Mesh(RINGG,DOTM);mouth.add(smile,ring);dots.add(mouth);g.add(dots);
+    dots.userData={eyes:dots.children.slice(0,2),mouth,smile,ring};}
   else{pick=outlined(sph(.32),C.x,.09);pick.position.y=L;g.add(pick);}
   G.add(g);castAll(g);const a={g,pick,dots};if(!lp){a.o=o||1;a.sticks=mkSticks(a.o);g.add(a.sticks);}return a;}
-const _c=new V(),_u=new V(),_p=new V();
+const _c=new V(),_u=new V(),_p=new V(),_w=new V(),_t=new V(),_t2=new V(),_m4=new THREE.Matrix4(),_q4=new THREE.Quaternion(),_nu=new V(),_nw=new V();
+const SMILEG=new THREE.TorusGeometry(.055,.017,6,16,Math.PI),RINGG=new THREE.TorusGeometry(.038,.016,6,16);
+let ptr=null;
+/* ---- lone-pair moods: what the face should be doing right now ---- */
+function mood(d,now){
+  if(d.dying)return{ew:1.5,eh:1.5,mw:1.1,mh:1.1,lift:.01,m:"o",still:1};                                  // snapped off: shocked
+  if(d===held){if(d.tn>.25)return{ew:1.15,eh:.28,mw:1.25,mh:.3,lift:0,m:"frown",shake:d.tn>.55,still:1}; // being pulled off: squint + frown
+    return{ew:1.35,eh:1.35,mw:.9,mh:.9,lift:.008,m:"o",still:1};}                                       // grabbed: eep
+  if(typeof pv!=="undefined"&&d===pv)return{ew:1.25,eh:1.25,mw:.8,mh:.8,lift:.006,m:"o",still:1};      // being carried in
+  if(now-(d.born||-1e4)<1200)return{ew:1.05,eh:.35,mw:1.45,mh:1.3,lift:.012,m:"smile",still:1};         // just arrived: ^^
+  if(d===selected)return{ew:1.05,eh:.45,mw:1.35,mh:1.2,lift:.01,m:"smile"};                             // tapped: pleased
+  if(held&&held.tn>.25)return{ew:1.2,eh:1.2,mw:.9,mh:.35,lift:0,m:"frown"};                             // someone else is being pulled: worried
+  if(held||(typeof gd!=="undefined"&&gd&&gd.on))return{ew:1.2,eh:1.2,mw:.6,mh:.6,lift:.004,m:"o"};      // something's happening: curious
+  return{ew:1,eh:1,mw:1,mh:.75,lift:0,m:"smile"};}
+// where the eyes look: whatever's being dragged, else your pointer, else a lazy wander
+function gaze(d,now){let tw=null;
+  if(held&&held!==d)tw=held.pick.getWorldPosition(_t);
+  else if(typeof pv!=="undefined"&&pv&&pv!==d)tw=pv.pick.getWorldPosition(_t);
+  else if(ptr&&now-ptr.t<2500){const r=stage.getBoundingClientRect();_t.set((ptr.x-r.left)/r.width*2-1,-(ptr.y-r.top)/r.height*2+1,.5).unproject(cam).sub(cam.position).normalize().multiplyScalar(cam.position.length()).add(cam.position);tw=_t;}
+  let gx,gy;
+  if(tw){d.g.worldToLocal(_t2.copy(tw)).sub(d.dots.position).sub(_p).normalize();gx=_t2.dot(_u)*1.6;gy=_t2.dot(_w)*1.6;}
+  else{if(!d.wt||now>d.wt){d.wt=now+1400+Math.random()*2600;d.wg=Math.random()<.35?[0,0]:[(Math.random()-.5)*1.6,(Math.random()-.5)*1.1];}[gx,gy]=d.wg;}
+  const g=d.gz||(d.gz=[0,0]);g[0]+=(Math.max(-1,Math.min(1,gx))-g[0])*.18;g[1]+=(Math.max(-1,Math.min(1,gy))-g[1])*.18;return g;}
+function lpFace(d){const now=performance.now(),F=mood(d,now),v=d.fv||(d.fv={ew:1,eh:1,mw:1,mh:.75,lift:0});
+  for(const k in v)v[k]+=(F[k]-v[k])*.25;
+  if(!d.nbk)d.nbk=now+600+Math.random()*3000;let bl=1;                                                   // blink now and then (sometimes twice)
+  if(now>d.nbk){if(now-d.nbk<130)bl=.1;else d.nbk=now+(Math.random()<.2?170:1800+Math.random()*3800);}
+  if(F.still)bl=1;
+  const g=gaze(d,now),sh=F.shake?(Math.random()-.5)*.025:0,U=d.dots.userData;
+  _m4.makeBasis(_u,_w,_c);_q4.setFromRotationMatrix(_m4);
+  U.eyes.forEach(m=>{m.position.copy(_p).multiplyScalar(.95).addScaledVector(_u,m.userData.k*.1+g[0]*.03+sh).addScaledVector(_w,.035+v.lift+g[1]*.03);
+    m.quaternion.copy(_q4);m.scale.set(v.ew,v.eh*bl,.55);});
+  U.mouth.position.copy(_p).multiplyScalar(.95).addScaledVector(_u,g[0]*.015+sh).addScaledVector(_w,-.078+g[1]*.015);
+  if(F.m==="frown")U.mouth.quaternion.copy(_q4);else{_m4.makeBasis(_nu.copy(_u).negate(),_nw.copy(_w).negate(),_c);U.mouth.quaternion.setFromRotationMatrix(_m4);}
+  U.mouth.scale.set(v.mw,v.mh,.6);U.ring.visible=F.m==="o";U.smile.visible=F.m!=="o";}
 function faceCam(d){d.g.updateMatrixWorld(true);_c.copy(cam.position);d.g.worldToLocal(_c);
   if(d.sticks)d.sticks.rotation.y=Math.atan2(_c.x,_c.z);
   if(d.dots){_c.y-=d.dots.position.y;_c.normalize();const a=.37*.78,b=.37*1.25;
     const q=Math.sqrt(a*a*_c.x*_c.x+b*b*_c.y*_c.y+a*a*_c.z*_c.z)||1;_p.set(a*a*_c.x/q,b*b*_c.y/q,a*a*_c.z/q);      // point on the lobe facing the camera
-    _u.set(_c.z,0,-_c.x);if(_u.lengthSq()<1e-4)_u.set(1,0,0);_u.normalize().multiplyScalar(.1);          // side by side, across the lobe
-    d.dots.children.forEach(m=>{m.position.copy(_p).multiplyScalar(.93).addScaledVector(_u,m.userData.k);});}}
+    d.g.getWorldQuaternion(_q4).invert();_u.set(1,0,0).applyQuaternion(cam.quaternion).applyQuaternion(_q4);   // screen-right, in the arm's frame
+    _u.addScaledVector(_c,-_u.dot(_c));if(_u.lengthSq()<1e-4)_u.set(_c.z,0,-_c.x);_u.normalize();_w.crossVectors(_c,_u).normalize();   // so the face is always upright on screen
+    lpFace(d);}}
 
 const HOLD=350;let spawnHint=null,fr=0,doms=[],nb=4,nl=0,t0=0,mode="spring",pairs=[],selected=null,held=null,showLp=true,W=[0,4,0,0],newOrders=[];
 function alive(){return doms.filter(d=>!d.dying);}
@@ -265,7 +307,7 @@ function setShape(b,l,instant){b=Math.max(1,Math.min(6,b));l=Math.max(0,Math.min
   let cb=alive().filter(d=>!d.lp).length,cl=alive().filter(d=>d.lp).length;
   const kill=lp=>{const a=alive().filter(d=>d.lp===lp);const d=a[a.length-1];d.dying=true;if(selected===d)select(null);};
   while(cb>b){kill(false);cb--;}while(cl>l){kill(true);cl--;}
-  const T=slots(b,l),old=alive().concat(spawnHint?[spawnHint]:[]),bi=T.map((s,i)=>i).filter(i=>!T[i].lp),li=T.map((s,i)=>i).filter(i=>T[i].lp);
+  let hi=0;const T=slots(b,l),old=alive().concat(spawnHint?[spawnHint]:[]),bi=T.map((s,i)=>i).filter(i=>!T[i].lp),li=T.map((s,i)=>i).filter(i=>T[i].lp);
   const ob=old.filter(d=>!d.lp),ol=old.filter(d=>d.lp);let best=null;
   if(old.length)for(const pb of injections(ob.length,bi.length))for(const pl of injections(ol.length,li.length)){
     const pr=[...ob.map((d,k)=>[d,bi[pb[k]]]),...ol.map((d,k)=>[d,li[pl[k]]])];
@@ -275,7 +317,7 @@ function setShape(b,l,instant){b=Math.max(1,Math.min(6,b));l=Math.max(0,Math.min
   const q=best?best.q:new THREE.Quaternion(),taken=new Set();
   if(best)best.pr.forEach(([d,s])=>{if(d.pseudo)return;d.target=T[s].v.clone().applyQuaternion(q);taken.add(s);});
   T.forEach((s,i)=>{if(taken.has(i))return;const dir=s.v.clone().applyQuaternion(q),a=mkArm(s.lp,s.lp?0:newOrders.shift()||1);
-    const d={lp:s.lp,dir:dir.clone(),target:dir,vel:new V(),len:instant?1:0,lv:0,str:1,sv:0,tn:0,...a};   /* str = pulled-out length, tn = 0..1 to snapping off */a.pick.userData.dom=d;doms.push(d);});
+    const d={lp:s.lp,dir:dir.clone(),target:dir,vel:new V(),len:instant?1:0,lv:0,str:1,sv:0,tn:0,...a};   /* str = pulled-out length, tn = 0..1 to snapping off */a.pick.userData.dom=d;doms.push(d);if(s.lp&&!instant){d.born=performance.now();SND.play("hi",.1+.12*(hi++));};});
   nb=b;nl=l;t0=performance.now();computePairs();refresh();fr=0;}
 /* w = [_, single, double, triple]; each bond is ONE electron domain whatever its order, so only the count moves the shape */
 function setMol(w,l,instant){const tot=w[1]+w[2]+w[3];if(tot<1||tot+l>6||w.some(x=>x<0)||l<0)return false;
@@ -294,7 +336,7 @@ function physics(){const P=ANIM[mode],age=(performance.now()-t0)/1000,rep=held?P
   for(const d of doms){if(d.dying||d===held)continue;const f=d.target.clone().sub(d.dir).multiplyScalar(P.k);
     if(rep)for(const o of doms){if(o===d||o.len<.02)continue;const dd=d.dir.clone().sub(o.dir),l=dd.length()+.12;f.addScaledVector(dd,rep*o.len*(o.lp?1.35:1)/(l*l*l));}
     d.vel.multiplyScalar(P.damp).add(f);d.dir.add(d.vel).normalize();}
-  doms=doms.filter(d=>{if(d.dying&&d.len<.015&&Math.abs(d.lv)<.01){G.remove(d.g);d.g.traverse(o=>{o.geometry&&o.geometry.dispose();});return false;}return true;});
+  doms=doms.filter(d=>{if(d.dying&&d.len<.015&&Math.abs(d.lv)<.01){G.remove(d.g);d.g.traverse(o=>{o.geometry&&o.geometry!==DOTG&&o.geometry!==SMILEG&&o.geometry!==RINGG&&o.geometry.dispose();});return false;}return true;});
   const now=performance.now();
   G.updateMatrixWorld(true);
   for(const d of doms){
@@ -305,7 +347,7 @@ function physics(){const P=ANIM[mode],age=(performance.now()-t0)/1000,rep=held?P
     else{d.pick.position.set(jit,L*st,0);const th=(1-.25*t)/Math.sqrt(st),hot=Math.min(1,Math.sqrt(t)*1.15);d.sticks.scale.set(th,st,th);   // short stretch; the strain shows as red
       d.sticks.children.forEach(m=>m.material.color.setHex(C.b).lerp(_red,hot));}
     d.g.quaternion.setFromUnitVectors(Y,d.dir);d.g.scale.setScalar(Math.max(.001,d.len));d.g.visible=!d.lp||showLp;if(d.g.visible&&d.len>.05)faceCam(d);
-    const on=d===selected,s=(on?1+.07*Math.sin(now/140):1)*(d.pop?1+.18*Math.exp(-(now-d.pop)/160):1),sy=d.lp?1+.35*(st-1):1;d.pick.scale.set((d.lp?.78:1)*s,(d.lp?1.25:1)*s*sy,(d.lp?.78:1)*s);paint(d.pick,on,d.lp?C.e:C.x,C.h);}
+    const on=d===selected,s=(on?1+.07*Math.sin(now/140):1)*(d.pop?1+.18*Math.exp(-(now-d.pop)/160):1),sy=d.lp?(1+.35*(st-1))*(1+.04*Math.sin(now/520+(d.ph||(d.ph=Math.random()*6)))):1;d.pick.scale.set((d.lp?.78:1)*s,(d.lp?1.25:1)*s*sy,(d.lp?.78:1)*s);paint(d.pick,on,d.lp?C.e:C.x,C.h);}
   const c=selected==="center";center.scale.setScalar(c?1+.05*Math.sin(now/140):1);paint(center,c,C.c,C.h);}
 // selected = swapped fill colour + thick red outline
 function paint(m,on,base,hi){m.material.color.setHex(on?hi:base);const h=m.userData.hull;h.material.color.setHex(on?C.k:C.o);h.scale.setScalar(on?1.22:1+(m===center?.07:.09));}
@@ -372,7 +414,7 @@ const BREAK=2.1,BREAK_PX=380;   // BREAK: stretch scale for the last-bond lock; 
 function detach(d){const w=W.slice();let l=nl;if(d.lp)l--;else w[d.o]--;
   d.dying=true;if(selected===d)select(null);
   if(!setMol(w,l)){d.dying=false;return false;}
-  held=null;d.fly=.07;d.tn=1;SND.play("snap");return true;}
+  held=null;d.fly=.07;d.tn=1;SND.play("snap");if(d.lp)SND.play("whee");return true;}
 let down=null,zoom=1,pinch=null;const pts=new Map();
 function setZoom(z){zoom=Math.max(.55,Math.min(2.8,z));cam.zoom=zoom;cam.updateProjectionMatrix();}
 const pdist=()=>{const [a,b]=[...pts.values()];return Math.hypot(a.x-b.x,a.y-b.y)||1;};
@@ -382,12 +424,13 @@ stage.addEventListener("pointerdown",e=>{pts.set(e.pointerId,{x:e.clientX,y:e.cl
   if(pts.size>2)return;
   const h=hitAt(e),dn=down={x:e.clientX,y:e.clientY,h,moved:false,px:e.clientX,py:e.clientY,t:performance.now()};
   if(h&&h!=="center")setTimeout(()=>{if(down===dn&&!dn.moved){dn.turn=true;h.pop=performance.now();SND.play("click");}},HOLD);stage.setPointerCapture(e.pointerId);stage.classList.add("grab");});
-stage.addEventListener("pointermove",e=>{if(pts.has(e.pointerId))pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+stage.addEventListener("pointerleave",()=>ptr=null);
+stage.addEventListener("pointermove",e=>{ptr={x:e.clientX,y:e.clientY,t:performance.now()};if(pts.has(e.pointerId))pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(pinch&&pts.size>=2){setZoom(pinch.z0*pdist()/pinch.d0);idle=performance.now();return;}
   if(!down){stage.classList.toggle("over",!!hitAt(e));return;}
   if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>4)down.moved=true;if(!down.moved)return;
   if(down.dead)return;                                    // this drag already snapped an atom off
-  if(down.h&&down.h!=="center"){if(!held){SND.play("grab");held=down.h;held.spd=0;}
+  if(down.h&&down.h!=="center"){if(!held){SND.play(down.h.lp?"eep":"grab");held=down.h;held.spd=0;}
     // pull the arm: aim it where the pointer ray meets the sphere it lives on; past the sphere's edge it stretches
     const a=aimAt(e.clientX,e.clientY,held.lp?.9:L),now=performance.now(),dt=Math.max(4,now-down.t);
     if(down.turn){const turn=new THREE.Quaternion().setFromUnitVectors(held.dir.clone().normalize(),a.p.normalize());   // held first: the whole model follows the atom
@@ -403,13 +446,13 @@ stage.addEventListener("pointermove",e=>{if(pts.has(e.pointerId))pts.set(e.point
       pull=raw>0?Math.max(0,beyond)/BREAK_PX:0;   // how far your finger is past the atom's reach, in real screen pixels; no flick shortcut
     held.lock=!can;held.strT=1+(can?.22:.12)*(1-Math.exp(-raw*2.2));   // gives a little, then just strains (reddens)
     held.tn=can?Math.pow(Math.min(1,pull),1.5):Math.min(1,raw/BREAK);
-    const step=Math.floor(held.tn*6);if(can&&step>(down.step||0))SND.play("creak",step);down.step=step;   // creaks tighten as it strains
+    const step=Math.floor(held.tn*6);if(can&&step>(down.step||0))SND.play(held.lp&&step===3?"whimper":"creak",step);down.step=step;   // creaks tighten as it strains
     if(can&&pull>=1){detach(held);down.dead=true;}
     else if(!can&&raw>.6&&!down.nope){down.nope=1;SND.play("nope");}}
   else{const dx=e.clientX-down.px,dy=e.clientY-down.py;if(dx||dy)G.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new V(dy,dx,0).normalize(),Math.hypot(dx,dy)*.011));idle=performance.now();}
   down.px=e.clientX;down.py=e.clientY;});
 const up=e=>{pts.delete(e.pointerId);if(pinch){if(pts.size<2)pinch=null;return;}
-  if(!down)return;if(!down.moved){const nx=down.h&&down.h===selected?null:down.h;if(nx)SND.play("sel");else if(selected)SND.play("unsel");select(nx);}
+  if(!down)return;if(!down.moved){const nx=down.h&&down.h===selected?null:down.h;if(nx)SND.play(nx!=="center"&&nx.lp?"chirp":"sel");else if(selected)SND.play("unsel");select(nx);}
   if(held){held.vel.set(0,0,0);t0=performance.now();held=null;SND.play("boing");}down=null;stage.classList.remove("grab");};
 stage.addEventListener("pointerup",up);stage.addEventListener("pointercancel",up);
 let idle=0;
@@ -436,7 +479,7 @@ $("tLp").onchange=e=>{showLp=e.target.checked;if(!showLp&&selected&&selected.lp)
 const GH=document.createElement("div");GH.id="ghost";document.body.appendChild(GH);
 const hex=c=>"#"+c.toString(16).padStart(6,"0"),sm=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
 let gd=null,pv=null;
-function pvKill(){if(!pv)return;G.remove(pv.g);pv.g.traverse(o=>{o.geometry&&o.geometry!==DOTG&&o.geometry.dispose();});pv=null;}
+function pvKill(){if(!pv)return;G.remove(pv.g);pv.g.traverse(o=>{o.geometry&&o.geometry!==DOTG&&o.geometry!==SMILEG&&o.geometry!==RINGG&&o.geometry.dispose();});pv=null;}
 function token(x,y,full,tip){const lp=gd.k==="e",k=lp?0:+gd.k,ink="#141414",sp=6,op=full?.4:1;let s="";
   if(lp)s=`<ellipse cx="${x}" cy="${y}" rx="15" ry="22" fill="${hex(C.e)}" stroke="${ink}" stroke-width="3"/><circle cx="${x-5}" cy="${y-6}" r="3.2" fill="${ink}"/><circle cx="${x+5}" cy="${y-6}" r="3.2" fill="${ink}"/>`;
   else{for(let i=0;i<k;i++){const o=(i-(k-1)/2)*sp;s+=`<line x1="${x+o}" y1="${y}" x2="${x+o}" y2="${y+34}" stroke="${ink}" stroke-width="${k===1?6:4}" stroke-linecap="round"/>`;}
