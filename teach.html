@@ -927,15 +927,53 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .xr span{font-weight:700}.xr small{display:block;font:600 .72rem "JetBrains Mono";color:var(--mut)}
 .xr b{font:800 1.05rem "JetBrains Mono"}
 /* month breakdown popup: right-click / long-press a chart bar → each student's share of that month */
-.mbl{display:flex;flex-direction:column}
-.mbr{padding:12px 0;border-bottom:2px solid var(--grid)}
-.mbt{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center;margin-bottom:8px}
-.mbt i{width:14px;height:14px;border:2px solid var(--ink)}
-.mbt span{font-weight:800}.mbt small{display:block;font:600 .72rem "JetBrains Mono";color:var(--mut)}
-.mbt b{font:800 1.05rem "JetBrains Mono"}
-.mbr .progress{height:16px}
-.mbc{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font:600 .72rem "JetBrains Mono";color:var(--mut)}
-.mbc .o{color:var(--red)}
+.sheet.mbig{width:min(1080px,100%);padding:26px 30px 26px 44px}
+.mbh{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:26px;align-items:end;padding-bottom:20px;border-bottom:3px solid var(--ink)}
+.mbh .amount{margin:2px 0 8px}
+.mbh .amount small{font-size:.32em;color:var(--mut);letter-spacing:0;margin-left:8px}
+.mbmix{display:flex;height:30px;border:3px solid var(--ink);background:var(--grid);overflow:hidden}
+.mbmix i{height:100%;border-right:3px solid var(--ink);transition:flex-grow .8s cubic-bezier(.2,.8,.2,1)}
+.mbmix i:last-child{border-right:0}
+.mbcap{display:flex;justify-content:space-between;margin-top:6px;font-size:.78rem;font-weight:700;color:var(--mut)}
+.mbst{display:flex;flex-direction:column;border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh)}
+.mbst div{display:grid;grid-template-columns:8px 1fr auto;gap:12px;align-items:center;padding:9px 14px 9px 10px;border-bottom:2px solid var(--grid)}
+.mbst div:last-child{border-bottom:0}
+.mbst i{align-self:stretch;min-height:22px}
+.mbst span{font-weight:800;font-size:.88rem}
+.mbst b{font:800 1.3rem "JetBrains Mono";letter-spacing:-.03em}
+.mbst .r b{color:var(--red)}
+.mbg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:18px;margin-top:22px}
+.mbk{position:relative;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:14px 16px 14px 28px;animation:enter .5s both;animation-delay:calc(var(--i,0)*45ms)}
+.mbk>i{position:absolute;left:0;top:0;bottom:0;width:14px;border-right:3px solid var(--ink)}
+.mbk header{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.mbk h3{margin:0;font-size:1.2rem;font-weight:800;line-height:1.2;overflow-wrap:anywhere}
+.mbk header b{font:800 1.6rem "JetBrains Mono";letter-spacing:-.04em;white-space:nowrap}
+.mbk .meta{display:flex;justify-content:space-between;margin:2px 0 12px;font:600 .74rem "JetBrains Mono";color:var(--mut)}
+.mbk .progress{height:22px}
+.mbk .pct{font:800 .8rem "JetBrains Mono";margin-top:5px}
+.mbk dl{display:grid;grid-template-columns:repeat(3,1fr);margin:12px 0 0;border-top:2px solid var(--grid);padding-top:10px}
+.mbk dl div{display:flex;flex-direction:column;gap:1px}
+.mbk dt{font-size:.68rem;font-weight:700;color:var(--mut)}
+.mbk dd{margin:0;font:800 .98rem "JetBrains Mono"}
+.mbk dd.z{color:var(--dash)}
+.mbk .o dd:not(.z){color:var(--red)}.mbk .u dd:not(.z){color:var(--blue)}
+.mbnone{padding:28px 0 6px;font-weight:700;color:var(--mut)}
+.mbh .amount.mbbig{font-size:clamp(56px,8.5vw,104px);line-height:1;margin:6px 0 10px;transition:color .3s}
+.mbh.cut .amount.mbbig{color:var(--red)}
+.mbwas{display:none;align-items:center;gap:10px;flex-wrap:wrap;margin:-2px 0 12px;font:800 .95rem "JetBrains Mono"}
+.mbh.cut .mbwas{display:flex}
+.mbwas s{color:var(--mut)}
+.mbwas b{background:var(--red);color:#fff;border:3px solid var(--ink);padding:2px 8px}
+.mbwas button{border:2px solid var(--ink);background:var(--yel);font:800 .78rem inherit;padding:3px 9px;cursor:pointer}
+.mbk{transition:opacity .25s,filter .25s}
+.mbk.off{opacity:.42;filter:grayscale(1)}
+.mbk header{padding-right:40px}
+.mbtick{position:absolute;right:12px;top:12px;width:30px;height:30px;border:3px solid var(--ink);background:var(--card);font:800 1rem/1 sans-serif;cursor:pointer;padding:0}
+.mbtick[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.mbk.off .mbtick{filter:none}
+.mbhint{font-size:.74rem;font-weight:700;color:var(--mut);margin-top:14px}
+.mbh>*,.mbg>*{min-width:0}
+@media (max-width:720px){.sheet.mbig{padding:22px 16px 18px 28px}.mbh{grid-template-columns:minmax(0,1fr);gap:16px}.mbg{grid-template-columns:minmax(0,1fr)}.mbk header b{font-size:1.3rem}}
 .xadd{display:grid;grid-template-columns:1fr 110px auto;gap:8px;margin-top:14px;align-items:center}
 @media (max-width:560px){.xadd{grid-template-columns:1fr 90px}.xadd .go{grid-column:1/-1}}
 
@@ -1682,7 +1720,8 @@ function renderMoney(){
   });
   renderHolCal();
 }
-// each student's slice of a month's เงินที่คาดว่าจะได้, same maths as monthMoney (paid + owed + still planned)
+// each student's slice of a month's เงินที่คาดว่าจะได้, same maths as monthMoney (paid + owed + still planned).
+// tick a student off to see what the month would be without them (view only, nothing is saved)
 function openMonthBreak(y, m){
   const by = {};
   monthSessions(y, m).filter(counts).forEach(s => {
@@ -1690,18 +1729,52 @@ function openMonthBreak(y, m){
     const a = amt(s); r.n++; r.h += +s.h || 0;
     if (s.status === 'done') s.paid ? r.paid += a : r.owe += a; else r.left += a;
   });
-  const rows = Object.values(by).map(r => ({...r, tot: r.paid + r.owe + r.left})).sort((a, b) => b.tot - a.tot);
-  const M = monthMoney(y, m), hist = !M.n ? (DB.history[mkey(y,m)] ?? 0) : 0;
-  const body = rows.length ? rows.map(r => { const p = st(r.who), pct = r.tot ? Math.round(r.paid / r.tot * 100) : 0;
-    return `<div class="mbr"><div class="mbt"><i class="${colorOf(r.who)}"></i><span>${esc(p?.name ?? '?')}<small>${r.n} คาบ · ${r.h} ชม.</small></span><b>${cash(r.tot)}</b></div>
-      <div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${pct}%"></div></div>
-      <div class="mbc"><span>ได้แล้ว ${cash(r.paid)} · ${pct}%</span>${r.owe ? `<span class="o">ค้าง ${cash(r.owe)}</span>` : ''}${r.left ? `<span>ยังไม่ถึง ${cash(r.left)}</span>` : ''}</div></div>`; }).join('')
-    : `<div class="mut" style="padding:14px 0;font-weight:600">${hist ? `เดือนนี้มีแค่ยอดรวม ${cash(hist)} ที่บันทึกไว้ ไม่มีรายคาบให้แยกรายนักเรียน` : 'ไม่มีคาบเรียนเดือนนี้'}</div>`;
+  const rows = Object.values(by).map(r => ({...r, tot: r.paid + r.owe + r.left, on: true})).sort((a, b) => b.tot - a.tot);
+  const M = monthMoney(y, m), hist = !M.n ? (DB.history[mkey(y,m)] ?? 0) : 0, full = M.n ? M.forecast : hist;
+  const nm = r => esc(st(r.who)?.name ?? '?'), fig = (cls, lab, v) => `<div class="${cls}"><dt>${lab}</dt><dd class="${v ? '' : 'z'}">${v ? cash(v) : '—'}</dd></div>`;
+  const cards = rows.map((r, i) => { const p = r.tot ? Math.round(r.paid / r.tot * 100) : 0;
+    return `<article class="mbk" style="--i:${i}" data-i="${i}"><i class="${colorOf(r.who)}"></i>
+      <button class="mbtick" aria-pressed="true" title="ติ๊กออกเพื่อดูว่าถ้าไม่มีคนนี้ จะได้เท่าไหร่">✓</button>
+      <header><h3>${nm(r)}</h3><b>${cash(r.tot)}</b></header>
+      <div class="meta"><span>${r.n} คาบ · ${r.h} ชม.</span><span>${full ? Math.round(r.tot / full * 100) : 0}% ของเดือน</span></div>
+      <div class="progress" role="progressbar" aria-valuenow="${p}" aria-valuemin="0" aria-valuemax="100"><div class="fill" data-w="${p}"></div></div>
+      <div class="pct">ได้แล้ว ${p}%</div>
+      <dl>${fig('', 'ได้แล้ว', r.paid)}${fig('o', 'ค้าง', r.owe)}${fig('u', 'ยังไม่ถึง', r.left)}</dl></article>`; }).join('');
   openModal(`<button class="pdx x" onclick="closeModal()" title="ปิด">✕</button>
-    <div class="xhead"><span class="eyebrow">รายนักเรียน · ${TH_MF[m]} ${y+543}</span>
-      <div class="xsum"><div><b>${cash(M.n ? M.forecast : hist)}</b><span>คาดทั้งเดือน</span></div><div><b>${cash(M.n ? M.earned : hist)}</b><span>ได้แล้ว</span></div><div><b>${rows.length}</b><span>นักเรียน</span></div></div></div>
-    <div class="mbl">${body}</div>`);
+    <div class="mbh" id="mbh"><div>
+        <div class="eyebrow">เงินที่คาดว่าจะได้ · ${TH_MF[m]} ${y+543}</div>
+        <div class="amount mbbig" id="mbbig">${cash(full)}</div>
+        <div class="mbwas"><s>${cash(full)}</s><b id="mbdiff"></b><span id="mbwho" class="mut"></span><button id="mball">เอาทุกคนกลับ</button></div>
+        ${rows.length ? `<div class="mbmix" title="สัดส่วนรายได้ของแต่ละคน">${rows.map(r => `<i class="${colorOf(r.who)}" style="flex-grow:0" data-g="${r.tot}" title="${nm(r)} · ${cash(r.tot)}"></i>`).join('')}</div>
+        <div class="mbcap"><span>แต่ละสีคือนักเรียนหนึ่งคน</span><span id="mbpct"></span></div>` : ''}
+      </div>
+      <div class="mbst"><div><i class="c-ok"></i><span>ได้แล้ว</span><b id="mbgot"></b></div><div class="r"><i class="c-red"></i><span>ค้างชำระ</span><b id="mbowe"></b></div><div><i class="c-blue"></i><span>ยังไม่ถึง</span><b id="mbleft"></b></div></div>
+    </div>
+    ${rows.length ? `<div class="mbhint">ติ๊ก ✓ ออกเพื่อดูว่าถ้าขาดคนนั้นไป เดือนนี้จะได้เท่าไหร่ · แค่ดูเฉย ๆ ไม่บันทึกอะไร</div><div class="mbg">${cards}</div>` : `<div class="mbnone">${hist ? `เดือนนี้บันทึกไว้แค่ยอดรวม ${cash(hist)} · ไม่มีรายคาบให้แยกรายนักเรียน` : 'ไม่มีคาบเรียนเดือนนี้'}</div>`}`, true);
+  $('#sheet').classList.add('mbig');
+  const big = $('#mbbig'); big._v = full;
+  const upd = () => {
+    const on = rows.filter(r => r.on), sum = k => on.reduce((a, r) => a + r[k], 0);
+    const tot = rows.length ? sum('tot') : full, got = rows.length ? sum('paid') : hist, off = rows.filter(r => !r.on);
+    count(big, tot, 600);
+    $('#mbh').classList.toggle('cut', off.length > 0);
+    $('#mbdiff').textContent = `− ${cash(full - tot)}`;
+    $('#mbwho').textContent = off.length ? `ถ้าไม่มี ${off.map(r => st(r.who)?.name ?? '?').join(', ')}` : '';
+    $('#mbgot').textContent = cash(got); $('#mbowe').textContent = cash(rows.length ? sum('owe') : 0); $('#mbleft').textContent = cash(rows.length ? sum('left') : 0);
+    if ($('#mbpct')) $('#mbpct').textContent = `ได้แล้ว ${tot ? Math.round(got / tot * 100) : 0}%`;
+    document.querySelectorAll('.mbmix i').forEach((e, i) => e.style.flexGrow = rows[i].on ? rows[i].tot : 0);
+    document.querySelectorAll('.mbk').forEach((c, i) => { c.classList.toggle('off', !rows[i].on); const t = c.querySelector('.mbtick'); t.setAttribute('aria-pressed', rows[i].on); t.textContent = rows[i].on ? '✓' : ''; });
+  };
+  $('#sheet').onclick = e => {
+    const t = e.target.closest('.mbtick'); if (t){ const r = rows[+t.closest('.mbk').dataset.i]; r.on = !r.on; upd(); }
+    if (e.target.id === 'mball'){ rows.forEach(r => r.on = true); upd(); }
+  };
+  $('#mbgot').textContent = cash(M.n ? M.earned : hist); $('#mbowe').textContent = cash(M.owe); $('#mbleft').textContent = cash(M.left);
+  if ($('#mbpct')) $('#mbpct').textContent = `ได้แล้ว ${full ? Math.round((M.n ? M.earned : hist) / full * 100) : 0}%`;
+  later(() => { document.querySelectorAll('.mbmix i').forEach(e => e.style.flexGrow = e.dataset.g); document.querySelectorAll('.mbk .fill').forEach(e => e.style.width = e.dataset.w + '%'); });
 }
+
+
 function renderHolCal(){
   const y = my, m = mm_, days = new Date(y, m+1, 0).getDate(), off = new Date(y, m, 1).getDay();
   const list = DB.holidays[mkey(y,m)] || (DB.holidays[mkey(y,m)] = []);
