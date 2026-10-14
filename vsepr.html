@@ -107,8 +107,8 @@ body.embed{overflow:hidden}body.embed .wrap{height:100vh}body.embed .stage{heigh
   body.embed{overflow:auto}body.embed .wrap{height:auto}body.embed .stage{height:min(440px,60vh)}}
 </style></head><body><div class="page">
 <h1>รูปร่างโมเลกุล 3D</h1>
-<p class="sub">กด + / − หรือ<b>ลากพันธะ / คู่โดดเดี่ยวจากแผงมาแปะที่โมเลกุล</b> · <b>ดึงอะตอมออกไกลๆ หรือกระชากแรงๆ</b> เพื่อถอด (ปล่อยก่อนจะเด้งกลับ) · <b>แตะ</b>เพื่อเลือกดูมุม · ลากที่ว่างเพื่อหมุน</p>
-<div class="wrap"><div class="stage" id="stage"><div class="lab" id="lab"></div><div class="hint">ลากจากแผง = เพิ่ม · ดึงอะตอมออก = ถอด · แตะ = ชี้ให้ดู · ลากที่ว่าง = หมุน · สกรอลล์ / ถ่างสองนิ้ว = ซูม · ดับเบิลคลิก = ขนาดเดิม</div></div>
+<p class="sub">กด + / − หรือ<b>ลากพันธะ / คู่โดดเดี่ยวจากแผงมาแปะที่โมเลกุล</b> · <b>ลากอะตอมเพื่อหมุนโมเลกุลตาม</b> · <b>ดึงออกแรงๆ</b> เพื่อถอด (ปล่อยก่อนจะเด้งกลับ) · <b>แตะ</b>เพื่อเลือกดูมุม · ลากที่ว่างเพื่อหมุน</p>
+<div class="wrap"><div class="stage" id="stage"><div class="lab" id="lab"></div><div class="hint">ลากจากแผง = เพิ่ม · ลากอะตอม = หมุนตาม · ดึงออกแรงๆ = ถอด · แตะ = ชี้ให้ดู · ลากที่ว่าง = หมุน · สกรอลล์ / ถ่างสองนิ้ว = ซูม · ดับเบิลคลิก = ขนาดเดิม</div></div>
 <div class="panel">
  <div class="shape"><div class="ax" id="ax"></div><div class="nm" id="nm"></div><div class="en" id="en"></div></div>
  <div class="cnt">
@@ -259,20 +259,21 @@ function faceCam(d){d.g.updateMatrixWorld(true);_c.copy(cam.position);d.g.worldT
     _u.set(_c.z,0,-_c.x);if(_u.lengthSq()<1e-4)_u.set(1,0,0);_u.normalize().multiplyScalar(.1);          // side by side, across the lobe
     d.dots.children.forEach(m=>{m.position.copy(_p).multiplyScalar(.93).addScaledVector(_u,m.userData.k);});}}
 
-let fr=0,doms=[],nb=4,nl=0,t0=0,mode="spring",pairs=[],selected=null,held=null,showLp=true,W=[0,4,0,0],newOrders=[];
+let spawnHint=null,fr=0,doms=[],nb=4,nl=0,t0=0,mode="spring",pairs=[],selected=null,held=null,showLp=true,W=[0,4,0,0],newOrders=[];
 function alive(){return doms.filter(d=>!d.dying);}
 function setShape(b,l,instant){b=Math.max(1,Math.min(6,b));l=Math.max(0,Math.min(6-b,l));
   let cb=alive().filter(d=>!d.lp).length,cl=alive().filter(d=>d.lp).length;
   const kill=lp=>{const a=alive().filter(d=>d.lp===lp);const d=a[a.length-1];d.dying=true;if(selected===d)select(null);};
   while(cb>b){kill(false);cb--;}while(cl>l){kill(true);cl--;}
-  const T=slots(b,l),old=alive(),bi=T.map((s,i)=>i).filter(i=>!T[i].lp),li=T.map((s,i)=>i).filter(i=>T[i].lp);
+  const T=slots(b,l),old=alive().concat(spawnHint?[spawnHint]:[]),bi=T.map((s,i)=>i).filter(i=>!T[i].lp),li=T.map((s,i)=>i).filter(i=>T[i].lp);
   const ob=old.filter(d=>!d.lp),ol=old.filter(d=>d.lp);let best=null;
   if(old.length)for(const pb of injections(ob.length,bi.length))for(const pl of injections(ol.length,li.length)){
     const pr=[...ob.map((d,k)=>[d,bi[pb[k]]]),...ol.map((d,k)=>[d,li[pl[k]]])];
-    const q=fitRot(pr.map(p=>T[p[1]].v),pr.map(p=>p[0].dir));let e=0;pr.forEach(([d,s])=>e+=T[s].v.clone().applyQuaternion(q).distanceToSquared(d.dir));
+    const wp=pr.flatMap(p=>p[0].pseudo?[p,p,p,p]:[p]);   // the dropped atom counts 4x: its seat must land where you let go
+    const q=fitRot(wp.map(p=>T[p[1]].v),wp.map(p=>p[0].dir));let e=0;wp.forEach(([d,s])=>e+=T[s].v.clone().applyQuaternion(q).distanceToSquared(d.dir));
     if(!best||e<best.e)best={e,q,pr};}
   const q=best?best.q:new THREE.Quaternion(),taken=new Set();
-  if(best)best.pr.forEach(([d,s])=>{d.target=T[s].v.clone().applyQuaternion(q);taken.add(s);});
+  if(best)best.pr.forEach(([d,s])=>{if(d.pseudo)return;d.target=T[s].v.clone().applyQuaternion(q);taken.add(s);});
   T.forEach((s,i)=>{if(taken.has(i))return;const dir=s.v.clone().applyQuaternion(q),a=mkArm(s.lp,s.lp?0:newOrders.shift()||1);
     const d={lp:s.lp,dir:dir.clone(),target:dir,vel:new V(),len:instant?1:0,lv:0,str:1,sv:0,tn:0,...a};   /* str = pulled-out length, tn = 0..1 to snapping off */a.pick.userData.dom=d;doms.push(d);});
   nb=b;nl=l;t0=performance.now();computePairs();refresh();fr=0;}
@@ -301,8 +302,8 @@ function physics(){const P=ANIM[mode],age=(performance.now()-t0)/1000,rep=held?P
     if(d===held)d.str+=(d.strT-d.str)*.5;else if(d.fly){d.str+=d.fly;d.fly*=.9;}else{d.sv=d.sv*.72+(1-d.str)*.22;d.str+=d.sv;d.tn*=.8;}
     const st=Math.max(.6,d.str),t=d.tn||0,jit=d===held&&t>.7?(Math.random()-.5)*.06*t:0;
     if(d.lp){d.pick.position.set(jit,.66*st,0);d.dots.position.y=.66*st;}
-    else{d.pick.position.set(jit,L*st,0);const th=Math.max(.3,(1-.5*t)/Math.sqrt(st));d.sticks.scale.set(th,st,th);   // the bond thins out like taffy
-      d.sticks.children.forEach(m=>m.material.color.setHex(C.b).lerp(_red,t));}
+    else{d.pick.position.set(jit,L*st,0);const th=(1-.25*t)/Math.sqrt(st),hot=Math.min(1,Math.sqrt(t)*1.15);d.sticks.scale.set(th,st,th);   // short stretch; the strain shows as red
+      d.sticks.children.forEach(m=>m.material.color.setHex(C.b).lerp(_red,hot));}
     d.g.quaternion.setFromUnitVectors(Y,d.dir);d.g.scale.setScalar(Math.max(.001,d.len));d.g.visible=!d.lp||showLp;if(d.g.visible&&d.len>.05)faceCam(d);
     const on=d===selected,s=on?1+.07*Math.sin(now/140):1,sy=d.lp?1+.35*(st-1):1;d.pick.scale.set((d.lp?.78:1)*s,(d.lp?1.25:1)*s*sy,(d.lp?.78:1)*s);paint(d.pick,on,d.lp?C.e:C.x,C.h);}
   const c=selected==="center";center.scale.setScalar(c?1+.05*Math.sin(now/140):1);paint(center,c,C.c,C.h);}
@@ -366,7 +367,7 @@ function aimAt(x,y,rad){const r=stage.getBoundingClientRect();ndc.set((x-r.left)
   const b=o.dot(dir),c=o.lengthSq()-rad*rad,disc=b*b-c;
   const p=disc>=0?o.clone().addScaledVector(dir,-b-Math.sqrt(disc)):o.clone().addScaledVector(dir,-b);
   return{p,out:disc>=0?1:p.length()/rad};}
-const BREAK=1.5;  // how far past its seat the finger must get (in bond lengths, yank included) before the atom snaps off
+const BREAK=2.1;  // how far past its seat the finger must get (in bond lengths, yank included) before the atom snaps off
 // snap an arm off: it flies outward and fades, the rest re-spread into the new shape
 function detach(d){const w=W.slice();let l=nl;if(d.lp)l--;else w[d.o]--;
   d.dying=true;if(selected===d)select(null);
@@ -388,12 +389,13 @@ stage.addEventListener("pointermove",e=>{if(pts.has(e.pointerId))pts.set(e.point
   if(down.h&&down.h!=="center"){if(!held){SND.play("grab");held=down.h;held.spd=0;}
     // pull the arm: aim it where the pointer ray meets the sphere it lives on; past the sphere's edge it stretches
     const a=aimAt(e.clientX,e.clientY,held.lp?.9:L),now=performance.now(),dt=Math.max(4,now-down.t);
-    held.dir.lerp(a.p.normalize(),.6).normalize();held.vel.set(0,0,0);t0=now;
+    const turn=new THREE.Quaternion().setFromUnitVectors(held.dir.clone().normalize(),a.p.normalize());
+    G.quaternion.multiply(new THREE.Quaternion().slerp(turn,.9));held.vel.set(0,0,0);idle=now;
     held.spd=held.spd*.6+Math.hypot(e.clientX-down.px,e.clientY-down.py)/dt*.4;down.t=now;
     // resistance: the atom only gives a little (it lags behind the finger like a stiff spring), and it takes
     // a long pull, or a real yank once it's already strained, before it snaps
-    const can=held.lp||nb>1,raw=a.out-1,pull=raw+(raw>.45?held.spd*.16:0);
-    held.lock=!can;held.strT=1+(can?.55:.3)*(1-Math.exp(-raw*1.3));
+    const can=held.lp||nb>1,raw=a.out-1,pull=raw+(raw>.9?held.spd*.2:0);
+    held.lock=!can;held.strT=1+(can?.22:.12)*(1-Math.exp(-raw*2.2));   // gives a little, then just strains (reddens)
     held.tn=can?Math.pow(Math.min(1,pull/BREAK),1.5):Math.min(1,raw/BREAK);
     const step=Math.floor(held.tn*6);if(can&&step>(down.step||0))SND.play("creak",step);down.step=step;   // creaks tighten as it strains
     if(can&&pull>=BREAK){detach(held);down.dead=true;}
@@ -453,7 +455,7 @@ function dropAt(x,y){const r=stage.getBoundingClientRect(),inS=x>=r.left&&x<=r.r
   if(nb+nl>=6){pvKill();SND.play("nope");return;}
   const w=W.slice();let l=nl;if(gd.k==="e")l++;else w[+gd.k]++;
   const from=pv?{dir:pv.dir.clone(),str:pv.str}:null;pvKill();
-  const before=new Set(doms);if(!setMol(w,l)){SND.play("nope");return;}
+  const before=new Set(doms);spawnHint=from&&{pseudo:true,lp:gd.k==="e",dir:from.dir};const ok=setMol(w,l);spawnHint=null;if(!ok){SND.play("nope");return;}
   // the real atom takes over exactly where the preview was, still stretched, and springs onto its seat
   const d=doms.find(o=>!before.has(o));if(d&&from){d.dir.copy(from.dir);d.str=from.str;d.len=1;d.lv=0;}
   SND.play(gd.k==="e"?"lp":"pop",nb+nl);}
