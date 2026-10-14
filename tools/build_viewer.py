@@ -1158,6 +1158,28 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 .fc.wide .fn{padding-top:10px}
 .fc ul{margin:6px 0 11px;padding:0 14px 0 30px;line-height:1.7;font-size:.93rem}
 .fc li::marker{color:var(--c)}
+/* ranked series (อนุกรมเคมีไฟฟ้า): each column = metal over its own ion; shade = strength */
+.srw{overflow-x:auto;padding:4px 12px 2px}
+.sr{display:grid;grid-template-columns:repeat(var(--n),minmax(42px,1fr));gap:6px 5px;min-width:calc(var(--n) * 47px)}
+.sre{grid-column:1/-1;display:flex;align-items:center;gap:8px;font-size:.9rem;font-weight:800;white-space:nowrap}
+.sre::before{content:"";flex:1;height:4px}
+.sre::after{content:"";width:0;height:0;border:8px solid transparent}
+.sre.l{color:var(--red)}.sre.l::after{order:-1;border-right:13px solid var(--red);border-left:0}
+.sre.l::before{background:linear-gradient(90deg,var(--red),color-mix(in srgb,var(--red) 20%,transparent))}
+.sre.r{color:var(--blue)}.sre.r::after{border-left:13px solid var(--blue);border-right:0}
+.sre.r::before{order:1;background:linear-gradient(270deg,var(--blue),color-mix(in srgb,var(--blue) 20%,transparent))}
+.sre.l i{order:0}.sre.l::before{order:1}.sre.r::before{order:0}.sre.r i{order:1}.sre.r::after{order:2}
+.sre i{font-style:normal}
+.sc{display:flex;flex-direction:column;gap:5px;transition:transform .15s}
+.sc b{display:flex;align-items:center;justify-content:center;height:40px;border:2px solid var(--ink);font:800 .95rem "JetBrains Mono",monospace;color:var(--ink);white-space:nowrap}
+.sc b sup,.sc b sub{font-size:.62em;line-height:1}.sc b sup{align-self:flex-start;margin-top:7px}.sc b sub{align-self:flex-end;margin-bottom:7px}
+.sc .m{background:color-mix(in srgb,var(--red) var(--a),var(--card))}
+.sc .i{background:color-mix(in srgb,var(--blue) var(--a),var(--card))}
+.sc .i.hi{color:#fff}.sc .m.hi{color:#fff}
+.sc.h b,.sc.h b.hi{border-style:dashed;background:var(--card);color:var(--ink)}
+.sc:hover{transform:translateY(-3px)}.sc:hover b{box-shadow:3px 3px 0 var(--sh)}
+@media(prefers-reduced-motion:reduce){.sc{transition:none}}
+@media(max-width:700px){.sr{grid-template-columns:repeat(7,minmax(0,1fr));min-width:0;row-gap:10px}.sc b{font-size:.88rem;height:38px}}
 .ftw{overflow-x:auto;margin:6px 12px 8px}
 .ftbl{width:100%;border-collapse:collapse;font-size:.9rem}
 .ftbl th{background:var(--ink);color:var(--paper);text-align:left;padding:5px 10px;font-size:.8rem;white-space:nowrap}
@@ -2518,6 +2540,13 @@ const TD=(()=>{
   function fcard(c){const x=c.x?`<i>เพิ่มเติม</i>`:"",srch=esc(plain([c.n,c.key,c.note,c.tex||"",(c.lines||[]).join(" "),(c.rows||[]).flat().join(" ")].join(" ")));
     if(c.k==="f")return `<div class="fc${c.w?" fhero":""}" data-s="${srch}"><div class="fm">${c.tex.split(/\\qquad/).map(t=>`<div class="fl chain">${eqParts(t.trim()).map(p=>`<span class="fp" data-tex="${esc(p)}">${esc(p)}</span>`).join("")}</div>`).join("")}</div>
       <div class="fn">${c.n}${x}</div>${c.key||c.note?`<div class="fk">${[c.key,c.note].filter(Boolean).join("<br>")}</div>`:""}</div>`;
+    if(c.k==="s"){const n=c.rows.length,a=i=>Math.round(10+68*i/(n-1));   // shade 10%..78%
+      return `<div class="fc wide" data-s="${srch}"><div class="fn">${c.n}${x}</div><div class="srw"><div class="sr" style="--n:${n}">
+      <div class="sre l"><i>${c.ends[0]}</i></div>
+      ${c.rows.map((r,i)=>{const am=a(n-1-i),ai=a(i),h=/^H</.test(r[0])?" h":"";
+        return `<div class="sc${h}"><b class="m${am>55?" hi":""}" style="--a:${am}%">${r[0]}</b><b class="i${ai>55?" hi":""}" style="--a:${ai}%">${r[1]}</b></div>`;}).join("")}
+      <div class="sre r"><i>${c.ends[1]}</i></div></div></div>
+      <ul>${c.lines.map(l=>`<li>${l}</li>`).join("")}</ul>${c.note?`<div class="fk">${c.note}</div>`:""}</div>`;}
     if(c.k==="t")return `<div class="fc wide" data-s="${srch}"><div class="fn">${c.n}${x}</div><div class="ftw"><table class="ftbl">
       <tr>${c.head.map(h=>`<th>${h}</th>`).join("")}</tr>${c.rows.map(r=>`<tr>${r.map(d=>`<td>${d}</td>`).join("")}</tr>`).join("")}</table></div>
       ${c.note?`<div class="fk">${c.note}</div>`:""}</div>`;

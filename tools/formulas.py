@@ -4,6 +4,7 @@ Three card kinds:
   F(tex, name, key, note, extra, wide)  a formula (wide=True spans the full row). `tex` is KaTeX (raw string!), `key` explains the symbols.
   T(name, head, rows, note)       a small table (VSEPR shapes, Le Chatelier...).
   R(name, lines, note)            a list of rules / relations in words.
+  S(name, rows, ends, lines)      a ranked series drawn as paired columns (อนุกรมเคมีไฟฟ้า).
 `extra=True` tags a card "เพิ่มเติม" = beyond the core ม.ปลาย curriculum (สอวน./A-Level stretch).
 Text fields may hold simple HTML (<sub>, <sup>, <b>). Edit freely, then re-run build_viewer.py.
 """
@@ -16,6 +17,10 @@ def T(name, head, rows, note="", extra=False):
 
 def R(name, lines, note="", extra=False):
     return {"k": "r", "n": name, "lines": lines, "note": note, "x": extra}
+
+def S(name, rows, ends, lines, note="", extra=False):
+    """a ranked series: rows = [(top, bottom)] pairs left->right, ends = (left label, right label)."""
+    return {"k": "s", "n": name, "rows": rows, "ends": ends, "lines": lines, "note": note, "x": extra}
 
 
 FORMULAS = {
@@ -264,6 +269,17 @@ FORMULAS = {
         "O = −2 (เพอร์ออกไซด์ −1, OF<sub>2</sub> +2) · H = +1 (ไฮไดรด์ของโลหะ −1)",
         "หมู่ 1 = +1 · หมู่ 2 = +2 · F = −1 เสมอ",
         "เลขออกซิเดชันเพิ่ม = ถูกออกซิไดซ์ (เป็นตัวรีดิวซ์) · ลด = ถูกรีดิวซ์ (เป็นตัวออกซิไดซ์)"]),
+    S("อนุกรมเคมีไฟฟ้า · ความแรงของตัวรีดิวซ์ / ตัวออกซิไดซ์", [
+        ("K", "K<sup>+</sup>"), ("Ca", "Ca<sup>2+</sup>"), ("Na", "Na<sup>+</sup>"), ("Mg", "Mg<sup>2+</sup>"),
+        ("Al", "Al<sup>3+</sup>"), ("Zn", "Zn<sup>2+</sup>"), ("Fe", "Fe<sup>2+</sup>"), ("Ni", "Ni<sup>2+</sup>"),
+        ("Sn", "Sn<sup>2+</sup>"), ("Pb", "Pb<sup>2+</sup>"), ("H<sub>2</sub>", "H<sup>+</sup>"), ("Cu", "Cu<sup>2+</sup>"),
+        ("Ag", "Ag<sup>+</sup>"), ("Au", "Au<sup>3+</sup>")],
+        ("โลหะ: ตัวรีดิวซ์แรง · ให้ e<sup>−</sup> ง่าย", "ไอออน: ตัวออกซิไดซ์แรง · รับ e<sup>−</sup> ง่าย"), [
+        "โลหะทางซ้ายให้ e<sup>−</sup> แก่ไอออนที่อยู่ทางขวาของมันได้เอง → แทนที่กันได้ "
+        "เช่น Zn + Cu<sup>2+</sup> → Zn<sup>2+</sup> + Cu ✓ แต่ Cu + Zn<sup>2+</sup> ✗",
+        "โลหะที่อยู่ทางซ้ายของ H<sub>2</sub> แทนที่ H<sup>+</sup> ในกรดเจือจางได้ ได้แก๊ส H<sub>2</sub> · Cu, Ag, Au ไม่ทำปฏิกิริยา",
+        "คู่เดียวกันสวนทางกันเสมอ: K เป็นตัวรีดิวซ์แรงที่สุด แต่ K<sup>+</sup> เป็นตัวออกซิไดซ์อ่อนที่สุด",
+        "ซ้าย = E° ติดลบมาก (มักเป็นแอโนด) · ขวา = E° เป็นบวกมาก (มักเป็นแคโทด)"]),
     F(r"E^\circ_{\text{cell}} = E^\circ_{\text{แคโทด}} - E^\circ_{\text{แอโนด}}", "ศักย์ไฟฟ้าของเซลล์",
       "ใช้ค่าศักย์รีดักชันทั้งคู่ ไม่ต้องกลับเครื่องหมาย · E° > 0 → เกิดได้เอง (เซลล์กัลวานิก)"),
     R("เซลล์ไฟฟ้าเคมี", [
