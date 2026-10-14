@@ -567,7 +567,34 @@ button.fg:hover{background:#fbf3dc}
 .mchart{display:grid;grid-template-columns:minmax(0,2fr) minmax(260px,1fr);background:var(--card);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);animation:enter .6s both;animation-delay:.2s}
 .chart-wrap{padding:16px 20px 32px;border-right:3px solid var(--ink)}
 .holwrap{padding:16px 18px}
-.mchart .chart{background-color:transparent}
+.mchart .chart{background:none;gap:clamp(8px,2.4vw,22px)}
+/* redesigned money chart: slim stacked bars on one baseline. ink = paid, red = owed, hatched = still to come
+   (same rule as the breakdown sheet). The month you're on stays full strength, the rest step back */
+.mchart .chart:before{content:"";position:absolute;left:0;right:0;bottom:26px;border-top:3px solid var(--ink);z-index:1}
+.mchart .bar{display:flex;flex-direction:column-reverse;width:min(100%,58px);background:none;border:0;transition:opacity .2s,transform .2s}
+.mchart .bar i{display:block;min-height:0;border:2px solid var(--ink);border-bottom:0}
+.mchart .bar i.pd{background:var(--ink)}
+.mchart .bar i.ow{background:var(--red)}
+.mchart .bar i.up{background:repeating-linear-gradient(45deg,var(--dash) 0 3px,var(--card) 3px 8px);border-style:dashed dashed none}
+.mchart .bar.zero{background:var(--dash)}
+.mchart .column:not(.sel) .bar{opacity:.38}
+.mchart .column:hover .bar{opacity:.75}
+.mchart .column.sel .bar{opacity:1;box-shadow:5px 0 0 var(--sh)}
+.mchart .column:hover .bar:not(.forecast),.mchart .column.sel .bar:not(.forecast){background:none}
+.mchart .column .value{top:-22px;background:none;color:var(--mut);font-size:.72rem}
+.mchart .column.sel .value{top:-28px;background:var(--ink);color:var(--paper);font-size:.84rem;padding:2px 7px}
+.mchart .column .label{bottom:-26px;color:var(--mut);font-weight:700}
+.mchart .column.sel .label{background:none;color:var(--ink);font-weight:800}
+.mchart .column.sel .label:after{content:"";display:block;width:22px;height:4px;margin:2px auto 0;background:var(--red)}
+.mchart .column.cur .label:before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-right:4px;vertical-align:2px}
+.mchart .average{border-top:2px dashed var(--blue);opacity:1}
+.mchart .average span{left:auto;right:0;bottom:4px;background:var(--blue);color:#fff;font-size:.66rem;padding:2px 6px}
+.clegend{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:22px;font:700 .74rem "JetBrains Mono";color:var(--mut)}
+.clegend span{display:inline-flex;align-items:center;gap:6px}
+.clegend span:before{content:"";width:11px;height:11px;border:2px solid var(--ink)}
+.clegend .lpd:before{background:var(--ink)}.clegend .low:before{background:var(--red)}
+.clegend .lup:before{background:repeating-linear-gradient(45deg,var(--dash) 0 2px,var(--card) 2px 5px);border-style:dashed}
+.clegend .lav:before{width:16px;height:0;border:0;border-top:2px dashed var(--blue)}
 .holwrap .day{border:0;background:var(--paper)}
 .holwrap .day.past{background:transparent;color:#b3ab9b}
 .holwrap .day:hover{box-shadow:none;background:var(--stbg)}
@@ -1149,7 +1176,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
     </div>
     <div class="owes" id="owes"></div>
     <div class="mchart">
-      <div class="chart-wrap"><div class="lab">6 เดือนล่าสุด · แตะแท่งเพื่อดูเดือนนั้น · คลิกขวา/กดค้างดูรายนักเรียน</div><div class="chart" id="chart"></div></div>
+      <div class="chart-wrap"><div class="lab">6 เดือนล่าสุด · แตะแท่งเพื่อดูเดือนนั้น · คลิกขวา/กดค้างดูรายนักเรียน</div><div class="chart" id="chart"></div><div class="clegend"><span class="lpd">ได้แล้ว</span><span class="low">ค้างชำระ</span><span class="lup">ยังไม่ถึง</span><span class="lav">เฉลี่ย 6 เดือนก่อน</span></div></div>
       <div class="holwrap"><div class="lab" id="ctitle"></div><div class="calendar" id="calendar"></div><div class="cnote" id="cnote"></div></div>
     </div>
   </section>
@@ -1730,13 +1757,18 @@ function renderMoney(){
   count($('#sAll'), yr);
   const cols = []; for (let k = 5; k >= 0; k--){ let y = my, m = mm_ - k; while (m < 0){ m += 12; y--; } cols.push([y,m]); }
   const maxV = Math.max(...cols.map(([y,m]) => monthTotal(y,m)), avg, 1) * 1.1, H = 204;
+  const curY = NOW.getFullYear(), curM = NOW.getMonth();
   $('#chart').innerHTML = `<div class="average" style="bottom:${26 + avg/maxV*H}px"><span>เฉลี่ย ${cash(avg)}</span></div>` + cols.map(([y,m], i) => {
-    const v = monthTotal(y,m), x = monthMoney(y,m), open = x.n && x.left > 0, sel = (y === my && m === mm_);
-    return `<button class="column ${sel?'sel':''}" data-y="${y}" data-m="${m}" title="${TH_M[m]}: ${cash(v)} · คลิกขวาดูรายนักเรียน" onclick="if(this._lp){this._lp=0;return}my=${y};mm_=${m};renderMoney();renderSchedule()"><div class="bar ${open?'forecast':''}" style="height:${Math.max(4, v/maxV*H)}px;--i:${i}"><span class="value">${open?'คาด ':''}${(v/1000).toFixed(1)}k</span>${open?`<div class="actual" style="height:0" data-h="${v ? x.earned/v*100 : 0}"></div>`:''}</div><span class="label">${TH_M[m]}</span></button>`;
+    const v = monthTotal(y,m), x = monthMoney(y,m), sel = (y === my && m === mm_), cur = (y === curY && m === curM);
+    // a month kept only as a total in history = one solid "paid" block
+    const seg = x.n ? [['pd', x.earned], ['ow', x.owe], ['up', x.left]] : [['pd', v]];
+    const k = v >= 1000 ? `${(v/1000).toFixed(1).replace(/\.0$/, '')}k` : v ? String(v) : '–';
+    return `<button class="column${sel ? ' sel' : ''}${cur ? ' cur' : ''}" data-y="${y}" data-m="${m}" title="${TH_M[m]}: ${cash(v)}${x.n ? ` · ได้แล้ว ${cash(x.earned)} · ค้าง ${cash(x.owe)} · ยังไม่ถึง ${cash(x.left)}` : ''} · คลิกขวาดูรายนักเรียน" onclick="if(this._lp){this._lp=0;return}my=${y};mm_=${m};renderMoney();renderSchedule()">`
+      + `<div class="bar${v ? '' : ' zero'}" style="height:${v ? Math.max(6, v/maxV*H) : 3}px;--i:${i}"><span class="value">${k}</span>`
+      + seg.filter(([, a]) => a > 0).map(([c, a]) => `<i class="${c}" style="flex-grow:${a}"></i>`).join('') + `</div>`
+      + `<span class="label">${TH_M[m]}</span></button>`;
   }).join('');
   $('#chart').classList.toggle('calm', calm);
-  const fillBars = () => document.querySelectorAll('#chart .actual').forEach(e => e.style.height = e.dataset.h + '%');
-  calm ? fillBars() : later(fillBars);
   // right-click (PC) or long-press (iPad) a bar → who that month's money came from
   document.querySelectorAll('#chart .column').forEach(b => {
     const go = () => openMonthBreak(+b.dataset.y, +b.dataset.m);
