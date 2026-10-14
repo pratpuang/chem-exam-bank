@@ -926,6 +926,16 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .xr{display:grid;grid-template-columns:1fr auto 32px;gap:12px;align-items:center;padding:11px 0;border-bottom:2px solid var(--grid)}
 .xr span{font-weight:700}.xr small{display:block;font:600 .72rem "JetBrains Mono";color:var(--mut)}
 .xr b{font:800 1.05rem "JetBrains Mono"}
+/* month breakdown popup: right-click / long-press a chart bar → each student's share of that month */
+.mbl{display:flex;flex-direction:column}
+.mbr{padding:12px 0;border-bottom:2px solid var(--grid)}
+.mbt{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center;margin-bottom:8px}
+.mbt i{width:14px;height:14px;border:2px solid var(--ink)}
+.mbt span{font-weight:800}.mbt small{display:block;font:600 .72rem "JetBrains Mono";color:var(--mut)}
+.mbt b{font:800 1.05rem "JetBrains Mono"}
+.mbr .progress{height:16px}
+.mbc{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px;font:600 .72rem "JetBrains Mono";color:var(--mut)}
+.mbc .o{color:var(--red)}
 .xadd{display:grid;grid-template-columns:1fr 110px auto;gap:8px;margin-top:14px;align-items:center}
 @media (max-width:560px){.xadd{grid-template-columns:1fr 90px}.xadd .go{grid-column:1/-1}}
 
@@ -1083,7 +1093,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
     </div>
     <div class="owes" id="owes"></div>
     <div class="mchart">
-      <div class="chart-wrap"><div class="lab">6 เดือนล่าสุด · แตะแท่งเพื่อดูเดือนนั้น</div><div class="chart" id="chart"></div></div>
+      <div class="chart-wrap"><div class="lab">6 เดือนล่าสุด · แตะแท่งเพื่อดูเดือนนั้น · คลิกขวา/กดค้างดูรายนักเรียน</div><div class="chart" id="chart"></div></div>
       <div class="holwrap"><div class="lab" id="ctitle"></div><div class="calendar" id="calendar"></div><div class="cnote" id="cnote"></div></div>
     </div>
   </section>
@@ -1657,12 +1667,40 @@ function renderMoney(){
   const maxV = Math.max(...cols.map(([y,m]) => monthTotal(y,m)), avg, 1) * 1.1, H = 204;
   $('#chart').innerHTML = `<div class="average" style="bottom:${26 + avg/maxV*H}px"><span>เฉลี่ย ${cash(avg)}</span></div>` + cols.map(([y,m], i) => {
     const v = monthTotal(y,m), x = monthMoney(y,m), open = x.n && x.left > 0, sel = (y === my && m === mm_);
-    return `<button class="column ${sel?'sel':''}" title="${TH_M[m]}: ${cash(v)}" onclick="my=${y};mm_=${m};renderMoney();renderSchedule()"><div class="bar ${open?'forecast':''}" style="height:${Math.max(4, v/maxV*H)}px;--i:${i}"><span class="value">${open?'คาด ':''}${(v/1000).toFixed(1)}k</span>${open?`<div class="actual" style="height:0" data-h="${v ? x.earned/v*100 : 0}"></div>`:''}</div><span class="label">${TH_M[m]}</span></button>`;
+    return `<button class="column ${sel?'sel':''}" data-y="${y}" data-m="${m}" title="${TH_M[m]}: ${cash(v)} · คลิกขวาดูรายนักเรียน" onclick="if(this._lp){this._lp=0;return}my=${y};mm_=${m};renderMoney();renderSchedule()"><div class="bar ${open?'forecast':''}" style="height:${Math.max(4, v/maxV*H)}px;--i:${i}"><span class="value">${open?'คาด ':''}${(v/1000).toFixed(1)}k</span>${open?`<div class="actual" style="height:0" data-h="${v ? x.earned/v*100 : 0}"></div>`:''}</div><span class="label">${TH_M[m]}</span></button>`;
   }).join('');
   $('#chart').classList.toggle('calm', calm);
   const fillBars = () => document.querySelectorAll('#chart .actual').forEach(e => e.style.height = e.dataset.h + '%');
   calm ? fillBars() : later(fillBars);
+  // right-click (PC) or long-press (iPad) a bar → who that month's money came from
+  document.querySelectorAll('#chart .column').forEach(b => {
+    const go = () => openMonthBreak(+b.dataset.y, +b.dataset.m);
+    b.oncontextmenu = e => { e.preventDefault(); go(); };
+    let t; const stop = () => clearTimeout(t);
+    b.ontouchstart = () => { stop(); t = setTimeout(() => { b._lp = 1; go(); }, 500); };
+    b.ontouchmove = b.ontouchend = b.ontouchcancel = stop;
+  });
   renderHolCal();
+}
+// each student's slice of a month's เงินที่คาดว่าจะได้, same maths as monthMoney (paid + owed + still planned)
+function openMonthBreak(y, m){
+  const by = {};
+  monthSessions(y, m).filter(counts).forEach(s => {
+    const r = by[s.who] ||= {who: s.who, paid: 0, owe: 0, left: 0, n: 0, h: 0};
+    const a = amt(s); r.n++; r.h += +s.h || 0;
+    if (s.status === 'done') s.paid ? r.paid += a : r.owe += a; else r.left += a;
+  });
+  const rows = Object.values(by).map(r => ({...r, tot: r.paid + r.owe + r.left})).sort((a, b) => b.tot - a.tot);
+  const M = monthMoney(y, m), hist = !M.n ? (DB.history[mkey(y,m)] ?? 0) : 0;
+  const body = rows.length ? rows.map(r => { const p = st(r.who), pct = r.tot ? Math.round(r.paid / r.tot * 100) : 0;
+    return `<div class="mbr"><div class="mbt"><i class="${colorOf(r.who)}"></i><span>${esc(p?.name ?? '?')}<small>${r.n} คาบ · ${r.h} ชม.</small></span><b>${cash(r.tot)}</b></div>
+      <div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><div class="fill" style="width:${pct}%"></div></div>
+      <div class="mbc"><span>ได้แล้ว ${cash(r.paid)} · ${pct}%</span>${r.owe ? `<span class="o">ค้าง ${cash(r.owe)}</span>` : ''}${r.left ? `<span>ยังไม่ถึง ${cash(r.left)}</span>` : ''}</div></div>`; }).join('')
+    : `<div class="mut" style="padding:14px 0;font-weight:600">${hist ? `เดือนนี้มีแค่ยอดรวม ${cash(hist)} ที่บันทึกไว้ ไม่มีรายคาบให้แยกรายนักเรียน` : 'ไม่มีคาบเรียนเดือนนี้'}</div>`;
+  openModal(`<button class="pdx x" onclick="closeModal()" title="ปิด">✕</button>
+    <div class="xhead"><span class="eyebrow">รายนักเรียน · ${TH_MF[m]} ${y+543}</span>
+      <div class="xsum"><div><b>${cash(M.n ? M.forecast : hist)}</b><span>คาดทั้งเดือน</span></div><div><b>${cash(M.n ? M.earned : hist)}</b><span>ได้แล้ว</span></div><div><b>${rows.length}</b><span>นักเรียน</span></div></div></div>
+    <div class="mbl">${body}</div>`);
 }
 function renderHolCal(){
   const y = my, m = mm_, days = new Date(y, m+1, 0).getDate(), off = new Date(y, m, 1).getDay();
