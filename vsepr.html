@@ -253,21 +253,24 @@ const DOTG=sph(.062,14),DOTM=flat(INK),_red=new THREE.Color(RED);
 function mkArm(lp,o){const g=new THREE.Group();let pick,dots=null;
   if(lp){pick=outlined(sph(.37,30),C.e,.08);pick.scale.set(.78,1.25,.78);pick.position.y=.66;g.add(pick);
     // the two electrons of the pair: two ink dots on the side of the lobe that faces you
-    dots=new THREE.Group();dots.position.y=.66;[-1,1].forEach(k=>{const m=new THREE.Mesh(DOTG,DOTM);m.userData.k=k;dots.add(m);});g.add(dots);dots.userData={eyes:dots.children.slice(0,2)};}
+    dots=new THREE.Group();dots.position.y=.66;[-1,1].forEach(k=>{const m=new THREE.Mesh(DOTG,DOTM);m.userData.k=k;m.userData.cv=mkChev();dots.add(m,m.userData.cv);});g.add(dots);dots.userData={eyes:dots.children.filter(m=>m.userData.cv)};}
   else{pick=outlined(sph(.32),C.x,.09);pick.position.y=L;g.add(pick);}
   G.add(g);castAll(g);const a={g,pick,dots};if(!lp){a.o=o||1;a.sticks=mkSticks(a.o);g.add(a.sticks);}return a;}
 const _c=new V(),_u=new V(),_p=new V(),_w=new V(),_t=new V(),_t2=new V(),_m4=new THREE.Matrix4(),_q4=new THREE.Quaternion(),_nu=new V(),_nw=new V();
-const _Z=new V(0,0,1),_nq=new THREE.Quaternion();
+const _Z=new V(0,0,1),_nq=new THREE.Quaternion(),CHEVG=new THREE.BoxGeometry(.11,.032,.03),CA=.62;
+// a chevron with its point toward +x, centred: two bars meeting at the tip
+function mkChev(){const c=new THREE.Group();[1,-1].forEach(sg=>{const b=new THREE.Mesh(CHEVG,DOTM);
+  b.position.set(0,sg*Math.sin(CA)*.055,0);b.rotation.z=-sg*CA;c.add(b);});c.visible=false;return c;}
 let ptr=null;
 /* ---- lone-pair moods: what the face should be doing right now ---- */
 function mood(d,now){
   if(d.dying)return{ew:1.5,eh:1.5,lift:.01,still:1};                                    // snapped off: shocked, huge eyes
-  if(d===held){if(d.tn>.25)return{ew:1.2,eh:.3,tilt:-.45,shake:d.tn>.55,still:1};      // being pulled off: > < squint
+  if(d===held){if(d.tn>.25)return{ew:1,eh:1,eye:"strain",shake:d.tn>.55,still:1};      // being pulled off: > <
     return{ew:1.4,eh:1.4,lift:.008,still:1};}                                            // grabbed: wide eyes
   if(typeof pv!=="undefined"&&d===pv)return{ew:1.25,eh:1.25,lift:.006,still:1};        // being carried in
-  if(now-(d.born||-1e4)<1200)return{ew:1.05,eh:.35,lift:.012,tilt:.2,still:1};          // just arrived: ^^
-  if(d===selected)return{ew:1.05,eh:.45,lift:.01,tilt:.15};                             // tapped: pleased
-  if(held&&held.tn>.25)return{ew:1.15,eh:.8,tilt:.35};                                  // another one being pulled: worried, droopy
+  if(now-(d.born||-1e4)<1200)return{ew:1,eh:1,lift:.01,eye:"happy",still:1};            // just arrived: ^ ^
+  if(d===selected)return{ew:1,eh:1,lift:.008,eye:"happy"};                              // tapped: ^ ^
+  if(held&&held.tn>.25)return{ew:.8,eh:.8,lift:-.012};                                  // another one being pulled: small eyes, looking down
   if(held||(typeof gd!=="undefined"&&gd&&gd.on))return{ew:1.2,eh:1.2,lift:.004};       // something's happening: curious
   return{ew:1,eh:1};}
 // where the eyes look: whatever's being dragged, else your pointer, else a lazy wander
@@ -279,7 +282,7 @@ function gaze(d,now){let tw=null;
   if(tw){d.g.worldToLocal(_t2.copy(tw)).sub(d.dots.position).sub(_p).normalize();gx=_t2.dot(_u)*1.6;gy=_t2.dot(_w)*1.6;}
   else{if(!d.wt||now>d.wt){d.wt=now+1400+Math.random()*2600;d.wg=Math.random()<.35?[0,0]:[(Math.random()-.5)*1.6,(Math.random()-.5)*1.1];}[gx,gy]=d.wg;}
   const g=d.gz||(d.gz=[0,0]);g[0]+=(Math.max(-1,Math.min(1,gx))-g[0])*.18;g[1]+=(Math.max(-1,Math.min(1,gy))-g[1])*.18;return g;}
-function lpFace(d){const now=performance.now(),F=mood(d,now),v=d.fv||(d.fv={ew:1,eh:1,lift:0,tilt:0});
+function lpFace(d){const now=performance.now(),F=mood(d,now),v=d.fv||(d.fv={ew:1,eh:1,lift:0});
   for(const k in v)v[k]+=((F[k]||0)-v[k])*.25;
   if(!d.nbk)d.nbk=now+600+Math.random()*3000;let bl=1;                                                   // blink now and then (sometimes twice)
   if(now>d.nbk){if(now-d.nbk<130)bl=.1;else d.nbk=now+(Math.random()<.2?170:1800+Math.random()*3800);}
@@ -287,7 +290,10 @@ function lpFace(d){const now=performance.now(),F=mood(d,now),v=d.fv||(d.fv={ew:1
   const g=gaze(d,now),sh=F.shake?(Math.random()-.5)*.025:0,U=d.dots.userData;
   _m4.makeBasis(_u,_w,_c);_q4.setFromRotationMatrix(_m4);
   U.eyes.forEach(m=>{m.position.copy(_p).multiplyScalar(.95).addScaledVector(_u,m.userData.k*.1+g[0]*.03+sh).addScaledVector(_w,.035+v.lift+g[1]*.03);
-    m.quaternion.copy(_q4).multiply(_nq.setFromAxisAngle(_Z,m.userData.k*v.tilt));m.scale.set(v.ew,v.eh*bl,.55);});
+    m.quaternion.copy(_q4);m.scale.set(v.ew,v.eh*bl,.55);
+    const cv=m.userData.cv;m.visible=!F.eye;cv.visible=!!F.eye;
+    if(F.eye){cv.position.copy(m.position);   // > <  points inward (strain);  ^ ^  points up (happy)
+      cv.quaternion.copy(_q4).multiply(_nq.setFromAxisAngle(_Z,F.eye==="happy"?Math.PI/2:m.userData.k<0?0:Math.PI));}});
 }
 function faceCam(d){d.g.updateMatrixWorld(true);_c.copy(cam.position);d.g.worldToLocal(_c);
   if(d.sticks)d.sticks.rotation.y=Math.atan2(_c.x,_c.z);
