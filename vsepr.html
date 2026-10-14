@@ -49,6 +49,21 @@ h1{font-size:2rem;margin:0 0 4px}.sub{color:var(--mut);margin:0 0 22px}
 .chips{display:flex;flex-wrap:wrap;gap:5px}
 .chips button{border:2px solid var(--ink);background:var(--card);font:700 .8rem "JetBrains Mono",monospace;padding:4px 8px;cursor:pointer}
 .chips button:hover{background:var(--yel)}
+/* drag a bond / lone pair out of its row and drop it on the molecule */
+.cnt .row{touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;transition:box-shadow .12s,transform .12s,opacity .12s}
+.cnt .row:hover{box-shadow:4px 4px 0 var(--ink);transform:translate(-2px,-2px)}
+.cnt .row.lift{opacity:.45;box-shadow:none;transform:none}
+#ghost{position:fixed;inset:0;pointer-events:none;z-index:50;display:none}
+#ghost svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#ghost em{position:absolute;transform:translate(-50%,calc(-100% - 18px));font:800 .78rem "Anuphan",sans-serif;font-style:normal;white-space:nowrap;background:var(--ink);color:#fff;padding:2px 8px}
+#ghost em.go{background:var(--red)}
+/* the pull-out meter that rides on a stretched atom */
+.lab u{position:absolute;transform:translate(-50%,calc(-100% - 24px));text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:3px;font:800 .74rem "Anuphan",sans-serif;white-space:nowrap}
+.lab u span{background:var(--ink);color:#fff;padding:2px 7px}
+.lab u s{display:block;width:70px;height:9px;border:2px solid var(--ink);background:linear-gradient(90deg,var(--red) calc(var(--t)*100%),#fffdf6 0)}
+.lab u.hot span{background:var(--red)}.lab u.hot>*{animation:shk .1s linear infinite}
+.lab u.lock span{background:var(--mut)}
+@keyframes shk{0%,100%{translate:0 0}25%{translate:-1.5px 0}75%{translate:1.5px 0}}
 /* ---- stage backgrounds ---- */
 .stage canvas{position:relative;z-index:1}
 .stage:before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none}
@@ -93,8 +108,8 @@ body.embed{overflow:hidden}body.embed .wrap{height:100vh}body.embed .stage{heigh
   body.embed{overflow:auto}body.embed .wrap{height:auto}body.embed .stage{height:min(440px,60vh)}}
 </style></head><body><div class="page">
 <h1>รูปร่างโมเลกุล 3D</h1>
-<p class="sub">กด + / − ดูแขนผลักกัน · <b>ลากอะตอมหรือคู่โดดเดี่ยว</b> แล้วปล่อยให้เด้งกลับ · <b>แตะ</b>เพื่อเลือกดูมุม · ลากที่ว่างเพื่อหมุน · เปิด “ลากเส้นจุดต่อจุด” ให้เห็นทรงของมันจริงๆ</p>
-<div class="wrap"><div class="stage" id="stage"><div class="lab" id="lab"></div><div class="hint">ลากอะตอม = ขยับ · แตะ = ชี้ให้ดู · ลากที่ว่าง = หมุน · สกรอลล์ / ถ่างสองนิ้ว = ซูม · ดับเบิลคลิก = ขนาดเดิม</div></div>
+<p class="sub">กด + / − หรือ<b>ลากพันธะ / คู่โดดเดี่ยวจากแผงมาแปะที่โมเลกุล</b> · <b>ดึงอะตอมออกไกลๆ หรือกระชากแรงๆ</b> เพื่อถอด (ปล่อยก่อนจะเด้งกลับ) · <b>แตะ</b>เพื่อเลือกดูมุม · ลากที่ว่างเพื่อหมุน</p>
+<div class="wrap"><div class="stage" id="stage"><div class="lab" id="lab"></div><div class="hint">ลากจากแผง = เพิ่ม · ดึงอะตอมออก = ถอด · แตะ = ชี้ให้ดู · ลากที่ว่าง = หมุน · สกรอลล์ / ถ่างสองนิ้ว = ซูม · ดับเบิลคลิก = ขนาดเดิม</div></div>
 <div class="panel">
  <div class="shape"><div class="ax" id="ax"></div><div class="nm" id="nm"></div><div class="en" id="en"></div></div>
  <div class="cnt">
@@ -158,7 +173,9 @@ const SND=(()=>{let ctx=null,out=null;
     grab:()=>tick({f:1800,vol:.08}),
     mol:()=>[523,659,784,1046].forEach((f,i)=>tone(vary(f,.01),.22,{vol:.09,delay:i*.06})),
     nope:()=>{tone(160,.14,{to:120,vol:.14,type:"triangle"});tone(150,.14,{to:110,vol:.1,type:"triangle",delay:.1});},
-    tog:()=>tick({f:2400,vol:.1})};
+    tog:()=>tick({f:2400,vol:.1}),
+    warn:()=>tick({f:5200,vol:.07}),                                                                       // the bond is about to give
+    snap:()=>{tone(vary(980),.14,{to:180,slideT:.11,vol:.15,type:"triangle"});tick({f:4400,vol:.16});tick({f:900,vol:.1,delay:.02});}};
   return{play:(n,a)=>{if(get("cqb_sfx","1")==="0")return;try{if(ac())P[n](a);}catch(e){}}};})();
 
 /* geometry: exact textbook seats, lone pairs placed first (5 pairs: equatorial, 6: opposite), bonds nudged 0.05 away from each lone pair */
@@ -227,7 +244,7 @@ const center=outlined(sph(.5),C.c,.07);G.add(center);castAll(center);center.user
 function mkSticks(o){const s=new THREE.Group(),r=o===1?.095:.068,off=o===1?[0]:o===2?[-.1,.1]:[-.16,0,.16];
   off.forEach(x=>{const st=new THREE.Mesh(new THREE.CylinderGeometry(r,r,L,16),flat(C.b));st.position.set(x,L/2,0);s.add(st);});castAll(s);return s;}
 function setOrder(d,o){d.o=o;if(d.sticks){d.g.remove(d.sticks);d.sticks.traverse(m=>{m.geometry&&m.geometry.dispose();});}d.sticks=mkSticks(o);d.g.add(d.sticks);}
-const DOTG=sph(.062,14),DOTM=flat(INK);
+const DOTG=sph(.062,14),DOTM=flat(INK),_red=new THREE.Color(RED);
 function mkArm(lp,o){const g=new THREE.Group();let pick,dots=null;
   if(lp){pick=outlined(sph(.37,30),C.e,.08);pick.scale.set(.78,1.25,.78);pick.position.y=.66;g.add(pick);
     // the two electrons of the pair: two ink dots on the side of the lobe that faces you
@@ -237,7 +254,7 @@ function mkArm(lp,o){const g=new THREE.Group();let pick,dots=null;
 const _c=new V(),_u=new V(),_p=new V();
 function faceCam(d){d.g.updateMatrixWorld(true);_c.copy(cam.position);d.g.worldToLocal(_c);
   if(d.sticks)d.sticks.rotation.y=Math.atan2(_c.x,_c.z);
-  if(d.dots){_c.y-=.66;_c.normalize();const a=.37*.78,b=.37*1.25;
+  if(d.dots){_c.y-=d.dots.position.y;_c.normalize();const a=.37*.78,b=.37*1.25;
     const q=Math.sqrt(a*a*_c.x*_c.x+b*b*_c.y*_c.y+a*a*_c.z*_c.z)||1;_p.set(a*a*_c.x/q,b*b*_c.y/q,a*a*_c.z/q);      // point on the lobe facing the camera
     _u.set(_c.z,0,-_c.x);if(_u.lengthSq()<1e-4)_u.set(1,0,0);_u.normalize().multiplyScalar(.1);          // side by side, across the lobe
     d.dots.children.forEach(m=>{m.position.copy(_p).multiplyScalar(.93).addScaledVector(_u,m.userData.k);});}}
@@ -257,7 +274,7 @@ function setShape(b,l,instant){b=Math.max(1,Math.min(6,b));l=Math.max(0,Math.min
   const q=best?best.q:new THREE.Quaternion(),taken=new Set();
   if(best)best.pr.forEach(([d,s])=>{d.target=T[s].v.clone().applyQuaternion(q);taken.add(s);});
   T.forEach((s,i)=>{if(taken.has(i))return;const dir=s.v.clone().applyQuaternion(q),a=mkArm(s.lp,s.lp?0:newOrders.shift()||1);
-    const d={lp:s.lp,dir:dir.clone(),target:dir,vel:new V(),len:instant?1:0,lv:0,...a};a.pick.userData.dom=d;doms.push(d);});
+    const d={lp:s.lp,dir:dir.clone(),target:dir,vel:new V(),len:instant?1:0,lv:0,str:1,sv:0,tn:0,...a};   /* str = pulled-out length, tn = 0..1 to snapping off */a.pick.userData.dom=d;doms.push(d);});
   nb=b;nl=l;t0=performance.now();computePairs();refresh();fr=0;}
 /* w = [_, single, double, triple]; each bond is ONE electron domain whatever its order, so only the count moves the shape */
 function setMol(w,l,instant){const tot=w[1]+w[2]+w[3];if(tot<1||tot+l>6||w.some(x=>x<0)||l<0)return false;
@@ -279,8 +296,15 @@ function physics(){const P=ANIM[mode],age=(performance.now()-t0)/1000,rep=held?P
   doms=doms.filter(d=>{if(d.dying&&d.len<.015&&Math.abs(d.lv)<.01){G.remove(d.g);d.g.traverse(o=>{o.geometry&&o.geometry.dispose();});return false;}return true;});
   const now=performance.now();
   G.updateMatrixWorld(true);
-  for(const d of doms){d.g.quaternion.setFromUnitVectors(Y,d.dir);d.g.scale.setScalar(Math.max(.001,d.len));d.g.visible=!d.lp||showLp;if(d.g.visible&&d.len>.05)faceCam(d);
-    const on=d===selected,s=on?1+.07*Math.sin(now/140):1;d.pick.scale.set((d.lp?.78:1)*s,(d.lp?1.25:1)*s,(d.lp?.78:1)*s);paint(d.pick,on,d.lp?C.e:C.x,C.h);}
+  for(const d of doms){
+    // stretch: follows the finger while held, flies off once snapped, otherwise springs back to 1
+    if(d===held)d.str+=(d.strT-d.str)*.5;else if(d.fly){d.str+=d.fly;d.fly*=.9;}else{d.sv=d.sv*.72+(1-d.str)*.22;d.str+=d.sv;d.tn*=.8;}
+    const st=Math.max(.6,d.str),t=d.tn||0,jit=d===held&&t>.7?(Math.random()-.5)*.06*t:0;
+    if(d.lp){d.pick.position.set(jit,.66*st,0);d.dots.position.y=.66*st;}
+    else{d.pick.position.set(jit,L*st,0);const th=Math.max(.3,(1-.5*t)/Math.sqrt(st));d.sticks.scale.set(th,st,th);   // the bond thins out like taffy
+      d.sticks.children.forEach(m=>m.material.color.setHex(C.b).lerp(_red,t));}
+    d.g.quaternion.setFromUnitVectors(Y,d.dir);d.g.scale.setScalar(Math.max(.001,d.len));d.g.visible=!d.lp||showLp;if(d.g.visible&&d.len>.05)faceCam(d);
+    const on=d===selected,s=on?1+.07*Math.sin(now/140):1,sy=d.lp?1+.35*(st-1):1;d.pick.scale.set((d.lp?.78:1)*s,(d.lp?1.25:1)*s*sy,(d.lp?.78:1)*s);paint(d.pick,on,d.lp?C.e:C.x,C.h);}
   const c=selected==="center";center.scale.setScalar(c?1+.05*Math.sin(now/140):1);paint(center,c,C.c,C.h);}
 // selected = swapped fill colour + thick red outline
 function paint(m,on,base,hi){m.material.color.setHex(on?hi:base);const h=m.userData.hull;h.material.color.setHex(on?C.k:C.o);h.scale.setScalar(on?1.22:1+(m===center?.07:.09));}
@@ -289,7 +313,7 @@ function paint(m,on,base,hi){m.material.color.setHex(on?hi:base);const h=m.userD
 const FACECOL=[C.e===CARD||C.e===INK?YEL:C.e,C.x===CARD?BLUE:C.x,C.c===INK?RED:C.c];let faceInfo=[];
 function buildHull(){HULLG.children.forEach(c=>{c.geometry.dispose();});HULLG.clear();faceInfo=[];
   if(!$("tDots").checked&&!$("tFaces").checked)return;
-  const atoms=alive().filter(d=>!d.lp&&d.len>.4).map(d=>d.dir.clone().multiplyScalar(L*d.len));
+  const atoms=alive().filter(d=>!d.lp&&d.len>.4).map(d=>d.dir.clone().multiplyScalar(L*d.len*d.str));
   if(atoms.length<2)return;
   if(atoms.length===2){ // linear or bent: just join the two atoms
     if($("tDots").checked){const g=new THREE.BufferGeometry().setFromPoints(atoms);const l=new THREE.Line(g,new THREE.LineDashedMaterial({color:C.o,dashSize:.14,gapSize:.1}));l.computeLineDistances();HULLG.add(l);}
@@ -318,6 +342,8 @@ function labels(){G.updateMatrixWorld();let html="";
   if($("tFaces").checked&&faceInfo.length>1)faceInfo.forEach((f,k)=>{const [x,y]=proj(f.c);
     const wc=f.c.clone().applyMatrix4(G.matrixWorld),wn=f.n.clone().applyQuaternion(G.quaternion),back=!f.flat&&wn.dot(cam.position.clone().sub(wc))<0;
     html+=`<b class="${back?"bk":""}" style="left:${x}px;top:${y}px">${k+1}</b>`;});
+  if(held&&held.tn>.08){const h=held,[x,y]=proj(h.dir.clone().multiplyScalar((h.lp?.66:L)*h.len*h.str)),t=Math.min(1,h.tn);
+    html+=`<u class="${h.lock?"lock":t>.7?"hot":""}" style="left:${x}px;top:${y}px;--t:${t.toFixed(3)}"><s></s><span>${h.lock?"ต้องเหลืออย่างน้อย 1 พันธะ":t>.7?"เกือบหลุด!":"ดึงออก"}</span></u>`;}
   lab.innerHTML=html;}
 
 /* ---- panel ---- */
@@ -333,6 +359,19 @@ const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();
 function hitAt(e){const r=stage.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(ndc,cam);
   const picks=[center,...doms.filter(d=>!d.dying&&d.g.visible).map(d=>d.pick)];const h=ray.intersectObjects(picks,false)[0];
   if(!h)return null;return h.object===center?"center":h.object.userData.dom;}
+// pointer -> a point on the sphere of radius rad (G's own frame). Off the sphere's edge: the nearest point,
+// and out = how many radii away it is (1 = on the sphere, 1.5 = pulled half a bond-length further)
+function aimAt(x,y,rad){const r=stage.getBoundingClientRect();ndc.set((x-r.left)/r.width*2-1,-(y-r.top)/r.height*2+1);ray.setFromCamera(ndc,cam);
+  G.updateMatrixWorld();const inv=new THREE.Matrix4().copy(G.matrixWorld).invert(),o=ray.ray.origin.clone().applyMatrix4(inv),dir=ray.ray.direction.clone().transformDirection(inv);
+  const b=o.dot(dir),c=o.lengthSq()-rad*rad,disc=b*b-c;
+  const p=disc>=0?o.clone().addScaledVector(dir,-b-Math.sqrt(disc)):o.clone().addScaledVector(dir,-b);
+  return{p,out:disc>=0?1:p.length()/rad};}
+const BREAK=.9;   // stretch (in bond lengths, flick included) at which the atom snaps off
+// snap an arm off: it flies outward and fades, the rest re-spread into the new shape
+function detach(d){const w=W.slice();let l=nl;if(d.lp)l--;else w[d.o]--;
+  d.dying=true;if(selected===d)select(null);
+  if(!setMol(w,l)){d.dying=false;return false;}
+  held=null;d.fly=.07;d.tn=1;SND.play("snap");return true;}
 let down=null,zoom=1,pinch=null;const pts=new Map();
 function setZoom(z){zoom=Math.max(.55,Math.min(2.8,z));cam.zoom=zoom;cam.updateProjectionMatrix();}
 const pdist=()=>{const [a,b]=[...pts.values()];return Math.hypot(a.x-b.x,a.y-b.y)||1;};
@@ -340,18 +379,23 @@ stage.addEventListener("pointerdown",e=>{pts.set(e.pointerId,{x:e.clientX,y:e.cl
   if(pts.size===2){ // second finger: stop dragging, start pinching
     if(held){held.vel.set(0,0,0);held=null;}down=null;pinch={d0:pdist(),z0:zoom};stage.classList.remove("grab");return;}
   if(pts.size>2)return;
-  const h=hitAt(e);down={x:e.clientX,y:e.clientY,h,moved:false,px:e.clientX,py:e.clientY};stage.setPointerCapture(e.pointerId);stage.classList.add("grab");});
+  const h=hitAt(e);down={x:e.clientX,y:e.clientY,h,moved:false,px:e.clientX,py:e.clientY,t:performance.now()};stage.setPointerCapture(e.pointerId);stage.classList.add("grab");});
 stage.addEventListener("pointermove",e=>{if(pts.has(e.pointerId))pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(pinch&&pts.size>=2){setZoom(pinch.z0*pdist()/pinch.d0);idle=performance.now();return;}
   if(!down){stage.classList.toggle("over",!!hitAt(e));return;}
   if(Math.hypot(e.clientX-down.x,e.clientY-down.y)>4)down.moved=true;if(!down.moved)return;
-  if(down.h&&down.h!=="center"){if(!held)SND.play("grab");held=down.h;
-    // pull the arm: aim it where the pointer ray meets the sphere it lives on
-    const r=stage.getBoundingClientRect();ndc.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(ndc,cam);
-    const inv=new THREE.Matrix4().copy(G.matrixWorld).invert(),o=ray.ray.origin.clone().applyMatrix4(inv),dir=ray.ray.direction.clone().transformDirection(inv);
-    const rad=held.lp?.9:L,b=o.dot(dir),c=o.lengthSq()-rad*rad,disc=b*b-c;
-    const p=disc>=0?o.clone().addScaledVector(dir,-b-Math.sqrt(disc)):o.clone().addScaledVector(dir,-b);
-    held.dir.lerp(p.normalize(),.6).normalize();held.vel.set(0,0,0);t0=performance.now();}
+  if(down.dead)return;                                    // this drag already snapped an atom off
+  if(down.h&&down.h!=="center"){if(!held){SND.play("grab");held=down.h;held.spd=0;}
+    // pull the arm: aim it where the pointer ray meets the sphere it lives on; past the sphere's edge it stretches
+    const a=aimAt(e.clientX,e.clientY,held.lp?.9:L),now=performance.now(),dt=Math.max(4,now-down.t);
+    held.dir.lerp(a.p.normalize(),.6).normalize();held.vel.set(0,0,0);t0=now;
+    held.spd=held.spd*.6+Math.hypot(e.clientX-down.px,e.clientY-down.py)/dt*.4;down.t=now;
+    // how far you pull + how hard you yank (a flick only counts once it's already stretched a bit)
+    const can=held.lp||nb>1,pull=(a.out-1)+(a.out>1.12?held.spd*.22:0);
+    held.lock=!can;held.strT=can?a.out:Math.min(a.out,1.5);held.tn=Math.min(1,(can?pull:held.strT-1)/BREAK);
+    if(held.tn>.7&&!down.warn){down.warn=1;SND.play("warn");}else if(held.tn<.5)down.warn=0;
+    if(can&&pull>=BREAK){detach(held);down.dead=true;}
+    else if(!can&&a.out>1.5&&!down.nope){down.nope=1;SND.play("nope");}}
   else{const dx=e.clientX-down.px,dy=e.clientY-down.py;if(dx||dy)G.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new V(dy,dx,0).normalize(),Math.hypot(dx,dy)*.011));idle=performance.now();}
   down.px=e.clientX;down.py=e.clientY;});
 const up=e=>{pts.delete(e.pointerId);if(pinch){if(pts.size<2)pinch=null;return;}
@@ -375,6 +419,50 @@ document.querySelector(".panel").addEventListener("click",e=>{const b=e.target.c
 });
 document.querySelector(".tg").addEventListener("change",()=>SND.play("tog"));
 $("tLp").onchange=e=>{showLp=e.target.checked;if(!showLp&&selected&&selected.lp)select(null);};
+
+/* ---- drag a new atom+bond (or a lone pair) out of its row; near the molecule its bond is pulled onto
+   the central atom like a magnet, and dropping it there adds it where you let go ---- */
+const GH=document.createElement("div");GH.id="ghost";document.body.appendChild(GH);
+const hex=c=>"#"+c.toString(16).padStart(6,"0"),sm=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
+let gd=null;
+function ghostAt(x,y){const r=stage.getBoundingClientRect(),inS=x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom,lp=gd.k==="e",full=nb+nl>=6;
+  G.updateMatrixWorld();const [px,py]=proj(new V()),cx=r.left+px,cy=r.top+py;
+  const ppu=r.height/(2*Math.tan(cam.fov*Math.PI/360)*cam.position.length())*zoom,R0=(lp?.72:L)*ppu;   // pixels per scene unit, seat distance
+  let dx=x-cx,dy=y-cy;const dist=Math.hypot(dx,dy)||1;dx/=dist;dy/=dist;
+  const s=inS&&!full?sm((2.6*R0-dist)/(1.3*R0)):0,rr=dist+(R0-dist)*s,bx=cx+dx*rr,by=cy+dy*rr;   // the magnet: inside 2.6 bond-lengths it slides onto the seat
+  return{inS,full,lp,s,cx,cy,bx,by,dx,dy,ppu,R0,rr};}
+function drawGhost(x,y){const g=ghostAt(x,y),{lp,s,cx,cy,bx,by,dx,dy,ppu}=g,ink="#141414",k=lp?0:+gd.k;let svg="";
+  if(g.inS&&!g.full){svg+=`<circle cx="${cx}" cy="${cy}" r="${g.R0}" fill="none" stroke="${ink}" stroke-width="2" stroke-dasharray="5 7" opacity="${(.15+.5*s).toFixed(2)}"/>`;
+    if(!lp){const nx=-dy,ny=dx,sp=7,w=k===1?6:4.5,a0=.5*ppu,a1=g.rr-.3*ppu;      // bond(s) from the central atom's edge to the ball
+      for(let i=0;i<k;i++){const o=(i-(k-1)/2)*sp;svg+=`<line x1="${cx+dx*a0+nx*o}" y1="${cy+dy*a0+ny*o}" x2="${cx+dx*a1+nx*o}" y2="${cy+dy*a1+ny*o}" stroke="${s>.85?"#e2412f":ink}" stroke-width="${w}" stroke-linecap="round"${s<.5?' stroke-dasharray="7 6"':""} opacity="${(.35+.65*s).toFixed(2)}"/>`;}}}
+  else if(!lp){const nx=-dy,ny=dx,sp=7,w=k===1?6:4.5;   // not over the molecule yet: a short bond stub so you know what you're carrying
+    for(let i=0;i<k;i++){const o=(i-(k-1)/2)*sp;svg+=`<line x1="${bx+nx*o}" y1="${by+ny*o}" x2="${bx-dx*34+nx*o}" y2="${by-dy*34+ny*o}" stroke="${ink}" stroke-width="${w}" stroke-linecap="round"/>`;}}
+  const op=g.full&&g.inS?.4:1,ow=s>.85?"#e2412f":ink;
+  if(lp){const rot=Math.atan2(dy,dx)*180/Math.PI+90,ux=-dy*.1*ppu,uy=dx*.1*ppu;
+    svg+=`<g opacity="${op}"><ellipse cx="${bx}" cy="${by}" rx="${.3*ppu}" ry="${.46*ppu}" transform="rotate(${rot} ${bx} ${by})" fill="${hex(C.e)}" stroke="${ow}" stroke-width="3"/>`
+      +`<circle cx="${bx+ux}" cy="${by+uy}" r="${.065*ppu}" fill="${ink}"/><circle cx="${bx-ux}" cy="${by-uy}" r="${.065*ppu}" fill="${ink}"/></g>`;}
+  else svg+=`<circle cx="${bx}" cy="${by}" r="${.33*ppu}" fill="${hex(C.x)}" stroke="${ow}" stroke-width="3.5" opacity="${op}"/>`;
+  const tip=g.full&&g.inS?"เต็มแล้ว · 6 คู่":g.inS&&s>.6?"ปล่อย = ต่อเข้า":"";
+  GH.innerHTML=`<svg>${svg}</svg>${tip?`<em class="${g.full?"":"go"}" style="left:${bx}px;top:${by-(lp?.46:.33)*ppu}px">${tip}</em>`:""}`;
+  return g;}
+function dropGhost(x,y){const g=ghostAt(x,y);
+  if(!g.inS)return;                                       // let go off the stage = never mind
+  if(g.full){SND.play("nope");return;}
+  const w=W.slice();let l=nl;if(gd.k==="e")l++;else w[+gd.k]++;
+  const before=new Set(doms);if(!setMol(w,l)){SND.play("nope");return;}
+  // the newborn starts where you dropped it, already grown, and the springs carry it to its seat
+  const d=doms.find(o=>!before.has(o));if(d){const a=aimAt(g.bx,g.by,g.lp?.9:L);d.dir.copy(a.p.normalize());d.len=.9;d.lv=0;}
+  SND.play(g.lp?"lp":"pop",nb+nl);}
+document.querySelectorAll(".cnt .row").forEach(row=>{const k=row.querySelector("[data-d]").dataset.d[0];
+  row.title="ลากไปวางบนโมเลกุลเพื่อเพิ่ม";
+  row.addEventListener("pointerdown",e=>{if(e.target.closest("button")||gd)return;gd={k,row,id:e.pointerId,x:e.clientX,y:e.clientY,on:false};
+    try{row.setPointerCapture(e.pointerId);}catch(_){}});
+  row.addEventListener("pointermove",e=>{if(!gd||gd.row!==row||e.pointerId!==gd.id)return;
+    if(!gd.on){if(Math.hypot(e.clientX-gd.x,e.clientY-gd.y)<6)return;gd.on=true;GH.style.display="block";row.classList.add("lift");SND.play("grab");}
+    const g=drawGhost(e.clientX,e.clientY);if(g.s>.85&&!gd.snap){gd.snap=1;SND.play("tog");}else if(g.s<.5)gd.snap=0;});
+  const end=(e,ok)=>{if(!gd||gd.row!==row||e.pointerId!==gd.id)return;if(gd.on&&ok)dropGhost(e.clientX,e.clientY);
+    GH.style.display="none";GH.innerHTML="";row.classList.remove("lift");gd=null;};
+  row.addEventListener("pointerup",e=>end(e,true));row.addEventListener("pointercancel",e=>end(e,false));});
 
 function size(){const w=stage.clientWidth,h=stage.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
 new ResizeObserver(size).observe(stage);size();
