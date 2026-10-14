@@ -573,14 +573,16 @@ button.fg:hover{background:#fbf3dc}
    (same rule as the breakdown sheet). The month you're on stays full strength, the rest step back */
 .mchart .chart:before{content:"";position:absolute;left:0;right:0;bottom:34px;border-top:3px solid var(--ink);z-index:1}
 .mchart .bar{display:flex;flex-direction:column-reverse;width:min(100%,58px);background:none;border:0;transition:opacity .2s,transform .2s}
-.mchart .bar i{display:block;min-height:0;border:2px solid var(--ink);border-bottom:0}
+.mchart .bar{border:2px solid var(--ink);border-bottom:0}
+.mchart .bar i{display:block;min-height:0}
+.mchart .bar i+i{border-bottom:2px solid var(--ink)}
 .mchart .bar i.pd{background:var(--ink)}
 .mchart .bar i.ow{background:var(--red)}
-.mchart .bar i.up{background:repeating-linear-gradient(45deg,var(--dash) 0 3px,var(--card) 3px 8px);border-style:dashed dashed none}
-.mchart .bar.zero{background:var(--dash)}
+.mchart .bar i.up{background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--ink) 28%,var(--card)) 0 2px,var(--card) 2px 8px)}
+.mchart .bar.zero{background:var(--dash);border:0}
 .mchart .column:not(.sel) .bar i{opacity:.4}
 .mchart .column:hover .bar i{opacity:.8}
-.mchart .column.sel .bar{opacity:1;box-shadow:5px 0 0 var(--sh)}
+.mchart .column:not(.sel) .bar{border-color:color-mix(in srgb,var(--ink) 30%,transparent)}
 .mchart .column:hover .bar:not(.forecast),.mchart .column.sel .bar:not(.forecast){background:none}
 .mchart .column .value{top:-26px;background:none;color:var(--mut);font-size:.95rem;font-weight:800}
 .mchart .column.sel .value{top:-34px;background:var(--ink);color:var(--paper);font-size:1.12rem;padding:3px 9px}
@@ -595,7 +597,7 @@ button.fg:hover{background:#fbf3dc}
 .clegend span{display:inline-flex;align-items:center;gap:6px}
 .clegend span:before{content:"";width:14px;height:14px;border:2px solid var(--ink)}
 .clegend .lpd:before{background:var(--ink)}.clegend .low:before{background:var(--red)}
-.clegend .lup:before{background:repeating-linear-gradient(45deg,var(--dash) 0 2px,var(--card) 2px 5px);border-style:dashed}
+.clegend .lup:before{background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--ink) 28%,var(--card)) 0 2px,var(--card) 2px 6px)}
 .clegend .lav:before{width:16px;height:0;border:0;border-top:2px dashed var(--blue)}
 .holwrap .day{border:0;background:var(--paper)}
 .holwrap .day.past{background:transparent;color:#b3ab9b}
