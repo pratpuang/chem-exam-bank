@@ -10,8 +10,8 @@ body{margin:0;background:var(--paper);color:var(--ink);font-family:"Anuphan",san
 .page{max-width:1280px;margin:auto;padding:30px 22px 60px}
 h1{font-size:2rem;margin:0 0 4px}.sub{color:var(--mut);margin:0 0 22px}
 .wrap{display:grid;grid-template-columns:1fr 330px;border:4px solid var(--ink);box-shadow:12px 12px 0 var(--red);background:var(--card)}
-.stage{position:relative;height:600px;border-right:4px solid var(--ink);touch-action:none;cursor:grab;overflow:hidden;background:var(--card)}
-.stage.grab{cursor:grabbing}.stage.over{cursor:pointer}
+.stage{position:relative;height:600px;border-right:4px solid var(--ink);touch-action:none;overflow:hidden;background:var(--card)}
+/* no grab/hand cursors: on Windows they're white and vanish on the light stage */
 .stage canvas{display:block;width:100%!important;height:100%!important}
 .lab{position:absolute;inset:0;pointer-events:none;z-index:3}
 .lab i{position:absolute;transform:translate(-50%,-50%);font:800 .82rem "JetBrains Mono",monospace;font-style:normal;white-space:nowrap;background:var(--ink);color:#fff;padding:2px 6px}
@@ -50,13 +50,12 @@ h1{font-size:2rem;margin:0 0 4px}.sub{color:var(--mut);margin:0 0 22px}
 .chips button{border:2px solid var(--ink);background:var(--card);font:700 .8rem "JetBrains Mono",monospace;padding:4px 8px;cursor:pointer}
 .chips button:hover{background:var(--yel)}
 /* drag a bond / lone pair out of its row and drop it on the molecule */
-.cnt .row{touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;transition:box-shadow .12s,transform .12s,opacity .12s}
+.cnt .row{touch-action:none;user-select:none;-webkit-user-select:none;transition:box-shadow .12s,transform .12s,opacity .12s}
 .cnt .row:hover{box-shadow:4px 4px 0 var(--ink);transform:translate(-2px,-2px)}
 .cnt .row.lift{opacity:.45;box-shadow:none;transform:none}
 #ghost{position:fixed;inset:0;pointer-events:none;z-index:50;display:none}
 #ghost svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 #ghost em{position:absolute;transform:translate(-50%,calc(-100% - 18px));font:800 .78rem "Anuphan",sans-serif;font-style:normal;white-space:nowrap;background:var(--ink);color:#fff;padding:2px 8px}
-#ghost em.go{background:var(--red)}
 /* the pull-out meter that rides on a stretched atom */
 .lab u{position:absolute;transform:translate(-50%,calc(-100% - 24px));text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:3px;font:800 .74rem "Anuphan",sans-serif;white-space:nowrap}
 .lab u span{background:var(--ink);color:#fff;padding:2px 7px}
@@ -174,7 +173,8 @@ const SND=(()=>{let ctx=null,out=null;
     mol:()=>[523,659,784,1046].forEach((f,i)=>tone(vary(f,.01),.22,{vol:.09,delay:i*.06})),
     nope:()=>{tone(160,.14,{to:120,vol:.14,type:"triangle"});tone(150,.14,{to:110,vol:.1,type:"triangle",delay:.1});},
     tog:()=>tick({f:2400,vol:.1}),
-    warn:()=>tick({f:5200,vol:.07}),                                                                       // the bond is about to give
+    creak:k=>{tick({f:1400+k*520,vol:.05+k*.012});if(k>=4)tone(vary(140+k*30),.07,{vol:.05,type:"triangle"});},   // strain, getting tighter
+    click:()=>{tick({f:3600,vol:.12});tone(vary(1320),.06,{vol:.06});},                                          // magnet catches
     snap:()=>{tone(vary(980),.14,{to:180,slideT:.11,vol:.15,type:"triangle"});tick({f:4400,vol:.16});tick({f:900,vol:.1,delay:.02});}};
   return{play:(n,a)=>{if(get("cqb_sfx","1")==="0")return;try{if(ac())P[n](a);}catch(e){}}};})();
 
@@ -366,7 +366,7 @@ function aimAt(x,y,rad){const r=stage.getBoundingClientRect();ndc.set((x-r.left)
   const b=o.dot(dir),c=o.lengthSq()-rad*rad,disc=b*b-c;
   const p=disc>=0?o.clone().addScaledVector(dir,-b-Math.sqrt(disc)):o.clone().addScaledVector(dir,-b);
   return{p,out:disc>=0?1:p.length()/rad};}
-const BREAK=.9;   // stretch (in bond lengths, flick included) at which the atom snaps off
+const BREAK=1.5;  // how far past its seat the finger must get (in bond lengths, yank included) before the atom snaps off
 // snap an arm off: it flies outward and fades, the rest re-spread into the new shape
 function detach(d){const w=W.slice();let l=nl;if(d.lp)l--;else w[d.o]--;
   d.dying=true;if(selected===d)select(null);
@@ -390,12 +390,14 @@ stage.addEventListener("pointermove",e=>{if(pts.has(e.pointerId))pts.set(e.point
     const a=aimAt(e.clientX,e.clientY,held.lp?.9:L),now=performance.now(),dt=Math.max(4,now-down.t);
     held.dir.lerp(a.p.normalize(),.6).normalize();held.vel.set(0,0,0);t0=now;
     held.spd=held.spd*.6+Math.hypot(e.clientX-down.px,e.clientY-down.py)/dt*.4;down.t=now;
-    // how far you pull + how hard you yank (a flick only counts once it's already stretched a bit)
-    const can=held.lp||nb>1,pull=(a.out-1)+(a.out>1.12?held.spd*.22:0);
-    held.lock=!can;held.strT=can?a.out:Math.min(a.out,1.5);held.tn=Math.min(1,(can?pull:held.strT-1)/BREAK);
-    if(held.tn>.7&&!down.warn){down.warn=1;SND.play("warn");}else if(held.tn<.5)down.warn=0;
+    // resistance: the atom only gives a little (it lags behind the finger like a stiff spring), and it takes
+    // a long pull, or a real yank once it's already strained, before it snaps
+    const can=held.lp||nb>1,raw=a.out-1,pull=raw+(raw>.45?held.spd*.16:0);
+    held.lock=!can;held.strT=1+(can?.55:.3)*(1-Math.exp(-raw*1.3));
+    held.tn=can?Math.pow(Math.min(1,pull/BREAK),1.5):Math.min(1,raw/BREAK);
+    const step=Math.floor(held.tn*6);if(can&&step>(down.step||0))SND.play("creak",step);down.step=step;   // creaks tighten as it strains
     if(can&&pull>=BREAK){detach(held);down.dead=true;}
-    else if(!can&&a.out>1.5&&!down.nope){down.nope=1;SND.play("nope");}}
+    else if(!can&&raw>.6&&!down.nope){down.nope=1;SND.play("nope");}}
   else{const dx=e.clientX-down.px,dy=e.clientY-down.py;if(dx||dy)G.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new V(dy,dx,0).normalize(),Math.hypot(dx,dy)*.011));idle=performance.now();}
   down.px=e.clientX;down.py=e.clientY;});
 const up=e=>{pts.delete(e.pointerId);if(pinch){if(pts.size<2)pinch=null;return;}
@@ -420,47 +422,49 @@ document.querySelector(".panel").addEventListener("click",e=>{const b=e.target.c
 document.querySelector(".tg").addEventListener("change",()=>SND.play("tog"));
 $("tLp").onchange=e=>{showLp=e.target.checked;if(!showLp&&selected&&selected.lp)select(null);};
 
-/* ---- drag a new atom+bond (or a lone pair) out of its row; near the molecule its bond is pulled onto
-   the central atom like a magnet, and dropping it there adds it where you let go ---- */
+/* ---- drag a new atom+bond (or a lone pair) out of its row. Off the molecule it's a small token under your
+   finger; over the stage it becomes a real 3D atom whose bond stretches from the central atom out to your
+   finger like a rubber band, and the closer you get the harder the magnet pulls it onto its seat ---- */
 const GH=document.createElement("div");GH.id="ghost";document.body.appendChild(GH);
 const hex=c=>"#"+c.toString(16).padStart(6,"0"),sm=x=>{x=Math.max(0,Math.min(1,x));return x*x*(3-2*x);};
-let gd=null;
-function ghostAt(x,y){const r=stage.getBoundingClientRect(),inS=x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom,lp=gd.k==="e",full=nb+nl>=6;
-  G.updateMatrixWorld();const [px,py]=proj(new V()),cx=r.left+px,cy=r.top+py;
-  const ppu=r.height/(2*Math.tan(cam.fov*Math.PI/360)*cam.position.length())*zoom,R0=(lp?.72:L)*ppu;   // pixels per scene unit, seat distance
-  let dx=x-cx,dy=y-cy;const dist=Math.hypot(dx,dy)||1;dx/=dist;dy/=dist;
-  const s=inS&&!full?sm((2.6*R0-dist)/(1.3*R0)):0,rr=dist+(R0-dist)*s,bx=cx+dx*rr,by=cy+dy*rr;   // the magnet: inside 2.6 bond-lengths it slides onto the seat
-  return{inS,full,lp,s,cx,cy,bx,by,dx,dy,ppu,R0,rr};}
-function drawGhost(x,y){const g=ghostAt(x,y),{lp,s,cx,cy,bx,by,dx,dy,ppu}=g,ink="#141414",k=lp?0:+gd.k;let svg="";
-  if(g.inS&&!g.full){svg+=`<circle cx="${cx}" cy="${cy}" r="${g.R0}" fill="none" stroke="${ink}" stroke-width="2" stroke-dasharray="5 7" opacity="${(.15+.5*s).toFixed(2)}"/>`;
-    if(!lp){const nx=-dy,ny=dx,sp=7,w=k===1?6:4.5,a0=.5*ppu,a1=g.rr-.3*ppu;      // bond(s) from the central atom's edge to the ball
-      for(let i=0;i<k;i++){const o=(i-(k-1)/2)*sp;svg+=`<line x1="${cx+dx*a0+nx*o}" y1="${cy+dy*a0+ny*o}" x2="${cx+dx*a1+nx*o}" y2="${cy+dy*a1+ny*o}" stroke="${s>.85?"#e2412f":ink}" stroke-width="${w}" stroke-linecap="round"${s<.5?' stroke-dasharray="7 6"':""} opacity="${(.35+.65*s).toFixed(2)}"/>`;}}}
-  else if(!lp){const nx=-dy,ny=dx,sp=7,w=k===1?6:4.5;   // not over the molecule yet: a short bond stub so you know what you're carrying
-    for(let i=0;i<k;i++){const o=(i-(k-1)/2)*sp;svg+=`<line x1="${bx+nx*o}" y1="${by+ny*o}" x2="${bx-dx*34+nx*o}" y2="${by-dy*34+ny*o}" stroke="${ink}" stroke-width="${w}" stroke-linecap="round"/>`;}}
-  const op=g.full&&g.inS?.4:1,ow=s>.85?"#e2412f":ink;
-  if(lp){const rot=Math.atan2(dy,dx)*180/Math.PI+90,ux=-dy*.1*ppu,uy=dx*.1*ppu;
-    svg+=`<g opacity="${op}"><ellipse cx="${bx}" cy="${by}" rx="${.3*ppu}" ry="${.46*ppu}" transform="rotate(${rot} ${bx} ${by})" fill="${hex(C.e)}" stroke="${ow}" stroke-width="3"/>`
-      +`<circle cx="${bx+ux}" cy="${by+uy}" r="${.065*ppu}" fill="${ink}"/><circle cx="${bx-ux}" cy="${by-uy}" r="${.065*ppu}" fill="${ink}"/></g>`;}
-  else svg+=`<circle cx="${bx}" cy="${by}" r="${.33*ppu}" fill="${hex(C.x)}" stroke="${ow}" stroke-width="3.5" opacity="${op}"/>`;
-  const tip=g.full&&g.inS?"เต็มแล้ว · 6 คู่":g.inS&&s>.6?"ปล่อย = ต่อเข้า":"";
-  GH.innerHTML=`<svg>${svg}</svg>${tip?`<em class="${g.full?"":"go"}" style="left:${bx}px;top:${by-(lp?.46:.33)*ppu}px">${tip}</em>`:""}`;
-  return g;}
-function dropGhost(x,y){const g=ghostAt(x,y);
-  if(!g.inS)return;                                       // let go off the stage = never mind
-  if(g.full){SND.play("nope");return;}
+let gd=null,pv=null;
+function pvKill(){if(!pv)return;G.remove(pv.g);pv.g.traverse(o=>{o.geometry&&o.geometry!==DOTG&&o.geometry.dispose();});pv=null;}
+function token(x,y,full,tip){const lp=gd.k==="e",k=lp?0:+gd.k,ink="#141414",sp=6,op=full?.4:1;let s="";
+  if(lp)s=`<ellipse cx="${x}" cy="${y}" rx="15" ry="22" fill="${hex(C.e)}" stroke="${ink}" stroke-width="3"/><circle cx="${x-5}" cy="${y-6}" r="3.2" fill="${ink}"/><circle cx="${x+5}" cy="${y-6}" r="3.2" fill="${ink}"/>`;
+  else{for(let i=0;i<k;i++){const o=(i-(k-1)/2)*sp;s+=`<line x1="${x+o}" y1="${y}" x2="${x+o}" y2="${y+34}" stroke="${ink}" stroke-width="${k===1?6:4}" stroke-linecap="round"/>`;}
+    s+=`<circle cx="${x}" cy="${y}" r="16" fill="${hex(C.x)}" stroke="${ink}" stroke-width="3.5"/>`;}
+  GH.innerHTML=`<svg opacity="${op}">${s}</svg>${tip?`<em style="left:${x}px;top:${y-14}px">${tip}</em>`:""}`;}
+function dragTo(x,y){const r=stage.getBoundingClientRect(),inS=x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom,lp=gd.k==="e",full=nb+nl>=6;
+  idle=performance.now();
+  if(!inS||full){pvKill();token(x,y,full&&inS,full&&inS?"เต็มแล้ว · 6 คู่":"");return;}
+  GH.innerHTML="";
+  if(!pv){const a=mkArm(lp,lp?0:+gd.k);pv={lp,o:lp?0:+gd.k,len:1,str:1,tn:0,snap:0,...a};
+    (pv.sticks||pv.g).traverse(m=>{if(m.isMesh&&!(pv.lp&&m!==pv.pick&&m.parent===pv.dots)){m.material=m.material.clone();m.material.transparent=true;}});}   // only the bond is ghostly; the ball stays solid
+  const seat=lp?.66:L,a=aimAt(x,y,seat),s=sm((1.95-a.out)/.7);           // s: 0 = far (ball under finger), 1 = caught on its seat
+  pv.dir=a.p.normalize();pv.str=1+(a.out-1)*(1-s);pv.snap=s;
+  if(s>.9&&!gd.snap){gd.snap=1;SND.play("click");}else if(s<.6)gd.snap=0;
+  pvDraw();}
+function pvDraw(){const p=pv,st=p.str,sy=p.lp?1+.35*(st-1):1;p.g.quaternion.setFromUnitVectors(Y,p.dir);
+  if(p.lp){p.pick.position.set(0,.66*st,0);p.dots.position.y=.66*st;p.pick.scale.set(.78,1.25*sy,.78);}
+  else{p.pick.position.set(0,L*st,0);const th=Math.max(.3,1/Math.sqrt(st))*(.55+.45*p.snap);p.sticks.scale.set(th,st,th);}
+  const op=.35+.65*p.snap;(p.sticks||p.g).traverse(m=>{if(m.isMesh&&m.material.transparent)m.material.opacity=op;});faceCam(p);}
+function dropAt(x,y){const r=stage.getBoundingClientRect(),inS=x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom;
+  if(!inS){pvKill();return;}                              // let go off the stage = never mind
+  if(nb+nl>=6){pvKill();SND.play("nope");return;}
   const w=W.slice();let l=nl;if(gd.k==="e")l++;else w[+gd.k]++;
+  const from=pv?{dir:pv.dir.clone(),str:pv.str}:null;pvKill();
   const before=new Set(doms);if(!setMol(w,l)){SND.play("nope");return;}
-  // the newborn starts where you dropped it, already grown, and the springs carry it to its seat
-  const d=doms.find(o=>!before.has(o));if(d){const a=aimAt(g.bx,g.by,g.lp?.9:L);d.dir.copy(a.p.normalize());d.len=.9;d.lv=0;}
-  SND.play(g.lp?"lp":"pop",nb+nl);}
+  // the real atom takes over exactly where the preview was, still stretched, and springs onto its seat
+  const d=doms.find(o=>!before.has(o));if(d&&from){d.dir.copy(from.dir);d.str=from.str;d.len=1;d.lv=0;}
+  SND.play(gd.k==="e"?"lp":"pop",nb+nl);}
 document.querySelectorAll(".cnt .row").forEach(row=>{const k=row.querySelector("[data-d]").dataset.d[0];
   row.title="ลากไปวางบนโมเลกุลเพื่อเพิ่ม";
   row.addEventListener("pointerdown",e=>{if(e.target.closest("button")||gd)return;gd={k,row,id:e.pointerId,x:e.clientX,y:e.clientY,on:false};
     try{row.setPointerCapture(e.pointerId);}catch(_){}});
   row.addEventListener("pointermove",e=>{if(!gd||gd.row!==row||e.pointerId!==gd.id)return;
     if(!gd.on){if(Math.hypot(e.clientX-gd.x,e.clientY-gd.y)<6)return;gd.on=true;GH.style.display="block";row.classList.add("lift");SND.play("grab");}
-    const g=drawGhost(e.clientX,e.clientY);if(g.s>.85&&!gd.snap){gd.snap=1;SND.play("tog");}else if(g.s<.5)gd.snap=0;});
-  const end=(e,ok)=>{if(!gd||gd.row!==row||e.pointerId!==gd.id)return;if(gd.on&&ok)dropGhost(e.clientX,e.clientY);
+    dragTo(e.clientX,e.clientY);});
+  const end=(e,ok)=>{if(!gd||gd.row!==row||e.pointerId!==gd.id)return;if(gd.on&&ok)dropAt(e.clientX,e.clientY);else pvKill();
     GH.style.display="none";GH.innerHTML="";row.classList.remove("lift");gd=null;};
   row.addEventListener("pointerup",e=>end(e,true));row.addEventListener("pointercancel",e=>end(e,false));});
 

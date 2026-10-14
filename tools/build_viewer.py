@@ -632,7 +632,7 @@ button.tile:hover:after{opacity:1;transform:none}
    quick flick) a paper sheet opens out of the card's own rectangle to full screen -- teach.html's paper -- and the
    page loads under it. Coming back runs the same sheet in reverse, closing into the card. */
 .hero{-webkit-touch-callout:none;touch-action:none;transition:translate .4s cubic-bezier(.2,1.3,.4,1),rotate .4s,box-shadow .2s}
-.hero.lift{z-index:5;transition:box-shadow .2s;box-shadow:0 14px 0 -4px var(--ink),0 0 0 3px var(--ink);cursor:grabbing}
+.hero.lift{z-index:5;transition:box-shadow .2s;box-shadow:0 14px 0 -4px var(--ink),0 0 0 3px var(--ink)}
 .hero .tup{position:absolute;left:0;right:0;bottom:0;height:0;background:var(--yel);border-top:3px solid var(--ink);display:flex;align-items:center;justify-content:center;gap:8px;
   font:800 .82rem "Anuphan",sans-serif;color:#141414;overflow:hidden;opacity:0;transition:opacity .15s,height .15s,background .15s;z-index:3;pointer-events:none}
 .hero.lift .tup{opacity:1;height:38px}
