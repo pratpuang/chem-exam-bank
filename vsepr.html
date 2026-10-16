@@ -49,6 +49,8 @@ h1{font-size:2rem;margin:0 0 4px}.sub{color:var(--mut);margin:0 0 22px}
 .chips{display:flex;flex-wrap:wrap;gap:5px}
 .chips button{border:2px solid var(--ink);background:var(--card);font:700 .8rem "JetBrains Mono",monospace;padding:4px 8px;cursor:pointer}
 .chips button:hover{background:var(--yel)}
+.rst{width:100%;border:3px solid var(--ink);background:var(--red);color:#fff;font:800 .95rem "JetBrains Mono",monospace;padding:8px 10px;box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+.rst:active{transform:translate(3px,3px);box-shadow:none}.rst i{display:inline-block;font-style:normal;transition:transform .6s cubic-bezier(.34,1.56,.64,1)}.rst.go i{transform:rotate(-360deg);transition:none}
 /* drag a bond / lone pair out of its row and drop it on the molecule */
 .cnt .row{touch-action:none;user-select:none;-webkit-user-select:none;transition:box-shadow .12s,transform .12s,opacity .12s}
 .cnt .row:hover{box-shadow:4px 4px 0 var(--ink);transform:translate(-2px,-2px)}
@@ -122,6 +124,7 @@ body.embed{overflow:hidden}body.embed .wrap{height:100vh}body.embed .stage{heigh
   <label><input type="checkbox" id="tAng" checked> แสดงมุมพันธะ</label>
   <label><input type="checkbox" id="tLp" checked> แสดงคู่โดดเดี่ยว</label></div>
  <div class="chips" id="chips"></div>
+ <button class="rst" id="rst" title="กลับไปเริ่มที่อะตอมกลาง + พันธะเดี่ยว 1 พันธะ"><i>↺</i> รีเซ็ต · A–X</button>
 </div></div></div>
 <script>
 const V=THREE.Vector3,Y=new V(0,1,0);
@@ -170,6 +173,7 @@ const SND=(()=>{let ctx=null,out=null;
     unsel:()=>tone(vary(660),.12,{to:520,vol:.07}),
     boing:()=>{const f=vary(300);tone(f,.3,{to:f*1.9,slideT:.05,vol:.1});tone(f*1.9,.25,{to:f*1.2,slideT:.2,vol:.06,delay:.05});},
     grab:()=>tick({f:1800,vol:.08}),
+    reset:()=>{[784,659,523,392].forEach((f,i)=>tone(vary(f,.01),.1,{vol:.07,delay:i*.045}));[1046,1318,1568].forEach((f,i)=>tone(vary(f,.01),.4,{vol:.08,delay:.26+i*.06}));},
     mol:()=>[523,659,784,1046].forEach((f,i)=>tone(vary(f,.01),.22,{vol:.09,delay:i*.06})),
     nope:()=>{tone(160,.14,{to:120,vol:.14,type:"triangle"});tone(150,.14,{to:110,vol:.1,type:"triangle",delay:.1});},
     tog:()=>tick({f:2400,vol:.1}),
@@ -474,6 +478,15 @@ document.querySelector(".panel").addEventListener("click",e=>{const b=e.target.c
     const after=nb+nl;after>before?SND.play(k==="e"?"lp":"pop",after):after<before?SND.play("unpop"):SND.play("order",+k);return;}
   const m=e.target.closest("[data-m]");if(m){const M=MOLS[+m.dataset.m];setMol([0,M[1],M[2],M[3]],M[4]);SND.play("mol");return;}
 });
+/* reset: back to one central atom + ONE single bond, with a squash-and-spring + spin so it lands with a "thunk" */
+let rstT=0;
+$("rst").onclick=()=>{select(null);setMol([0,1,0,0],0);rstT=performance.now();SND.play("reset");
+  const b=$("rst");b.classList.remove("go");void b.offsetWidth;b.classList.add("go");requestAnimationFrame(()=>requestAnimationFrame(()=>b.classList.remove("go")));};
+function rstAnim(){if(!rstT)return;const t=Math.min(1,(performance.now()-rstT)/900);
+  let k;if(t<.22)k=1-.32*Math.sin(t/.22*Math.PI/2);                                  // squash in
+  else{const u=(t-.22)/.78;k=.68+.32*(Math.pow(2,-10*u)*Math.sin((u*10-.75)*2.0944)+1);}  // elastic spring back out
+  G.scale.setScalar(k);G.rotation.y+=.22*(1-t)*(1-t);
+  if(t>=1){G.scale.setScalar(1);rstT=0;}}
 document.querySelector(".tg").addEventListener("change",()=>SND.play("tog"));
 $("tLp").onchange=e=>{showLp=e.target.checked;if(!showLp&&selected&&selected.lp)select(null);};
 
@@ -526,5 +539,5 @@ document.querySelectorAll(".cnt .row").forEach(row=>{const k=row.querySelector("
 function size(){const w=stage.clientWidth,h=stage.clientHeight;R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix();}
 new ResizeObserver(size).observe(stage);size();
 setMol([0,4,0,0],0,true);
-(function loop(){steer();physics();if(!down&&performance.now()-idle>3000&&!selected)G.rotation.y+=.0035;buildHull();R.render(scene,cam);labels();live();requestAnimationFrame(loop);})();
+(function loop(){steer();physics();rstAnim();if(!down&&performance.now()-idle>3000&&!selected)G.rotation.y+=.0035;buildHull();R.render(scene,cam);labels();live();requestAnimationFrame(loop);})();
 </script></body></html>
