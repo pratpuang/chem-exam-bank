@@ -1154,6 +1154,10 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 .fc .fn i{font-style:normal;font-size:.68rem;border:2px solid var(--ink);padding:0 6px;margin-left:8px;vertical-align:2px;background:var(--yel);color:#141414;white-space:nowrap}
 .fc .fk{padding:2px 12px 11px;font-size:.86rem;color:var(--mut);line-height:1.55}
 .fc.wide{grid-column:1/-1;border-left:10px solid var(--c)}
+/* tap a tool card (สูตร / ค่าคงที่) and it pops forward; tap again or tap another to drop it */
+.fc,.kcard{transition:transform .22s cubic-bezier(.34,1.56,.64,1),box-shadow .22s;cursor:pointer;position:relative}
+.fc.pop,.kcard.pop{transform:translate(-4px,-6px) scale(1.04);box-shadow:10px 12px 0 var(--c);z-index:2}
+@media(prefers-reduced-motion:reduce){.fc,.kcard{transition:none}}
 .fc.fhero{grid-column:1/-1;box-shadow:7px 7px 0 var(--c)}
 .fc .fl.chain{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;column-gap:.4em;row-gap:10px}
 .fc .fp{white-space:nowrap}.fc .fp .katex{font-size:1.3em}.fc.fhero .fm{min-height:120px;padding:18px 14px}.fc.fhero .fp .katex{font-size:1.75em}
@@ -2521,6 +2525,8 @@ const TD=(()=>{
       <p class="tdnote">แตะไอออนเพื่อส่งสูตรไปคิด Mw ในตารางธาตุ</p>`;
     $("#cvcat").onclick=e=>{const b=e.target.closest("button");if(!b)return;cat=b.dataset.c;unit=Object.keys(CV[cat].u)[0];SFX.play("select");cvRender();};
     $("#cvx").addEventListener("input",cvCalc);$("#cvu").onchange=()=>{unit=$("#cvu").value;SFX.play("select");cvCalc();};
+    $("#td").addEventListener("click",e=>{const c=e.target.closest(".fc,.kcard");if(!c||e.target.closest("a,button,input,select"))return;   // pop a tool card
+      const was=c.classList.contains("pop");document.querySelectorAll("#td .pop").forEach(x=>x.classList.remove("pop"));if(!was){c.classList.add("pop");SFX.play("select");}});
     $("#td-io").onclick=e=>{const r=e.target.closest("tr.io");if(!r)return;close();setTimeout(()=>PD.load(r.dataset.f),120);};
     cvRender();built=true;}
   /* ----- สูตร ----- */
