@@ -49,8 +49,8 @@ h1{font-size:2rem;margin:0 0 4px}.sub{color:var(--mut);margin:0 0 22px}
 .chips{display:flex;flex-wrap:wrap;gap:5px}
 .chips button{border:2px solid var(--ink);background:var(--card);font:700 .8rem "JetBrains Mono",monospace;padding:4px 8px;cursor:pointer}
 .chips button:hover{background:var(--yel)}
-.rst{width:100%;border:3px solid var(--ink);background:var(--red);color:#fff;font:800 .95rem "JetBrains Mono",monospace;padding:8px 10px;box-shadow:3px 3px 0 var(--ink);cursor:pointer}
-.rst:active{transform:translate(3px,3px);box-shadow:none}.rst i{display:inline-block;font-style:normal;transition:transform .6s cubic-bezier(.34,1.56,.64,1)}.rst.go i{transform:rotate(-360deg);transition:none}
+.rst{align-self:flex-start;border:2px solid var(--ink);background:var(--card);color:var(--ink);font:700 .8rem "JetBrains Mono",monospace;padding:4px 10px;cursor:pointer}
+.rst:hover{background:var(--yel)}.rst:active{transform:translate(1px,1px)}.rst i{display:inline-block;font-style:normal;transition:transform .6s cubic-bezier(.34,1.56,.64,1)}.rst.go i{transform:rotate(-360deg);transition:none}
 /* drag a bond / lone pair out of its row and drop it on the molecule */
 .cnt .row{touch-action:none;user-select:none;-webkit-user-select:none;transition:box-shadow .12s,transform .12s,opacity .12s}
 .cnt .row:hover{box-shadow:4px 4px 0 var(--ink);transform:translate(-2px,-2px)}
@@ -173,7 +173,7 @@ const SND=(()=>{let ctx=null,out=null;
     unsel:()=>tone(vary(660),.12,{to:520,vol:.07}),
     boing:()=>{const f=vary(300);tone(f,.3,{to:f*1.9,slideT:.05,vol:.1});tone(f*1.9,.25,{to:f*1.2,slideT:.2,vol:.06,delay:.05});},
     grab:()=>tick({f:1800,vol:.08}),
-    reset:()=>{[784,659,523,392].forEach((f,i)=>tone(vary(f,.01),.1,{vol:.07,delay:i*.045}));[1046,1318,1568].forEach((f,i)=>tone(vary(f,.01),.4,{vol:.08,delay:.26+i*.06}));},
+    reset:()=>{const f=vary(520);tone(f,.24,{to:f*.5,slideT:.2,vol:.06});tone(vary(330),.32,{vol:.055,delay:.22});tone(vary(495),.28,{vol:.025,delay:.24});},   // soft low swoop down + gentle landing
     mol:()=>[523,659,784,1046].forEach((f,i)=>tone(vary(f,.01),.22,{vol:.09,delay:i*.06})),
     nope:()=>{tone(160,.14,{to:120,vol:.14,type:"triangle"});tone(150,.14,{to:110,vol:.1,type:"triangle",delay:.1});},
     tog:()=>tick({f:2400,vol:.1}),
