@@ -173,6 +173,7 @@ const SND=(()=>{let ctx=null,out=null;
     unsel:()=>tone(vary(660),.12,{to:520,vol:.07}),
     boing:()=>{const f=vary(300);tone(f,.3,{to:f*1.9,slideT:.05,vol:.1});tone(f*1.9,.25,{to:f*1.2,slideT:.2,vol:.06,delay:.05});},
     grab:()=>tick({f:1800,vol:.08}),
+    rstep:k=>{const f=vary(640*Math.pow(.93,k));tone(f,.09,{to:f*.6,slideT:.07,vol:.035});},   // one soft blip per bond leaving, stepping down
     reset:()=>{const f=vary(520);tone(f,.24,{to:f*.5,slideT:.2,vol:.06});tone(vary(330),.32,{vol:.055,delay:.22});tone(vary(495),.28,{vol:.025,delay:.24});},   // soft low swoop down + gentle landing
     mol:()=>[523,659,784,1046].forEach((f,i)=>tone(vary(f,.01),.22,{vol:.09,delay:i*.06})),
     nope:()=>{tone(160,.14,{to:120,vol:.14,type:"triangle"});tone(150,.14,{to:110,vol:.1,type:"triangle",delay:.1});},
@@ -480,8 +481,17 @@ document.querySelector(".panel").addEventListener("click",e=>{const b=e.target.c
 });
 /* reset: back to one central atom + ONE single bond, with a squash-and-spring + spin so it lands with a "thunk" */
 let rstT=0;
-$("rst").onclick=()=>{select(null);setMol([0,1,0,0],0);rstT=performance.now();SND.play("reset");
-  const b=$("rst");b.classList.remove("go");void b.offsetWidth;b.classList.add("go");requestAnimationFrame(()=>requestAnimationFrame(()=>b.classList.remove("go")));};
+let rstTm=0;
+function rstNext(w,l){if(l>0)return[w,l-1];                                    // lone pairs leave first,
+  const tot=w[1]+w[2]+w[3];
+  if(tot>1){const v=w.slice();v[w[3]?3:w[2]?2:1]--;return[v,l];}               // then bonds one by one (triple -> double -> single),
+  if(w[1]!==1)return[[0,1,0,0],0];return null;}                               // and the last one becomes a single bond
+$("rst").onclick=()=>{clearTimeout(rstTm);select(null);
+  const b=$("rst");b.classList.remove("go");void b.offsetWidth;b.classList.add("go");requestAnimationFrame(()=>requestAnimationFrame(()=>b.classList.remove("go")));
+  const seq=[];let w=W.slice(),l=nl,nx;while((nx=rstNext(w,l))){[w,l]=nx;seq.push(nx);}
+  const gap=seq.length?Math.max(55,Math.min(110,650/seq.length)):0;let i=0;
+  (function step(){if(i<seq.length){setMol(seq[i][0],seq[i][1]);SND.play("rstep",i);i++;rstTm=setTimeout(step,gap);return;}
+    rstT=performance.now();SND.play("reset");})();};
 function rstAnim(){if(!rstT)return;const t=Math.min(1,(performance.now()-rstT)/900);
   let k;if(t<.22)k=1-.32*Math.sin(t/.22*Math.PI/2);                                  // squash in
   else{const u=(t-.22)/.78;k=.68+.32*(Math.pow(2,-10*u)*Math.sin((u*10-.75)*2.0944)+1);}  // elastic spring back out
