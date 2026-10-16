@@ -869,11 +869,13 @@ html.scrlock{overscroll-behavior:none}
 .sheet .mtop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding-right:104px}
 .sheet .mtop .badge{white-space:normal}   /* a long chapter name wraps instead of running under ✎ ✕ on a phone */
 .sheet .body{font-size:1.38rem;line-height:1.85}
+/* a short no-choice question (one or two lines, no figure) gets bigger type + breathing room above the เฉลย/ตาราง/บันทึก row */
+.sheet .body.short{font-size:1.75rem;line-height:1.7;min-height:7em;padding-bottom:12px}
 /* save-as-image: an off-screen copy of the sheet (badges + question + choices), fixed width so every PNG matches */
 .shotwrap{position:fixed;left:0;top:0;box-sizing:border-box;opacity:0;z-index:-1;pointer-events:none;width:1100px;padding:28px 46px 46px 28px;background:var(--paper)}
 .shotsd{position:absolute}
 .sheet.shot{box-shadow:none;max-height:none;overflow:visible;animation:none!important;max-width:none;width:100%;padding:34px 40px 30px 54px}
-.sheet.shot .body{font-size:1.38rem}.sheet.shot .body img{max-width:100%;height:auto}.sheet.shot .mtop{padding-right:0}
+.sheet.shot .body,.sheet.shot .body.short{font-size:1.38rem;min-height:0}.sheet.shot .body img{max-width:100%;height:auto}.sheet.shot .mtop{padding-right:0}
 .sheet .body li{padding:9px 14px;font-size:1.02em}
 .sheet .fig{max-height:52vh;width:auto}
 .sheet .solbody{font-size:1.05rem}
@@ -917,7 +919,7 @@ html.scrlock{overscroll-behavior:none}
 #modal.split{flex-direction:row;align-items:stretch;justify-content:flex-start;background:var(--paper)}
 #modal.split .sheet{flex:0 0 var(--sq,38%);min-width:0;min-height:0;max-width:none;max-height:none;padding:24px 22px 20px 34px;box-shadow:6px 6px 0 var(--red)}
 #modal.split .sheet.lv-medium{box-shadow:6px 6px 0 var(--yel)}#modal.split .sheet.lv-easy{box-shadow:6px 6px 0 var(--blue)}
-#modal.split .sheet .body{font-size:1.2rem}
+#modal.split .sheet .body{font-size:1.2rem}#modal.split .sheet .body.short{font-size:1.45rem;min-height:5em}
 #modal.split .mdiv{display:grid;place-items:center;flex:none;width:28px;touch-action:none;cursor:col-resize;-webkit-user-select:none;user-select:none}
 .mdiv:after{content:"";width:8px;height:72px;background:var(--ink)}
 #modal.split .mboard{display:block;position:relative;flex:1 1 0;min-width:0;min-height:0;overflow:hidden;border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);
@@ -938,7 +940,7 @@ html.scrlock{overscroll-behavior:none}
 .exprow button.pri{background:var(--ink);color:var(--paper)}
 .exprow button.dan{color:var(--red)}
 @media(max-width:640px){.mctrl{gap:8px}.mctrl button{font-size:.9rem;padding:6px 6px}
-  .poster{padding:20px 16px 18px 26px}.poster .pnum{font-size:4.2rem}.poster .body,.poster .solbox,.poster .bigans{max-width:100%}.poster .phead,.poster .pmeta{max-width:78%}.sheet{padding:22px 16px 18px 28px}.sheet .body{font-size:1.15rem}}
+  .poster{padding:20px 16px 18px 26px}.poster .pnum{font-size:4.2rem}.poster .body,.poster .solbox,.poster .bigans{max-width:100%}.poster .phead,.poster .pmeta{max-width:78%}.sheet{padding:22px 16px 18px 28px}.sheet .body{font-size:1.15rem}.sheet .body.short{font-size:1.4rem;min-height:6em}}
 
 .katex-display{overflow-x:auto;overflow-y:hidden;padding:4px 0;margin:.6em 0}
 .katex{font-size:1.08em}
@@ -2010,6 +2012,7 @@ function fillModal(anim){
   const q=filtered[mIdx];dwell(q);
   $("#mtop").innerHTML=`${idBadge(q)}${chBadge(q)}${topicBadge(q,true)}${examBadge(q)}${diffBadge(q)}`;
   $("#mbody").innerHTML=q.bodyHtml+figHtml(q).replace(' loading="lazy"','');$("#mbody").classList.remove("rv");
+  $("#mbody").classList.toggle("short",!/<li|<img|<table/i.test(q.bodyHtml)&&!figHtml(q)&&q.bodyHtml.replace(/<[^>]+>/g,"").trim().length<220);   // one/two-liner, no choices: bigger type + space
   $("#mfoot").innerHTML=footHtml(q);
   const rb=$("#mreveal");rb.innerHTML=`<span class="nw">${revName(q).replace(" + ",'&nbsp;</span><span class="nw">+ ')}</span>`;rb.classList.toggle("flag",!!(q.solFlag||q.solPending));rb.setAttribute("aria-expanded","false");   // label wraps only between its words
   $("#msol").innerHTML=revWrap(q);tex($("#msol"));
