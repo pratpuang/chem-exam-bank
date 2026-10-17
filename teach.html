@@ -1090,32 +1090,54 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .dskip input{width:20px;height:20px;accent-color:var(--ink);grid-row:span 2}
 .dskip span{font-weight:700;font-size:.9rem}.dskip small{font-size:.74rem;color:var(--mut);font-weight:600}
 .dskip:has(input:checked){border-color:var(--ink);background:var(--stbg)}
-/* drag to reschedule */
+/* drag to reschedule — spring curves throughout: --sp overshoots a touch, --ez settles */
+:root{--sp:cubic-bezier(.34,1.56,.64,1);--ez:cubic-bezier(.22,1,.36,1)}
 [data-sid]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-.mvsrc{opacity:.35;outline:3px dashed var(--ink);outline-offset:-3px}
-#mvghost{position:fixed;left:0;top:0;z-index:200;pointer-events:none;display:flex;flex-direction:column;gap:2px;padding:8px 14px 8px 20px;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);opacity:0;scale:.8;transition:opacity .15s,scale .25s cubic-bezier(.3,1.6,.5,1)}
-#mvghost.on{opacity:1;scale:1}
+.mvhold{animation:mvhold .38s var(--ez) both}
+@keyframes mvhold{to{scale:.975}}
+.mvsrc{animation:mvpick .3s var(--ez) both}
+@keyframes mvpick{from{scale:.975}to{opacity:.3;scale:.96;filter:grayscale(.6)}}
+.mvback{animation:mvback .45s var(--sp) both}
+@keyframes mvback{from{opacity:.3;scale:.96}to{opacity:1;scale:1}}
+.mvland{animation:mvland .7s var(--sp) both;z-index:2}
+@keyframes mvland{0%{scale:.92;box-shadow:0 0 0 0 var(--yel)}45%{scale:1.03;box-shadow:0 0 0 6px var(--yel)}100%{scale:1;box-shadow:0 0 0 0 transparent}}
+#mvghost{position:fixed;left:0;top:0;z-index:200;pointer-events:none;display:flex;flex-direction:column;gap:2px;padding:8px 14px 8px 20px;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:4px 4px 0 var(--sh);opacity:0;scale:.92;transform-origin:20% 50%;will-change:translate,rotate;transition:opacity .18s,scale .35s var(--sp),box-shadow .35s var(--ez)}
+#mvghost.on{opacity:1;scale:1.04;box-shadow:12px 14px 0 var(--sh)}
+#mvghost.near{scale:.9;box-shadow:5px 6px 0 var(--sh)}
+#mvghost.into{transition:translate .24s var(--ez),scale .24s var(--ez),opacity .24s;scale:.25;opacity:0}
+#mvghost.home{transition:translate .34s var(--ez),rotate .34s var(--ez),scale .34s var(--ez),opacity .3s .05s;scale:.95;opacity:0}
 #mvghost i{position:absolute;left:0;top:0;bottom:0;width:8px;border-right:2px solid var(--ink)}
 #mvghost b{font-size:1.1rem;font-weight:800}#mvghost small{font:700 .78rem "JetBrains Mono";color:var(--mut)}
-#mvdock{position:fixed;left:50%;bottom:14px;z-index:199;width:min(560px,calc(100vw - 24px));translate:-50% 140%;background:var(--paper);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);padding:10px;transition:translate .3s cubic-bezier(.3,1.3,.5,1)}
-#mvdock.on{translate:-50% 0}
-#mvdock.top{bottom:auto;top:14px;translate:-50% -140%}#mvdock.top.on{translate:-50% 0}
+#mvdock{position:fixed;left:50%;bottom:14px;z-index:199;width:min(560px,calc(100vw - 24px));translate:-50% calc(100% + 30px);opacity:0;background:var(--paper);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);padding:10px;transition:translate .45s var(--sp),opacity .2s}
+#mvdock.on{translate:-50% 0;opacity:1}
+#mvdock.top{bottom:auto;top:14px;translate:-50% calc(-100% - 30px)}#mvdock.top.on{translate:-50% 0}
 #mvdock .mvh{font-size:.78rem;font-weight:700;color:var(--mut);margin:0 2px 8px}
 #mvdock .mvg{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-.mvd{position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 0 5px;border:2px solid var(--ink);background:var(--card);font-size:.7rem;font-weight:700;line-height:1.1;transition:background .12s,transform .12s}
+.mvd{position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 0 5px;border:2px solid var(--ink);background:var(--card);font-size:.7rem;font-weight:700;line-height:1.1;transition:background .15s,color .15s,scale .3s var(--sp),box-shadow .2s}
+#mvdock.on .mvd{animation:mvchip .4s var(--sp) both;animation-delay:calc(.06s + var(--i) * 12ms)}
+@keyframes mvchip{from{opacity:0;translate:0 10px;scale:.8}}
 .mvd b{font:800 1.05rem "JetBrains Mono"}.mvd em{position:absolute;top:-9px;right:-4px;font-style:normal;font-size:.6rem;background:var(--ink);color:var(--paper);padding:0 3px}
-.mvd.past{opacity:.45}.mvd.hol{background:#fbe4dd}.mvd.today{box-shadow:inset 0 -4px 0 var(--red)}
+.mvd.past{opacity:.45}.mvd.hol{background:#fbe4dd}.mvd.today{box-shadow:inset 0 -4px 0 var(--red)}.mvd.exam{background:repeating-linear-gradient(135deg,var(--card) 0 5px,color-mix(in srgb,var(--lav) 38%,var(--card)) 5px 10px)}
 .mvd.cur{border-style:dashed;opacity:.5}
-.mvover{background:var(--yel)!important;color:#141414!important;transform:scale(1.06);outline:3px solid var(--ink);outline-offset:-1px;z-index:2}
+.mvover{background:var(--yel)!important;color:#141414!important;scale:1.07;outline:3px solid var(--ink);outline-offset:-1px;z-index:2;transition:scale .3s var(--sp),background .15s}
+.dc.mvover{scale:1.012}.cday.mvover{scale:1.04}
 .mvw{color:var(--red)}
 .mvlen{position:absolute;left:0;right:0;bottom:-3px;height:14px;cursor:ns-resize;touch-action:none;z-index:3}
-.mvlen:after{content:"";position:absolute;left:50%;bottom:4px;width:34px;height:4px;margin-left:-17px;background:var(--ink);opacity:0;transition:opacity .15s}
-[data-sid]:hover>.mvlen:after,.mvlenon>.mvlen:after{opacity:.55}
+.mvlen:after{content:"";position:absolute;left:50%;bottom:4px;width:34px;height:4px;translate:-50% 0;background:var(--ink);opacity:0;transition:opacity .2s,width .35s var(--sp),background .2s,height .2s}
+[data-sid]:hover>.mvlen:after{opacity:.55}
 @media (hover:none){.mvlen:after{opacity:.25}}
-.mvlenon{outline:3px solid var(--yel);outline-offset:-3px}
-#mvtip{position:fixed;left:0;top:0;z-index:200;pointer-events:none;display:flex;flex-direction:column;padding:6px 12px;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh)}
+.mvlenon{outline:3px solid var(--yel);outline-offset:-3px;transition:outline-color .2s}
+.mvlenon>.mvlen:after{opacity:1;width:64px;height:5px;background:var(--yel);box-shadow:0 0 0 2px var(--ink)}
+#mvtip{position:fixed;left:0;top:0;z-index:200;pointer-events:none;display:flex;flex-direction:column;padding:6px 12px;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);opacity:0;scale:.85;will-change:translate;transition:opacity .15s,scale .3s var(--sp),background .2s,color .2s}
+#mvtip.on{opacity:1;scale:1}#mvtip.out{opacity:0;scale:.85}
+#mvtip.bump{animation:mvbump .32s var(--sp)}
+@keyframes mvbump{40%{scale:1.14}}
 #mvtip b{font:800 1.2rem "JetBrains Mono"}#mvtip small{font:700 .75rem "JetBrains Mono";color:var(--mut)}
 #mvtip.chg{background:var(--yel);color:#141414}#mvtip.chg small{color:#141414}
+.exr.new{animation:exin .4s var(--sp) both}.exr.gone{animation:exout .25s var(--ez) both}
+@keyframes exin{from{opacity:0;translate:0 -8px;scale:.96}}
+@keyframes exout{to{opacity:0;translate:16px 0;scale:.96}}
+@media (prefers-reduced-motion:reduce){.mvhold,.mvsrc,.mvback,.mvland,#mvdock.on .mvd,#mvtip.bump,.exr.new,.exr.gone{animation-duration:.01s!important}}
 /* exam windows */
 .mc.exam{background:repeating-linear-gradient(135deg,var(--card) 0 7px,color-mix(in srgb,var(--lav) 38%,var(--card)) 7px 14px)}
 .mc.exam.hol{background:#fbe4dd}
@@ -1340,8 +1362,49 @@ function defTpl(){ return {free:"ช่วงนี้พี่ว่างป�
 DB.tpl ||= defTpl();
 DB.tpl.free ??= defTpl().free;
 let undoSnap = null;
-function save(){ cacheSave(); schedulePush(); }
-function snap(){ undoSnap = JSON.stringify(DB); }
+function save(){ histRecord(); cacheSave(); schedulePush(); }
+// undo / redo: every change goes through save(), so history is recorded there as {b: before, a: after}. HIST.cur is the
+// state on screen; it's re-marked on every renderAll, so data arriving from the server never becomes an undo step.
+// Undo doesn't restore a whole snapshot — it reverts only the classes / students / settings that step touched, so a
+// class another device synced in meanwhile survives. Saves within a second (typing in a box) fold into one step;
+// snap() forces a fresh step.
+const HIST = {u: [], r: [], cur: null, t: 0, MAX: 60};
+function histMark(){ HIST.cur = JSON.stringify(DB); }
+function histRecord(){
+  const now = JSON.stringify(DB); if (HIST.cur == null){ HIST.cur = now; return; } if (now === HIST.cur) return;
+  const last = HIST.u[HIST.u.length - 1];
+  if (last && !HIST.r.length && Date.now() - HIST.t <= 1000 && last.a === HIST.cur) last.a = now;
+  else { HIST.u.push({b: HIST.cur, a: now}); if (HIST.u.length > HIST.MAX) HIST.u.shift(); }
+  HIST.r = []; HIST.cur = now; HIST.t = Date.now();
+}
+function snap(){ HIST.t = 0; undoSnap = true; }
+const KEYED = {sessions: 'id', students: 'id', archived: 'id', skips: 'key'};
+function histPatch(D, F, T){   // make D look like T wherever F and T differ
+  const J = JSON.stringify, cl = x => JSON.parse(J(x));
+  for (const k of new Set([...Object.keys(F), ...Object.keys(T)])){
+    const id = KEYED[k];
+    if (id){ const fm = new Map((F[k] || []).map(x => [x[id], J(x)])), tl = T[k] || [], tm = new Map(tl.map((x, i) => [x[id], [x, i]])), list = D[k] ||= [];
+      for (const key of new Set([...fm.keys(), ...tm.keys()])){
+        const t = tm.get(key); if (fm.get(key) === (t && J(t[0]))) continue;
+        const i = list.findIndex(x => x[id] === key);
+        if (!t){ if (i >= 0) list.splice(i, 1); } else if (i >= 0) list[i] = cl(t[0]); else list.splice(Math.min(t[1], list.length), 0, cl(t[0]));
+      } }
+    else if (J(F[k]) !== J(T[k])){ if (k in T) D[k] = cl(T[k]); else delete D[k]; }
+  }
+}
+function histGo(back){
+  const from = back ? HIST.u : HIST.r, to = back ? HIST.r : HIST.u; if (!from.length) return toast(back ? 'ไม่มีอะไรให้เลิกทำแล้ว' : 'ไม่มีอะไรให้ทำซ้ำ');
+  if ($('#modal').classList.contains('open')) closeModal();
+  const step = from.pop(); histPatch(DB, JSON.parse(back ? step.a : step.b), JSON.parse(back ? step.b : step.a)); to.push(step);
+  HIST.cur = JSON.stringify(DB); HIST.t = 0;
+  cacheSave(); schedulePush(); calm = true; try { renderAll(); } finally { calm = false; }
+  SFX.play('undo'); toast(back ? `↶ เลิกทำ${HIST.u.length ? ` · ย้อนได้อีก ${HIST.u.length}` : ''}` : `↷ ทำซ้ำ${HIST.r.length ? ` · อีก ${HIST.r.length}` : ''}`);
+}
+addEventListener('keydown', e => {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey) return; const k = e.key.toLowerCase(); if (k !== 'z' && k !== 'y') return;
+  const t = e.target; if (t.closest?.('input,textarea,select,[contenteditable]') && t.type !== 'checkbox') return;   // a text box keeps its own text undo
+  if (MV.on) return; e.preventDefault(); histGo(k === 'z' && !e.shiftKey);
+});
 
 /* =============================== helpers =============================== */
 const $ = s => document.querySelector(s);
@@ -1366,7 +1429,7 @@ const needsConfirm = s => s.status === 'plan' && atOf(s) <= NOW;
 let toastT;
 function toast(t, undo){
   const e = $('#toast'); e.innerHTML = ''; e.append(t);
-  if (undo && undoSnap){ const b = document.createElement('button'); b.textContent = 'เลิกทำ'; b.onclick = () => { DB = JSON.parse(undoSnap); undoSnap = null; save(); renderAll(); e.classList.remove('show'); }; e.append(b); }
+  if (undo && undoSnap){ const b = document.createElement('button'); b.textContent = 'เลิกทำ'; b.onclick = () => { undoSnap = null; e.classList.remove('show'); histGo(true); }; e.append(b); }
   e.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('show'), undo ? 4200 : 1800);
 }
 function count(el, target, ms = 950){
@@ -1589,6 +1652,7 @@ async function push(){
     }
     await write('app_state', () => sb.from('app_state').upsert({owner:user.id, data:merged}));
     for (const k in merged) DB[k] = merged[k];   // take the other device's parts too (incl. inside merged groups)
+    histMark();
     d.st = merged; }, () => base.st = J(rowsOf(DB).st));   // compare in this device's own key order, or it looks unsaved forever
   cacheSave(); pushing = false;
   if (fails.length){ setSync(navigator.onLine ? 'err' : 'off'); clearTimeout(pushT); pushT = setTimeout(push, 15000); }
@@ -2094,7 +2158,7 @@ function tk(s, o = {}){
     ${o.pv ? '' : `<span class="tools"><button title="แก้ / เลื่อน" onclick="event.stopPropagation();editSession('${s.id}')">✎</button><button class="del" title="ลบ" onclick="event.stopPropagation();delSession('${s.id}')">🗑</button></span>`}
   </div>`;
 }
-function renderAll(){ renderMoney(); renderSchedule(); if (openD === 'cal') renderCal(); if (openD === 'stu') renderStudents(); if (openD === 'kit'){ writeKit(); } }
+function renderAll(){ histMark(); renderMoney(); renderSchedule(); if (openD === 'cal') renderCal(); if (openD === 'stu') renderStudents(); if (openD === 'kit'){ writeKit(); } }
 function markDone(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.status = 'done'; save(); renderAll(); wrapUp(id); }
 let wu = null;
 function undone(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.status = 'plan'; s.paid = false; save(); renderAll(); toast(`${st(s.who)?.name} · กลับเป็นนัดไว้`, true); }
@@ -2220,9 +2284,11 @@ function delSession(id){
    same "ไม่ต้องถามอีก 10 นาที" opt-out; moving a weekly class leaves its slot empty on purpose (same as editing it). */
 var MV = {on: false};
 const SKIPMOVE = 'teach-skipmove', skipMove = () => { try{ return +localStorage.getItem(SKIPMOVE) > Date.now(); }catch{ return false; } };
+// the class just edited by a drag pops where it now lives, so your eye can find it
+const land = id => later(() => qsa(`[data-sid="${id}"]`).forEach(e => { e.classList.remove('mvland'); void e.offsetWidth; e.classList.add('mvland'); e.addEventListener('animationend', () => e.classList.remove('mvland'), {once: true}); }));
 function setLen(s, h){
   snap(); const was = s.h; s.h = h; s.series = null;   // off the weekly autopilot, or the next top-up would put the slot's length back
-  save(); renderAll(); SFX.play('save');
+  save(); renderAll(); SFX.play('save'); land(s.id);
   toast(`${st(s.who)?.name} ${dLabel(s.date)} · ${was} → ${h} ชม. · ถึง ${endOf(s)}`, true);
 }
 function askLen(s, h){
@@ -2236,20 +2302,25 @@ function askLen(s, h){
   $('#mv1').onclick = () => { if ($('#mskip').checked){ try{ localStorage.setItem(SKIPMOVE, Date.now() + 10*60000); }catch{} } closeModal(); setLen(s, h); };
   setTimeout(() => $('#mv1')?.focus(), 50);
 }
-// the grip along a class's bottom edge: drag down = longer, up = shorter, half an hour per notch
+// the grip along a class's bottom edge: drag down = longer, up = shorter, half an hour per notch.
+// The tag glides after your finger and bumps each time the length clicks to a new notch.
 {
   const STEP = 26; let L = null, tip = null;
+  const k = reduced ? 1 : .3;
   addEventListener('pointerdown', e => {
     if (e.button !== 0) return; const g = e.target.closest?.('.mvlen'); if (!g) return;
     const el = g.closest('[data-sid]'), s = el && DB.sessions.find(x => x.id === el.dataset.sid); if (!s) return;
-    e.preventDefault(); MV.on = true; L = {s, el, y0: e.clientY, h: +s.h || 1, id: e.pointerId}; el.classList.add('mvlenon');
-    tip = document.createElement('div'); tip.id = 'mvtip'; document.body.append(tip); show(e);
+    e.preventDefault(); MV.on = true; L = {s, el, y0: e.clientY, h: +s.h || 1, id: e.pointerId, tx: e.clientX, ty: e.clientY, x: e.clientX, y: e.clientY, raf: 0}; el.classList.add('mvlenon');
+    tip = document.createElement('div'); tip.id = 'mvtip'; document.body.append(tip); paint(); later(() => tip?.classList.add('on')); loop();
   });
   const hOf = y => Math.min(4, Math.max(.5, L.s.h + Math.round((y - L.y0) / STEP) * .5));
-  const show = e => { L.h = hOf(e.clientY); tip.innerHTML = `<b>${L.h} ชม.</b><small>${L.s.time}–${endOf({...L.s, h: L.h})}</small>`;
-    tip.classList.toggle('chg', L.h !== +L.s.h); tip.style.transform = `translate(${e.clientX + 16}px, ${e.clientY - 20}px)`; };
-  addEventListener('pointermove', e => { if (L && e.pointerId === L.id) show(e); });
-  const stop = (e, go) => { if (!L || e.pointerId !== L.id) return; const {s, h, el} = L; el.classList.remove('mvlenon'); tip?.remove(); tip = null; L = null;
+  const paint = () => { tip.innerHTML = `<b>${L.h} ชม.</b><small>${L.s.time}–${endOf({...L.s, h: L.h})}</small>`; tip.classList.toggle('chg', L.h !== +L.s.h); };
+  const loop = () => { if (!L) return; L.x += (L.tx - L.x) * k; L.y += (L.ty - L.y) * k;
+    tip.style.translate = `${L.x + 18}px ${L.y - 22}px`; L.raf = requestAnimationFrame(loop); };
+  addEventListener('pointermove', e => { if (!L || e.pointerId !== L.id) return; L.tx = e.clientX; L.ty = e.clientY;
+    const h = hOf(e.clientY); if (h !== L.h){ L.h = h; paint(); tip.classList.remove('bump'); void tip.offsetWidth; tip.classList.add('bump'); navigator.vibrate?.(6); SFX.play('tick'); } });
+  const stop = (e, go) => { if (!L || e.pointerId !== L.id) return; const {s, h, el} = L; cancelAnimationFrame(L.raf); el.classList.remove('mvlenon');
+    const t = tip; tip = null; L = null; if (t){ t.classList.remove('on'); t.classList.add('out'); setTimeout(() => t.remove(), 200); }
     setTimeout(() => MV.on = false, 0);
     const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 60);
     if (go && h !== +s.h) askLen(s, h); };
@@ -2259,7 +2330,7 @@ function askLen(s, h){
 function moveTo(s, date){
   snap(); if (isGen(s)) addSkip(s);
   const from = s.date; s.date = date; s.series = null;
-  save(); renderAll(); SFX.play('save');
+  save(); renderAll(); SFX.play('save'); land(s.id);
   toast(`เลื่อน ${st(s.who)?.name} ${dLabel(from)} → ${dLabel(date)} ${s.time}`, true);
 }
 function askMove(s, date){
@@ -2274,30 +2345,50 @@ function askMove(s, date){
   setTimeout(() => $('#mv1')?.focus(), 50);
 }
 {
-  const HOLD = 380, SLOP = 8;
-  let h = null, eat = false, ghost = null, dock = null, over = null;
+  // the ghost starts exactly on top of the class, then glides after the pointer (eased, with a little tilt from the
+  // speed); dropping on a day sucks it into that day, letting go elsewhere flies it home
+  const HOLD = 380, SLOP = 8, K = reduced ? 1 : .26;
+  let h = null, eat = false, ghost = null, dock = null, over = null, G = null;
   const mon = iso => { const d = new Date(iso + 'T00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoD(d); };
-  const lit = el => { if (over === el) return; over?.classList.remove('mvover'); over = el; el?.classList.add('mvover'); };
+  const lit = el => { if (over === el) return; over?.classList.remove('mvover'); over = el; el?.classList.add('mvover'); ghost?.classList.toggle('near', !!el); if (el){ navigator.vibrate?.(4); SFX.play('key'); } };
   const drop = (x, y) => { const el = document.elementFromPoint(x, y)?.closest('[data-drop]'); return el && el.dataset.drop !== h.s.date ? el : null; };
   function lift(){
     MV.on = true; h.el.classList.add('mvsrc'); navigator.vibrate?.(12); SFX.play('select');
-    const p = st(h.s.who);
+    const p = st(h.s.who), r = h.el.getBoundingClientRect();
     ghost = document.createElement('div'); ghost.id = 'mvghost';
     ghost.innerHTML = `<i class="${colorOf(h.s.who)}"></i><b>${esc(p?.name ?? '?')}</b><small>${h.s.time} · ${dLabel(h.s.date)}</small>`;
     document.body.append(ghost);
-    // the dock: three weeks of days, starting the week of the class (or this week, for a class that's already past)
+    // start where the class is (clamped so a wide row doesn't start the ghost off to one side), then chase the pointer
+    G = {x: Math.min(Math.max(r.left, h.x - 140), h.x - 14), y: r.top + 4, vx: 0, rot: 0, raf: 0, home: {x: Math.min(Math.max(r.left, h.x - 140), h.x - 14), y: r.top + 4}};
+    ghost.style.translate = `${G.x}px ${G.y}px`;
     const t0 = isoD(NOW), start = mon(h.s.date >= t0 ? h.s.date : t0); let k = '';
     for (let i = 0; i < 21; i++){ const iso = shift(start, i), d = new Date(iso + 'T00:00');
-      k += `<span class="mvd${iso === h.s.date ? ' cur' : ''}${iso === t0 ? ' today' : ''}${iso < t0 ? ' past' : ''}${isHolD(iso) ? ' hol' : ''}" data-drop="${iso}">${TH_D[d.getDay()]}<b>${d.getDate()}</b>${d.getDate() === 1 || i === 0 ? `<em>${TH_M[d.getMonth()]}</em>` : ''}</span>`; }
+      k += `<span class="mvd${iso === h.s.date ? ' cur' : ''}${iso === t0 ? ' today' : ''}${iso < t0 ? ' past' : ''}${isHolD(iso) ? ' hol' : ''}${examOf(iso) ? ' exam' : ''}" style="--i:${i}" data-drop="${iso}">${TH_D[d.getDay()]}<b>${d.getDate()}</b>${d.getDate() === 1 || i === 0 ? `<em>${TH_M[d.getMonth()]}</em>` : ''}</span>`; }
     dock = document.createElement('div'); dock.id = 'mvdock'; if (h.y > innerHeight * .55) dock.className = 'top';   // sits on the half you're not dragging from, so it never hides the day you want
     dock.innerHTML = `<div class="mvh">ลากไปวางบนวันที่จะเลื่อนไป · ปล่อยที่อื่นเพื่อยกเลิก</div><div class="mvg">${k}</div>`;
     document.body.append(dock); later(() => { dock?.classList.add('on'); ghost?.classList.add('on'); });
-    place(h.x, h.y);
+    loop();
   }
-  const place = (x, y) => { if (ghost) ghost.style.transform = `translate(${x + 14}px, ${y - 46}px)`; };
-  function end(){
-    clearTimeout(h?.t); h?.el.classList.remove('mvsrc'); lit(null);
-    ghost?.remove(); ghost = null; const d = dock; dock = null; if (d){ d.classList.remove('on'); setTimeout(() => d.remove(), 250); }
+  function loop(){
+    if (!ghost || !h) return;
+    const tx = h.x + 16, ty = h.y - 48, dx = (tx - G.x) * K;
+    G.x += dx; G.y += (ty - G.y) * K; G.vx = G.vx * .8 + dx * .2;
+    G.rot += ((reduced ? 0 : Math.max(-9, Math.min(9, G.vx * .9))) - G.rot) * .2;
+    ghost.style.translate = `${G.x}px ${G.y}px`; ghost.style.rotate = `${G.rot}deg`;
+    G.raf = requestAnimationFrame(loop);
+  }
+  // fly the ghost somewhere (a day's centre, or home) and fade it out there
+  function fly(gh, x, y, into){
+    if (!gh) return; if (reduced){ gh.remove(); return; }
+    gh.classList.add(into ? 'into' : 'home'); gh.style.rotate = '0deg'; gh.style.translate = `${x}px ${y}px`;
+    setTimeout(() => gh.remove(), into ? 260 : 360);
+  }
+  function end(target){
+    clearTimeout(h?.t); cancelAnimationFrame(G?.raf); const src = h?.el; lit(null);
+    if (src){ src.classList.remove('mvsrc'); if (MV.on && !target){ src.classList.add('mvback'); src.addEventListener('animationend', () => src.classList.remove('mvback'), {once: true}); } }
+    if (ghost){ if (target){ const r = target.getBoundingClientRect(), gr = ghost.getBoundingClientRect(); fly(ghost, r.left + r.width / 2 - gr.width / 2, r.top + r.height / 2 - gr.height / 2, true); }
+      else fly(ghost, G.home.x, G.home.y, false); }
+    ghost = null; const d = dock; dock = null; if (d){ d.classList.remove('on'); setTimeout(() => d.remove(), 320); }
     if (MV.on){ eat = true; setTimeout(() => eat = false, 60); }
     MV.on = false; h = null;
   }
@@ -2308,16 +2399,17 @@ function askMove(s, date){
     const b = e.target.closest('button,input,a,select,textarea'); if (b && el.contains(b) && b !== el) return;   // stamps / ticks keep their own tap
     const s = DB.sessions.find(x => x.id === el.dataset.sid); if (!s) return;
     h = {s, el, x: e.clientX, y: e.clientY, id: e.pointerId}; h.t = setTimeout(lift, HOLD);
+    el.classList.add('mvhold'); setTimeout(() => el.classList.remove('mvhold'), HOLD + 40);   // a slight press-in while you hold, so you know it's about to lift
   });
   addEventListener('pointermove', e => {
     if (!h || e.pointerId !== h.id) return;
-    if (!MV.on){ if (Math.hypot(e.clientX - h.x, e.clientY - h.y) > SLOP){ clearTimeout(h.t); h = null; } return; }   // moved first = a scroll, not a drag
-    h.x = e.clientX; h.y = e.clientY; place(h.x, h.y); lit(drop(h.x, h.y));
+    if (!MV.on){ if (Math.hypot(e.clientX - h.x, e.clientY - h.y) > SLOP){ clearTimeout(h.t); h.el.classList.remove('mvhold'); h = null; } return; }   // moved first = a scroll, not a drag
+    h.x = e.clientX; h.y = e.clientY; lit(drop(h.x, h.y));
   });
   addEventListener('pointerup', e => {
     if (!h || e.pointerId !== h.id) return;
-    const was = MV.on, s = h.s, t = was ? drop(e.clientX, e.clientY) : null; end();
-    if (t) askMove(s, t.dataset.drop); else if (was) SFX.play('off');
+    const was = MV.on, s = h.s, t = was ? drop(e.clientX, e.clientY) : null; end(t);
+    if (t) setTimeout(() => askMove(s, t.dataset.drop), reduced ? 0 : 180); else if (was) SFX.play('off');
   });
   addEventListener('pointercancel', () => h && end());
   addEventListener('keydown', e => { if (e.key === 'Escape' && MV.on) end(); });
@@ -2443,7 +2535,7 @@ function saveSession(){
 
 /* =============================== modal + drawers =============================== */
 function openModal(html, wide){ const sh = $('#sheet'); sh.onclick = null; sh.className = 'sheet' + (wide ? ' wide' : ''); sh.innerHTML = html; sh.scrollTop = 0; $('#modal').classList.add('open'); }
-function closeModal(){ $('#modal').classList.remove('open'); }
+function closeModal(){ if ($('#modal').contains(document.activeElement)) document.activeElement.blur(); $('#modal').classList.remove('open'); }   // focus left in a hidden box would swallow Ctrl+Z
 let openD = null;
 function openDrawer(k){
   closeDrawer(); openD = k;
@@ -2479,8 +2571,9 @@ function editExams(){
   paint();
   $('#sheet').oninput = e => { const r = e.target.closest('.exr'); if (r && e.target.dataset.f) list[+r.dataset.i][e.target.dataset.f] = e.target.value; };
   $('#sheet').onclick = e => {
-    if (e.target.id === 'exadd'){ const t = isoD(NOW); list.push({a: t, b: shift(t, 7), t: 'สอบ'}); paint(); }
-    else if (e.target.dataset.rm !== undefined){ list.splice(+e.target.dataset.rm, 1); paint(); }
+    if (e.target.id === 'exadd'){ const t = isoD(NOW); list.push({a: t, b: shift(t, 7), t: 'สอบ'}); paint(); const r = [...qsa('.exr')].pop(); r?.classList.add('new'); r?.querySelector('[data-f=t]')?.select(); }
+    else if (e.target.dataset.rm !== undefined){ const r = e.target.closest('.exr'), i = +e.target.dataset.rm; if (reduced){ list.splice(i, 1); return paint(); }
+      r.classList.add('gone'); r.addEventListener('animationend', () => { list.splice(i, 1); paint(); }, {once: true}); }
     else if (e.target.id === 'exsave'){
       const ok = list.filter(e => e.a && e.b).map(e => e.a > e.b ? {...e, a: e.b, b: e.a} : e).map(e => ({...e, t: e.t.trim() || 'สอบ'})).sort((x, y) => x.a.localeCompare(y.a));
       snap(); DB.exams = ok; save(); closeModal(); renderAll(); toast(`บันทึกช่วงสอบ ${ok.length} ช่วง`, true);
