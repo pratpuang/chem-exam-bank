@@ -723,6 +723,13 @@ button.fg:hover{background:#fbf3dc}
 .rw.cancel>span:not(.tools),.rw.holi>span:not(.tools){opacity:.45}
 .rw.cancel .tm,.rw.cancel .nm b{text-decoration:line-through}
 .rw.pv{cursor:default}.rw.pv:hover{background:none}
+.paycard{display:flex;align-items:stretch;gap:12px;margin-top:8px;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding-right:14px;min-width:0}
+.paycard .cb{flex:none;width:8px}
+.paycard .pcm{flex:1;min-width:0;padding:10px 0;display:flex;flex-direction:column;gap:3px}
+.paycard .pcm b{font-size:1.25rem;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.paycard .pcm small{font:700 .8rem "JetBrains Mono";color:var(--mut)}
+.paycard .pcm em{font-style:normal;font-weight:700;font-size:.85rem;overflow-wrap:anywhere}
+.paycard .pca{flex:none;align-self:center;font:800 1.2rem "JetBrains Mono";white-space:nowrap}
 .st .amt{font:800 1.05rem "JetBrains Mono";color:var(--mut)}
 @media (max-width:1000px){.rw{grid-template-columns:8px 30px 80px 120px 165px minmax(0,1fr) auto;gap:0 12px}.rw .hr,.rw .tm small{display:none}}
 @media (max-width:700px){.rw{grid-template-columns:6px 28px auto auto minmax(0,1fr) auto;row-gap:6px}.rw .cb,.rw .ckw{grid-row:1 / span 2}.rw .st{grid-row:1 / span 2;grid-column:6}.rw .nt{grid-row:2;grid-column:3 / 6}.rw .nm b{max-width:9em}}
@@ -2113,8 +2120,9 @@ function saveWu(){
 // stamps are easy to hit by accident (scrolling on a phone), so they ask first; the drawer's explicit button doesn't
 function askPaid(id){
   const s = DB.sessions.find(x => x.id === id); if (!s) return;
-  openModal(`<h2>${s.paid ? 'กลับเป็นค้างจ่าย?' : 'ได้เงินแล้ว?'}</h2><div class="dc" style="margin:6px 0 0">${rw(s, true)}</div>
-    <div class="mut" style="font-size:.85rem;margin-top:8px">${dLabel(s.date)} · ${cash(amt(s))}</div>
+  openModal(`<h2>${s.paid ? 'กลับเป็นค้างจ่าย?' : 'ได้เงินแล้ว?'}</h2><div class="paycard"><span class="cb ${colorOf(s.who)}"></span><div class="pcm"><b>${esc(st(s.who)?.name ?? '?')}</b>
+      <small>${dLabel(s.date)} · ${s.time}–${endOf(s)} · ${s.h} ชม.</small>${s.log?.topic ? `<em>📘 ${esc(s.log.topic)}</em>` : s.note ? `<em>${esc(s.note)}</em>` : ''}</div>
+      <span class="pca">${cash(amt(s))}</span></div>
     <div class="cfoot"><button class="ghostb" onclick="closeModal()">ยกเลิก</button><span class="sp"></span>
       <button class="go sm ${s.paid ? 'red' : ''}" id="pay1">${s.paid ? 'กลับเป็นค้างจ่าย' : 'ได้เงินแล้ว ✓'}</button></div>`);
   $('#pay1').onclick = () => { closeModal(); togglePaid(id); };
@@ -2154,10 +2162,18 @@ function stripFrom(iso, who = edit?.who){
 }
 const shift = (iso, n) => { const d = new Date(iso+'T00:00'); d.setDate(d.getDate()+n); return isoD(d); };
 const NEXT = {who:'date', date:'time', time:'h', h:null};
+// new class: preset start + length from the student's เวลาประจำ — the slot on that weekday if there is one, else their first slot.
+// Stops once the time has been set by hand, so picking a date afterwards never undoes it.
+function presetSlot(){
+  if (edit.id || edit.tset) return;
+  const sl = st(edit.who)?.slots || [], w = new Date(edit.date + 'T00:00').getDay(), m = sl.find(x => +x[0] === w) || sl[0];
+  if (m){ edit.time = m[1]; edit.h = +m[2] || 1; }
+}
 function editSession(id, date){
   if (!id && !DB.students.length){ toast('เพิ่มนักเรียนก่อน'); return editStudent(); }
   const s = id ? DB.sessions.find(x => x.id === id) : null, first = DB.students[0];
-  edit = s ? {...s, rep:0} : {id:null, who:first?.id, date: date || isoD(NOW), time: first?.slots[0]?.[1] || '18:00', h: first?.slots[0]?.[2] || 1, rate:first?.rate || DB.rates.solo, status:'plan', paid:false, note:'', rep:0};
+  edit = s ? {...s, rep:0} : {id:null, who:first?.id, date: date || isoD(NOW), time: '18:00', h: 1, rate:first?.rate || DB.rates.solo, status:'plan', paid:false, note:'', rep:0};
+  presetSlot();
   edit.pick = s ? 'date' : 'who'; edit.more = false;
   edit.from = s ? shift(s.date, -7) : date && date < isoD(NOW) ? shift(date, -3) : isoD(NOW);
   openModal(`<button class="pdx x" onclick="closeModal()" title="ปิด">✕</button>
@@ -2178,10 +2194,10 @@ function editSession(id, date){
     const t = e.target.closest('button'); if (!t) return; const d = t.dataset;
     let adv = false;
     if (d.p) edit.pick = d.p;
-    else if (d.w){ edit.who = d.w; if (!edit.id){ const p = st(d.w); edit.rate = p.rate; if (p.slots[0]){ edit.time = p.slots[0][1]; edit.h = p.slots[0][2]; } } adv = true; }
-    else if (d.d){ edit.date = d.d; adv = true; }
-    else if (d.tm) edit.time = addMin(edit.time, +d.tm);
-    else if (d.t){ edit.time = d.t; adv = true; }
+    else if (d.w){ edit.who = d.w; if (!edit.id){ edit.rate = st(d.w).rate; edit.tset = false; presetSlot(); } adv = true; }
+    else if (d.d){ edit.date = d.d; presetSlot(); adv = true; }
+    else if (d.tm){ edit.time = addMin(edit.time, +d.tm); edit.tset = true; }
+    else if (d.t){ edit.time = d.t; edit.tset = true; adv = true; }
     else if (d.h) edit.h = +d.h;
     else if (d.rt) edit.rate = Math.max(0, edit.rate + +d.rt);
     else if (d.s) edit.status = d.s;
@@ -2200,7 +2216,7 @@ function picker(){
   if (k === 'date') return `<div class="dstrip" id="estrip">${stripFrom(edit.from)}</div><div class="sub"><label class="other" style="margin:0">📅 วันอื่น<input type="date" id="edate"></label></div>`;
   if (k === 'time'){
     const usual = [...new Set((st(edit.who)?.slots || []).map(x => x[1]))];
-    return `<div class="row"><div class="step"><button data-tm="-15" aria-label="ถอย 15 นาที">−</button><input class="tin" inputmode="numeric" maxlength="5" onfocus="this.select()" aria-label="พิมพ์เวลา" value="${edit.time}" onchange="tIn(this, v => { edit.time = v; paintEdit(false); })"><button data-tm="15" aria-label="เลื่อน 15 นาที">+</button></div>
+    return `<div class="row"><div class="step"><button data-tm="-15" aria-label="ถอย 15 นาที">−</button><input class="tin" inputmode="numeric" maxlength="5" onfocus="this.select()" aria-label="พิมพ์เวลา" value="${edit.time}" onchange="tIn(this, v => { edit.time = v; edit.tset = true; paintEdit(false); })"><button data-tm="15" aria-label="เลื่อน 15 นาที">+</button></div>
       ${usual.length ? `<div class="chips">${usual.map(t => `<button class="chip mono ${t===edit.time?'on':''}" data-t="${t}">${t}</button>`).join('')}</div>` : ''}</div>
 `;
   }
@@ -2217,7 +2233,7 @@ function paintEdit(full){
     + `<div class="tok amt"><small>รวม</small><b>${cash(edit.rate*edit.h)}</b></div>`;
   if (full){
     $('#epk').innerHTML = picker(); $('#epk').style.animation = 'none'; $('#epk').offsetHeight; $('#epk').style.animation = '';
-    const di = $('#edate'); if (di) di.onchange = e => { if (!e.target.value) return; edit.date = e.target.value; edit.from = shift(edit.date, -3); if (!edit.id) edit.pick = 'time'; paintEdit(true); };
+    const di = $('#edate'); if (di) di.onchange = e => { if (!e.target.value) return; edit.date = e.target.value; presetSlot(); edit.from = shift(edit.date, -3); if (!edit.id) edit.pick = 'time'; paintEdit(true); };
     later(() => { const on = $('#estrip .on'); if (on) $('#estrip').scrollLeft = on.offsetLeft - 120; });
   } else $('#epk').innerHTML = picker();
   qsa('#estrip .dt').forEach(b => b.classList.toggle('on', b.dataset.d === edit.date));
