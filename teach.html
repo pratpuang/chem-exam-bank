@@ -1060,6 +1060,36 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .mbtick{position:absolute;right:12px;top:12px;width:30px;height:30px;border:3px solid var(--ink);background:var(--card);font:800 1rem/1 sans-serif;cursor:pointer;padding:0}
 .mbtick[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .mbk.off .mbtick{filter:none}
+/* calendar: student tray + quick-add pop-up */
+.ctray{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:10px 12px;border:3px solid var(--ink);background:var(--card);box-shadow:4px 4px 0 var(--sh)}
+.ctl{flex:none;font-size:.7rem;font-weight:800;color:var(--mut);line-height:1.25}
+.ctr{display:flex;flex-wrap:wrap;gap:6px;min-width:0}
+.trc{display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 0;border:2px solid var(--ink);background:var(--paper);font-size:.85rem;font-weight:800;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;transition:translate .2s var(--ez),box-shadow .2s var(--ez),opacity .2s}
+.trc i{align-self:stretch;width:8px;margin:-5px 0;border-right:2px solid var(--ink)}
+.trc:hover{translate:-1px -1px;box-shadow:3px 3px 0 var(--sh)}.trc:active{cursor:grabbing}
+.trc.trsrc{opacity:.35}
+.mc.qaon{outline:3px solid var(--yel);outline-offset:-3px;z-index:2}
+#qadd{position:fixed;z-index:180;width:300px;max-width:calc(100vw - 20px);padding:12px;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);opacity:0;scale:.9;transform-origin:50% 0;transition:opacity .16s,scale .3s var(--sp)}
+#qadd.up{transform-origin:50% 100%}#qadd.on{opacity:1;scale:1}#qadd.out{opacity:0;scale:.92;transition:opacity .15s,scale .15s}
+.qa-ar{position:absolute;top:-11px;width:16px;height:16px;translate:-50% 0;rotate:45deg;background:var(--card);border-left:3px solid var(--ink);border-top:3px solid var(--ink)}
+#qadd.up .qa-ar{top:auto;bottom:-11px;rotate:225deg}
+.qa-h{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.qa-h i{width:12px;height:22px;border:2px solid var(--ink)}.qa-h b{font-size:1.1rem;font-weight:800}.qa-h span{flex:1;font:700 .78rem "JetBrains Mono";color:var(--mut)}
+.qa-x{width:28px;height:28px;border:2px solid var(--ink);background:var(--card);color:var(--ink);cursor:pointer}.qa-x:hover{background:var(--red);color:#fff}
+.qa-t{display:flex;border:2px solid var(--ink);width:max-content}
+.qa-t button{width:38px;border:0;background:none;color:var(--ink);font:800 1.2rem inherit;cursor:pointer}.qa-t button:hover{background:var(--yel)}
+.qa-t input{width:96px;border:0;border-left:2px solid var(--ink);border-right:2px solid var(--ink);background:none;color:var(--ink);text-align:center;font:800 1.5rem/1.3 "JetBrains Mono";letter-spacing:-.03em}
+.qa-c,.qa-l,.qa-r{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.qa-c button,.qa-l button,.qa-r button{padding:4px 8px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font:800 .76rem "JetBrains Mono",inherit;cursor:pointer;transition:background .15s}
+.qa-r button{font-family:inherit}.qa-l small{font-size:.62rem;margin-left:2px}
+.qa-c button.usual{box-shadow:inset 0 -3px 0 var(--ink)}
+.qa-c button:hover,.qa-l button:hover,.qa-r button:hover{background:color-mix(in srgb,var(--yel) 40%,var(--card))}
+.qa-c button.on,.qa-l button.on,.qa-r button.on{background:var(--ink);color:var(--paper)}
+.qa-n{width:100%;margin-top:10px;border:0;border-bottom:2px solid var(--grid);background:none;color:var(--ink);font:600 .85rem inherit;padding:4px 0}.qa-n:focus{outline:none;border-bottom-color:var(--ink)}
+.qa-w{margin-top:8px;font-size:.78rem;font-weight:800;color:var(--red)}
+.qa-f{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding-top:10px;border-top:2px dashed var(--grid)}
+.qa-f span{font:700 .78rem "JetBrains Mono";color:var(--mut)}.qa-f b{color:var(--ink)}
+@media (max-width:560px){.ctray{flex-direction:column;align-items:flex-start}.ctl br{display:none}}
 .sheet.awsheet{width:min(760px,100%);padding-bottom:20px}
 #addw h2{margin:0 0 14px}
 .aw-steps{display:flex;gap:6px;margin:0 0 18px;padding-bottom:14px;border-bottom:3px solid var(--ink)}
@@ -1085,10 +1115,14 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .aw-d em{position:absolute;top:-8px;right:-4px;font-style:normal;font-size:.6rem;font-weight:800;background:var(--ink);color:var(--paper);padding:0 4px}
 .aw-d>i{position:absolute;top:5px;left:5px;width:9px;height:9px;border-radius:50%;border:2px solid var(--ink)}
 .aw-d small{font-size:.58rem;font-weight:800;color:var(--red)}
-.aw-d.usual{box-shadow:inset 0 -4px 0 var(--ink)}.aw-d.past{opacity:.4}.aw-d.hol{background:#fbe4dd}.aw-d.today b{color:var(--red)}
+.aw-d.usual{box-shadow:inset 0 -4px 0 var(--ink)}.aw-d.past{background:var(--paper);color:var(--mut);border-color:color-mix(in srgb,var(--ink) 35%,transparent)}.aw-d.hol{background:#fbe4dd}.aw-d.today b{color:var(--red)}
 .aw-d:hover{translate:-1px -1px;box-shadow:3px 3px 0 var(--sh)}.aw-d.on{background:var(--yel);color:#141414}
-.aw-other{display:inline-flex;align-items:center;gap:8px;margin-top:12px;font-size:.85rem;font-weight:700}
-.aw-other input{font:700 .85rem "JetBrains Mono";border:2px solid var(--ink);background:var(--card);color:var(--ink);padding:4px 6px}
+.aw-mh{display:flex;align-items:center;gap:6px;margin:0 0 12px}
+.aw-mh b{min-width:150px;text-align:center;font-size:1.1rem;font-weight:800}
+.aw-mh button{width:36px;height:34px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font-weight:800;cursor:pointer;transition:background .15s}.aw-mh button:hover{background:var(--yel)}
+.aw-mh .aw-tdy{width:auto;padding:0 10px;margin-left:6px;font-size:.8rem}
+.aw-cal.in-r{animation:awr .3s var(--ez)}.aw-cal.in-l{animation:awl .3s var(--ez)}
+.aw-d.out{background:transparent;color:var(--mut);border-style:dashed;border-color:color-mix(in srgb,var(--ink) 30%,transparent)}.aw-d.out.on,.aw-d.past.on{background:var(--yel);color:#141414;border:2px solid var(--ink)}
 .aw-time{display:flex;align-items:stretch;width:max-content;border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);background:var(--card)}
 .aw-time button{width:56px;border:0;background:none;color:var(--ink);font:800 1.6rem inherit;cursor:pointer}.aw-time button:hover{background:var(--yel)}
 .aw-time input{width:150px;border:0;border-left:3px solid var(--ink);border-right:3px solid var(--ink);background:none;color:var(--ink);text-align:center;font:800 2.6rem/1.2 "JetBrains Mono";letter-spacing:-.04em;padding:6px 0}
@@ -1392,6 +1426,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
       <div class="calhead"><span class="mn" id="cmn"></span><span class="yr" id="cyr"></span><span class="sp"></span>
         <div class="calnav"><button id="cprev" aria-label="เดือนก่อน">◀</button><button id="ctoday">วันนี้</button><button id="cnext" aria-label="เดือนถัดไป">▶</button></div></div>
       <div class="calfig" id="cfig"></div>
+      <div class="ctray" id="ctray"></div>
       <div class="mcal" id="mcal"></div>
       <div class="calleg"><span><i class="lh"></i>วันหยุด</span><span><i class="lt"></i>วันนี้</span><span><i class="ld"></i>เดดไลน์</span><span class="mut">ขีดฆ่า = ยกเลิก / ไม่นับ</span></div>
     </div>
@@ -2587,6 +2622,81 @@ function askMove(s, date){
   addEventListener('click', e => { if (eat){ e.stopPropagation(); e.preventDefault(); eat = false; } }, true);   // the drop isn't a tap on the class
 }
 
+/* ---------- calendar: drag a student's name onto a day → a small pop-up on that day to set the time and add ----------
+   the pop-up starts from the student's usual slot for that weekday (or their first slot), same as the add flow */
+function quickAdd(who, iso, cell){
+  document.getElementById('qadd')?.remove();
+  const p = st(who); if (!p) return;
+  const w = new Date(iso + 'T00:00').getDay(), sl = (p.slots || []).find(x => +x[0] === w) || (p.slots || [])[0];
+  const q = {who, date: iso, time: sl ? sl[1] : '18:00', h: sl ? +sl[2] || 1 : 1, rate: p.rate || DB.rates.solo, rep: 0, note: ''};
+  const box = document.createElement('div'); box.id = 'qadd'; document.body.append(box);
+  const usual = [...new Set((p.slots || []).map(x => x[1]))], quick = [...new Set([...usual, '16:00', '17:00', '18:00', '19:00', '20:00'])].sort();
+  const warn = () => { const a = q.time.split(':').map(Number), A = a[0] * 60 + a[1], B = A + q.h * 60;
+    const c = DB.sessions.filter(x => x.date === q.date && x.status !== 'cancel' && (([h, m]) => h * 60 + m < B && h * 60 + m + x.h * 60 > A)(x.time.split(':').map(Number)));
+    return c.length ? `⚠ ชนกับ ${c.map(x => `${esc(st(x.who)?.name)} ${x.time}`).join(', ')}` : isHolD(q.date) ? '☂ วันหยุด · ไม่นับเงิน' : ''; };
+  const paint = () => { box.innerHTML = `<span class="qa-ar"></span>
+    <div class="qa-h"><i class="${colorOf(who)}"></i><b>${esc(p.name)}</b><span>${dLabel(iso)}</span><button class="qa-x" data-q="x" aria-label="ปิด">✕</button></div>
+    <div class="qa-t"><button data-tm="-15" aria-label="ถอย 15 นาที">−</button><input id="qa-time" inputmode="numeric" maxlength="5" value="${q.time}" onfocus="this.select()" aria-label="เวลาเริ่ม"><button data-tm="15" aria-label="เลื่อน 15 นาที">+</button></div>
+    <div class="qa-c">${quick.map(t => `<button class="${t === q.time ? 'on' : ''}${usual.includes(t) ? ' usual' : ''}" data-t="${t}">${t}</button>`).join('')}</div>
+    <div class="qa-l">${[1, 1.5, 2, 2.5, 3].map(h => `<button class="${h === q.h ? 'on' : ''}" data-h="${h}">${h}<small>ชม.</small></button>`).join('')}</div>
+    <div class="qa-r">${[[0, 'ครั้งเดียว'], [3, '4 สัปดาห์'], [7, '8 สัปดาห์']].map(([v, t]) => `<button class="${q.rep === v ? 'on' : ''}" data-rep="${v}">${t}</button>`).join('')}</div>
+    <input class="qa-n" id="qa-note" value="${esc(q.note)}" placeholder="โน้ต (ไม่ใส่ก็ได้)">
+    ${warn() ? `<div class="qa-w">${warn()}</div>` : ''}
+    <div class="qa-f"><span>${q.time}–${endOf(q)} · <b>${cash(amt(q))}</b>${q.rep ? ` × ${q.rep + 1}` : ''}</span><button class="go sm" data-q="add">เพิ่มคาบ</button></div>`;
+    $('#qa-time').onchange = e => tIn(e.target, v => { q.time = v; paint(); });
+    $('#qa-note').oninput = e => q.note = e.target.value; place(); };
+  // sits right over the day it was dropped on (above it when there's no room below), kept on screen
+  const place = () => { const r = cell.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight, m = 10;
+    let x = r.left + r.width / 2 - bw / 2, y = r.bottom + 10, up = false;
+    if (y + bh > innerHeight - m){ y = r.top - bh - 10; up = true; } if (y < m) y = m;
+    x = Math.max(m, Math.min(x, innerWidth - bw - m));
+    box.style.left = x + 'px'; box.style.top = y + 'px'; box.classList.toggle('up', up);
+    box.querySelector('.qa-ar').style.left = Math.max(16, Math.min(bw - 16, r.left + r.width / 2 - x)) + 'px'; };
+  const close = () => { box.classList.add('out'); cell.classList.remove('qaon'); setTimeout(() => box.remove(), 180); removeEventListener('pointerdown', outside, true); removeEventListener('keydown', esc_, true); };
+  const outside = e => { if (!box.contains(e.target)) close(); };
+  const esc_ = e => { if (e.key === 'Escape'){ e.stopPropagation(); close(); } if (e.key === 'Enter' && e.target.id !== 'qa-time'){ e.preventDefault(); box.querySelector('[data-q="add"]').click(); } };
+  box.onclick = e => { const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
+    if (d.q === 'x') return close();
+    if (d.q === 'add'){
+      snap(); const series = q.rep ? uid() : null, ids = [];
+      for (let k = 0; k <= q.rep; k++){ const day = shift(q.date, 7 * k), past = new Date(`${day}T${q.time}:00`) <= NOW, id = uid(); ids.push(id);
+        DB.sessions.push({id, who, date: day, time: q.time, h: q.h, rate: q.rate, status: past ? 'done' : 'plan', paid: false, note: q.note.trim(), series}); }
+      save(); close(); renderAll(); SFX.play('save'); ids.forEach(land);
+      return toast(q.rep ? `เพิ่ม ${q.rep + 1} คาบ · ${p.name} ทุกวัน${TH_DF[w]}` : `เพิ่มคาบ ${p.name} ${dLabel(q.date)} ${q.time}`, true); }
+    if (d.tm) q.time = addMin(q.time, +d.tm); else if (d.t) q.time = d.t; else if (d.h) q.h = +d.h; else if (d.rep !== undefined) q.rep = +d.rep; else return;
+    paint(); };
+  cell.classList.add('qaon'); paint(); later(() => box.classList.add('on'));
+  setTimeout(() => { addEventListener('pointerdown', outside, true); addEventListener('keydown', esc_, true); }, 0);
+  setTimeout(() => box.querySelector('[data-q="add"]')?.focus(), 60);
+}
+{
+  let T = null, ghost = null, over = null;
+  const K = reduced ? 1 : .3;
+  const lit = el => { if (over === el) return; over?.classList.remove('mvover'); over = el; el?.classList.add('mvover'); ghost?.classList.toggle('near', !!el); if (el){ navigator.vibrate?.(4); SFX.play('key'); } };
+  const cellAt = (x, y) => document.elementFromPoint(x, y)?.closest('#mcal [data-drop]');
+  const loop = () => { if (!T?.on || !ghost) return; T.gx += (T.x + 14 - T.gx) * K; T.gy += (T.y - 46 - T.gy) * K; ghost.style.translate = `${T.gx}px ${T.gy}px`; T.raf = requestAnimationFrame(loop); };
+  addEventListener('pointerdown', e => { const c = e.target.closest?.('.trc'); if (!c || e.button !== 0) return;
+    e.preventDefault(); T = {who: c.dataset.who, el: c, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, id: e.pointerId, on: false}; });
+  addEventListener('pointermove', e => { if (!T || e.pointerId !== T.id) return; T.x = e.clientX; T.y = e.clientY;
+    if (!T.on){ if (Math.hypot(T.x - T.x0, T.y - T.y0) < 5) return;
+      T.on = true; MV.on = true; T.el.classList.add('trsrc'); SFX.play('select'); navigator.vibrate?.(10);
+      const r = T.el.getBoundingClientRect(); T.gx = r.left; T.gy = r.top;
+      ghost = document.createElement('div'); ghost.id = 'mvghost'; ghost.innerHTML = `<i class="${colorOf(T.who)}"></i><b>${esc(st(T.who)?.name ?? '?')}</b><small>วางบนวันที่จะเพิ่มคาบ</small>`;
+      ghost.style.translate = `${T.gx}px ${T.gy}px`; document.body.append(ghost); later(() => ghost?.classList.add('on')); loop(); }
+    lit(cellAt(T.x, T.y)); });
+  const end = e => { if (!T || e.pointerId !== T.id) return; const t = T, cell = t.on ? cellAt(e.clientX, e.clientY) : null;
+    cancelAnimationFrame(t.raf); t.el.classList.remove('trsrc'); lit(null); T = null;
+    const g = ghost; ghost = null;
+    if (g){ if (cell && !reduced){ const r = cell.getBoundingClientRect(), gr = g.getBoundingClientRect(); g.classList.add('into'); g.style.translate = `${r.left + r.width / 2 - gr.width / 2}px ${r.top + r.height / 2 - gr.height / 2}px`; setTimeout(() => g.remove(), 260); }
+      else if (!reduced){ g.classList.add('home'); g.style.translate = `${t.el.getBoundingClientRect().left}px ${t.el.getBoundingClientRect().top}px`; setTimeout(() => g.remove(), 360); } else g.remove(); }
+    setTimeout(() => MV.on = false, 0);
+    if (t.on){ const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 80); }
+    if (cell) setTimeout(() => quickAdd(t.who, cell.dataset.drop, cell), reduced ? 0 : 200);
+    else if (!t.on && e.type === 'pointerup') toast('ลากชื่อไปวางบนวันในปฏิทิน');
+    else if (t.on) SFX.play('off'); };
+  addEventListener('pointerup', end); addEventListener('pointercancel', end);
+}
+
 /* ---------- session composer: one ticket bar, one picker at a time ---------- */
 let edit = null;
 function stripFrom(iso, who = edit?.who){
@@ -2611,6 +2721,7 @@ function presetSlot(){
 function addFlow(date){
   const STEPS = ['ใคร', 'วันไหน', 'กี่โมง', 'สรุป'];
   edit = {id: null, who: null, date: date || isoD(NOW), time: '18:00', h: 1, rate: DB.rates.solo, status: 'plan', paid: false, note: '', rep: 0, tset: false, step: 0, fixedDate: !!date};
+  const syncMonth = () => { const d = new Date(edit.date + 'T00:00'); edit.cy = d.getFullYear(); edit.cm = d.getMonth(); }; syncMonth();
   const slotTxt = p => (p.slots || []).map(([w, t, h]) => `${TH_D[w]}. ${t}`).join(' · ');
   // the next date a student's usual slot falls on (from today, or the date you opened the window on)
   const nextUsual = p => { if (!p.slots?.length) return null; for (let k = 0; k < 14; k++){ const d = shift(isoD(NOW), k), w = new Date(d + 'T00:00').getDay();
@@ -2619,12 +2730,14 @@ function addFlow(date){
   const pane = k => {
     const p = st(edit.who);
     if (k === 0) return `<div class="aw-q">ใครเรียน?</div><div class="aw-stu">${DB.students.map((x, i) => `<button class="aw-st ${edit.who === x.id ? 'on' : ''}" data-w="${x.id}" style="--i:${i}"><i class="${colorOf(x.id)}"></i><b>${esc(x.name)}</b><small>${x.slots?.length ? slotTxt(x) : 'ไม่มีเวลาประจำ'}</small></button>`).join('')}</div>`;
-    if (k === 1){ const t0 = isoD(NOW), base = new Date(edit.date < t0 ? edit.date : t0); base.setDate(base.getDate() - (base.getDay() + 6) % 7); let g = '';
-      for (let i = 0; i < 28; i++){ const d = new Date(base); d.setDate(d.getDate() + i); const iso = isoD(d), w = d.getDay(), usual = (p?.slots || []).some(x => +x[0] === w);
-        g += `<button class="aw-d${iso === edit.date ? ' on' : ''}${iso < t0 ? ' past' : ''}${iso === t0 ? ' today' : ''}${isHolD(iso) ? ' hol' : ''}${usual ? ' usual' : ''}" data-d="${iso}" style="--i:${i}">
-          <span>${TH_D[w]}</span><b>${d.getDate()}</b>${d.getDate() === 1 || i === 0 ? `<em>${TH_M[d.getMonth()]}</em>` : ''}${usual ? `<i class="${colorOf(edit.who)}"></i>` : ''}${has(edit.who, iso) ? '<small>มีคาบแล้ว</small>' : isHolD(iso) ? '<small>วันหยุด</small>' : ''}</button>`; }
-      return `<div class="aw-q">วันไหน?${p?.slots?.length ? `<span>จุดสี = วันเรียนประจำของ${esc(p.name)}</span>` : ''}</div><div class="aw-wk">${['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'].map(x => `<span>${x}</span>`).join('')}</div><div class="aw-cal">${g}</div>
-        <label class="aw-other">📅 วันอื่น<input type="date" id="aw-date" value="${edit.date}"></label>`; }
+    if (k === 1){ const t0 = isoD(NOW), y = edit.cy, mo = edit.cm, first = new Date(y, mo, 1), base = new Date(first); base.setDate(1 - (first.getDay() + 6) % 7);
+      const weeks = Math.ceil(((first.getDay() + 6) % 7 + new Date(y, mo + 1, 0).getDate()) / 7); let g = '';
+      for (let i = 0; i < weeks * 7; i++){ const d = new Date(base); d.setDate(base.getDate() + i); const iso = isoD(d), w = d.getDay(), usual = (p?.slots || []).some(x => +x[0] === w), out = d.getMonth() !== mo;
+        g += `<button class="aw-d${iso === edit.date ? ' on' : ''}${iso < t0 ? ' past' : ''}${iso === t0 ? ' today' : ''}${isHolD(iso) ? ' hol' : ''}${usual ? ' usual' : ''}${out ? ' out' : ''}" data-d="${iso}" style="--i:${i}">
+          <b>${d.getDate()}</b>${usual ? `<i class="${colorOf(edit.who)}"></i>` : ''}${has(edit.who, iso) ? '<small>มีคาบแล้ว</small>' : isHolD(iso) ? '<small>วันหยุด</small>' : ''}</button>`; }
+      return `<div class="aw-q">วันไหน?${p?.slots?.length ? `<span>จุดสี = วันเรียนประจำของ${esc(p.name)}</span>` : ''}</div>
+        <div class="aw-mh"><button data-mv="-1" aria-label="เดือนก่อน">◀</button><b>${TH_MF[mo]} ${y + 543}</b><button data-mv="1" aria-label="เดือนถัดไป">▶</button>${y * 12 + mo !== NOW.getFullYear() * 12 + NOW.getMonth() ? '<button class="aw-tdy" data-mv="0">เดือนนี้</button>' : ''}</div>
+        <div class="aw-wk">${['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'].map(x => `<span>${x}</span>`).join('')}</div><div class="aw-cal">${g}</div>`; }
     if (k === 2){ const usual = [...new Set((p?.slots || []).map(x => x[1]))], quick = [...new Set([...usual, '16:00', '17:00', '18:00', '19:00', '20:00'])].sort();
       return `<div class="aw-q">กี่โมง · นานเท่าไหร่?</div>
         <div class="aw-time"><button data-tm="-15" aria-label="ถอย 15 นาที">−</button><input id="aw-t" inputmode="numeric" maxlength="5" value="${edit.time}" onfocus="this.select()" aria-label="เวลาเริ่ม"><button data-tm="15" aria-label="เลื่อน 15 นาที">+</button></div>
@@ -2655,7 +2768,6 @@ function addFlow(date){
   const go = (k, dir) => { edit.step = k; const pn = $('#aw-pane');
     if (dir && !reduced){ pn.classList.remove('in-l', 'in-r'); void pn.offsetWidth; pn.classList.add(dir > 0 ? 'in-r' : 'in-l'); }
     pn.innerHTML = pane(k); head(); end();
-    const di = $('#aw-date'); if (di) di.onchange = e => { if (e.target.value){ edit.date = e.target.value; presetSlot(); go(2, 1); } };
     const ti = $('#aw-t'); if (ti) ti.onchange = () => tIn(ti, v => { edit.time = v; edit.tset = true; go(2); });
     const ni = $('#enote'); if (ni){ ni.oninput = e => edit.note = e.target.value; }
   };
@@ -2663,7 +2775,9 @@ function addFlow(date){
     const b = e.target.closest('button'); if (!b || b.disabled) return; const d = b.dataset;
     if (d.step !== undefined){ const k = +d.step; if (k !== edit.step) go(k, k > edit.step ? 1 : -1); }
     else if (d.w){ edit.who = d.w; const p = st(d.w); edit.rate = p.rate || DB.rates.solo; edit.tset = false;
-      if (!edit.fixedDate){ const nu = nextUsual(p); if (nu) edit.date = nu; } presetSlot(); SFX.play('select'); go(1, 1); }
+      if (!edit.fixedDate){ const nu = nextUsual(p); if (nu) edit.date = nu; } syncMonth(); presetSlot(); SFX.play('select'); go(1, 1); }
+    else if (d.mv !== undefined){ const v = +d.mv; if (v){ edit.cm += v; if (edit.cm < 0){ edit.cm = 11; edit.cy--; } if (edit.cm > 11){ edit.cm = 0; edit.cy++; } } else { edit.cy = NOW.getFullYear(); edit.cm = NOW.getMonth(); }
+      const pn = $('#aw-pane'); pn.innerHTML = pane(1); if (!reduced){ const c = pn.querySelector('.aw-cal'); c.classList.add(v < 0 ? 'in-l' : 'in-r'); } SFX.play('key'); }
     else if (d.d){ edit.date = d.d; presetSlot(); SFX.play('select'); go(2, 1); }
     else if (d.tm){ edit.time = addMin(edit.time, +d.tm); edit.tset = true; go(2); }
     else if (d.t){ edit.time = d.t; edit.tset = true; go(2); }
@@ -2807,6 +2921,7 @@ $('#ctoday').onclick = () => { cy = NOW.getFullYear(); cm = NOW.getMonth(); cday
 function renderCal(anim){
   const M = monthMoney(cy, cm), hols = (DB.holidays[mkey(cy,cm)] || []).length;
   $('#cmn').textContent = TH_MF[cm]; $('#cyr').textContent = cy + 543;
+  $('#ctray').innerHTML = DB.students.length ? `<span class="ctl">ลากชื่อไปวางบนวัน<br>เพื่อเพิ่มคาบ</span><div class="ctr">${DB.students.map(p => `<span class="trc" data-who="${p.id}" title="ลาก ${esc(p.name)} ไปวางบนวันที่จะเพิ่มคาบ"><i class="${colorOf(p.id)}"></i>${esc(p.name)}</span>`).join('')}</div>` : '';
   $('#cfig').innerHTML = `<div><b>${M.n}</b><span>คาบ</span></div><div><b>${cash(M.earned)}</b><span>ได้แล้ว</span></div><div><b>${cash(M.forecast)}</b><span>คาดทั้งเดือน</span></div><div><b>${hols}</b><span>วันหยุด</span></div>`;
   const days = new Date(cy, cm+1, 0).getDate(), off = new Date(cy, cm, 1).getDay(), ses = monthSessions(cy, cm), prevDays = new Date(cy, cm, 0).getDate();
   let h = TH_D.map((d,i) => `<div class="h${i===0||i===6?' we':''}">${d}</div>`).join(''), i = 0;
