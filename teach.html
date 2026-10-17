@@ -1204,6 +1204,28 @@ input.tin.scrub,#aw-t.scrub{background:color-mix(in srgb,var(--yel) 45%,transpar
 .hl-pre{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
 .hl-pre button{padding:3px 9px;border:1.5px solid var(--grid);border-radius:999px;background:none;color:var(--mut);font:700 .74rem inherit;cursor:pointer;transition:all .15s}.hl-pre button:hover{border-color:var(--ink);color:var(--ink)}
 .hl-f{display:flex;align-items:center;gap:10px;margin-top:12px}.hl-f .go{margin-left:auto}
+/* holiday types: --hc = colour, --hp = its pattern */
+.ht-exam{--hc:#9fb0e8;--hp:repeating-linear-gradient(0deg,transparent 0 9px,color-mix(in srgb,#5b6fd6 35%,transparent) 9px 10px)}
+.ht-home{--hc:#8fd3b0;--hp:radial-gradient(circle,color-mix(in srgb,#2e7d57 40%,transparent) 1.5px,transparent 2px) 0 0/10px 10px}
+.ht-trip{--hc:#7cc4ec;--hp:repeating-linear-gradient(135deg,transparent 0 6px,color-mix(in srgb,#fff 55%,transparent) 6px 9px)}
+.ht-sick{--hc:#ef8fb3;--hp:linear-gradient(90deg,transparent 45%,color-mix(in srgb,#fff 60%,transparent) 45% 55%,transparent 55%) 50% 50%/12px 12px,linear-gradient(0deg,transparent 45%,color-mix(in srgb,#fff 60%,transparent) 45% 55%,transparent 55%) 50% 50%/12px 12px}
+.ht-errand{--hc:#f2a33a;--hp:repeating-linear-gradient(45deg,transparent 0 5px,color-mix(in srgb,#141414 12%,transparent) 5px 6px)}
+.ht-off{--hc:#f3b7a8;--hp:repeating-linear-gradient(45deg,transparent 0 7px,color-mix(in srgb,var(--red) 22%,transparent) 7px 9px)}
+/* calendar view cells */
+.mc.hol[class*="ht-"]{background:var(--hp),color-mix(in srgb,var(--hc) 38%,var(--card))}
+.mc.hol[class*="ht-"] .n{color:#141414}
+.mc.hol .hltag{display:block;width:max-content;max-width:100%;margin:0 0 2px;padding:1px 5px;background:var(--hc);color:#141414;border:1.5px solid var(--ink);font:800 .58rem/1.3 "Anuphan",sans-serif;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* calendar view day panel header */
+.agenda .ah.hol[class*="ht-"]{background:var(--hp),var(--hc);color:#141414}
+.agenda .ah.hol[class*="ht-"] .big{-webkit-text-stroke-color:rgba(20,20,20,.18)}
+.agenda .ah .ahic{position:absolute;right:16px;bottom:10px;font-size:3.6rem;line-height:1;opacity:.9;filter:drop-shadow(3px 3px 0 rgba(20,20,20,.25));animation:ahic .6s var(--sp) both}
+@keyframes ahic{from{opacity:0;scale:.5;rotate:-20deg}}
+.agenda .ah .ahlab{display:inline-block;margin-right:6px;padding:1px 8px;background:var(--card);color:#141414;border:2px solid var(--ink);font-family:"Anuphan",sans-serif;font-weight:800}
+/* main holiday calendar + day cards + chips */
+.holwrap .day.holiday[class*="ht-"]{background:var(--hc);color:#141414}
+.dc.hol .dch .htag[class*="ht-"]{background:var(--hc);color:#141414;border-color:var(--ink)}
+.hlabs em[class*="ht-"]{padding:1px 7px;background:color-mix(in srgb,var(--hc) 55%,transparent);color:#141414;border:1.5px solid var(--ink)}
+.hl-pre button[class*="ht-"]{border-color:var(--hc);color:var(--ink)}.hl-pre button[class*="ht-"]:hover{background:color-mix(in srgb,var(--hc) 40%,transparent)}
 .mbrc{margin-top:22px}
 .mbrh{margin-bottom:10px}
 .mbr{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);background:var(--card)}
@@ -1626,6 +1648,9 @@ const colorOf = id => colorClass(st(id)?.color ?? 0);
 const mkey = (y,m) => `${y}-${m}`;
 const atOf = s => new Date(`${s.date}T${s.time}:00`);
 const holLab = date => isHolD(date) ? (DB.holidayNotes || {})[date] || '' : '';
+// each kind of holiday has its own colour + icon, picked from the name (no name = plain วันหยุด)
+const HOLT = {exam: ['📝', 'สอบ'], home: ['🏠', 'กลับบ้าน'], trip: ['✈️', 'ไปเที่ยว'], sick: ['🤒', 'ป่วย'], errand: ['💼', 'ติดธุระ'], off: ['☂', 'วันหยุด']};
+const holType = date => { const t = holLab(date); return /สอบ|ควิซ|มิดเทอม|ไฟนอล/.test(t) ? 'exam' : /บ้าน/.test(t) ? 'home' : /เที่ยว|ทริป|ทะเล|ภูเขา/.test(t) ? 'trip' : /ป่วย|หมอ|ไม่สบาย/.test(t) ? 'sick' : /ธุระ|งาน|ประชุม/.test(t) ? 'errand' : 'off'; };
 const isHolD = date => { const [y,m,d] = date.split('-').map(Number); return (DB.holidays[mkey(y,m-1)] || []).includes(d); };
 const amt = s => s.rate * s.h;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2242,14 +2267,14 @@ function renderHolCal(){
   const today0 = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
   for (let d = 1; d <= days; d++){
     const date = new Date(y, m, d), iso = isoD(date);
-    h += `<button class="day${date < today0?' past':''}${iso === isoD(NOW)?' today':''}${ses.some(s => s.date === iso)?' has':''}${list.includes(d)?' holiday':''}${holLab(iso)?' lab':''}" aria-pressed="${list.includes(d)}" data-d="${d}"${holLab(iso) ? ` title="${esc(holLab(iso))}"` : ''}>${d}</button>`;
+    h += `<button class="day${date < today0?' past':''}${iso === isoD(NOW)?' today':''}${ses.some(s => s.date === iso)?' has':''}${list.includes(d)?` holiday ht-${holType(iso)}`:''}${holLab(iso)?' lab':''}" aria-pressed="${list.includes(d)}" data-d="${d}"${holLab(iso) ? ` title="${esc(holLab(iso))}"` : ''}>${d}</button>`;
   }
   $('#calendar').innerHTML = h;
   $('#calendar').onclick = null;   // taps and sweeps both go through the sweep below
   holSweep.ym = [y, m];
   const left = monthSessions(y,m).filter(s => s.status === 'plan' && counts(s) && atOf(s) > NOW).length;
-  const labs = list.slice().sort((a, b) => a - b).map(d => [d, holLab(`${y}-${pad(m+1)}-${pad(d)}`)]).filter(x => x[1]);
-  $('#cnote').innerHTML = `หยุด ${list.length} วัน · เหลือสอน ${left} คาบ${labs.length ? `<span class="hlabs">${labs.map(([d, t]) => `<em>${d} ${esc(t)}</em>`).join('')}</span>` : ''}<small>แตะ / ลากผ่านหลายวันเพื่อสลับ · กดค้างเพื่อตั้งชื่อ</small>`;
+  const labs = list.slice().sort((a, b) => a - b).map(d => { const iso = `${y}-${pad(m+1)}-${pad(d)}`; return [d, holLab(iso), holType(iso)]; }).filter(x => x[1]);
+  $('#cnote').innerHTML = `หยุด ${list.length} วัน · เหลือสอน ${left} คาบ${labs.length ? `<span class="hlabs">${labs.map(([d, t, ty]) => `<em class="ht-${ty}">${HOLT[ty][0]} ${d} ${esc(t)}</em>`).join('')}</span>` : ''}<small>แตะ / ลากผ่านหลายวันเพื่อสลับ · กดค้างเพื่อตั้งชื่อ</small>`;
 }
 
 // sweep holidays: press a day and drag across others — every day you pass takes the first day's new state
@@ -2284,7 +2309,7 @@ function holLabel(btn){
   const box = document.createElement('div'); box.id = 'hlab'; document.body.append(box);
   box.innerHTML = `<span class="qa-ar"></span><div class="hl-h"><b>${dLabel(iso)}</b><span>ชื่อวันหยุด</span></div>
     <input id="hl-in" maxlength="24" value="${esc(cur)}" placeholder="เช่น สอบไฟนอล" autocomplete="off">
-    <div class="hl-pre">${['สอบ', 'สอบไฟนอล', 'กลับบ้าน', 'ไปเที่ยว', 'ป่วย', 'ติดธุระ'].map(t => `<button data-t="${t}">${t}</button>`).join('')}</div>
+    <div class="hl-pre">${[['สอบ', 'exam'], ['สอบไฟนอล', 'exam'], ['กลับบ้าน', 'home'], ['ไปเที่ยว', 'trip'], ['ป่วย', 'sick'], ['ติดธุระ', 'errand']].map(([t, ty]) => `<button class="ht-${ty}" data-t="${t}">${HOLT[ty][0]} ${t}</button>`).join('')}</div>
     <div class="hl-f">${cur ? '<button class="qa-lk" data-k="clear">ลบชื่อ</button>' : ''}<span class="sp"></span><button class="go sm" data-k="ok">บันทึก</button></div>`;
   const r = btn.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight; let x = Math.max(10, Math.min(r.left + r.width / 2 - bw / 2, innerWidth - bw - 10)), y0 = r.bottom + 10, up = false;
   if (y0 + bh > innerHeight - 10){ y0 = r.top - bh - 10; up = true; } box.style.left = x + 'px'; box.style.top = Math.max(10, y0) + 'px'; box.classList.toggle('up', up);
@@ -2442,7 +2467,7 @@ function sCard(s){
 function dayCard(date, items, i = 0){
   const hol = isHolD(date), x = new Date(date+'T00:00'), sum = items.filter(counts).reduce((a,s)=>a+amt(s),0), rel = relOnly(date);
   return `<section class="dc ${date===isoD(NOW)?'today':''} ${hol?'hol':''}" style="--i:${i}" data-drop="${date}">
-    <header class="dch"><b>${x.getDate()}</b><span class="dw">${TH_DF[x.getDay()]}<small>${TH_MF[x.getMonth()]}${rel ? ' · '+rel : ''}</small></span>${hol ? `<span class="htag">${esc(holLab(date) || 'วันหยุด')}</span>` : ''}<span class="sp"></span><span class="dsum">${items.length} คาบ · ${cash(sum)}</span><button class="dadd" title="เพิ่มคาบวันนี้" onclick="editSession(null,'${date}')">＋</button></header>
+    <header class="dch"><b>${x.getDate()}</b><span class="dw">${TH_DF[x.getDay()]}<small>${TH_MF[x.getMonth()]}${rel ? ' · '+rel : ''}</small></span>${hol ? `<span class="htag ht-${holType(date)}">${HOLT[holType(date)][0]} ${esc(holLab(date) || 'วันหยุด')}</span>` : ''}<span class="sp"></span><span class="dsum">${items.length} คาบ · ${cash(sum)}</span><button class="dadd" title="เพิ่มคาบวันนี้" onclick="editSession(null,'${date}')">＋</button></header>
     ${items.map(s => rw(s)).join('')}</section>`;
 }
 function rw(s, pv){
@@ -3187,7 +3212,8 @@ function renderCal(anim){
     const iso = `${cy}-${pad(cm+1)}-${pad(d)}`;
     const items = [...DB.deadlines.filter(x => x.d === iso).map(x => `<span class="ev dl">⚑ ${esc(x.t)}</span>`),
       ...sorted(ses.filter(s => s.date === iso)).map(e => `<span data-sid="${e.id}" class="ev ${colorOf(e.who)} ${counts(e)?'':'x'} ${clashWith(e).length?'clash':''}" title="${e.time}${clashWith(e).length ? ' · ⚠ ชน' : ''}"><em>${e.time}</em>${esc(st(e.who)?.name)}</span>`)];
-    h += `<button class="mc${iso===isoD(NOW)?' today':''}${isHolD(iso)?' hol':''}${iso===cday?' sel':''}" style="--i:${i++}" data-iso="${iso}" data-drop="${iso}"><span class="n">${d}${holLab(iso) ? `<em class="hltag">${esc(holLab(iso))}</em>` : ''}</span><span class="evs">${items.slice(0,2).join('')}${items.length > 2 ? `<span class="more">+${items.length-2} อีก</span>` : ''}</span></button>`;
+    const ht = isHolD(iso) ? holType(iso) : '';
+    h += `<button class="mc${iso===isoD(NOW)?' today':''}${ht?` hol ht-${ht}`:''}${iso===cday?' sel':''}" style="--i:${i++}" data-iso="${iso}" data-drop="${iso}"><span class="n">${d}</span>${ht ? `<em class="hltag">${HOLT[ht][0]} ${esc(holLab(iso) || HOLT[ht][1])}</em>` : ''}<span class="evs">${items.slice(0,2).join('')}${items.length > 2 ? `<span class="more">+${items.length-2} อีก</span>` : ''}</span></button>`;
   }
   const tail = (7 - (off + days) % 7) % 7; for (let k = 1; k <= tail; k++) h += `<div class="mc out" style="--i:${i++}"><span class="n">${k}</span></div>`;
   $('#mcal').classList.toggle('still', !anim);
@@ -3199,7 +3225,8 @@ function renderDay(){
   qsa('#mcal .mc[data-iso]').forEach(b => b.classList.toggle('sel', b.dataset.iso === cday));
   const x = new Date(cday+'T00:00'), hol = isHolD(cday), dayS = sorted(DB.sessions.filter(s => s.date === cday)), dl = DB.deadlines.filter(d => d.d === cday);
   const sum = dayS.filter(counts).reduce((a,s)=>a+amt(s),0);
-  $('#daypane').innerHTML = `<div class="ah ${cday===isoD(NOW)?'today':''} ${hol?'hol':''}"><span class="big">${x.getDate()}</span><h3>${TH_DF[x.getDay()]}</h3><p>${x.getDate()} ${TH_MF[x.getMonth()]} ${x.getFullYear()+543}${relOnly(cday) ? ' · '+relOnly(cday) : ''}</p><p class="ahs">${hol?`☂ ${esc(holLab(cday) || 'วันหยุด')} · `:''}${dayS.length ? `${dayS.length} คาบ · ${cash(sum)}` : 'ไม่มีคาบ'}</p></div>
+  const dht = hol ? holType(cday) : '';
+  $('#daypane').innerHTML = `<div class="ah ${cday===isoD(NOW)?'today':''} ${hol?`hol ht-${dht}`:''}">${hol ? `<span class="ahic">${HOLT[dht][0]}</span>` : ''}<span class="big">${x.getDate()}</span><h3>${TH_DF[x.getDay()]}</h3><p>${x.getDate()} ${TH_MF[x.getMonth()]} ${x.getFullYear()+543}${relOnly(cday) ? ' · '+relOnly(cday) : ''}</p><p class="ahs">${hol?`<span class="ahlab">${HOLT[dht][0]} ${esc(holLab(cday) || 'วันหยุด')}</span>`:''}${dayS.length ? `${dayS.length} คาบ · ${cash(sum)}` : 'ไม่มีคาบ'}</p></div>
     <div class="ab">${dl.map(d => `<div class="dlr">⚑ ${esc(d.t)}</div>`).join('')}${dayS.map(s => rw(s)).join('') || (dl.length ? '' : '<div class="free">ว่างทั้งวัน<small>พักได้ หรือเปิดรับน้องเพิ่ม</small></div>')}</div>
     <div class="acts"><button class="go sm" onclick="editSession(null,'${cday}')">＋ คาบวันนี้</button><button class="chip" onclick="toggleHol('${cday}')">${hol ? '↺ ยกเลิกวันหยุด' : '☂ ตั้งเป็นวันหยุด'}</button></div>`;
 }
