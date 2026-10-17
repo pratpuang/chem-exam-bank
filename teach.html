@@ -363,6 +363,7 @@ button.mc:hover{background:#fbf3dc}
 .segbar{display:grid;grid-template-columns:repeat(14,1fr);gap:3px;margin-top:10px}
 .segbar button{height:34px;border:2px solid var(--ink);background:var(--card);padding:0;font:800 .62rem "JetBrains Mono";color:var(--mut);transition:transform .12s}
 .segbar button:hover{transform:translateY(-3px)}
+.segbar button{touch-action:none}.segbar button.swp{outline:2px solid var(--yel);outline-offset:1px;z-index:1}
 .segbar .d{background:var(--blue);color:#fff}
 .segbar .n{background:var(--yel);color:var(--ink);transform:translateY(-4px);box-shadow:0 4px 0 var(--ink)}
 .segbar .s{background:repeating-linear-gradient(45deg,var(--card) 0 4px,#e1d9c8 4px 8px);border-style:dashed}
@@ -616,6 +617,17 @@ button.fg:hover{background:#fbf3dc}
 .nb .meta{color:var(--mut);font-size:.88rem;font-weight:600;margin-top:4px}
 .nb .ch{margin-top:10px;font-weight:800;font-size:.95rem}
 .nb .rem{margin-top:6px;font-size:.82rem;color:var(--mut);font-weight:700}
+.nb .nbdot{display:inline-block;width:9px;height:9px;margin-right:7px;border-radius:50%;background:var(--red);vertical-align:1px;animation:nbpulse 1.6s ease-in-out infinite}
+@keyframes nbpulse{50%{box-shadow:0 0 0 6px color-mix(in srgb,var(--red) 25%,transparent)}}
+.nb.live .eb{color:var(--red)}
+.nbl{display:flex;flex-direction:column;gap:6px;margin-top:12px;min-width:200px}
+.nbb{display:block;height:10px;border:2px solid var(--ink);background:var(--paper);overflow:hidden}
+.nbb i{display:block;height:100%;background:var(--red);transition:width 1s var(--ez)}
+.nbm{font:700 .8rem "JetBrains Mono";color:var(--mut)}.nbm b{color:var(--ink);font-size:1.05em}
+.nb.ended .eb{color:var(--ink)}
+.nbok{align-self:flex-start;display:inline-flex;align-items:baseline;gap:8px;padding:9px 16px;border:3px solid var(--ink);background:var(--ink);color:var(--paper);font:800 1rem inherit;box-shadow:4px 4px 0 var(--red);cursor:pointer;transition:translate .15s var(--ez),box-shadow .15s var(--ez)}
+.nbok small{font-size:.72rem;font-weight:700;opacity:.75}.nbok:hover{translate:-2px -2px;box-shadow:6px 6px 0 var(--red)}
+.stamp.live{background:var(--card);color:var(--red);border-color:var(--red)}
 .nb .go-y{position:relative;background:var(--yel);color:var(--ink);border:3px solid var(--ink);font-weight:800;padding:11px 18px;box-shadow:4px 4px 0 var(--sh);transition:transform .1s,box-shadow .1s}
 .nb .go-y:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--sh)}
 @media (max-width:700px){.nb{grid-template-columns:1fr;gap:12px}.nb .tm{font-size:3.2rem}}
@@ -1155,6 +1167,8 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .aw-peek{display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:700;color:var(--mut);margin-right:12px}.aw-peek i{width:10px;height:10px;border:2px solid var(--ink)}
 #aw-next:disabled{opacity:.4;cursor:default}
 @media (max-width:560px){.aw-steps button{flex-direction:column;gap:4px;font-size:.72rem;text-align:center;padding:4px 2px}.aw-stu{grid-template-columns:1fr 1fr}.aw-d{min-height:52px}.aw-two{grid-template-columns:1fr}.aw-peek{display:none}.aw-time input{width:120px;font-size:2.1rem}}
+#calendar .day{touch-action:none;-webkit-user-select:none;user-select:none;transition:background .15s,color .15s,scale .25s var(--sp)}
+#calendar .day.swept{scale:1.08;z-index:1}
 .mbrc{margin-top:22px}
 .mbrh{margin-bottom:10px}
 .mbr{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);background:var(--card)}
@@ -1575,7 +1589,10 @@ const relDay = date => { const a = new Date(date+'T00:00'), b = new Date(NOW.get
 const sorted = list => [...list].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
 // counts toward money unless cancelled; a planned one on a holiday drops out of the forecast
 const counts = s => s.status !== 'cancel' && !(s.status === 'plan' && isHolD(s.date));
-const needsConfirm = s => s.status === 'plan' && atOf(s) <= NOW;
+// a class asks "สอนแล้ว?" only once it has ENDED; while it's running it reads as live
+const endTime = s => new Date(atOf(s).getTime() + (+s.h || 1) * 36e5);
+const needsConfirm = s => s.status === 'plan' && endTime(s) <= NOW;
+const isLive = s => s.status === 'plan' && counts(s) && atOf(s) <= NOW && endTime(s) > NOW;
 let toastT;
 function toast(t, undo){
   const e = $('#toast'); e.innerHTML = ''; e.append(t);
@@ -2174,9 +2191,29 @@ function renderHolCal(){
     h += `<button class="day${date < today0?' past':''}${iso === isoD(NOW)?' today':''}${ses.some(s => s.date === iso)?' has':''}${list.includes(d)?' holiday':''}" aria-pressed="${list.includes(d)}" data-d="${d}">${d}</button>`;
   }
   $('#calendar').innerHTML = h;
-  $('#calendar').onclick = e => { const d = +e.target.dataset.d; if (d) toggleHol(`${y}-${pad(m+1)}-${pad(d)}`); };
+  $('#calendar').onclick = null;   // taps and sweeps both go through the sweep below
+  holSweep.ym = [y, m];
   const left = monthSessions(y,m).filter(s => s.status === 'plan' && counts(s) && atOf(s) > NOW).length;
-  $('#cnote').textContent = `หยุด ${list.length} วัน · เหลือสอน ${left} คาบ · แตะวันที่เพื่อสลับ`;
+  $('#cnote').textContent = `หยุด ${list.length} วัน · เหลือสอน ${left} คาบ · แตะหรือลากผ่านหลายวันเพื่อสลับ`;
+}
+
+// sweep holidays: press a day and drag across others — every day you pass takes the first day's new state
+// (on → all on, off → all off). One save + one toast at the end, with the money it moves.
+var holSweep = {ym: null};
+{
+  let H = null;
+  const dayAt = (x, y) => document.elementFromPoint(x, y)?.closest('#calendar .day');
+  const paint = b => { if (!H || H.seen.has(b.dataset.d)) return; H.seen.add(b.dataset.d); b.classList.toggle('holiday', H.on); b.classList.add('swept'); SFX.play(H.on ? 'on' : 'off'); navigator.vibrate?.(4); };
+  addEventListener('pointerdown', e => { const b = e.target.closest?.('#calendar .day'); if (!b || e.button !== 0) return; e.preventDefault();
+    H = {on: !b.classList.contains('holiday'), seen: new Set(), id: e.pointerId}; paint(b); });
+  addEventListener('pointermove', e => { if (!H || e.pointerId !== H.id) return; const b = dayAt(e.clientX, e.clientY); if (b) paint(b); });
+  const end = e => { if (!H || e.pointerId !== H.id) return; const h = H; H = null; const [y, m] = holSweep.ym, k = mkey(y, m), list = DB.holidays[k] || (DB.holidays[k] = []);
+    const days = [...h.seen].map(Number).filter(d => h.on !== list.includes(d)); if (!days.length) return renderHolCal();
+    snap(); days.forEach(d => h.on ? list.push(d) : list.splice(list.indexOf(d), 1)); save();
+    const lost = DB.sessions.filter(s => s.status === 'plan' && days.some(d => s.date === `${y}-${pad(m + 1)}-${pad(d)}`)).reduce((a, s) => a + amt(s), 0);
+    toast(`${h.on ? 'ตั้งเป็นวันหยุด' : 'ยกเลิกวันหยุด'} ${days.length > 1 ? `${days.length} วัน` : `${days[0]} ${TH_M[m]}`}${lost ? ` · คาด ${h.on ? '−' : '+'}${cash(lost)}` : ''}`, true);
+    calm = true; try { renderAll(); } finally { calm = false; } };
+  addEventListener('pointerup', end); addEventListener('pointercancel', end);
 }
 
 /* =============================== SCHEDULE =============================== */
@@ -2220,14 +2257,20 @@ function strip(map){ return `<div class="strip">${map.split('').map(c => `<i cla
 function renderSchedule(){
   $('#whof').innerHTML = DB.students.map(s => `<button class="${whoF.has(s.id)?'on':''}" data-w="${s.id}"><i class="${colorOf(s.id)}"></i>${esc(s.name)}</button>`).join('') + (whoF.size ? `<button data-w="*">ล้าง ✕</button>` : '');
   const endAt = s => new Date(atOf(s).getTime() + s.h*36e5);
-  const nx = sorted(DB.sessions.filter(s => s.status==='plan' && counts(s) && endAt(s) > NOW))[0];
+  let nx = sorted(DB.sessions.filter(s => s.status==='plan' && counts(s) && endAt(s) > NOW))[0];
   const live = nx && atOf(nx) <= NOW;
-  const confirmN = DB.sessions.filter(needsConfirm).length;
+  // a class that ended in the last 3 hours and isn't confirmed yet keeps the big card, with the confirm right on it
+  const ended = !live && sorted(DB.sessions.filter(s => s.status === 'plan' && counts(s) && endAt(s) <= NOW && NOW - endAt(s) < 3 * 36e5)).pop();
+  if (ended) nx = ended;
+  const confirmN = DB.sessions.filter(needsConfirm).length - (ended ? 1 : 0);
   let nc = '';
   if (nx){
     const s = st(nx.who), cur = s?.map ? s.map.indexOf('n') : -1, lastCon = s ? [...s.feed].reverse().find(f => f[0]==='con') : null;
-    nc = `<div class="nb"><span class="stripe ${colorOf(nx.who)}"></span><span class="ghost">${esc((s?.name || '?')[0])}</span>
-      <div><div class="eb">${live ? `● กำลังสอนอยู่ · ถึง ${endOf(nx)}` : `คาบถัดไป · ${relDay(nx.date)}`}</div><div class="tm">${nx.time}</div></div>
+    const pct = live ? Math.min(100, (NOW - atOf(nx)) / (endTime(nx) - atOf(nx)) * 100) : 0, left = live ? Math.max(1, Math.ceil((endTime(nx) - NOW) / 6e4)) : 0;
+    nc = `<div class="nb${live ? ' live' : ''}${ended ? ' ended' : ''}"><span class="stripe ${colorOf(nx.who)}"></span><span class="ghost">${esc((s?.name || '?')[0])}</span>
+      <div><div class="eb">${live ? '<i class="nbdot"></i>กำลังสอนอยู่' : ended ? 'จบคาบแล้ว' : `คาบถัดไป · ${relDay(nx.date)}`}</div><div class="tm">${nx.time}</div>
+        ${live ? `<div class="nbl"><span class="nbb"><i style="width:${pct}%"></i></span><span class="nbm">เหลือ <b>${left}</b> นาที · ถึง ${endOf(nx)}</span></div>` : ''}
+        ${ended ? `<div class="nbl"><span class="nbm">${nx.time}–${endOf(nx)} · ${relDay(nx.date)}</span><button class="nbok" onclick="markDone('${nx.id}')">สอนแล้ว ✓ <small>บันทึกคาบ</small></button></div>` : ''}</div>
       <div style="position:relative;min-width:0"><div class="nm"><i class="${colorOf(nx.who)}"></i>${esc(s?.name)}</div>
         <div class="meta">${esc(s?.grade)} · ${esc(s?.mode)} · ${nx.h} ชม. · ${cash(amt(nx))}</div>
         ${cur >= 0 ? `<div class="ch">${chipOf(nx)}${nx.note ? esc(nx.note) : ''}</div>` : (nx.note || s?.goal ? `<div class="ch">${esc(nx.note || s?.goal)}</div>` : '')}
@@ -2336,6 +2379,7 @@ function stampOf(s, pv){
     : `<span class="stamp ${cls}">${t}<small>${sm}</small></span>`;
   if (s.status === 'cancel') return S('cancel', 'ยกเลิก', 'ไม่นับ');
   if (needsConfirm(s)) return S('wait', 'สอนแล้ว?', 'แตะยืนยัน', `markDone('${s.id}')`, 'ยืนยันว่าสอนแล้ว');
+  if (isLive(s)) return S('live', 'กำลังสอน', `เหลือ ${Math.max(1, Math.ceil((endTime(s) - NOW) / 6e4))} นาที`);
   if (hol) return S('cancel', 'วันหยุด', 'ไม่นับ');
   if (s.status === 'plan') return `<span class="amt" title="นัดไว้">${a}</span>`;
   if (s.paid) return S('paid', 'จ่ายแล้ว ✓', a, `askPaid('${s.id}')`, 'แตะเพื่อกลับเป็นค้างจ่าย');
@@ -3050,8 +3094,8 @@ function renderStudents(anim){
       <div class="obody">
         <div class="col">
           <div>${p.map ? `<div class="now"><span>${cur >= 0 ? `กำลังสอน บท ${cur+1} · ${CH[cur]}` : 'แผนที่บท'}</span><small>${done}/14 บท</small></div>
-            <div class="segbar">${p.map.split('').map((x,j) => `<button class="${x==='t'?'':x}" onclick="chPick('${p.id}',${j},this)" data-tip="บท ${j+1} · ${CHF[j]}" aria-label="บท ${j+1} ${CHF[j]} · ${CHS[x]}">${j+1}</button>`).join('')}</div>
-            <div class="hint">แตะบทเพื่อเลือกสถานะ · ชี้ที่บทเพื่อดูชื่อ <span class="lg"><i class="d"></i>สอนแล้ว <i class="n"></i>กำลังสอน <i></i>ยังไม่สอน <i class="s"></i>ข้าม</span></div>`
+            <div class="segbar">${p.map.split('').map((x,j) => `<button class="${x==='t'?'':x}" data-sid2="${p.id}" data-j="${j}" onclick="chPick('${p.id}',${j},this)" data-tip="บท ${j+1} · ${CHF[j]}" aria-label="บท ${j+1} ${CHF[j]} · ${CHS[x]}">${j+1}</button>`).join('')}</div>
+            <div class="hint">แตะบทเพื่อเลือกสถานะ · ลากผ่านหลายบทเพื่อติ๊กทีเดียว <span class="lg"><i class="d"></i>สอนแล้ว <i class="n"></i>กำลังสอน <i></i>ยังไม่สอน <i class="s"></i>ข้าม</span></div>`
             : `<span class="lab">แผนที่บท</span><button class="addq" onclick="startMap('${p.id}')">＋ ตั้งแผนที่บท</button>`}</div>
           ${p.notes ? `<div><span class="lab">โน้ต</span><div class="onote">${esc(p.notes)}</div></div>` : ''}
           <div><span class="lab">ค้างจ่าย</span>${owe.length ? `<div class="rcpt">${owe.map(s => `<div class="r"><span>${dLabel(s.date)} · <b>${cash(amt(s))}</b></span><button onclick="togglePaid('${s.id}')">ได้เงินแล้ว ✓</button></div>`).join('')}</div>` : '<div class="clear">✓ เคลียร์หมดแล้ว</div>'}</div>
@@ -3340,6 +3384,29 @@ function chPick(id, j, el){
   const w = pop.offsetWidth, h = pop.offsetHeight, x = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width/2 - w/2)), below = r.bottom + 8 + h < innerHeight;
   pop.style.left = x + 'px'; pop.style.top = (below ? r.bottom + 8 : r.top - h - 8) + 'px';
   pop.onclick = e => { const b = e.target.closest('[data-v]'); if (b) chSet(id, j, b.dataset.v); };
+}
+// sweep the chapter bar: press a box and drag along it — every box from where you started to where you are flips to
+// สอนแล้ว (or back to ยังไม่สอน if you started on a done box). A plain tap still opens the chapter menu.
+{
+  let C = null;
+  const boxAt = (x, y) => document.elementFromPoint(x, y)?.closest('.segbar button[data-j]');
+  const show = () => { const [a, b] = [Math.min(C.j0, C.j1), Math.max(C.j0, C.j1)];
+    C.bar.querySelectorAll('button[data-j]').forEach(btn => { const j = +btn.dataset.j, inR = j >= a && j <= b && C.orig[j] !== 's';
+      btn.classList.toggle('swp', inR); btn.className = btn.className.replace(/\b(d|n)\b/g, '').trim(); const v = inR ? C.v : C.orig[j]; if (v === 'd' || v === 'n') btn.classList.add(v); }); };
+  addEventListener('pointerdown', e => { const b = e.target.closest?.('.segbar button[data-j]'); if (!b || e.button !== 0) return;
+    const p = st(b.dataset.sid2); if (!p?.map) return;
+    C = {id: p.id, bar: b.closest('.segbar'), j0: +b.dataset.j, j1: +b.dataset.j, orig: p.map.split(''), v: p.map[+b.dataset.j] === 'd' ? 't' : 'd', moved: false, ptr: e.pointerId}; });
+  addEventListener('pointermove', e => { if (!C || e.pointerId !== C.ptr) return; const b = boxAt(e.clientX, e.clientY);
+    if (!b || b.closest('.segbar') !== C.bar || +b.dataset.j === C.j1) return;
+    if (!C.moved){ C.moved = true; chClose(); MV.on = true; } C.j1 = +b.dataset.j; show(); SFX.play('nib'); navigator.vibrate?.(4); });
+  const end = e => { if (!C || e.pointerId !== C.ptr) return; const c = C; C = null; if (!c.moved) return;
+    setTimeout(() => MV.on = false, 0);
+    const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 80);
+    const p = st(c.id), a = c.orig.slice(), [lo, hi] = [Math.min(c.j0, c.j1), Math.max(c.j0, c.j1)];
+    for (let j = lo; j <= hi; j++) if (a[j] !== 's') a[j] = c.v;
+    snap(); p.map = a.join(''); save(); renderStudents(); renderSchedule(); SFX.play('key');
+    toast(`${p.name} · บท ${lo + 1}${hi > lo ? `–${hi + 1}` : ''} ${c.v === 'd' ? 'สอนแล้ว ✓' : 'กลับเป็นยังไม่สอน'}`, true); };
+  addEventListener('pointerup', end); addEventListener('pointercancel', end);
 }
 function chSet(id, j, v){
   const p = st(id), a = p.map.split('');
