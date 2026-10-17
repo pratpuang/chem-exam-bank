@@ -1191,6 +1191,19 @@ input.tin.scrub,#aw-t.scrub{background:color-mix(in srgb,var(--yel) 45%,transpar
 .cw-pre{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-bottom:12px}
 .cw-pre button{aspect-ratio:1;border:2px solid var(--ink);cursor:pointer;transition:scale .15s var(--sp)}.cw-pre button:hover{scale:1.12}
 .cw-ok{width:100%;justify-content:center}
+#calendar .day.press{scale:.92}
+#calendar .day.lab:before{content:"";position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:var(--yel);border:1.5px solid var(--ink)}
+#cnote small{display:block;margin-top:4px;font-size:.68rem;color:var(--mut)}
+.hlabs{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:6px}.hlabs em{font-style:normal;font-size:.72rem;font-weight:800;color:var(--red)}
+.hltag{display:block;max-width:100%;margin-top:2px;font:800 .58rem/1.2 "Anuphan",sans-serif;font-style:normal;color:var(--red);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hlab{position:fixed;z-index:185;width:250px;padding:14px;background:var(--card);color:var(--ink);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--sh);opacity:0;scale:.92;transform-origin:50% 0;transition:opacity .15s,scale .3s var(--sp)}
+#hlab.up{transform-origin:50% 100%}#hlab.on{opacity:1;scale:1}#hlab.out{opacity:0;scale:.94}
+#hlab.up .qa-ar{top:auto;bottom:-9px;rotate:225deg}
+.hl-h{display:flex;align-items:baseline;gap:8px;margin-bottom:10px}.hl-h b{font-size:1rem;font-weight:800}.hl-h span{font-size:.75rem;font-weight:700;color:var(--mut)}
+#hl-in{width:100%;border:0;border-bottom:2px solid var(--ink);background:none;color:var(--ink);font:700 1rem inherit;padding:4px 0}#hl-in:focus{outline:none}
+.hl-pre{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.hl-pre button{padding:3px 9px;border:1.5px solid var(--grid);border-radius:999px;background:none;color:var(--mut);font:700 .74rem inherit;cursor:pointer;transition:all .15s}.hl-pre button:hover{border-color:var(--ink);color:var(--ink)}
+.hl-f{display:flex;align-items:center;gap:10px;margin-top:12px}.hl-f .go{margin-left:auto}
 .mbrc{margin-top:22px}
 .mbrh{margin-bottom:10px}
 .mbr{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);background:var(--card)}
@@ -1612,6 +1625,7 @@ const colorClass = c => { c = +c || 0; if (c < CUSTOM) return COLORS[c % COLORS.
 const colorOf = id => colorClass(st(id)?.color ?? 0);
 const mkey = (y,m) => `${y}-${m}`;
 const atOf = s => new Date(`${s.date}T${s.time}:00`);
+const holLab = date => isHolD(date) ? (DB.holidayNotes || {})[date] || '' : '';
 const isHolD = date => { const [y,m,d] = date.split('-').map(Number); return (DB.holidays[mkey(y,m-1)] || []).includes(d); };
 const amt = s => s.rate * s.h;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2228,13 +2242,14 @@ function renderHolCal(){
   const today0 = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
   for (let d = 1; d <= days; d++){
     const date = new Date(y, m, d), iso = isoD(date);
-    h += `<button class="day${date < today0?' past':''}${iso === isoD(NOW)?' today':''}${ses.some(s => s.date === iso)?' has':''}${list.includes(d)?' holiday':''}" aria-pressed="${list.includes(d)}" data-d="${d}">${d}</button>`;
+    h += `<button class="day${date < today0?' past':''}${iso === isoD(NOW)?' today':''}${ses.some(s => s.date === iso)?' has':''}${list.includes(d)?' holiday':''}${holLab(iso)?' lab':''}" aria-pressed="${list.includes(d)}" data-d="${d}"${holLab(iso) ? ` title="${esc(holLab(iso))}"` : ''}>${d}</button>`;
   }
   $('#calendar').innerHTML = h;
   $('#calendar').onclick = null;   // taps and sweeps both go through the sweep below
   holSweep.ym = [y, m];
   const left = monthSessions(y,m).filter(s => s.status === 'plan' && counts(s) && atOf(s) > NOW).length;
-  $('#cnote').textContent = `หยุด ${list.length} วัน · เหลือสอน ${left} คาบ · แตะหรือลากผ่านหลายวันเพื่อสลับ`;
+  const labs = list.slice().sort((a, b) => a - b).map(d => [d, holLab(`${y}-${pad(m+1)}-${pad(d)}`)]).filter(x => x[1]);
+  $('#cnote').innerHTML = `หยุด ${list.length} วัน · เหลือสอน ${left} คาบ${labs.length ? `<span class="hlabs">${labs.map(([d, t]) => `<em>${d} ${esc(t)}</em>`).join('')}</span>` : ''}<small>แตะ / ลากผ่านหลายวันเพื่อสลับ · กดค้างเพื่อตั้งชื่อ</small>`;
 }
 
 // sweep holidays: press a day and drag across others — every day you pass takes the first day's new state
@@ -2245,15 +2260,45 @@ var holSweep = {ym: null};
   const dayAt = (x, y) => document.elementFromPoint(x, y)?.closest('#calendar .day');
   const paint = b => { if (!H || H.seen.has(b.dataset.d)) return; H.seen.add(b.dataset.d); b.classList.toggle('holiday', H.on); b.classList.add('swept'); SFX.play(H.on ? 'on' : 'off'); navigator.vibrate?.(4); };
   addEventListener('pointerdown', e => { const b = e.target.closest?.('#calendar .day'); if (!b || e.button !== 0) return; e.preventDefault();
-    H = {on: !b.classList.contains('holiday'), seen: new Set(), id: e.pointerId}; paint(b); });
-  addEventListener('pointermove', e => { if (!H || e.pointerId !== H.id) return; const b = dayAt(e.clientX, e.clientY); if (b) paint(b); });
-  const end = e => { if (!H || e.pointerId !== H.id) return; const h = H; H = null; const [y, m] = holSweep.ym, k = mkey(y, m), list = DB.holidays[k] || (DB.holidays[k] = []);
+    H = {on: !b.classList.contains('holiday'), seen: new Set(), id: e.pointerId, b0: b, x: e.clientX, y: e.clientY,
+      lp: setTimeout(() => { if (!H || H.seen.size) return; const b0 = H.b0; H = null; navigator.vibrate?.(15); holLabel(b0); }, 550)}; b.classList.add('press'); });
+  addEventListener('pointermove', e => { if (!H || e.pointerId !== H.id) return; const b = dayAt(e.clientX, e.clientY);
+    if (b && b !== H.b0 && !H.seen.size){ clearTimeout(H.lp); paint(H.b0); }   // left the first day: it's a sweep
+    if (b && H.seen.size) paint(b); });
+  const end = e => { if (!H || e.pointerId !== H.id) return; clearTimeout(H.lp); H.b0.classList.remove('press'); if (!H.seen.size && e.type === 'pointerup') paint(H.b0);
+    const h = H; H = null; const [y, m] = holSweep.ym, k = mkey(y, m), list = DB.holidays[k] || (DB.holidays[k] = []);
     const days = [...h.seen].map(Number).filter(d => h.on !== list.includes(d)); if (!days.length) return renderHolCal();
-    snap(); days.forEach(d => h.on ? list.push(d) : list.splice(list.indexOf(d), 1)); save();
+    snap(); days.forEach(d => h.on ? list.push(d) : list.splice(list.indexOf(d), 1));
+    if (!h.on && DB.holidayNotes) days.forEach(d => delete DB.holidayNotes[`${y}-${pad(m + 1)}-${pad(d)}`]);   // a day that stops being a holiday drops its label
+    save();
     const lost = DB.sessions.filter(s => s.status === 'plan' && days.some(d => s.date === `${y}-${pad(m + 1)}-${pad(d)}`)).reduce((a, s) => a + amt(s), 0);
     toast(`${h.on ? 'ตั้งเป็นวันหยุด' : 'ยกเลิกวันหยุด'} ${days.length > 1 ? `${days.length} วัน` : `${days[0]} ${TH_M[m]}`}${lost ? ` · คาด ${h.on ? '−' : '+'}${cash(lost)}` : ''}`, true);
     calm = true; try { renderAll(); } finally { calm = false; } };
   addEventListener('pointerup', end); addEventListener('pointercancel', end);
+}
+
+// long-press a day in the holiday calendar → name it (สอบไฟนอล, กลับบ้าน…). Saving makes it a holiday if it wasn't.
+function holLabel(btn){
+  document.getElementById('hlab')?.remove(); btn.classList.remove('press');
+  const [y, m] = holSweep.ym, d = +btn.dataset.d, iso = `${y}-${pad(m + 1)}-${pad(d)}`, cur = (DB.holidayNotes || {})[iso] || '';
+  const box = document.createElement('div'); box.id = 'hlab'; document.body.append(box);
+  box.innerHTML = `<span class="qa-ar"></span><div class="hl-h"><b>${dLabel(iso)}</b><span>ชื่อวันหยุด</span></div>
+    <input id="hl-in" maxlength="24" value="${esc(cur)}" placeholder="เช่น สอบไฟนอล" autocomplete="off">
+    <div class="hl-pre">${['สอบ', 'สอบไฟนอล', 'กลับบ้าน', 'ไปเที่ยว', 'ป่วย', 'ติดธุระ'].map(t => `<button data-t="${t}">${t}</button>`).join('')}</div>
+    <div class="hl-f">${cur ? '<button class="qa-lk" data-k="clear">ลบชื่อ</button>' : ''}<span class="sp"></span><button class="go sm" data-k="ok">บันทึก</button></div>`;
+  const r = btn.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight; let x = Math.max(10, Math.min(r.left + r.width / 2 - bw / 2, innerWidth - bw - 10)), y0 = r.bottom + 10, up = false;
+  if (y0 + bh > innerHeight - 10){ y0 = r.top - bh - 10; up = true; } box.style.left = x + 'px'; box.style.top = Math.max(10, y0) + 'px'; box.classList.toggle('up', up);
+  box.querySelector('.qa-ar').style.left = Math.max(14, Math.min(bw - 14, r.left + r.width / 2 - x)) + 'px';
+  const inp = box.querySelector('#hl-in');
+  const close = () => { box.classList.add('out'); setTimeout(() => box.remove(), 160); removeEventListener('pointerdown', outside, true); };
+  const outside = e => { if (!box.contains(e.target)) close(); };
+  const commit = t => { t = t.trim(); snap(); DB.holidayNotes ||= {}; const k = mkey(y, m), list = DB.holidays[k] || (DB.holidays[k] = []);
+    if (t){ DB.holidayNotes[iso] = t; if (!list.includes(d)) list.push(d); } else delete DB.holidayNotes[iso];
+    save(); close(); calm = true; try { renderAll(); } finally { calm = false; } SFX.play('on'); toast(t ? `${d} ${TH_M[m]} · ${t}` : `ลบชื่อวันหยุด ${d} ${TH_M[m]}`, true); };
+  box.onclick = e => { const b = e.target.closest('button'); if (!b) return; if (b.dataset.t){ inp.value = b.dataset.t; return commit(b.dataset.t); } if (b.dataset.k === 'clear') return commit(''); if (b.dataset.k === 'ok') commit(inp.value); };
+  inp.onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); commit(inp.value); } if (e.key === 'Escape'){ e.stopPropagation(); close(); } };
+  later(() => { box.classList.add('on'); inp.focus(); inp.select(); });
+  setTimeout(() => addEventListener('pointerdown', outside, true), 0);
 }
 
 /* =============================== SCHEDULE =============================== */
@@ -2397,7 +2442,7 @@ function sCard(s){
 function dayCard(date, items, i = 0){
   const hol = isHolD(date), x = new Date(date+'T00:00'), sum = items.filter(counts).reduce((a,s)=>a+amt(s),0), rel = relOnly(date);
   return `<section class="dc ${date===isoD(NOW)?'today':''} ${hol?'hol':''}" style="--i:${i}" data-drop="${date}">
-    <header class="dch"><b>${x.getDate()}</b><span class="dw">${TH_DF[x.getDay()]}<small>${TH_MF[x.getMonth()]}${rel ? ' · '+rel : ''}</small></span>${hol ? '<span class="htag">วันหยุด</span>' : ''}<span class="sp"></span><span class="dsum">${items.length} คาบ · ${cash(sum)}</span><button class="dadd" title="เพิ่มคาบวันนี้" onclick="editSession(null,'${date}')">＋</button></header>
+    <header class="dch"><b>${x.getDate()}</b><span class="dw">${TH_DF[x.getDay()]}<small>${TH_MF[x.getMonth()]}${rel ? ' · '+rel : ''}</small></span>${hol ? `<span class="htag">${esc(holLab(date) || 'วันหยุด')}</span>` : ''}<span class="sp"></span><span class="dsum">${items.length} คาบ · ${cash(sum)}</span><button class="dadd" title="เพิ่มคาบวันนี้" onclick="editSession(null,'${date}')">＋</button></header>
     ${items.map(s => rw(s)).join('')}</section>`;
 }
 function rw(s, pv){
@@ -2737,7 +2782,7 @@ function quickAdd(who, iso, cell){
       ${others.map(x => `<span class="qa-o${c.includes(x) ? ' hit' : ''}" style="left:${X(toM(x.time))}%;width:${x.h * 60 / span * 100}%" title="${esc(st(x.who)?.name)} ${x.time}–${endOf(x)}"></span>`).join('')}
       <span class="qa-blk ${colorOf(who)}${c.length ? ' clash' : ''}" style="left:${X(a)}%;width:${q.h * 60 / span * 100}%"><s class="qa-rs" title="ลากเพื่อเปลี่ยนความยาว"></s></span>
     </div><div class="qa-tk">${ticks}</div>
-    ${c.length ? `<div class="qa-w">ชนกับ ${c.map(x => `${esc(st(x.who)?.name)} ${x.time}`).join(', ')}</div>` : isHolD(iso) ? '<div class="qa-w">วันหยุด · ไม่นับเงิน</div>' : ''}
+    ${c.length ? `<div class="qa-w">ชนกับ ${c.map(x => `${esc(st(x.who)?.name)} ${x.time}`).join(', ')}</div>` : isHolD(iso) ? `<div class="qa-w">${esc(holLab(iso) || 'วันหยุด')} · ไม่นับเงิน</div>` : ''}
     ${q.noteOpen ? `<input class="qa-n" id="qa-note" value="${esc(q.note)}" placeholder="จะสอนอะไร">` : ''}
     <div class="qa-f"><button class="qa-lk${q.rep ? ' on' : ''}" data-q="rep">${rp[1]}</button>${q.noteOpen ? '' : '<button class="qa-lk" data-q="note">โน้ต</button>'}<span class="sp"></span><button class="go sm" data-q="add">เพิ่มคาบ${q.rep ? ` ×${q.rep + 1}` : ''}</button></div>`;
     const ni = $('#qa-note'); if (ni){ ni.oninput = e => q.note = e.target.value; }
@@ -3042,7 +3087,7 @@ function picker(){
 function clashNote(){
   const [h0,m0] = edit.time.split(':').map(Number), a = h0*60+m0, b = a + edit.h*60;
   const clash = DB.sessions.filter(x => x.date === edit.date && x.id !== edit.id && x.status !== 'cancel' && (([h,m]) => h*60+m < b && h*60+m + x.h*60 > a)(x.time.split(':').map(Number)));
-  return clash.length ? `⚠ ชนกับ ${clash.map(x => `${esc(st(x.who)?.name)} ${x.time}`).join(', ')}` : isHolD(edit.date) ? '☂ วันหยุด · ไม่นับเงิน' : '';
+  return clash.length ? `⚠ ชนกับ ${clash.map(x => `${esc(st(x.who)?.name)} ${x.time}`).join(', ')}` : isHolD(edit.date) ? `☂ ${esc(holLab(edit.date) || 'วันหยุด')} · ไม่นับเงิน` : '';
 }
 function paintEdit(full){
   const p = st(edit.who), tok = (k, lab, val, cls='') => `<button class="tok ${cls} ${edit.pick===k?'on':''}" data-p="${k}"><small>${lab}</small><b>${val}</b></button>`;
@@ -3142,7 +3187,7 @@ function renderCal(anim){
     const iso = `${cy}-${pad(cm+1)}-${pad(d)}`;
     const items = [...DB.deadlines.filter(x => x.d === iso).map(x => `<span class="ev dl">⚑ ${esc(x.t)}</span>`),
       ...sorted(ses.filter(s => s.date === iso)).map(e => `<span data-sid="${e.id}" class="ev ${colorOf(e.who)} ${counts(e)?'':'x'} ${clashWith(e).length?'clash':''}" title="${e.time}${clashWith(e).length ? ' · ⚠ ชน' : ''}"><em>${e.time}</em>${esc(st(e.who)?.name)}</span>`)];
-    h += `<button class="mc${iso===isoD(NOW)?' today':''}${isHolD(iso)?' hol':''}${iso===cday?' sel':''}" style="--i:${i++}" data-iso="${iso}" data-drop="${iso}"><span class="n">${d}</span><span class="evs">${items.slice(0,2).join('')}${items.length > 2 ? `<span class="more">+${items.length-2} อีก</span>` : ''}</span></button>`;
+    h += `<button class="mc${iso===isoD(NOW)?' today':''}${isHolD(iso)?' hol':''}${iso===cday?' sel':''}" style="--i:${i++}" data-iso="${iso}" data-drop="${iso}"><span class="n">${d}${holLab(iso) ? `<em class="hltag">${esc(holLab(iso))}</em>` : ''}</span><span class="evs">${items.slice(0,2).join('')}${items.length > 2 ? `<span class="more">+${items.length-2} อีก</span>` : ''}</span></button>`;
   }
   const tail = (7 - (off + days) % 7) % 7; for (let k = 1; k <= tail; k++) h += `<div class="mc out" style="--i:${i++}"><span class="n">${k}</span></div>`;
   $('#mcal').classList.toggle('still', !anim);
@@ -3154,7 +3199,7 @@ function renderDay(){
   qsa('#mcal .mc[data-iso]').forEach(b => b.classList.toggle('sel', b.dataset.iso === cday));
   const x = new Date(cday+'T00:00'), hol = isHolD(cday), dayS = sorted(DB.sessions.filter(s => s.date === cday)), dl = DB.deadlines.filter(d => d.d === cday);
   const sum = dayS.filter(counts).reduce((a,s)=>a+amt(s),0);
-  $('#daypane').innerHTML = `<div class="ah ${cday===isoD(NOW)?'today':''} ${hol?'hol':''}"><span class="big">${x.getDate()}</span><h3>${TH_DF[x.getDay()]}</h3><p>${x.getDate()} ${TH_MF[x.getMonth()]} ${x.getFullYear()+543}${relOnly(cday) ? ' · '+relOnly(cday) : ''}</p><p class="ahs">${hol?'☂ วันหยุด · ':''}${dayS.length ? `${dayS.length} คาบ · ${cash(sum)}` : 'ไม่มีคาบ'}</p></div>
+  $('#daypane').innerHTML = `<div class="ah ${cday===isoD(NOW)?'today':''} ${hol?'hol':''}"><span class="big">${x.getDate()}</span><h3>${TH_DF[x.getDay()]}</h3><p>${x.getDate()} ${TH_MF[x.getMonth()]} ${x.getFullYear()+543}${relOnly(cday) ? ' · '+relOnly(cday) : ''}</p><p class="ahs">${hol?`☂ ${esc(holLab(cday) || 'วันหยุด')} · `:''}${dayS.length ? `${dayS.length} คาบ · ${cash(sum)}` : 'ไม่มีคาบ'}</p></div>
     <div class="ab">${dl.map(d => `<div class="dlr">⚑ ${esc(d.t)}</div>`).join('')}${dayS.map(s => rw(s)).join('') || (dl.length ? '' : '<div class="free">ว่างทั้งวัน<small>พักได้ หรือเปิดรับน้องเพิ่ม</small></div>')}</div>
     <div class="acts"><button class="go sm" onclick="editSession(null,'${cday}')">＋ คาบวันนี้</button><button class="chip" onclick="toggleHol('${cday}')">${hol ? '↺ ยกเลิกวันหยุด' : '☂ ตั้งเป็นวันหยุด'}</button></div>`;
 }
