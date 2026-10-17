@@ -290,6 +290,7 @@ button.mc:hover{background:#fbf3dc}
 .mc .more{font-size:.64rem;font-weight:800;color:var(--mut)}
 @media (max-width:640px){.mc{min-height:58px;padding:4px}.mc .ev{font-size:0;height:6px;padding:0}.mc .ev.x{display:none}.mc .more{display:none}.calfig{gap:16px}}
 .calleg{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;font-size:.74rem;font-weight:700}.calleg i{display:inline-block;width:12px;height:12px;border:2px solid var(--ink);margin-right:6px;vertical-align:-2px}.calleg .lh{background:#fbe4dd}.calleg .lt{background:var(--red);border-radius:50%}.calleg .ld{background:var(--ink)}
+.calleg .lx{background:repeating-linear-gradient(135deg,var(--card) 0 2px,var(--lav) 2px 4px)}
 .agenda{position:sticky;top:70px;background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);overflow:hidden}
 .agenda .ah{position:relative;padding:16px 18px 14px;border-bottom:3px solid var(--ink);background:var(--blue);color:#fff;overflow:hidden;min-height:132px;display:flex;flex-direction:column;justify-content:flex-end}
 .agenda .ah .big{position:absolute;right:-6px;top:-26px;font:800 9rem/1 "JetBrains Mono";letter-spacing:-.06em;color:transparent;-webkit-text-stroke:3px rgba(255,255,255,.45);pointer-events:none}
@@ -1107,6 +1108,26 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .mvd.cur{border-style:dashed;opacity:.5}
 .mvover{background:var(--yel)!important;color:#141414!important;transform:scale(1.06);outline:3px solid var(--ink);outline-offset:-1px;z-index:2}
 .mvw{color:var(--red)}
+.mvlen{position:absolute;left:0;right:0;bottom:-3px;height:14px;cursor:ns-resize;touch-action:none;z-index:3}
+.mvlen:after{content:"";position:absolute;left:50%;bottom:4px;width:34px;height:4px;margin-left:-17px;background:var(--ink);opacity:0;transition:opacity .15s}
+[data-sid]:hover>.mvlen:after,.mvlenon>.mvlen:after{opacity:.55}
+@media (hover:none){.mvlen:after{opacity:.25}}
+.mvlenon{outline:3px solid var(--yel);outline-offset:-3px}
+#mvtip{position:fixed;left:0;top:0;z-index:200;pointer-events:none;display:flex;flex-direction:column;padding:6px 12px;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh)}
+#mvtip b{font:800 1.2rem "JetBrains Mono"}#mvtip small{font:700 .75rem "JetBrains Mono";color:var(--mut)}
+#mvtip.chg{background:var(--yel);color:#141414}#mvtip.chg small{color:#141414}
+/* exam windows */
+.mc.exam{background:repeating-linear-gradient(135deg,var(--card) 0 7px,color-mix(in srgb,var(--lav) 38%,var(--card)) 7px 14px)}
+.mc.exam.hol{background:#fbe4dd}
+.extag{display:block;font:800 .6rem/1.2 "Noto Sans Thai",sans-serif;font-style:normal;background:var(--lav);color:#141414;border:1.5px solid var(--ink);padding:0 4px;margin-top:2px;width:max-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dc.exam .dch{box-shadow:inset 6px 0 0 var(--lav)}
+.dch .extg{background:var(--lav);color:#141414;border-color:var(--ink)}
+.cday.exam{box-shadow:5px 5px 0 var(--sh),inset 0 -8px 0 var(--lav)}
+.dt.exam{box-shadow:inset 0 4px 0 var(--lav)}
+.exr{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto auto;gap:6px;align-items:center;margin-bottom:8px}
+.exr input[type=date]{font:700 .85rem "JetBrains Mono";border:2px solid var(--ink);background:var(--card);color:var(--ink);padding:4px 6px}
+.exr .x2{width:32px;height:32px;border:2px solid var(--ink);background:var(--card);color:var(--ink);cursor:pointer}
+@media (max-width:560px){.exr{grid-template-columns:1fr auto 1fr auto}.exr .ln{grid-column:1 / -1}}
 .dwarn{margin:12px 0 0;padding:8px 12px;border-left:4px solid var(--red);background:#fbe4dd;font-weight:700;font-size:.86rem}
 /* clashes */
 .rw.clash{background:linear-gradient(90deg,#fbe4dd,transparent 70%)}
@@ -1239,7 +1260,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
         <div class="calnav"><button id="cprev" aria-label="เดือนก่อน">◀</button><button id="ctoday">วันนี้</button><button id="cnext" aria-label="เดือนถัดไป">▶</button></div></div>
       <div class="calfig" id="cfig"></div>
       <div class="mcal" id="mcal"></div>
-      <div class="calleg"><span><i class="lh"></i>วันหยุด</span><span><i class="lt"></i>วันนี้</span><span><i class="ld"></i>เดดไลน์</span><span class="mut">ขีดฆ่า = ยกเลิก / ไม่นับ</span></div>
+      <div class="calleg"><span><i class="lh"></i>วันหยุด</span><span><i class="lt"></i>วันนี้</span><span><i class="ld"></i>เดดไลน์</span><span><i class="lx"></i>ช่วงสอบ</span><span class="mut">ขีดฆ่า = ยกเลิก / ไม่นับ</span></div>
     </div>
     <div class="agenda" id="daypane"></div>
   </div>
@@ -1309,7 +1330,7 @@ const uid = () => Math.random().toString(36).slice(2,9);
 let NOW = new Date();   // kept live by tick(): the page (and the bank's layer) can stay open for days
 
 // the real data lives in Supabase; this is the empty shape until the first load (or the offline cache) fills it
-const blankDB = () => ({v:4, students:[], archived:[], sessions:[], avail:defAvail(), tpl:defTpl(), rates:{solo:300, group:175}, buffer:{before:0, after:0, linked:true}, history:{}, holidays:{}, deadlines:[], expenses:[], skips:[]});
+const blankDB = () => ({v:4, students:[], archived:[], sessions:[], avail:defAvail(), tpl:defTpl(), rates:{solo:300, group:175}, buffer:{before:0, after:0, linked:true}, history:{}, holidays:{}, deadlines:[], expenses:[], skips:[], exams:[{a:'2026-09-28', b:'2026-10-09', t:'มิดเทอม'}, {a:'2026-11-30', b:'2026-12-09', t:'ไฟนอล'}]});
 let DB = blankDB();
 try{ localStorage.removeItem('teach-demo-v3'); }catch{}
 function defAvail(){ return {block:{0:[],1:[8,9,10,11,12,13,14,15,16],2:[8,9,10,11,12,13,14,15,16],3:[8,9,10,11,12,13,14,15,16],4:[8,9,10,11,12,13,14,15,16],5:[8,9,10,11,12,13,14,15,16],6:[]}}; }
@@ -1330,6 +1351,8 @@ const st = id => DB.students.find(s => s.id === id) || (DB.archived || []).find(
 const colorOf = id => COLORS[(st(id)?.color ?? 0) % COLORS.length];
 const mkey = (y,m) => `${y}-${m}`;
 const atOf = s => new Date(`${s.date}T${s.time}:00`);
+// your own exam windows (มิดเทอม / ไฟนอล): shaded on the calendar + day lists, and a class booked inside one gets a warning
+const examOf = date => (DB.exams || []).find(e => e.a && e.b && date >= e.a && date <= e.b);
 const isHolD = date => { const [y,m,d] = date.split('-').map(Number); return (DB.holidays[mkey(y,m-1)] || []).includes(d); };
 const amt = s => s.rate * s.h;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2013,7 +2036,7 @@ function rgTick(){
   $('#slist').addEventListener('click', e => { if (ate){ e.stopPropagation(); e.preventDefault(); ate = false; } }, true); }
 function cardGroup(g){
   const x = new Date(g.date+'T00:00'), rel = relOnly(g.date), hol = isHolD(g.date);
-  return `<div class="cday ${g.date===isoD(NOW)?'today':''} ${hol?'hol':''}" data-drop="${g.date}"><span class="cw">${TH_DF[x.getDay()]}</span><b>${x.getDate()}</b><small>${TH_M[x.getMonth()]}${rel ? '<br>'+rel : ''}</small><span class="cn">${g.items.length} คาบ</span><button title="เพิ่มคาบวันนี้" aria-label="เพิ่มคาบ" onclick="editSession(null,'${g.date}')">＋</button></div>`
+  return `<div class="cday ${g.date===isoD(NOW)?'today':''} ${hol?'hol':''} ${examOf(g.date)?'exam':''}" data-drop="${g.date}"><span class="cw">${TH_DF[x.getDay()]}</span><b>${x.getDate()}</b><small>${TH_M[x.getMonth()]}${rel ? '<br>'+rel : ''}</small><span class="cn">${g.items.length} คาบ</span><button title="เพิ่มคาบวันนี้" aria-label="เพิ่มคาบ" onclick="editSession(null,'${g.date}')">＋</button></div>`
     + g.items.map(sCard).join('');
 }
 function sCard(s){
@@ -2025,12 +2048,12 @@ function sCard(s){
     <div class="cm"><i class="${colorOf(s.who)}"></i>${esc(p?.name ?? '?')}${cw.length ? ' ⚠' : ''}${chipOf(s)}</div>
     <div class="cd">${s.h} ชม.${s.log?.topic ? ' · 📘 '+esc(s.log.topic) : s.note ? ' · '+esc(s.note) : ''}</div>
     ${lastOf(s, 'div', 'plast')}
-    <div class="cf">${stampOf(s)}</div></div>`;
+    <div class="cf">${stampOf(s)}</div>${s.status === 'cancel' ? '' : '<span class="mvlen" title="ลากขึ้น/ลงเพื่อเปลี่ยนความยาวคาบ"></span>'}</div>`;
 }
 function dayCard(date, items, i = 0){
   const hol = isHolD(date), x = new Date(date+'T00:00'), sum = items.filter(counts).reduce((a,s)=>a+amt(s),0), rel = relOnly(date);
-  return `<section class="dc ${date===isoD(NOW)?'today':''} ${hol?'hol':''}" style="--i:${i}" data-drop="${date}">
-    <header class="dch"><b>${x.getDate()}</b><span class="dw">${TH_DF[x.getDay()]}<small>${TH_MF[x.getMonth()]}${rel ? ' · '+rel : ''}</small></span>${hol ? '<span class="htag">วันหยุด</span>' : ''}<span class="sp"></span><span class="dsum">${items.length} คาบ · ${cash(sum)}</span><button class="dadd" title="เพิ่มคาบวันนี้" onclick="editSession(null,'${date}')">＋</button></header>
+  return `<section class="dc ${date===isoD(NOW)?'today':''} ${hol?'hol':''} ${examOf(date)?'exam':''}" style="--i:${i}" data-drop="${date}">
+    <header class="dch"><b>${x.getDate()}</b><span class="dw">${TH_DF[x.getDay()]}<small>${TH_MF[x.getMonth()]}${rel ? ' · '+rel : ''}</small></span>${hol ? '<span class="htag">วันหยุด</span>' : ''}${examOf(date) ? `<span class="htag extg">📝 ${esc(examOf(date).t)}</span>` : ''}<span class="sp"></span><span class="dsum">${items.length} คาบ · ${cash(sum)}</span><button class="dadd" title="เพิ่มคาบวันนี้" onclick="editSession(null,'${date}')">＋</button></header>
     ${items.map(s => rw(s)).join('')}</section>`;
 }
 function rw(s, pv){
@@ -2045,6 +2068,7 @@ function rw(s, pv){
     <span class="hr">${s.h} ชม.</span>
     <span class="nt">${s.status === 'done' && s.log?.topic ? `<b>📘 ${esc(s.log.topic)}</b>` : lastOf(s, 'span', 'plast') || (s.note ? `<b>${esc(s.note)}</b>` : '')}</span>
     <span class="st">${stampOf(s, pv)}</span>
+    ${pv || s.status === 'cancel' ? '' : '<span class="mvlen" title="ลากขึ้น/ลงเพื่อเปลี่ยนความยาวคาบ"></span>'}
     ${pv ? '' : `<span class="tools">${s.status === 'done' ? `<button title="บันทึกการสอน" onclick="event.stopPropagation();wrapUp('${s.id}')">📝</button>` : ''}<button title="แก้ / เลื่อน" onclick="event.stopPropagation();editSession('${s.id}')">✎</button><button class="del" title="ลบ" onclick="event.stopPropagation();delSession('${s.id}')">🗑</button></span>`}
   </div>`;
 }
@@ -2196,6 +2220,42 @@ function delSession(id){
    same "ไม่ต้องถามอีก 10 นาที" opt-out; moving a weekly class leaves its slot empty on purpose (same as editing it). */
 var MV = {on: false};
 const SKIPMOVE = 'teach-skipmove', skipMove = () => { try{ return +localStorage.getItem(SKIPMOVE) > Date.now(); }catch{ return false; } };
+function setLen(s, h){
+  snap(); const was = s.h; s.h = h; s.series = null;   // off the weekly autopilot, or the next top-up would put the slot's length back
+  save(); renderAll(); SFX.play('save');
+  toast(`${st(s.who)?.name} ${dLabel(s.date)} · ${was} → ${h} ชม. · ถึง ${endOf(s)}`, true);
+}
+function askLen(s, h){
+  if (skipMove()) return setLen(s, h);
+  const tmp = {...s, h}, cw = clashWith(tmp);
+  openModal(`<h2>เปลี่ยนความยาวคาบ?</h2><div class="paycard"><span class="cb ${colorOf(s.who)}"></span><div class="pcm"><b>${esc(st(s.who)?.name ?? '?')}</b>
+      <small>${dLabel(s.date)} · ${s.time}–<s>${endOf(s)}</s> → ${endOf(tmp)}</small><em>${s.h} → ${h} ชม.</em>${cw.length ? `<em class="mvw">⚠ ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time).join(', ')}</em>` : ''}</div>
+      <span class="pca"><s class="mut" style="font-size:.8em">${cash(amt(s))}</s><br>${cash(amt(tmp))}</span></div>
+    <label class="dskip"><input type="checkbox" id="mskip"><span>ไม่ต้องถามอีก 10 นาที</span><small>ลากแล้วเปลี่ยนทันที · ยังกดเลิกทำได้</small></label>
+    <div class="cfoot"><button class="ghostb" onclick="closeModal()">ยกเลิก</button><span class="sp"></span><button class="go sm" id="mv1">เปลี่ยนเป็น ${h} ชม.</button></div>`);
+  $('#mv1').onclick = () => { if ($('#mskip').checked){ try{ localStorage.setItem(SKIPMOVE, Date.now() + 10*60000); }catch{} } closeModal(); setLen(s, h); };
+  setTimeout(() => $('#mv1')?.focus(), 50);
+}
+// the grip along a class's bottom edge: drag down = longer, up = shorter, half an hour per notch
+{
+  const STEP = 26; let L = null, tip = null;
+  addEventListener('pointerdown', e => {
+    if (e.button !== 0) return; const g = e.target.closest?.('.mvlen'); if (!g) return;
+    const el = g.closest('[data-sid]'), s = el && DB.sessions.find(x => x.id === el.dataset.sid); if (!s) return;
+    e.preventDefault(); MV.on = true; L = {s, el, y0: e.clientY, h: +s.h || 1, id: e.pointerId}; el.classList.add('mvlenon');
+    tip = document.createElement('div'); tip.id = 'mvtip'; document.body.append(tip); show(e);
+  });
+  const hOf = y => Math.min(4, Math.max(.5, L.s.h + Math.round((y - L.y0) / STEP) * .5));
+  const show = e => { L.h = hOf(e.clientY); tip.innerHTML = `<b>${L.h} ชม.</b><small>${L.s.time}–${endOf({...L.s, h: L.h})}</small>`;
+    tip.classList.toggle('chg', L.h !== +L.s.h); tip.style.transform = `translate(${e.clientX + 16}px, ${e.clientY - 20}px)`; };
+  addEventListener('pointermove', e => { if (L && e.pointerId === L.id) show(e); });
+  const stop = (e, go) => { if (!L || e.pointerId !== L.id) return; const {s, h, el} = L; el.classList.remove('mvlenon'); tip?.remove(); tip = null; L = null;
+    setTimeout(() => MV.on = false, 0);
+    const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 60);
+    if (go && h !== +s.h) askLen(s, h); };
+  addEventListener('pointerup', e => stop(e, true));
+  addEventListener('pointercancel', e => stop(e, false));
+}
 function moveTo(s, date){
   snap(); if (isGen(s)) addSkip(s);
   const from = s.date; s.date = date; s.series = null;
@@ -2206,7 +2266,7 @@ function askMove(s, date){
   if (skipMove()) return moveTo(s, date);
   const tmp = {...s, date}, cw = clashWith(tmp), hol = isHolD(date);
   openModal(`<h2>เลื่อนคาบนี้?</h2><div class="paycard"><span class="cb ${colorOf(s.who)}"></span><div class="pcm"><b>${esc(st(s.who)?.name ?? '?')}</b>
-      <small><s>${dLabel(s.date)}</s> → ${dLabel(date)} · ${s.time}–${endOf(s)}</small>${cw.length ? `<em class="mvw">⚠ ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time).join(', ')}</em>` : ''}${hol ? `<em class="mvw">☂ วันนั้นเป็นวันหยุด · ไม่นับเงิน</em>` : ''}</div>
+      <small><s>${dLabel(s.date)}</s> → ${dLabel(date)} · ${s.time}–${endOf(s)}</small>${cw.length ? `<em class="mvw">⚠ ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time).join(', ')}</em>` : ''}${hol ? `<em class="mvw">☂ วันนั้นเป็นวันหยุด · ไม่นับเงิน</em>` : ''}${examOf(date) ? `<em class="mvw">📝 วันนั้นอยู่ในช่วงสอบ${esc(examOf(date).t)}</em>` : ''}</div>
       <span class="pca">${cash(amt(s))}</span></div>
     <label class="dskip"><input type="checkbox" id="mskip"><span>ไม่ต้องถามอีก 10 นาที</span><small>ลากแล้วเลื่อนทันที · ยังกดเลิกทำได้</small></label>
     <div class="cfoot"><button class="ghostb" onclick="closeModal()">ยกเลิก</button><span class="sp"></span><button class="go sm" id="mv1">เลื่อนไป ${dLabel(date)}</button></div>`);
@@ -2244,6 +2304,7 @@ function askMove(s, date){
   addEventListener('pointerdown', e => {
     if (e.button !== 0 || h) return;
     const el = e.target.closest?.('[data-sid]'); if (!el) return;
+    if (e.target.closest('.mvlen')) return;   // that's the length grip
     const b = e.target.closest('button,input,a,select,textarea'); if (b && el.contains(b) && b !== el) return;   // stamps / ticks keep their own tap
     const s = DB.sessions.find(x => x.id === el.dataset.sid); if (!s) return;
     h = {s, el, x: e.clientX, y: e.clientY, id: e.pointerId}; h.t = setTimeout(lift, HOLD);
@@ -2272,7 +2333,7 @@ function stripFrom(iso, who = edit?.who){
   const start = new Date(iso+'T00:00'), t0 = isoD(NOW); let h = '';
   for (let k = 0; k < 35; k++){ const d = new Date(start); d.setDate(d.getDate()+k); const i = isoD(d), w = d.getDay();
     const reg = (st(who)?.slots || []).some(x => x[0] === w);
-    h += `<button class="dt${w===0||w===6?' we':''}${isHolD(i)?' hol':''}${i<t0?' past':''}${i===t0?' today':''}${reg?' reg':''}" data-d="${i}">${TH_D[w]}<b>${d.getDate()}</b>${d.getDate()===1||k===0?`<em>${TH_M[d.getMonth()]}</em>`:''}</button>`; }
+    h += `<button class="dt${w===0||w===6?' we':''}${isHolD(i)?' hol':''}${examOf(i)?' exam':''}${i<t0?' past':''}${i===t0?' today':''}${reg?' reg':''}" data-d="${i}">${TH_D[w]}<b>${d.getDate()}</b>${d.getDate()===1||k===0?`<em>${TH_M[d.getMonth()]}</em>`:''}</button>`; }
   return h;
 }
 const shift = (iso, n) => { const d = new Date(iso+'T00:00'); d.setDate(d.getDate()+n); return isoD(d); };
@@ -2340,7 +2401,8 @@ function picker(){
 function clashNote(){
   const [h0,m0] = edit.time.split(':').map(Number), a = h0*60+m0, b = a + edit.h*60;
   const clash = DB.sessions.filter(x => x.date === edit.date && x.id !== edit.id && x.status !== 'cancel' && (([h,m]) => h*60+m < b && h*60+m + x.h*60 > a)(x.time.split(':').map(Number)));
-  return clash.length ? `⚠ ชนกับ ${clash.map(x => `${esc(st(x.who)?.name)} ${x.time}`).join(', ')}` : isHolD(edit.date) ? '☂ วันหยุด · ไม่นับเงิน' : '';
+  const ex = examOf(edit.date), en = ex ? `📝 ช่วงสอบ${ex.t}` : '';
+  return clash.length ? `⚠ ชนกับ ${clash.map(x => `${esc(st(x.who)?.name)} ${x.time}`).join(', ')}${en ? ' · ' + esc(en) : ''}` : isHolD(edit.date) ? '☂ วันหยุด · ไม่นับเงิน' : esc(en);
 }
 function paintEdit(full){
   const p = st(edit.who), tok = (k, lab, val, cls='') => `<button class="tok ${cls} ${edit.pick===k?'on':''}" data-p="${k}"><small>${lab}</small><b>${val}</b></button>`;
@@ -2404,6 +2466,28 @@ function toggleHol(iso){
   calm = true; try { renderAll(); } finally { calm = false; }   // a tap on a day shouldn't replay the chart/progress intro
 }
 
+/* ---------- exam windows editor (opened from the calendar's day pane) ---------- */
+function editExams(){
+  const list = (DB.exams || []).map(e => ({...e}));
+  const row = (e, i) => `<div class="exr" data-i="${i}"><input class="ln" data-f="t" value="${esc(e.t)}" placeholder="ชื่อ เช่น ไฟนอล" aria-label="ชื่อช่วงสอบ">
+    <input type="date" data-f="a" value="${e.a}" aria-label="เริ่ม"><span>→</span><input type="date" data-f="b" value="${e.b}" aria-label="ถึง"><button class="x2" data-rm="${i}" title="ลบ" aria-label="ลบ">✕</button></div>`;
+  const paint = () => { $('#exl').innerHTML = list.map(row).join('') || '<p class="mut">ยังไม่มีช่วงสอบ</p>'; };
+  openModal(`<button class="pdx x" onclick="closeModal()" title="ปิด">✕</button><h2>📝 ช่วงสอบ</h2>
+    <p class="mut" style="margin:0 0 10px;font-size:.85rem">วันในช่วงนี้จะมีแถบสีบนปฏิทินและตารางสอน · นัดคาบในช่วงนี้จะมีเตือน</p>
+    <div id="exl"></div><button class="chip" id="exadd" style="margin-top:10px">＋ เพิ่มช่วงสอบ</button>
+    <div class="cfoot"><button class="ghostb" onclick="closeModal()">ยกเลิก</button><span class="sp"></span><button class="go sm" id="exsave">บันทึก</button></div>`);
+  paint();
+  $('#sheet').oninput = e => { const r = e.target.closest('.exr'); if (r && e.target.dataset.f) list[+r.dataset.i][e.target.dataset.f] = e.target.value; };
+  $('#sheet').onclick = e => {
+    if (e.target.id === 'exadd'){ const t = isoD(NOW); list.push({a: t, b: shift(t, 7), t: 'สอบ'}); paint(); }
+    else if (e.target.dataset.rm !== undefined){ list.splice(+e.target.dataset.rm, 1); paint(); }
+    else if (e.target.id === 'exsave'){
+      const ok = list.filter(e => e.a && e.b).map(e => e.a > e.b ? {...e, a: e.b, b: e.a} : e).map(e => ({...e, t: e.t.trim() || 'สอบ'})).sort((x, y) => x.a.localeCompare(y.a));
+      snap(); DB.exams = ok; save(); closeModal(); renderAll(); toast(`บันทึกช่วงสอบ ${ok.length} ช่วง`, true);
+    }
+  };
+}
+
 /* ---------- calendar drawer ---------- */
 let cy = NOW.getFullYear(), cm = NOW.getMonth(), cday = isoD(NOW);
 $('#cprev').onclick = () => { cm--; if (cm < 0){ cm = 11; cy--; } renderCal(true); };
@@ -2420,7 +2504,8 @@ function renderCal(anim){
     const iso = `${cy}-${pad(cm+1)}-${pad(d)}`;
     const items = [...DB.deadlines.filter(x => x.d === iso).map(x => `<span class="ev dl">⚑ ${esc(x.t)}</span>`),
       ...sorted(ses.filter(s => s.date === iso)).map(e => `<span data-sid="${e.id}" class="ev ${colorOf(e.who)} ${counts(e)?'':'x'} ${clashWith(e).length?'clash':''}" title="${e.time}${clashWith(e).length ? ' · ⚠ ชน' : ''}"><em>${e.time}</em>${esc(st(e.who)?.name)}</span>`)];
-    h += `<button class="mc${iso===isoD(NOW)?' today':''}${isHolD(iso)?' hol':''}${iso===cday?' sel':''}" style="--i:${i++}" data-iso="${iso}" data-drop="${iso}"><span class="n">${d}</span><span class="evs">${items.slice(0,2).join('')}${items.length > 2 ? `<span class="more">+${items.length-2} อีก</span>` : ''}</span></button>`;
+    const ex = examOf(iso);
+    h += `<button class="mc${iso===isoD(NOW)?' today':''}${isHolD(iso)?' hol':''}${ex?' exam':''}${iso===cday?' sel':''}" style="--i:${i++}" data-iso="${iso}" data-drop="${iso}"><span class="n">${d}${ex && (iso === ex.a || d === 1) ? `<em class="extag">📝 ${esc(ex.t)}</em>` : ''}</span><span class="evs">${items.slice(0,2).join('')}${items.length > 2 ? `<span class="more">+${items.length-2} อีก</span>` : ''}</span></button>`;
   }
   const tail = (7 - (off + days) % 7) % 7; for (let k = 1; k <= tail; k++) h += `<div class="mc out" style="--i:${i++}"><span class="n">${k}</span></div>`;
   $('#mcal').classList.toggle('still', !anim);
@@ -2432,9 +2517,9 @@ function renderDay(){
   qsa('#mcal .mc[data-iso]').forEach(b => b.classList.toggle('sel', b.dataset.iso === cday));
   const x = new Date(cday+'T00:00'), hol = isHolD(cday), dayS = sorted(DB.sessions.filter(s => s.date === cday)), dl = DB.deadlines.filter(d => d.d === cday);
   const sum = dayS.filter(counts).reduce((a,s)=>a+amt(s),0);
-  $('#daypane').innerHTML = `<div class="ah ${cday===isoD(NOW)?'today':''} ${hol?'hol':''}"><span class="big">${x.getDate()}</span><h3>${TH_DF[x.getDay()]}</h3><p>${x.getDate()} ${TH_MF[x.getMonth()]} ${x.getFullYear()+543}${relOnly(cday) ? ' · '+relOnly(cday) : ''}</p><p class="ahs">${hol?'☂ วันหยุด · ':''}${dayS.length ? `${dayS.length} คาบ · ${cash(sum)}` : 'ไม่มีคาบ'}</p></div>
+  $('#daypane').innerHTML = `<div class="ah ${cday===isoD(NOW)?'today':''} ${hol?'hol':''}"><span class="big">${x.getDate()}</span><h3>${TH_DF[x.getDay()]}</h3><p>${x.getDate()} ${TH_MF[x.getMonth()]} ${x.getFullYear()+543}${relOnly(cday) ? ' · '+relOnly(cday) : ''}</p><p class="ahs">${examOf(cday) ? `📝 ช่วงสอบ${esc(examOf(cday).t)} · ` : ''}${hol?'☂ วันหยุด · ':''}${dayS.length ? `${dayS.length} คาบ · ${cash(sum)}` : 'ไม่มีคาบ'}</p></div>
     <div class="ab">${dl.map(d => `<div class="dlr">⚑ ${esc(d.t)}</div>`).join('')}${dayS.map(s => rw(s)).join('') || (dl.length ? '' : '<div class="free">ว่างทั้งวัน<small>พักได้ หรือเปิดรับน้องเพิ่ม</small></div>')}</div>
-    <div class="acts"><button class="go sm" onclick="editSession(null,'${cday}')">＋ คาบวันนี้</button><button class="chip" onclick="toggleHol('${cday}')">${hol ? '↺ ยกเลิกวันหยุด' : '☂ ตั้งเป็นวันหยุด'}</button></div>`;
+    <div class="acts"><button class="go sm" onclick="editSession(null,'${cday}')">＋ คาบวันนี้</button><button class="chip" onclick="toggleHol('${cday}')">${hol ? '↺ ยกเลิกวันหยุด' : '☂ ตั้งเป็นวันหยุด'}</button><button class="chip" onclick="editExams()">📝 ช่วงสอบ</button></div>`;
 }
 
 /* ---------- students drawer ---------- */
