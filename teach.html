@@ -1122,6 +1122,22 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .mvover{background:var(--yel)!important;color:#141414!important;scale:1.07;outline:3px solid var(--ink);outline-offset:-1px;z-index:2;transition:scale .3s var(--sp),background .15s}
 .dc.mvover{scale:1.012}.cday.mvover{scale:1.04}
 .mvw{color:var(--red)}
+#mvdock .mvb{display:flex;gap:8px;align-items:stretch}#mvdock .mvg{flex:1;min-width:0}
+.mvbin{flex:none;width:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:2px dashed var(--ink);background:var(--card);color:var(--ink);font-size:.72rem;font-weight:800;transition:background .2s,color .2s,scale .35s var(--sp),border-color .2s}
+#mvdock.on .mvbin{animation:mvchip .45s var(--sp) both;animation-delay:.3s}
+.mvbin svg{width:32px;height:37px;overflow:visible}
+.mvbin svg .lid{fill:currentColor;stroke:currentColor;transform-origin:37px 9px;transition:rotate .35s var(--sp),translate .35s var(--sp)}
+.mvbin svg .can{fill:none;stroke:currentColor;stroke-width:3;stroke-linejoin:round}
+.mvbin svg .ln{stroke:currentColor;stroke-width:2.5;stroke-linecap:round}
+.mvbin.mvover{background:var(--red)!important;color:#fff!important;border-style:solid;scale:1.1}
+.mvbin.mvover svg .lid{rotate:28deg;translate:2px -5px}
+.mvbin.mvover svg{animation:binwob .5s var(--ez) infinite alternate}
+@keyframes binwob{from{rotate:-4deg}to{rotate:4deg}}
+.mvbin.gulp{background:var(--red);color:#fff;border-style:solid}
+.mvbin.gulp svg{animation:bingulp .45s var(--sp) .18s both}.mvbin.gulp svg .lid{rotate:0deg;translate:0 0;transition-delay:.15s}
+@keyframes bingulp{30%{scale:1.18 .82}60%{scale:.92 1.1}100%{scale:1}}
+#mvghost.doom{scale:.82;rotate:-6deg!important;border-color:var(--red);box-shadow:5px 6px 0 var(--red)}
+@media (max-width:420px){.mvbin{width:58px}}
 .mvlen{position:absolute;left:0;right:0;bottom:-3px;height:14px;cursor:ns-resize;touch-action:none;z-index:3}
 .mvlen:after{content:"";position:absolute;left:50%;bottom:4px;width:34px;height:4px;translate:-50% 0;background:var(--ink);opacity:0;transition:opacity .2s,width .35s var(--sp),background .2s,height .2s}
 [data-sid]:hover>.mvlen:after{opacity:.55}
@@ -2144,7 +2160,6 @@ function rw(s, pv){
     <span class="nt">${s.status === 'done' && s.log?.topic ? `<b>📘 ${esc(s.log.topic)}</b>` : lastOf(s, 'span', 'plast') || (s.note ? `<b>${esc(s.note)}</b>` : '')}</span>
     <span class="st">${stampOf(s, pv)}</span>
     ${pv || s.status === 'cancel' ? '' : '<span class="mvlen" title="ลากขึ้น/ลงเพื่อเปลี่ยนความยาวคาบ"></span>'}
-    ${pv ? '' : `<span class="tools">${s.status === 'done' ? `<button title="บันทึกการสอน" onclick="event.stopPropagation();wrapUp('${s.id}')">📝</button>` : ''}<button title="แก้ / เลื่อน" onclick="event.stopPropagation();editSession('${s.id}')">✎</button><button class="del" title="ลบ" onclick="event.stopPropagation();delSession('${s.id}')">🗑</button></span>`}
   </div>`;
 }
 function stampOf(s, pv){
@@ -2166,7 +2181,6 @@ function tk(s, o = {}){
     <span class="face ${colorOf(s.who)}"><b>${esc((p?.name || '?')[0])}</b></span>
     <span class="mid">${o.date ? `<span class="dl">${dLabel(s.date)}${relOnly(s.date) ? ' · '+relOnly(s.date) : ''}</span>` : ''}<span class="when">${s.time}<small>– ${endOf(s)} · ${s.h} ชม.</small></span><span class="who">${esc(p?.name ?? '?')}</span>${s.note ? `<span class="nt">📝 ${esc(s.note)}</span>` : ''}</span>
     <span class="stub">${stampOf(s, o.pv)}</span>
-    ${o.pv ? '' : `<span class="tools"><button title="แก้ / เลื่อน" onclick="event.stopPropagation();editSession('${s.id}')">✎</button><button class="del" title="ลบ" onclick="event.stopPropagation();delSession('${s.id}')">🗑</button></span>`}
   </div>`;
 }
 function renderAll(){ histMark(); renderMoney(); renderSchedule(); if (openD === 'cal') renderCal(); if (openD === 'stu') renderStudents(); if (openD === 'kit'){ writeKit(); } }
@@ -2367,8 +2381,10 @@ function askMove(s, date){
   const HOLD = 380, SLOP = 8, K = reduced ? 1 : .26;
   let h = null, eat = false, ghost = null, dock = null, over = null, G = null;
   const mon = iso => { const d = new Date(iso + 'T00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoD(d); };
-  const lit = el => { if (over === el) return; over?.classList.remove('mvover'); over = el; el?.classList.add('mvover'); ghost?.classList.toggle('near', !!el); if (el){ navigator.vibrate?.(4); SFX.play('key'); } };
-  const drop = (x, y) => { const el = document.elementFromPoint(x, y)?.closest('[data-drop]'); return el && el.dataset.drop !== h.s.date ? el : null; };
+  const lit = el => { if (over === el) return; over?.classList.remove('mvover'); over = el; el?.classList.add('mvover'); ghost?.classList.toggle('near', !!el); ghost?.classList.toggle('doom', !!el?.dataset.bin);
+    if (el){ navigator.vibrate?.(el.dataset.bin ? [8, 40, 8] : 4); SFX.play(el.dataset.bin ? 'bad' : 'key'); } };
+  const drop = (x, y) => { const at = document.elementFromPoint(x, y), bin = at?.closest('[data-bin]'); if (bin) return bin;
+    const el = at?.closest('[data-drop]'); return el && el.dataset.drop !== h.s.date ? el : null; };
   function lift(){
     MV.on = true; h.el.classList.add('mvsrc'); navigator.vibrate?.(12); SFX.play('select');
     const p = st(h.s.who), r = h.el.getBoundingClientRect();
@@ -2382,7 +2398,8 @@ function askMove(s, date){
     for (let i = 0; i < 21; i++){ const iso = shift(start, i), d = new Date(iso + 'T00:00');
       k += `<span class="mvd${iso === h.s.date ? ' cur' : ''}${iso === t0 ? ' today' : ''}${iso < t0 ? ' past' : ''}${isHolD(iso) ? ' hol' : ''}${examOf(iso) ? ' exam' : ''}" style="--i:${i}" data-drop="${iso}">${TH_D[d.getDay()]}<b>${d.getDate()}</b>${d.getDate() === 1 || i === 0 ? `<em>${TH_M[d.getMonth()]}</em>` : ''}</span>`; }
     dock = document.createElement('div'); dock.id = 'mvdock'; if (h.y > innerHeight * .55) dock.className = 'top';   // sits on the half you're not dragging from, so it never hides the day you want
-    dock.innerHTML = `<div class="mvh">ลากไปวางบนวันที่จะเลื่อนไป · ปล่อยที่อื่นเพื่อยกเลิก</div><div class="mvg">${k}</div>`;
+    dock.innerHTML = `<div class="mvh">ลากไปวางบนวันที่จะเลื่อนไป · ลงถังเพื่อลบ · ปล่อยที่อื่นเพื่อยกเลิก</div><div class="mvb"><div class="mvg">${k}</div>
+      <div class="mvbin" data-bin="1" aria-label="ถังขยะ"><svg viewBox="0 0 40 46" aria-hidden="true"><g class="lid"><rect x="3" y="7" width="34" height="5" rx="1"/><rect x="14" y="2" width="12" height="6" rx="1" fill="none" stroke-width="3"/></g><path class="can" d="M7 15h26l-2.4 27a2 2 0 0 1-2 1.8H11.4a2 2 0 0 1-2-1.8z"/><path class="ln" d="M15 21v16M20 21v16M25 21v16"/></svg><span>ลบ</span></div></div>`;
     document.body.append(dock); later(() => { dock?.classList.add('on'); ghost?.classList.add('on'); });
     loop();
   }
@@ -2403,6 +2420,7 @@ function askMove(s, date){
   function end(target){
     clearTimeout(h?.t); cancelAnimationFrame(G?.raf); const src = h?.el; lit(null);
     if (src){ src.classList.remove('mvsrc'); if (MV.on && !target){ src.classList.add('mvback'); src.addEventListener('animationend', () => src.classList.remove('mvback'), {once: true}); } }
+    if (target?.dataset.bin){ target.classList.add('gulp'); const d0 = dock; dock = null; setTimeout(() => { if (d0){ d0.classList.remove('on'); setTimeout(() => d0.remove(), 320); } }, 380); }
     if (ghost){ if (target){ const r = target.getBoundingClientRect(), gr = ghost.getBoundingClientRect(); fly(ghost, r.left + r.width / 2 - gr.width / 2, r.top + r.height / 2 - gr.height / 2, true); }
       else fly(ghost, G.home.x, G.home.y, false); }
     ghost = null; const d = dock; dock = null; if (d){ d.classList.remove('on'); setTimeout(() => d.remove(), 320); }
@@ -2426,7 +2444,8 @@ function askMove(s, date){
   addEventListener('pointerup', e => {
     if (!h || e.pointerId !== h.id) return;
     const was = MV.on, s = h.s, t = was ? drop(e.clientX, e.clientY) : null; end(t);
-    if (t) setTimeout(() => askMove(s, t.dataset.drop), reduced ? 0 : 180); else if (was) SFX.play('off');
+    if (t?.dataset.bin) setTimeout(() => delSession(s.id), reduced ? 0 : 420);
+    else if (t) setTimeout(() => askMove(s, t.dataset.drop), reduced ? 0 : 180); else if (was) SFX.play('off');
   });
   addEventListener('pointercancel', () => h && end());
   addEventListener('keydown', e => { if (e.key === 'Escape' && MV.on) end(); });
@@ -2474,7 +2493,7 @@ function editSession(id, date){
             : `<div><span class="eb2">ทำซ้ำทุกสัปดาห์</span><div class="chips" id="erep">${[[0,'ครั้งเดียว'],[3,'4 สัปดาห์'],[7,'8 สัปดาห์'],[11,'ทั้งเทอม']].map(([v,t]) => `<button class="chip" data-rep="${v}">${t}</button>`).join('')}</div></div>`}
       </div>
     </div>
-    <div class="cfoot">${s ? `<button class="linkx" onclick="delSession('${s.id}')">ลบคาบนี้</button>` : ''}<span class="ewarn" id="ewarn"></span><span class="sp"></span><button class="ghostb" onclick="closeModal()">ยกเลิก</button><button class="go" onclick="saveSession()">${s ? 'บันทึก' : 'เพิ่มคาบ'}</button></div>`, true);
+    <div class="cfoot">${s ? `<button class="linkx" onclick="delSession('${s.id}')">ลบคาบนี้</button>${s.status === 'done' ? `<button class="linkx" onclick="closeModal();wrapUp('${s.id}')">📝 บันทึกการสอน</button>` : ''}` : ''}<span class="ewarn" id="ewarn"></span><span class="sp"></span><button class="ghostb" onclick="closeModal()">ยกเลิก</button><button class="go" onclick="saveSession()">${s ? 'บันทึก' : 'เพิ่มคาบ'}</button></div>`, true);
   $('#sheet').onclick = e => {
     const t = e.target.closest('button'); if (!t) return; const d = t.dataset;
     let adv = false;
