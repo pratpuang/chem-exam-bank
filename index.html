@@ -1960,8 +1960,9 @@ const MWQ=(()=>{
     return`<h4>Mw ของสารในโจทย์ · g/mol</h4>`+rows.map(({f,c})=>{
       const es=Object.entries(c),tot=es.reduce((a,[k,n])=>a+SYM[k].m*n,0),lone=es.length===1&&es[0][1]===1;
       const parts=es.map(([k,n])=>n===1?r1(SYM[k].m):`${n}(${r1(SYM[k].m)})`).join(" + "),sum=es.reduce((a,[k,n])=>a+n*+r1(SYM[k].m),0);
-      const eq=lone?`มวลอะตอม = ${r1(tot)}`:`${fHTML(f)} = ${parts} ${Math.abs(sum-+r1(tot))<.05?"=":"≈"} ${r1(tot)}`;
-      return`<button class="mwrow" aria-expanded="false"><span>${fHTML(f)}</span><span><b>${r1(tot)}</b> <small>g/mol</small></span></button><div class="mwbrk">${eq}</div>`;}).join("");}
+      const T=lone?r1(tot):r1(sum);   // Prat 2026-10-17: total = sum of the rounded parts (textbook style, NaCl 58.5), so the working always adds up
+      const eq=lone?`มวลอะตอม = ${T}`:`${fHTML(f)} = ${parts} = ${T}`;
+      return`<button class="mwrow" aria-expanded="false"><span>${fHTML(f)}</span><span><b>${T}</b> <small>g/mol</small></span></button><div class="mwbrk">${eq}</div>`;}).join("");}
   return{find,panel};})();
 /*ENDMWQ*/
 const STRIP=(()=>{
