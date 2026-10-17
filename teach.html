@@ -633,7 +633,7 @@ button.fg:hover{background:#fbf3dc}
 @media (max-width:700px){.nb{grid-template-columns:1fr;gap:12px}.nb .tm{font-size:3.2rem}}
 .alert{display:flex;gap:10px;align-items:center;border-left:6px solid var(--yel);background:var(--stbg);padding:9px 12px;font-size:.85rem;font-weight:600;margin:-8px 0 22px}
 #whof.who-f{gap:4px 16px;margin-bottom:18px}
-#whof.who-f button{border:0;background:none;padding:4px 0;font-size:.85rem;border-bottom:3px solid transparent;transform:none}
+#whof.who-f button{border:0;background:none;padding:4px 0;font-size:.85rem;border-bottom:3px solid transparent;transform:none;touch-action:none;-webkit-user-select:none;user-select:none}
 #whof.who-f button i{border-radius:50%;width:11px;height:11px}
 #whof.who-f button.on{color:var(--ink);background:none;border-bottom-color:var(--ink)}
 #whof.who-f button:not(.on){color:var(--mut)}
@@ -740,7 +740,7 @@ button.fg:hover{background:#fbf3dc}
 /* track: half-hour notches, taller marks on the hour; the fill takes the student's colour */
 .hmr{position:relative;flex:none;width:112px;height:12px;border:2px solid var(--ink);background:linear-gradient(90deg,transparent calc(12.5% - 1px),var(--grid) calc(12.5% - 1px) 12.5%,transparent 12.5%) 0 100%/25% 45% repeat-x,linear-gradient(90deg,transparent calc(25% - 1.5px),color-mix(in srgb,var(--ink) 35%,transparent) calc(25% - 1.5px) 25%,transparent 25%) 0 0/25% 100% repeat-x,var(--paper);transition:box-shadow .2s var(--ez)}
 .hmr i{position:absolute;left:0;top:0;bottom:0;border-right:2px solid var(--ink);transition:width .28s var(--sp)}
-.hmr i:not([class*="c-"]){background:var(--ink)}
+.hmr i:not([class*="c-"]):not([class*="cx-"]){background:var(--ink)}
 .hmr s{position:absolute;top:50%;width:14px;height:24px;translate:-50% -50%;background:var(--card);border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);transition:left .28s var(--sp),background .15s,scale .25s var(--sp),box-shadow .2s}
 .hmr s:before{content:"";position:absolute;inset:5px 3px;background:linear-gradient(90deg,var(--ink) 0 2px,transparent 2px calc(100% - 2px),var(--ink) calc(100% - 2px))}
 .hm:hover .hmr s,.hmi:hover .hmr s{background:var(--yel)}
@@ -1169,6 +1169,28 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 @media (max-width:560px){.aw-steps button{flex-direction:column;gap:4px;font-size:.72rem;text-align:center;padding:4px 2px}.aw-stu{grid-template-columns:1fr 1fr}.aw-d{min-height:52px}.aw-two{grid-template-columns:1fr}.aw-peek{display:none}.aw-time input{width:120px;font-size:2.1rem}}
 #calendar .day{touch-action:none;-webkit-user-select:none;user-select:none;transition:background .15s,color .15s,scale .25s var(--sp)}
 #calendar .day.swept{scale:1.08;z-index:1}
+#mcal{transition:translate .25s var(--ez)}#mcal.swiping{transition:none}
+#mcal.slr{animation:calr .35s var(--ez)}#mcal.sll{animation:call .35s var(--ez)}
+@keyframes calr{from{opacity:.2;translate:50px 0}}@keyframes call{from{opacity:.2;translate:-50px 0}}
+input.tin,#aw-t{cursor:ns-resize;touch-action:none}input.tin:focus,#aw-t:focus{cursor:text}
+input.tin.scrub,#aw-t.scrub{background:color-mix(in srgb,var(--yel) 45%,transparent)!important;outline:none}
+/* colour wheel */
+.cwbtn{width:34px;height:34px;border:3px solid var(--ink);background:conic-gradient(red,#ff0,lime,cyan,blue,#f0f,red);transition:transform .12s,box-shadow .12s}
+.cwbtn.on{transform:translateY(-4px);box-shadow:0 4px 0 var(--ink)}
+.cwpress{animation:cwp .3s var(--sp)}@keyframes cwp{50%{scale:1.12}}
+#cwheel{position:fixed;z-index:190;width:248px;padding:14px;background:var(--card);color:var(--ink);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--sh);opacity:0;scale:.92;transition:opacity .15s,scale .3s var(--sp)}
+#cwheel.on{opacity:1;scale:1}#cwheel.out{opacity:0;scale:.94}
+.cw-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.cw-pv{width:26px;height:26px;border-radius:50%;border:2px solid var(--ink)}.cw-hex{flex:1;font:800 .85rem "JetBrains Mono"}
+.cw-x{border:0;background:none;color:var(--mut);cursor:pointer;font-size:.9rem}.cw-x:hover{color:var(--ink)}
+.cw-w{--l:50;position:relative;width:100%;aspect-ratio:1;border-radius:50%;border:2px solid var(--ink);background:radial-gradient(circle,hsl(0 0% calc(var(--l)*1%)) 0%,transparent 70%),conic-gradient(hsl(0 90% calc(var(--l)*1%)),hsl(60 90% calc(var(--l)*1%)),hsl(120 90% calc(var(--l)*1%)),hsl(180 90% calc(var(--l)*1%)),hsl(240 90% calc(var(--l)*1%)),hsl(300 90% calc(var(--l)*1%)),hsl(360 90% calc(var(--l)*1%)));cursor:crosshair;touch-action:none}
+.cw-dot{position:absolute;width:20px;height:20px;translate:-50% -50%;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--ink);pointer-events:none}
+.cw-l{width:100%;margin:14px 0 10px;-webkit-appearance:none;appearance:none;height:12px;border:2px solid var(--ink);background:linear-gradient(90deg,#141414,var(--hs,red),#fff)}
+.cw-l::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:22px;background:var(--card);border:2px solid var(--ink);cursor:pointer}
+.cw-l::-moz-range-thumb{width:14px;height:22px;background:var(--card);border:2px solid var(--ink);border-radius:0;cursor:pointer}
+.cw-pre{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-bottom:12px}
+.cw-pre button{aspect-ratio:1;border:2px solid var(--ink);cursor:pointer;transition:scale .15s var(--sp)}.cw-pre button:hover{scale:1.12}
+.cw-ok{width:100%;justify-content:center}
 .mbrc{margin-top:22px}
 .mbrh{margin-bottom:10px}
 .mbr{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);background:var(--card)}
@@ -1188,7 +1210,7 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .mbtp small{font-size:.7rem;color:var(--mut);font-weight:600}
 .mbhint{font-size:.74rem;font-weight:700;color:var(--mut);margin-top:14px}
 .mbss{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-.mbs{width:42px;height:42px;padding:0;border:2px solid var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;font:800 1rem/1 "JetBrains Mono";cursor:pointer;transition:transform .15s,opacity .2s,background .2s}
+.mbs{touch-action:none;-webkit-user-select:none;user-select:none;width:42px;height:42px;padding:0;border:2px solid var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;font:800 1rem/1 "JetBrains Mono";cursor:pointer;transition:transform .15s,opacity .2s,background .2s}
 .mbs small{font:700 .6rem/1 "JetBrains Mono";margin-top:2px;opacity:.8}
 .mbs.pd{background:var(--ink);color:var(--paper)}
 .mbs.ow{background:var(--red);color:#fff}
@@ -1577,7 +1599,17 @@ const $ = s => document.querySelector(s);
 const cash = n => '฿' + Math.round(n).toLocaleString('en-US');
 const subjL = x => x === 'bio' ? 'ชีวะ' : x === 'other' ? 'อื่นๆ' : 'เคมี';
 const st = id => DB.students.find(s => s.id === id) || (DB.archived || []).find(s => s.id === id);
-const colorOf = id => COLORS[(st(id)?.color ?? 0) % COLORS.length];
+// colour: 0–11 = the palette; ≥ CUSTOM = any colour you picked on the wheel, stored as CUSTOM + 0xRRGGBB in the same int column
+// (no schema change). Custom colours get a generated class, so every `class="${colorOf(id)}"` keeps working.
+const CUSTOM = 16777216;
+const cxDone = new Set();
+const colorClass = c => { c = +c || 0; if (c < CUSTOM) return COLORS[c % COLORS.length];
+  const hex = (c - CUSTOM).toString(16).padStart(6, '0').slice(-6), k = 'cx-' + hex;
+  if (!cxDone.has(k)){ cxDone.add(k); const [r, g, b] = [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16));
+    const st0 = document.getElementById('cxcss') || document.head.appendChild(Object.assign(document.createElement('style'), {id: 'cxcss'}));
+    st0.append(`.${k}{background:#${hex};color:${.299 * r + .587 * g + .114 * b > 150 ? '#141414' : '#fff'}}`); }
+  return k; };
+const colorOf = id => colorClass(st(id)?.color ?? 0);
 const mkey = (y,m) => `${y}-${m}`;
 const atOf = s => new Date(`${s.date}T${s.time}:00`);
 const isHolD = date => { const [y,m,d] = date.split('-').map(Number); return (DB.holidays[mkey(y,m-1)] || []).includes(d); };
@@ -2170,9 +2202,17 @@ function openMonthBreak(y, m){
   };
   $('#sheet').onclick = e => {
     const t = e.target.closest('.mbtick'); if (t){ const r = rows[+t.closest('.mbk').dataset.i], v = !r.on; r.ss.forEach(x => x.on = v); upd(); }
-    const b = e.target.closest('.mbs'); if (b){ const x = rows[+b.closest('.mbk').dataset.i].ss[+b.dataset.j]; x.on = !x.on; upd(); }
+    // (the date boxes are handled by the sweep below)
     if (e.target.id === 'mball'){ rows.forEach(r => r.ss.forEach(x => x.on = true)); upd(); }
   };
+  // sweep the date boxes: press one and drag across others (any student) — each takes the first box's new state
+  let SW = null;
+  const boxAt = (x, y) => document.elementFromPoint(x, y)?.closest('#sheet .mbs');
+  const paintBox = b => { if (!SW || SW.seen.has(b)) return; SW.seen.add(b); const x = rows[+b.closest('.mbk').dataset.i].ss[+b.dataset.j]; if (x.on !== SW.on){ x.on = SW.on; upd(); SFX.play('nib'); } };
+  $('#sheet').onpointerdown = e => { const b = e.target.closest('.mbs'); if (!b || e.button !== 0) return; e.preventDefault();
+    SW = {on: !rows[+b.closest('.mbk').dataset.i].ss[+b.dataset.j].on, seen: new Set(), id: e.pointerId}; paintBox(b); };
+  $('#sheet').onpointermove = e => { if (!SW || e.pointerId !== SW.id) return; const b = boxAt(e.clientX, e.clientY); if (b) paintBox(b); };
+  $('#sheet').onpointerup = $('#sheet').onpointercancel = e => { if (SW && e.pointerId === SW.id) SW = null; };
   $('#mbgot').textContent = cash(M.n ? M.earned : hist); $('#mbowe').textContent = cash(M.owe); $('#mbleft').textContent = cash(M.left);
   if ($('#mbpct')) $('#mbpct').textContent = `ได้แล้ว ${full ? Math.round((M.n ? M.earned : hist) / full * 100) : 0}%`;
   later(() => { document.querySelectorAll('.mbmix i').forEach(e => e.style.flexGrow = e.dataset.g); document.querySelectorAll('.mbseg i').forEach(e => e.style.width = e.dataset.w + '%'); });
@@ -2286,7 +2326,7 @@ function renderSchedule(){
   if (confirmN) nc += `<div class="alert">⏳ <span>มี <b>${confirmN} คาบ</b> ที่เลยเวลาแล้วแต่ยังไม่ได้ยืนยัน · แตะตรา <b>สอนแล้ว?</b></span></div>`;
   $('#nextcard').innerHTML = nc;
   let list = DB.sessions.filter(s => !whoF.size || whoF.has(s.who));
-  if (range === 'next') list = sorted(list.filter(s => s.date >= today || needsConfirm(s)));   // all of today (even classes already taught) + every upcoming one, no cap
+  if (range === 'next') list = sorted(list.filter(s => s.date >= today || needsConfirm(s) || isLive(s)));   // all of today (even classes already taught) + every upcoming one, no cap
   else list = [...list.filter(s => atOf(s) <= NOW)].sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time)).slice(0, 40);
   const groups = []; for (const s of list){ const g = groups[groups.length-1]; if (g && g.date === s.date) g.items.push(s); else groups.push({date:s.date, items:[s]}); }
   const keepX = rowKey === range + sview ? $('#slist .crow')?.scrollLeft : null; rowKey = range + sview;   // a sync re-render must not throw the row back to its first card
@@ -2757,10 +2797,11 @@ function quickAdd(who, iso, cell){
   let T = null, ghost = null, over = null;
   const K = reduced ? 1 : .3;
   const lit = el => { if (over === el) return; over?.classList.remove('mvover'); over = el; el?.classList.add('mvover'); ghost?.classList.toggle('near', !!el); if (el){ navigator.vibrate?.(4); SFX.play('key'); } };
-  const cellAt = (x, y) => document.elementFromPoint(x, y)?.closest('#mcal [data-drop]');
+  const cellAt = (x, y) => document.elementFromPoint(x, y)?.closest('#mcal [data-drop], #slist .dc[data-drop], #slist .cday[data-drop]');
   const loop = () => { if (!T?.on || !ghost) return; T.gx += (T.x + 14 - T.gx) * K; T.gy += (T.y - 46 - T.gy) * K; ghost.style.translate = `${T.gx}px ${T.gy}px`; T.raf = requestAnimationFrame(loop); };
-  addEventListener('pointerdown', e => { const c = e.target.closest?.('.trc'); if (!c || e.button !== 0) return;
-    e.preventDefault(); T = {who: c.dataset.who, el: c, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, id: e.pointerId, on: false}; });
+  addEventListener('pointerdown', e => { const c = e.target.closest?.('.trc, #whof button[data-w]:not([data-w="*"])'); if (!c || e.button !== 0) return;
+    if (c.classList.contains('trc')) e.preventDefault();
+    T = {who: c.dataset.who || c.dataset.w, el: c, legend: !c.classList.contains('trc'), x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, id: e.pointerId, on: false}; });
   addEventListener('pointermove', e => { if (!T || e.pointerId !== T.id) return; T.x = e.clientX; T.y = e.clientY;
     if (!T.on){ if (Math.hypot(T.x - T.x0, T.y - T.y0) < 5) return;
       T.on = true; MV.on = true; T.el.classList.add('trsrc'); SFX.play('select'); navigator.vibrate?.(10);
@@ -2775,9 +2816,79 @@ function quickAdd(who, iso, cell){
       else if (!reduced){ g.classList.add('home'); g.style.translate = `${t.el.getBoundingClientRect().left}px ${t.el.getBoundingClientRect().top}px`; setTimeout(() => g.remove(), 360); } else g.remove(); }
     setTimeout(() => MV.on = false, 0);
     if (t.on){ const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 80); }
-    if (cell) setTimeout(() => quickAdd(t.who, cell.dataset.drop, cell), reduced ? 0 : 200);
-    else if (!t.on && e.type === 'pointerup') toast('ลากชื่อไปวางบนวันในปฏิทิน');
+    if (cell) setTimeout(() => quickAdd(t.who, cell.dataset.drop, cell.querySelector('.dch') || cell), reduced ? 0 : 200);
+    else if (!t.on && e.type === 'pointerup' && !t.legend) toast('ลากชื่อไปวางบนวันในปฏิทิน');
     else if (t.on) SFX.play('off'); };
+  addEventListener('pointerup', end); addEventListener('pointercancel', end);
+}
+
+/* ---------- colour wheel: hue around, saturation from the centre out, a brightness slider, the 12 presets below ---------- */
+function colorPick(anchor, cur, onPick){
+  document.getElementById('cwheel')?.remove();
+  const hex2hsl = hex => { let [r, g, b] = [0, 2, 4].map(i => parseInt(hex.slice(i, i + 2), 16) / 255); const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2; let h = 0, sa = 0;
+    if (mx !== mn){ const d = mx - mn; sa = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; } return [h, sa * 100, l * 100]; };
+  const hsl2hex = (h, sa, l) => { sa /= 100; l /= 100; const k = n => (n + h / 30) % 12, a = sa * Math.min(l, 1 - l), f = n => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+    return [f(0), f(8), f(4)].map(x => Math.round(x * 255).toString(16).padStart(2, '0')).join(''); };
+  const rgbOf = cls => { const t = document.createElement('i'); t.className = cls; t.style.display = 'none'; document.body.append(t); const m = getComputedStyle(t).backgroundColor.match(/\d+/g) || [0, 0, 0]; t.remove(); return m.slice(0, 3).map(x => (+x).toString(16).padStart(2, '0')).join(''); };
+  let [h, sa, l] = hex2hsl(rgbOf(colorClass(cur)));
+  const box = document.createElement('div'); box.id = 'cwheel'; document.body.append(box);
+  box.innerHTML = `<div class="cw-top"><span class="cw-pv"></span><b class="cw-hex"></b><button class="cw-x" aria-label="ปิด">✕</button></div>
+    <div class="cw-w"><span class="cw-dot"></span></div>
+    <input type="range" class="cw-l" min="18" max="82" aria-label="ความสว่าง">
+    <div class="cw-pre">${COLORS.map((c, i) => `<button class="${c}" data-c="${i}" aria-label="สี ${i + 1}"></button>`).join('')}</div>
+    <button class="go sm cw-ok">ใช้สีนี้</button>`;
+  const W = box.querySelector('.cw-w'), dot = box.querySelector('.cw-dot'), L = box.querySelector('.cw-l');
+  const hexNow = () => hsl2hex(h, sa, l);
+  const show = () => { const hx = hexNow(); box.querySelector('.cw-pv').style.background = '#' + hx; box.querySelector('.cw-hex').textContent = '#' + hx;
+    const rad = h * Math.PI / 180, rr = sa / 100 * 50; dot.style.left = 50 + Math.sin(rad) * rr + '%'; dot.style.top = 50 - Math.cos(rad) * rr + '%'; dot.style.background = '#' + hx;
+    W.style.setProperty('--l', l); L.value = l; L.style.setProperty('--hs', `hsl(${h} ${sa}% 50%)`); };
+  let drag = false;
+  const at = e => { const r = W.getBoundingClientRect(), x = e.clientX - (r.left + r.width / 2), y = e.clientY - (r.top + r.height / 2);
+    h = (Math.atan2(x, -y) * 180 / Math.PI + 360) % 360; sa = Math.min(100, Math.hypot(x, y) / (r.width / 2) * 100); show(); };
+  W.onpointerdown = e => { e.preventDefault(); drag = true; W.setPointerCapture(e.pointerId); at(e); };
+  W.onpointermove = e => { if (drag) at(e); };
+  W.onpointerup = W.onpointercancel = () => { drag = false; };
+  L.oninput = () => { l = +L.value; show(); };
+  const close = () => { box.classList.add('out'); setTimeout(() => box.remove(), 160); removeEventListener('pointerdown', outside, true); };
+  const outside = e => { if (!box.contains(e.target) && e.target !== anchor) close(); };
+  box.onclick = e => { const b = e.target.closest('button'); if (!b) return;
+    if (b.classList.contains('cw-x')) return close();
+    if (b.dataset.c !== undefined){ onPick(+b.dataset.c); SFX.play('select'); return close(); }
+    if (b.classList.contains('cw-ok')){ onPick(CUSTOM + parseInt(hexNow(), 16)); SFX.play('select'); return close(); } };
+  const r = anchor.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight;
+  let x = Math.max(10, Math.min(r.left + r.width / 2 - bw / 2, innerWidth - bw - 10)), y = r.bottom + 10; if (y + bh > innerHeight - 10) y = Math.max(10, r.top - bh - 10);
+  box.style.left = x + 'px'; box.style.top = y + 'px'; show(); later(() => box.classList.add('on'));
+  setTimeout(() => addEventListener('pointerdown', outside, true), 0);
+}
+// long-press a student's dot / name (main-view legend, calendar name strip, student cards) → the wheel, saved straight away
+{
+  let P = null;
+  const whoOf = el => el.dataset.w || el.dataset.who || el.dataset.id;
+  addEventListener('pointerdown', e => { if (e.button !== 0) return; const el = e.target.closest?.('#whof button[data-w]:not([data-w="*"]), .trc, .sc[data-id]:not(.addcard)'); if (!el || e.target.closest('input,textarea,.segbar,.obody button,.obody a')) return;
+    const who = whoOf(el); if (!st(who)) return;
+    P = {el, who, x: e.clientX, y: e.clientY, id: e.pointerId, t: setTimeout(() => { if (!P || MV.on) return; const p = P; P = null; navigator.vibrate?.(15); SFX.play('select');
+      const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 600);
+      p.el.classList.add('cwpress'); setTimeout(() => p.el.classList.remove('cwpress'), 300);
+      colorPick(p.el, st(p.who).color ?? 0, v => setColor(p.who, v)); }, 550)}; });
+  addEventListener('pointermove', e => { if (P && e.pointerId === P.id && Math.hypot(e.clientX - P.x, e.clientY - P.y) > 6){ clearTimeout(P.t); P = null; } });
+  const end = e => { if (P && e.pointerId === P.id){ clearTimeout(P.t); P = null; } };
+  addEventListener('pointerup', end); addEventListener('pointercancel', end);
+  addEventListener('contextmenu', e => { if (e.target.closest?.('#whof button, .trc, .sc[data-id]') && e.pointerType !== 'mouse') e.preventDefault(); });
+}
+
+// any time box (.tin / the add-flow time): drag up = later, down = earlier, 15 min per notch; a plain tap still types.
+// The new time is committed on release through the box's own change handler, so each screen keeps its own logic.
+{
+  let Z = null;
+  addEventListener('pointerdown', e => { const el = e.target.closest?.('input.tin, #aw-t'); if (!el || e.button !== 0 || document.activeElement === el) return;   // already typing in it: leave it alone
+    e.preventDefault();   // no focus / text-selection yet, or the browser swallows the drag; a plain tap focuses it on release
+    Z = {el, y: e.clientY, x: e.clientX, v0: parseT(el.value) || el.value, id: e.pointerId, on: false, last: el.value}; });
+  addEventListener('pointermove', e => { if (!Z || e.pointerId !== Z.id) return; const dy = Z.y - e.clientY;
+    if (!Z.on){ if (Math.abs(dy) < 6 || Math.abs(dy) < Math.abs(e.clientX - Z.x)) return; Z.on = true; Z.el.blur(); Z.el.classList.add('scrub'); }
+    e.preventDefault(); const v = addMin(Z.v0, Math.round(dy / 12) * 15); if (v !== Z.last){ Z.last = v; Z.el.value = v; SFX.play('nib'); navigator.vibrate?.(3); } }, {passive: false});
+  const end = e => { if (!Z || e.pointerId !== Z.id) return; const z = Z; Z = null; if (!z.on){ if (e.type === 'pointerup'){ z.el.focus(); z.el.select(); } return; } z.el.classList.remove('scrub');
+    const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 80);
+    z.el.dispatchEvent(new Event('change', {bubbles: true})); };
   addEventListener('pointerup', end); addEventListener('pointercancel', end);
 }
 
@@ -2971,7 +3082,7 @@ function saveSession(){
 }
 
 /* =============================== modal + drawers =============================== */
-function openModal(html, wide){ const sh = $('#sheet'); sh.onclick = null; sh.className = 'sheet' + (wide ? ' wide' : ''); sh.innerHTML = html; sh.scrollTop = 0; $('#modal').classList.add('open'); }
+function openModal(html, wide){ const sh = $('#sheet'); sh.onclick = sh.onpointerdown = sh.onpointermove = sh.onpointerup = sh.onpointercancel = null; sh.className = 'sheet' + (wide ? ' wide' : ''); sh.innerHTML = html; sh.scrollTop = 0; $('#modal').classList.add('open'); }
 function closeModal(){ if ($('#modal').contains(document.activeElement)) document.activeElement.blur(); $('#modal').classList.remove('open'); }   // focus left in a hidden box would swallow Ctrl+Z
 let openD = null;
 function openDrawer(k){
@@ -3001,6 +3112,23 @@ function toggleHol(iso){
 let cy = NOW.getFullYear(), cm = NOW.getMonth(), cday = isoD(NOW);
 $('#cprev').onclick = () => { cm--; if (cm < 0){ cm = 11; cy--; } renderCal(true); };
 $('#cnext').onclick = () => { cm++; if (cm > 11){ cm = 0; cy++; } renderCal(true); };
+{
+  let S = null;
+  addEventListener('pointerdown', e => { if (e.button !== 0 || !e.target.closest?.('#mcal') || MV.on) return; S = {x: e.clientX, y: e.clientY, id: e.pointerId, on: false}; });
+  addEventListener('pointermove', e => { if (!S || e.pointerId !== S.id || MV.on) return; const dx = e.clientX - S.x, dy = e.clientY - S.y;
+    if (!S.on){ if (Math.abs(dx) < 14 || Math.abs(dx) < Math.abs(dy) * 1.4) return; S.on = true; $('#mcal').classList.add('swiping'); }
+    $('#mcal').style.translate = `${dx * .5}px 0`; });
+  const end = e => { if (!S || e.pointerId !== S.id) return; const s0 = S; S = null; if (!s0.on) return;
+    const dx = e.clientX - s0.x, g = $('#mcal'); g.classList.remove('swiping'); g.style.translate = '';
+    const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 80);
+    if (Math.abs(dx) > 60) calMove(dx < 0 ? 1 : -1); };
+  addEventListener('pointerup', end); addEventListener('pointercancel', end);
+  addEventListener('keydown', e => { if (openD !== 'cal' || $('#modal').classList.contains('open') || document.getElementById('qadd') || e.target.closest?.('input,textarea,select') || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft'){ e.preventDefault(); calMove(e.key === 'ArrowRight' ? 1 : -1); } });
+}
+// change the calendar month with a slide in from the side you're heading to
+function calMove(d){ cm += d; if (cm < 0){ cm = 11; cy--; } if (cm > 11){ cm = 0; cy++; } renderCal(false); SFX.play('key');
+  if (!reduced){ const g = $('#mcal'); g.classList.remove('slr', 'sll'); void g.offsetWidth; g.classList.add(d > 0 ? 'slr' : 'sll'); } }
 $('#ctoday').onclick = () => { cy = NOW.getFullYear(); cm = NOW.getMonth(); cday = isoD(NOW); renderCal(true); };
 function renderCal(anim){
   const M = monthMoney(cy, cm), hols = (DB.holidays[mkey(cy,cm)] || []).length;
@@ -3115,7 +3243,7 @@ function renderStudents(anim){
   $('#scards').innerHTML = cardsOf(active) + add + fold + (showGone && !stuOwe ? cardsOf([...(DB.archived || [])].sort((a, b) => GONE.indexOf(kindOf(a)) - GONE.indexOf(kindOf(b))), active.length) : '');
   popStu = false;
 }
-function setColor(id, c){ st(id).color = c; save(); renderAll(); toast(`เปลี่ยนสี ${st(id).name} แล้ว`); }
+function setColor(id, c){ snap(); st(id).color = c; save(); renderAll(); toast(`เปลี่ยนสี ${st(id).name} แล้ว`, true); }
 function cycle(id, i){ const p = st(id), o = 'tdns'; const a = p.map.split(''); a[i] = o[(o.indexOf(a[i])+1) % 4]; p.map = a.join(''); save(); renderStudents(); renderSchedule(); }
 function startMap(id){ st(id).map = 'tttttttttttttt'; save(); renderStudents(); }
 function addFb(id){ const el = $('#fb-'+id), t = el.value.trim(); if (!t) return; st(id).feed.push([fbKind[id] || 'pro', isoD(NOW), t]); fbOpen[id] = 0; save(); renderStudents(); renderSchedule(); toast('จดแล้ว'); }
@@ -3158,7 +3286,7 @@ function editStudent(id){
     <span class="eb2">ชั้น</span>${ch('grade', ['ม.1','ม.2','ม.3','ม.4','ม.5','ม.6','ซิ่ว','มหาลัย'].map(g => [g,g]))}
     <div class="trow2"><div><span class="eb2">วิชา</span>${ch('subj', [['chem','เคมี'],['bio','ชีวะ'],['other','อื่นๆ']])}</div><div><span class="eb2">เรียนแบบ</span>${ch('mode', ['ออนไลน์','ออนไซต์','ผสม'].map(g => [g,g]))}</div></div>
     <div class="trow2"><div><span class="eb2">เรท / ชม.</span><div class="step"><button data-rate="-25" aria-label="ลดเรท">−</button><b id="prate"></b><button data-rate="25" aria-label="เพิ่มเรท">+</button></div></div>
-      <div><span class="eb2">สีประจำตัว</span><div class="sw" id="pcol">${COLORS.map((c,i) => `<button class="${c}" data-c="${i}" aria-label="สี ${i+1}"></button>`).join('')}</div></div></div>
+      <div><span class="eb2">สีประจำตัว</span><div class="sw" id="pcol">${COLORS.map((c,i) => `<button class="${c}" data-c="${i}" aria-label="สี ${i+1}"></button>`).join('') + '<button class="cwbtn" data-cw="1" aria-label="เลือกสีเองจากวงล้อสี" title="เลือกสีเอง"></button>' + ('')}</div></div></div>
     <span class="eb2">ประเภท</span>${ch('kind', Object.entries(KINDS).map(([k, [t]]) => [k, t]))}
     <span class="eb2">เวลาประจำ · ใช้สร้างตารางสอน</span><div class="slotl" id="pslots"></div>
     <div class="slotadd"><div class="chips" id="pnd">${[1,2,3,4,5,6,0].map(w => `<button class="chip" data-nd="${w}">${TH_D[w]}.</button>`).join('')}</div>
@@ -3174,6 +3302,7 @@ function editStudent(id){
     const t = e.target.closest('button'); if (!t) return; const d = t.dataset, k = t.parentNode.dataset.k;
     if (k && d.v !== undefined) pe[k] = d.v;
     else if (d.c !== undefined) pe.color = +d.c;
+    else if (d.cw){ colorPick(t, pe.color, v => { pe.color = v; paintStu(); }); return; }
     else if (d.rate) pe.rate = Math.max(0, pe.rate + +d.rate);
     else if (d.nd !== undefined) pe.nd = +d.nd;
     else if (d.nt) pe.nt = addMin(pe.nt, +d.nt);
@@ -3204,12 +3333,13 @@ function editStudent(id){
   paintStu();
 }
 function paintStu(){
-  $('#pband').className = 'pband ' + COLORS[pe.color % COLORS.length];
+  $('#pband').className = 'pband ' + colorClass(pe.color);
   $('#pbig').textContent = (pe.name.trim() || '?')[0];
   $('#pmeta').textContent = `${pe.grade} · ${subjL(pe.subj)} · ${pe.mode} · ${cash(pe.rate)}/ชม.`;
   qsa('#sheet [data-k]').forEach(g => g.querySelectorAll('[data-v]').forEach(b => b.classList.toggle('on', b.dataset.v === String(pe[g.dataset.k]))));
   $('#prate').textContent = cash(pe.rate);
-  qsa('#pcol button').forEach(b => b.classList.toggle('on', +b.dataset.c === pe.color));
+  qsa('#pcol button[data-c]').forEach(b => b.classList.toggle('on', +b.dataset.c === pe.color));
+  const cw = $('#pcol .cwbtn'); if (cw){ const cu = pe.color >= CUSTOM; cw.classList.toggle('on', cu); cw.className = 'cwbtn' + (cu ? ' on ' + colorClass(pe.color) : ''); }
   $('#pslots').innerHTML = pe.slots.length ? pe.slots.map(([w,t,h], i) => `<span class="slc">${TH_DF[w]} <b>${t}</b> · ${h} ชม.<button data-rm="${i}" title="ลบเวลานี้">✕</button></span>`).join('') : '<span class="mut" style="font-size:.85rem;font-weight:600">ยังไม่มี · เลือกวัน เวลา แล้วกดเพิ่มด้านล่าง</span>';
   qsa('#pnd [data-nd]').forEach(b => b.classList.toggle('on', +b.dataset.nd === pe.nd));
   $('#pnt').value = $('#pnt').defaultValue = pe.nt;
