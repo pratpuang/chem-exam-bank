@@ -1179,6 +1179,8 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=ls.get("cqb_sfx"
     splitOff:()=>{noise(.14,{freq:1500,sweep:.4,q:1,vol:.07,attack:.05});wood(vary(495,.015),{vol:.09,delay:.13});wood(vary(330,.015),{vol:.07,delay:.16});},
     fileUp:()=>{noise(.32,{freq:700,sweep:3.2,q:.9,vol:.085,attack:.12,wet:.18});noise(.16,{freq:3200,sweep:.6,q:1.2,vol:.025,attack:.06});   // paper slid up out of a folder
       wood(vary(587,.015),{vol:.075,delay:.3});pop(vary(880,.02),{vol:.05,rise:1.4,dur:.06,delay:.34});},                     // ...and it settles with a light tap
+    uncalc:()=>{const r=vary(523,.01);[4,2,0].forEach((k,i)=>tone(note(r,k),.045,{vol:.035,type:"triangle",lp:2200,attack:.002,delay:i*.05}));   // working folds away: three quick ticks stepping down
+      noise(.07,{freq:1400,sweep:.5,q:.8,vol:.035,attack:.015,delay:.1});thock({f:vary(190),vol:.06,delay:.15});},                // ...and a soft paper tuck
     fileDown:()=>{noise(.2,{freq:2000,sweep:.35,q:.9,vol:.07,attack:.04});thock({f:vary(150),vol:.09,delay:.17});},          // slid back in, lands in the folder
     calc:n=>{n=Math.max(1,Math.min(12,n|0));const r=vary(523,.01);                                                         // the working builds: one soft tick per token, climbing,
       for(let i=0;i<n;i++)tone(note(r,i),.05,{vol:.04,type:"triangle",lp:2600,attack:.002,delay:i*.085});                  // in step with the CSS stagger (.085s)
@@ -2025,8 +2027,12 @@ const STRIP=(()=>{
     if(e.target.closest(".mspx")){close();return;}
     const c=e.target.closest(".mwchip");if(!c)return;const on=c.getAttribute("aria-expanded")!=="true",b=c.closest(".mspb");   // one breakdown open at a time
     b.querySelectorAll(".mwchip").forEach(x=>x.setAttribute("aria-expanded",x===c&&on));
+    const h0=b.offsetHeight;   // FLIP: measure, toggle, measure, then animate the file's height so it glides up (or down) instead of jumping
     b.querySelectorAll(".mwbrk").forEach(x=>x.classList.toggle("on",on&&x.dataset.k===c.dataset.k));
-    if(on){const m=b.querySelector(`.mwbrk[data-k="${c.dataset.k}"]`);SFX.play("calc",m?m.querySelectorAll(".mt").length-1:4);}else SFX.play("fold");push();});
+    const h1=b.offsetHeight;
+    if(h0!==h1&&b.animate&&!matchMedia("(prefers-reduced-motion:reduce)").matches){b.style.overflow="hidden";
+      b.animate([{height:h0+"px"},{height:h1+"px"}],{duration:440,easing:"cubic-bezier(.22,1.35,.42,1)"}).onfinish=()=>{b.style.overflow="";push();};}
+    if(on){const m=b.querySelector(`.mwbrk[data-k="${c.dataset.k}"]`);SFX.play("calc",m?m.querySelectorAll(".mt").length-1:4);}else SFX.play("uncalc");push();});
   new ResizeObserver(follow).observe(sheet);window.addEventListener("resize",()=>push(1));
   return{fill,place,close,isOpen:()=>cur!==null};})();
 /* 💾 save the question on screen as a PNG: badges + question + choices only: no 📌 note, solution or controls.
