@@ -1061,42 +1061,40 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .mbtick[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .mbk.off .mbtick{filter:none}
 /* calendar: student tray + quick-add pop-up */
-.ctray{display:flex;align-items:center;gap:14px;margin:0 0 14px}
-.ctr{display:flex;gap:4px;min-width:0;overflow-x:auto;scrollbar-width:none;padding:3px 2px}.ctr::-webkit-scrollbar{display:none}
-.ctl{flex:none;font-size:.72rem;font-weight:700;color:var(--mut);white-space:nowrap}
-.trc{flex:none;display:inline-flex;align-items:center;gap:7px;padding:3px 11px 3px 3px;border-radius:999px;font-size:.85rem;font-weight:800;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;transition:background .15s,translate .25s var(--sp),opacity .2s}
-.trc i{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:2px solid var(--ink);font:800 .78rem/1 "Anuphan",sans-serif;font-style:normal}
-.trc:hover{background:color-mix(in srgb,var(--ink) 8%,transparent);translate:0 -2px}.trc:active{cursor:grabbing}
+.ctray{display:flex;align-items:center;gap:16px;margin:0 0 16px}
+.ctr{display:flex;flex-wrap:wrap;gap:4px 16px;min-width:0}
+.ctl{flex:none;margin-left:auto;font-size:.72rem;font-weight:700;color:var(--mut);white-space:nowrap}
+.trc{display:inline-flex;align-items:center;gap:6px;padding:4px 0;border-bottom:3px solid transparent;font-size:.85rem;font-weight:800;color:var(--ink);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;transition:border-color .15s,translate .2s var(--sp),opacity .2s}
+.trc i{width:11px;height:11px;border-radius:50%;border:2px solid var(--ink);flex:none}
+.trc:hover{border-bottom-color:var(--ink);translate:0 -1px}.trc:active{cursor:grabbing}
 .trc.trsrc{opacity:.3}
 .mc.qaon{outline:3px solid var(--yel);outline-offset:-3px;z-index:2}
-#qadd{position:fixed;z-index:180;width:330px;max-width:calc(100vw - 20px);padding:14px 14px 12px;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);opacity:0;scale:.9;transform-origin:50% 0;transition:opacity .16s,scale .32s var(--sp)}
-#qadd.up{transform-origin:50% 100%}#qadd.on{opacity:1;scale:1}#qadd.out{opacity:0;scale:.92;transition:opacity .15s,scale .15s}
-.qa-ar{position:absolute;top:-11px;width:16px;height:16px;translate:-50% 0;rotate:45deg;background:var(--card);border-left:3px solid var(--ink);border-top:3px solid var(--ink)}
-#qadd.up .qa-ar{top:auto;bottom:-11px;rotate:225deg}
-.qa-h{display:flex;align-items:center;gap:10px}
-.qa-h i{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);font:800 1rem/1 "Anuphan",sans-serif;font-style:normal}
-.qa-h div{flex:1;min-width:0;display:flex;flex-direction:column}.qa-h b{font-size:1.05rem;font-weight:800;line-height:1.2}.qa-h span{font-size:.76rem;font-weight:700;color:var(--mut)}
-.qa-x{width:28px;height:28px;border:0;background:none;color:var(--mut);font-size:1rem;cursor:pointer}.qa-x:hover{color:var(--red)}
-.qa-big{display:flex;align-items:center;gap:6px;margin:12px 0 10px}
-.qa-big b{flex:none;white-space:nowrap;font:800 1.8rem/1 "JetBrains Mono";letter-spacing:-.05em}.qa-big b em{font-style:normal;font-size:.55em;color:var(--mut);letter-spacing:-.02em;margin-left:4px}
-.qa-big span{margin-left:auto;font:700 .8rem "JetBrains Mono";color:var(--mut);white-space:nowrap}
-.qa-nudge{width:24px;height:30px;border:0;background:none;color:var(--mut);font:800 1.3rem/1 inherit;cursor:pointer}.qa-nudge:hover{color:var(--ink)}
-.qa-tl{position:relative;height:34px;border:2px solid var(--ink);background:repeating-linear-gradient(90deg,transparent 0 calc(100%/9 - 1px),var(--grid) calc(100%/9 - 1px) calc(100%/9)),var(--paper);cursor:pointer;touch-action:none}
-.qa-o{position:absolute;top:5px;bottom:5px;display:grid;place-items:center;background:repeating-linear-gradient(135deg,var(--dash) 0 3px,var(--paper) 3px 6px);border:1.5px solid color-mix(in srgb,var(--ink) 45%,transparent);font-size:.66rem;font-weight:800;color:var(--mut);overflow:hidden;pointer-events:none}
-.qa-o.hit{border-color:var(--red);color:var(--red)}
-.qa-blk{position:absolute;top:2px;bottom:2px;border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);cursor:grab;transition:left .18s var(--ez),width .18s var(--ez),box-shadow .2s}
-#qadd.dragging .qa-blk{transition:none;cursor:grabbing;box-shadow:3px 3px 0 var(--yel)}
-.qa-blk.clash{outline:2px solid var(--red);outline-offset:1px}
-.qa-rs{position:absolute;top:-2px;bottom:-2px;right:-7px;width:12px;cursor:ew-resize}
-.qa-rs:after{content:"";position:absolute;top:50%;left:50%;width:6px;height:18px;translate:-50% -50%;background:var(--card);border:2px solid var(--ink)}
-.qa-tk{position:relative;height:14px;margin-top:3px}.qa-tk span{position:absolute;translate:-50% 0;font:700 .62rem "JetBrains Mono";color:var(--mut)}
+#qadd{position:fixed;z-index:180;width:310px;max-width:calc(100vw - 20px);padding:16px 16px 14px;background:var(--card);color:var(--ink);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--sh);opacity:0;scale:.92;transform-origin:50% 0;transition:opacity .16s,scale .32s var(--sp)}
+#qadd.up{transform-origin:50% 100%}#qadd.on{opacity:1;scale:1}#qadd.out{opacity:0;scale:.94;transition:opacity .15s,scale .15s}
+.qa-ar{position:absolute;top:-9px;width:14px;height:14px;translate:-50% 0;rotate:45deg;background:var(--card);border-left:2px solid var(--ink);border-top:2px solid var(--ink)}
+#qadd.up .qa-ar{top:auto;bottom:-9px;rotate:225deg}
+.qa-h{display:flex;align-items:center;gap:8px}
+.qa-h i{width:11px;height:11px;border-radius:50%;border:2px solid var(--ink);flex:none}
+.qa-h b{font-size:1rem;font-weight:800}.qa-h span{flex:1;font-size:.8rem;font-weight:600;color:var(--mut)}
+.qa-x{width:24px;height:24px;margin:-4px -4px 0 0;border:0;background:none;color:var(--mut);font-size:.9rem;cursor:pointer;transition:color .15s}.qa-x:hover{color:var(--ink)}
+.qa-big{margin:14px 0}
+.qa-big b{display:block;white-space:nowrap;font:800 2rem/1 "JetBrains Mono";letter-spacing:-.05em}.qa-big b em{font-style:normal;color:var(--mut);font-size:.6em;letter-spacing:-.02em}
+.qa-big span{display:block;margin-top:6px;font:700 .78rem "JetBrains Mono";color:var(--mut)}
+.qa-tl{position:relative;height:26px;background:var(--paper);border:2px solid var(--ink);cursor:pointer;touch-action:none}
+.qa-o{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--ink) 14%,transparent);pointer-events:none}
+.qa-o.hit{background:color-mix(in srgb,var(--red) 35%,transparent)}
+.qa-blk{position:absolute;top:-2px;bottom:-2px;border:2px solid var(--ink);cursor:grab;transition:left .18s var(--ez),width .18s var(--ez),box-shadow .2s}
+#qadd.dragging .qa-blk{transition:none;cursor:grabbing;box-shadow:0 0 0 3px var(--yel)}
+.qa-blk.clash{box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 50%,transparent)}
+.qa-rs{position:absolute;top:0;bottom:0;right:-8px;width:14px;cursor:ew-resize}
+.qa-rs:after{content:"";position:absolute;top:50%;left:50%;width:4px;height:14px;translate:-50% -50%;background:var(--card);border:2px solid var(--ink)}
+.qa-tk{position:relative;height:14px;margin-top:5px}.qa-tk span{position:absolute;translate:-50% 0;font:700 .6rem "JetBrains Mono";color:var(--mut)}
 .qa-tk span:first-child{translate:0 0}.qa-tk span:last-child{translate:-100% 0}
-.qa-hint{margin-top:6px;font-size:.68rem;font-weight:600;color:var(--mut)}
-.qa-w{margin-top:6px;font-size:.76rem;font-weight:800;color:var(--red)}
-.qa-n{width:100%;margin-top:10px;border:0;border-bottom:2px solid var(--ink);background:none;color:var(--ink);font:600 .86rem inherit;padding:4px 0}.qa-n:focus{outline:none}
-.qa-f{display:flex;align-items:center;gap:6px;margin-top:12px}
-.qa-pill{padding:5px 10px;border:1.5px solid var(--grid);border-radius:999px;background:none;color:var(--mut);font:700 .74rem inherit;cursor:pointer;white-space:nowrap;transition:all .15s}
-.qa-pill:hover{border-color:var(--ink);color:var(--ink)}.qa-pill.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.qa-w{margin-top:8px;font-size:.76rem;font-weight:800;color:var(--red)}
+.qa-n{width:100%;margin-top:12px;border:0;border-bottom:2px solid var(--ink);background:none;color:var(--ink);font:600 .86rem inherit;padding:4px 0}.qa-n:focus{outline:none}
+.qa-f{display:flex;align-items:center;gap:14px;margin-top:16px}
+.qa-lk{padding:0;border:0;background:none;color:var(--mut);font:700 .78rem inherit;text-decoration:underline dotted;text-underline-offset:4px;cursor:pointer;white-space:nowrap;transition:color .15s}
+.qa-lk:hover{color:var(--ink)}.qa-lk.on{color:var(--ink);text-decoration-style:solid}
 @media (max-width:560px){.ctl{display:none}}
 .sheet.awsheet{width:min(760px,100%);padding-bottom:20px}
 #addw h2{margin:0 0 14px}
@@ -2523,7 +2521,7 @@ function askLen(s, h){
     tip.style.translate = `${Math.max(8, Math.min(L.x - 60, innerWidth - 244))}px ${Math.max(8, L.y - 112)}px`;   // above the finger, kept on screen
     L.raf = requestAnimationFrame(loop); };
   addEventListener('pointermove', e => { if (!L || e.pointerId !== L.id) return; L.tx = e.clientX; L.ty = e.clientY;
-    const h = hOf(e.clientX); if (h !== L.h){ L.h = h; paint(); const b = tip.querySelector('.rh b'); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); navigator.vibrate?.(6); SFX.play('tick'); } });
+    const h = hOf(e.clientX); if (h !== L.h){ L.h = h; paint(); const b = tip.querySelector('.rh b'); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); navigator.vibrate?.(6); SFX.play('nib'); } });
   const stop = (e, go) => { if (!L || e.pointerId !== L.id) return; const {s, h, g} = L; cancelAnimationFrame(L.raf); g.classList.remove('on');
     live(g, +s.h, false);   // back to the saved length; it re-draws with the new one once confirmed
     const t = tip; tip = null; L = null; if (t){ t.classList.remove('on'); t.classList.add('out'); setTimeout(() => t.remove(), 200); }
@@ -2637,7 +2635,7 @@ function quickAdd(who, iso, cell){
   const p = st(who); if (!p) return;
   const w = new Date(iso + 'T00:00').getDay(), sl = (p.slots || []).find(x => +x[0] === w) || (p.slots || [])[0];
   const q = {who, date: iso, time: sl ? sl[1] : '18:00', h: sl ? +sl[2] || 1 : 1, rate: p.rate || DB.rates.solo, rep: 0, note: '', noteOpen: false};
-  const REPS = [[0, 'ครั้งเดียว'], [3, 'ทุกสัปดาห์ × 4'], [7, 'ทุกสัปดาห์ × 8']];
+  const REPS = [[0, 'ครั้งเดียว'], [3, 'ซ้ำ 4 สัปดาห์'], [7, 'ซ้ำ 8 สัปดาห์']];
   const box = document.createElement('div'); box.id = 'qadd'; document.body.append(box);
   const toM = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; }, toT = m => `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`;
   const others = DB.sessions.filter(x => x.date === iso && x.status !== 'cancel');
@@ -2647,17 +2645,17 @@ function quickAdd(who, iso, cell){
   const X = m => (m - lo) / span * 100;
   const clash = () => { const a = toM(q.time), b = a + q.h * 60; return others.filter(x => toM(x.time) < b && toM(x.time) + x.h * 60 > a); };
   const paint = () => { frame(); const a = toM(q.time), c = clash(), rp = REPS.find(r => r[0] === q.rep);
-    let ticks = ''; for (let m = lo; m <= lo + span; m += 60) ticks += `<span style="left:${X(m)}%">${m / 60 % 24}</span>`;
+    let ticks = ''; for (let m = lo; m <= lo + span; m += 60) ticks += `<span style="left:${X(m)}%">${(m / 60) % 2 ? '' : `${m / 60 % 24}:00`}</span>`;
     box.innerHTML = `<span class="qa-ar"></span>
-    <div class="qa-h"><i class="${colorOf(who)}">${esc((p.name || '?')[0])}</i><div><b>${esc(p.name)}</b><span>${TH_DF[w]} ${dLabel(iso).split(' ').slice(1).join(' ')}</span></div><button class="qa-x" data-q="x" aria-label="ปิด">✕</button></div>
-    <div class="qa-big"><button class="qa-nudge" data-tm="-15" aria-label="ถอย 15 นาที">‹</button><b>${q.time}<em>–${endOf(q)}</em></b><button class="qa-nudge" data-tm="15" aria-label="เลื่อน 15 นาที">›</button><span>${q.h} ชม. · ${cash(amt(q))}</span></div>
+    <div class="qa-h"><i class="${colorOf(who)}"></i><b>${esc(p.name)}</b><span>${dLabel(iso)}</span><button class="qa-x" data-q="x" aria-label="ปิด">✕</button></div>
+    <div class="qa-big"><b>${q.time}<em> – ${endOf(q)}</em></b><span>${q.h} ชม. · ${cash(amt(q))}</span></div>
     <div class="qa-tl" id="qa-tl">
-      ${others.map(x => `<span class="qa-o${c.includes(x) ? ' hit' : ''}" style="left:${X(toM(x.time))}%;width:${x.h * 60 / span * 100}%" title="${esc(st(x.who)?.name)} ${x.time}">${esc((st(x.who)?.name || '?')[0])}</span>`).join('')}
+      ${others.map(x => `<span class="qa-o${c.includes(x) ? ' hit' : ''}" style="left:${X(toM(x.time))}%;width:${x.h * 60 / span * 100}%" title="${esc(st(x.who)?.name)} ${x.time}–${endOf(x)}"></span>`).join('')}
       <span class="qa-blk ${colorOf(who)}${c.length ? ' clash' : ''}" style="left:${X(a)}%;width:${q.h * 60 / span * 100}%"><s class="qa-rs" title="ลากเพื่อเปลี่ยนความยาว"></s></span>
     </div><div class="qa-tk">${ticks}</div>
-    ${c.length ? `<div class="qa-w">⚠ ชนกับ ${c.map(x => `${esc(st(x.who)?.name)} ${x.time}`).join(', ')}</div>` : isHolD(iso) ? '<div class="qa-w">☂ วันหยุด · ไม่นับเงิน</div>' : '<div class="qa-hint">ลากแถบเพื่อเลื่อนเวลา · ลากขอบขวาเพื่อเปลี่ยนความยาว</div>'}
+    ${c.length ? `<div class="qa-w">ชนกับ ${c.map(x => `${esc(st(x.who)?.name)} ${x.time}`).join(', ')}</div>` : isHolD(iso) ? '<div class="qa-w">วันหยุด · ไม่นับเงิน</div>' : ''}
     ${q.noteOpen ? `<input class="qa-n" id="qa-note" value="${esc(q.note)}" placeholder="จะสอนอะไร">` : ''}
-    <div class="qa-f"><button class="qa-pill${q.rep ? ' on' : ''}" data-q="rep">⟲ ${rp[1]}</button>${q.noteOpen ? '' : '<button class="qa-pill" data-q="note">＋ โน้ต</button>'}<span class="sp"></span><button class="go sm" data-q="add">เพิ่มคาบ${q.rep ? ` ×${q.rep + 1}` : ''}</button></div>`;
+    <div class="qa-f"><button class="qa-lk${q.rep ? ' on' : ''}" data-q="rep">${rp[1]}</button>${q.noteOpen ? '' : '<button class="qa-lk" data-q="note">โน้ต</button>'}<span class="sp"></span><button class="go sm" data-q="add">เพิ่มคาบ${q.rep ? ` ×${q.rep + 1}` : ''}</button></div>`;
     const ni = $('#qa-note'); if (ni){ ni.oninput = e => q.note = e.target.value; }
     place(); };
   // the timeline: drag the block to move the start, drag its right edge for the length, tap an empty spot to jump there
@@ -2681,8 +2679,8 @@ function quickAdd(who, iso, cell){
   const live = () => { const a = toM(q.time), c = clash(), blk = box.querySelector('.qa-blk');
     blk.style.left = X(a) + '%'; blk.style.width = q.h * 60 / span * 100 + '%'; blk.classList.toggle('clash', !!c.length);
     box.querySelectorAll('.qa-o').forEach((o, i) => o.classList.toggle('hit', c.includes(others[i])));
-    box.querySelector('.qa-big b').innerHTML = `${q.time}<em>–${endOf(q)}</em>`; box.querySelector('.qa-big span').textContent = `${q.h} ชม. · ${cash(amt(q))}`;
-    SFX.play('tick'); };
+    box.querySelector('.qa-big b').innerHTML = `${q.time}<em> – ${endOf(q)}</em>`; box.querySelector('.qa-big span').textContent = `${q.h} ชม. · ${cash(amt(q))}`;
+    SFX.play('nib'); };
   // sits right over the day it was dropped on (above it when there's no room below), kept on screen
   const place = () => { const r = cell.getBoundingClientRect(), bw = box.offsetWidth, bh = box.offsetHeight, m = 10;
     let x = r.left + r.width / 2 - bw / 2, y = r.bottom + 10, up = false;
@@ -2963,7 +2961,7 @@ $('#ctoday').onclick = () => { cy = NOW.getFullYear(); cm = NOW.getMonth(); cday
 function renderCal(anim){
   const M = monthMoney(cy, cm), hols = (DB.holidays[mkey(cy,cm)] || []).length;
   $('#cmn').textContent = TH_MF[cm]; $('#cyr').textContent = cy + 543;
-  $('#ctray').innerHTML = DB.students.length ? `<div class="ctr">${DB.students.map(p => `<span class="trc" data-who="${p.id}" title="ลาก ${esc(p.name)} ไปวางบนวันที่จะเพิ่มคาบ"><i class="${colorOf(p.id)}">${esc((p.name || '?')[0])}</i>${esc(p.name)}</span>`).join('')}</div><span class="ctl">↓ ลากชื่อไปวางบนวัน</span>` : '';
+  $('#ctray').innerHTML = DB.students.length ? `<div class="ctr">${DB.students.map(p => `<span class="trc" data-who="${p.id}" title="ลาก ${esc(p.name)} ไปวางบนวันที่จะเพิ่มคาบ"><i class="${colorOf(p.id)}"></i>${esc(p.name)}</span>`).join('')}</div><span class="ctl">↓ ลากชื่อไปวางบนวัน</span>` : '';
   $('#cfig').innerHTML = `<div><b>${M.n}</b><span>คาบ</span></div><div><b>${cash(M.earned)}</b><span>ได้แล้ว</span></div><div><b>${cash(M.forecast)}</b><span>คาดทั้งเดือน</span></div><div><b>${hols}</b><span>วันหยุด</span></div>`;
   const days = new Date(cy, cm+1, 0).getDate(), off = new Date(cy, cm, 1).getDay(), ses = monthSessions(cy, cm), prevDays = new Date(cy, cm, 0).getDate();
   let h = TH_D.map((d,i) => `<div class="h${i===0||i===6?' we':''}">${d}</div>`).join(''), i = 0;
@@ -3432,6 +3430,7 @@ const SFX = (() => {
     undrawer: () => { noise(.13, {type:'lowpass', freq:1800, sweep:.3, q:.7, vol:.07, attack:.03}); thock({f:vary(130), vol:.09, delay:.1}); },
     sheet: () => { noise(.09, {freq:900, sweep:2.2, q:.8, vol:.05, attack:.03}); wood(vary(784, .02), {vol:.06, delay:.07}); },
     // the tick box: marker swipe, then a rising mallet + bell; unticking falls back down
+    nib: () => { tone(vary(820, .02), .045, {vol:.022, attack:.004, lp:2200}); },   // the soft notch click for sliders / timeline drags
     tick: () => { noise(.05, {freq:2000, sweep:1.5, q:1.1, vol:.045, attack:.01}); thock({f:vary(230), vol:.09, delay:.03}); mallet(vary(659, .01), {vol:.1, delay:.035}); bell(1319, .45, {vol:.026, delay:.06, index:1.1, wet:.35}); },
     untick: () => { thock({f:vary(170), vol:.09}); tone(vary(620), .11, {vol:.06, slide:.62, slideT:.09, attack:.002, wet:.12}); },
     step: i => { const f = note(392, i + 2); wood(vary(f, .015), {vol:.08}); wood(vary(f * 1.5, .015), {vol:.07, delay:.05}); },
