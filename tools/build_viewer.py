@@ -934,15 +934,21 @@ html.scrlock{overscroll-behavior:none}
 #mstrips{position:absolute;left:0;top:0;width:0;height:0;z-index:0}
 #modal{transition:padding-top .26s cubic-bezier(.2,.9,.3,1)}
 #modal.hasstrip{padding-top:52px}
-.msp{position:absolute;left:0;right:0;bottom:-4px;transform:translateY(100%);transition:transform .26s cubic-bezier(.2,1.15,.4,1)}
-.msp.on{transform:none;z-index:1}
-.mstab{position:absolute;left:calc(26px + var(--i,0)*104px);bottom:calc(100% - 3px);z-index:1;display:flex;align-items:center;gap:7px;background:var(--stbg);color:var(--ink);
-  border:3px solid var(--ink);border-bottom:0;border-radius:10px 10px 0 0;padding:6px 16px 10px;font:800 .95rem "Anuphan",sans-serif;cursor:pointer;transition:transform .15s,background .15s}
+.msp{position:absolute;left:0;right:0;bottom:-4px;transform:translateY(100%);transition:transform .24s cubic-bezier(.55,0,.8,.3)}
+.msp.on{transform:none;z-index:1;transition:transform .56s cubic-bezier(.22,1.45,.42,1)}
+.msp.on .mstab{animation:mstug .5s cubic-bezier(.3,1.5,.5,1)}
+@keyframes mstug{0%{transform:translateY(0)}30%{transform:translateY(-7px) rotate(-2deg)}100%{transform:none}}
+.msp.on .mwchip{animation:mwpop .38s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(.16s + var(--k,0)*.045s)}
+@keyframes mwpop{from{opacity:0;transform:translateY(10px) scale(.85)}}
+@keyframes mwbrkin{from{opacity:0;transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.msp,.msp.on{transition-duration:.01s}.msp.on .mstab,.msp.on .mwchip,.mwbrk.on{animation:none}}
+.mstab{position:absolute;left:calc(26px + var(--i,0)*104px);bottom:calc(100% - 3px);z-index:1;display:flex;align-items:center;gap:7px;background:var(--yel);color:#141414;
+  border:3px solid var(--ink);border-bottom:0;border-radius:10px 10px 0 0;padding:6px 16px 10px;font:800 .95rem "Anuphan",sans-serif;box-shadow:3px -3px 0 var(--sh);cursor:pointer;transition:transform .22s cubic-bezier(.3,1.6,.5,1),box-shadow .22s}
 .mstab i{font-style:normal;font-size:.6rem;transition:transform .26s}.msp.on .mstab i{transform:rotate(180deg)}
-.msp:not(.on) .mstab:hover{background:var(--yel);color:#141414;transform:translateY(-4px)}
-.msp:not(.on) .mstab:active{background:var(--yel);color:#141414;transform:translateY(-1px)}.msp.on .mstab:active{transform:translateY(1px)}
-.mspb{position:relative;background:var(--stbg);color:var(--ink);border:3px solid var(--ink);border-radius:0 10px 0 0;padding:11px 16px 16px;max-height:35vh;overflow:auto;overscroll-behavior:contain;
-  visibility:hidden;transition:visibility 0s .26s}
+.msp:not(.on) .mstab:hover{transform:translateY(-5px);box-shadow:3px -6px 0 var(--sh)}
+.msp:not(.on) .mstab:active{transform:translateY(1px);box-shadow:1px -1px 0 var(--sh);transition-duration:.06s}.msp.on .mstab:active{transform:translateY(1px)}
+.mspb{position:relative;background:var(--yel);color:#141414;border:3px solid var(--ink);border-radius:0 10px 0 0;padding:11px 16px 16px;max-height:35vh;overflow:auto;overscroll-behavior:contain;
+  visibility:hidden;transition:visibility 0s .24s}
 .msp.on .mspb{visibility:visible;transition:none}
 .mspb h4{margin:0 34px 9px 0;font:800 .8rem "Anuphan",sans-serif;color:var(--mut)}
 .mspb .mspx{position:absolute;right:8px;top:7px;border:2px solid var(--ink);background:var(--card);color:var(--ink);width:26px;height:26px;font-weight:800;cursor:pointer;line-height:1}
@@ -951,9 +957,11 @@ html.scrlock{overscroll-behavior:none}
   cursor:pointer;box-shadow:2px 2px 0 var(--ink);transition:transform .1s,box-shadow .1s}
 .mwchip b{font-variant-numeric:tabular-nums;font-weight:800}
 .mwchip:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}.mwchip:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
-.mwchip[aria-expanded=true]{background:var(--ink);color:var(--card)}
+.mwchip[aria-expanded=true]{background:#141414;color:#fffdf7}
+.mspb h4{color:#141414!important;opacity:.7}
+.mwbrk{border-top-color:#141414!important}
 .mwbrk{display:none;margin-top:11px;padding-top:8px;border-top:2px dashed var(--ink);font:600 .95rem "Anuphan",sans-serif;line-height:1.6}
-.mwbrk.on{display:block}
+.mwbrk.on{display:block;animation:mwbrkin .24s cubic-bezier(.3,1.3,.5,1)}
 /* ---------- export modal ---------- */
 .expwrap{position:fixed;inset:0;background:rgba(20,20,20,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
 .expwrap.show{display:flex}
@@ -2489,7 +2497,7 @@ const MWQ=(()=>{
       const parts=es.map(([k,n])=>n===1?r1(SYM[k].m):`${n}(${r1(SYM[k].m)})`).join(" + "),sum=es.reduce((a,[k,n])=>a+n*+r1(SYM[k].m),0);
       const T=lone?r1(tot):r1(sum);   // Prat 2026-10-17: total = sum of the rounded parts (textbook style, NaCl 58.5), so the working always adds up
       return{F:fHTML(f),T,eq:lone?`${fHTML(f)} · มวลอะตอม = ${T}`:`${fHTML(f)} = ${parts} = ${T}`};});
-    return`<h4>Mw ของสารในโจทย์ · g/mol</h4><div class="mwchips">`+R.map((r,i)=>`<button class="mwchip" data-k="${i}" aria-expanded="false"><span>${r.F}</span><b>${r.T}</b></button>`).join("")+
+    return`<h4>Mw ของสารในโจทย์ · g/mol</h4><div class="mwchips">`+R.map((r,i)=>`<button class="mwchip" data-k="${i}" style="--k:${i}" aria-expanded="false"><span>${r.F}</span><b>${r.T}</b></button>`).join("")+
       `</div>`+R.map((r,i)=>`<div class="mwbrk" data-k="${i}">${r.eq}</div>`).join("");}
   return{find,panel};})();
 /*ENDMWQ*/
