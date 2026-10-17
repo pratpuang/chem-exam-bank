@@ -421,7 +421,7 @@ html.scrlock{overscroll-behavior:none}
 .msp.on .mwchip{animation:mwpop .38s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(.16s + var(--k,0)*.045s)}
 @keyframes mwpop{from{opacity:0;transform:translateY(10px) scale(.85)}}
 @keyframes mwbrkin{from{opacity:0;transform:translateY(-6px)}}
-@media (prefers-reduced-motion:reduce){.msp,.msp.on{transition-duration:.01s}.msp.on .mstab,.msp.on .mwchip,.mwbrk.on{animation:none}}
+@media (prefers-reduced-motion:reduce){.msp,.msp.on{transition-duration:.01s}.msp.on .mstab,.msp.on .mwchip,.mwbrk.on,.mwbrk.on .mt{animation:none}}
 .mstab{position:absolute;left:calc(26px + var(--i,0)*104px);bottom:calc(100% - 3px);z-index:1;display:flex;align-items:center;gap:7px;background:var(--yel);color:#141414;
   border:3px solid var(--ink);border-bottom:0;border-radius:10px 10px 0 0;padding:6px 16px 10px;font:800 .95rem "Anuphan",sans-serif;box-shadow:3px -3px 0 var(--sh);cursor:pointer;transition:transform .22s cubic-bezier(.3,1.6,.5,1),box-shadow .22s}
 .mstab i{font-style:normal;font-size:.6rem;transition:transform .26s}.msp.on .mstab i{transform:rotate(180deg)}
@@ -441,7 +441,15 @@ html.scrlock{overscroll-behavior:none}
 .mspb h4{color:#141414!important;opacity:.7}
 .mwbrk{border-top-color:#141414!important}
 .mwbrk{display:none;margin-top:11px;padding-top:8px;border-top:2px dashed var(--ink);font:600 .95rem "Anuphan",sans-serif;line-height:1.6}
-.mwbrk.on{display:block;animation:mwbrkin .24s cubic-bezier(.3,1.3,.5,1)}
+.mwbrk.on{display:flex;flex-wrap:wrap;align-items:flex-end;gap:4px 7px;animation:mwbrkin .2s ease-out}
+.mwbrk .mt{display:inline-flex;flex-direction:column;align-items:center;line-height:1.25;font-variant-numeric:tabular-nums}
+.mwbrk .mt small{font:800 .66rem "Anuphan",sans-serif;opacity:.65;letter-spacing:.02em}
+.mwbrk .mterm{border-bottom:2px solid #141414;padding:0 2px}
+.mwbrk .mtot{font-weight:800;background:#141414;color:#fffdf7;padding:1px 9px;box-shadow:2px 2px 0 var(--sh)}
+.mwbrk.on .mt{animation:mtin .34s cubic-bezier(.3,1.55,.5,1) both;animation-delay:calc(var(--t)*.085s)}
+.mwbrk.on .mtot{animation:mtot .5s cubic-bezier(.3,1.7,.5,1) both;animation-delay:calc(var(--t)*.085s + .06s)}
+@keyframes mtin{from{opacity:0;transform:translateY(9px)}}
+@keyframes mtot{0%{opacity:0;transform:scale(.4) rotate(-8deg)}70%{transform:scale(1.12) rotate(2deg)}100%{transform:none}}
 /* ---------- export modal ---------- */
 .expwrap{position:fixed;inset:0;background:rgba(20,20,20,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
 .expwrap.show{display:flex}
@@ -1169,6 +1177,12 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=ls.get("cqb_sfx"
       thock({f:110,vol:.12,delay:.42});bell(262,.8,{vol:.03,delay:.44,ratio:1,index:.4});},   // clean slate
     splitOn:()=>{noise(.14,{freq:600,sweep:2.5,q:1,vol:.07,attack:.05});wood(vary(660,.015),{vol:.09,delay:.13});wood(vary(990,.015),{vol:.06,delay:.16});},   // panel slides open, latches
     splitOff:()=>{noise(.14,{freq:1500,sweep:.4,q:1,vol:.07,attack:.05});wood(vary(495,.015),{vol:.09,delay:.13});wood(vary(330,.015),{vol:.07,delay:.16});},
+    fileUp:()=>{noise(.32,{freq:700,sweep:3.2,q:.9,vol:.085,attack:.12,wet:.18});noise(.16,{freq:3200,sweep:.6,q:1.2,vol:.025,attack:.06});   // paper slid up out of a folder
+      wood(vary(587,.015),{vol:.075,delay:.3});pop(vary(880,.02),{vol:.05,rise:1.4,dur:.06,delay:.34});},                     // ...and it settles with a light tap
+    fileDown:()=>{noise(.2,{freq:2000,sweep:.35,q:.9,vol:.07,attack:.04});thock({f:vary(150),vol:.09,delay:.17});},          // slid back in, lands in the folder
+    calc:n=>{n=Math.max(1,Math.min(12,n|0));const r=vary(523,.01);                                                         // the working builds: one soft tick per token, climbing,
+      for(let i=0;i<n;i++)tone(note(r,i),.05,{vol:.04,type:"triangle",lp:2600,attack:.002,delay:i*.085});                  // in step with the CSS stagger (.085s)
+      const d=n*.085+.06;bell(note(r,n+2),.5,{vol:.07,ratio:1,index:.6,delay:d,wet:.3});pop(note(r,n+4),{vol:.05,rise:1.3,dur:.07,delay:d});},   // ...then the total lands with a chime
     snap:()=>{wood(vary(880,.03),{vol:.07});thock({f:vary(200),vol:.07,delay:.012});},   // divider dropped
     // ---- side drawers: a soft slide + landing, tinted per drawer ----
     drawer:w=>{if(w==="td"){tone(vary(330,.02),.14,{vol:.055,type:"triangle",slide:1.5,slideT:.12,attack:.008,lp:1800,wet:.15});   // tools: a smooth glide in...
@@ -1976,7 +1990,12 @@ const MWQ=(()=>{
       const es=Object.entries(c),tot=es.reduce((a,[k,n])=>a+SYM[k].m*n,0),lone=es.length===1&&es[0][1]===1;
       const parts=es.map(([k,n])=>n===1?r1(SYM[k].m):`${n}(${r1(SYM[k].m)})`).join(" + "),sum=es.reduce((a,[k,n])=>a+n*+r1(SYM[k].m),0);
       const T=lone?r1(tot):r1(sum);   // Prat 2026-10-17: total = sum of the rounded parts (textbook style, NaCl 58.5), so the working always adds up
-      return{F:fHTML(f),T,eq:lone?`${fHTML(f)} · มวลอะตอม = ${T}`:`${fHTML(f)} = ${parts} = ${T}`};});
+      // the working builds term by term: each token is a .mt span with its own --t step (CSS staggers them); every term
+      // carries its element as a small label above it (Cu / 4×O) so the kid sees where each number came from
+      let t=0;const tk=(h,c="")=>`<span class="mt${c}" style="--t:${t++}">${h}</span>`;
+      const eq=lone?tk(fHTML(f))+tk("มวลอะตอม","")+tk("=")+tk(T," mtot"):
+        tk(fHTML(f))+tk("=")+es.map(([k,n],j)=>(j?tk("+"):"")+tk(`<small>${n===1?k:n+"×"+k}</small>${n===1?r1(SYM[k].m):`${n}(${r1(SYM[k].m)})`}`," mterm")).join("")+tk("=")+tk(T," mtot");
+      return{F:fHTML(f),T,eq};});
     return`<h4>Mw ของสารในโจทย์ · g/mol</h4><div class="mwchips">`+R.map((r,i)=>`<button class="mwchip" data-k="${i}" style="--k:${i}" aria-expanded="false"><span>${r.F}</span><b>${r.T}</b></button>`).join("")+
       `</div>`+R.map((r,i)=>`<div class="mwbrk" data-k="${i}">${r.eq}</div>`).join("");}
   return{find,panel};})();
@@ -2000,13 +2019,14 @@ const STRIP=(()=>{
       h+=`<div class="msp" data-s="${i}"><button class="mstab" style="--i:${n++}" title="${d.title}" aria-expanded="false">${d.label}<i>▲</i></button>`+
          `<div class="mspb">${b}<button class="mspx" aria-label="ปิด">✕</button></div></div>`;});
     el.innerHTML=h;modal.classList.toggle("hasstrip",!!h);push(1);}
-  function close(quiet){if(cur===null)return;show(-1);if(!quiet)SFX.play("select");}
+  function close(quiet){if(cur===null)return;show(-1);if(!quiet)SFX.play("fileDown");}
   el.addEventListener("click",e=>{
-    const t=e.target.closest(".mstab");if(t){const i=+t.closest(".msp").dataset.s;if(cur===i)close();else{show(i);SFX.play("select");}return;}
+    const t=e.target.closest(".mstab");if(t){const i=+t.closest(".msp").dataset.s;if(cur===i)close();else{show(i);SFX.play("fileUp");}return;}
     if(e.target.closest(".mspx")){close();return;}
     const c=e.target.closest(".mwchip");if(!c)return;const on=c.getAttribute("aria-expanded")!=="true",b=c.closest(".mspb");   // one breakdown open at a time
     b.querySelectorAll(".mwchip").forEach(x=>x.setAttribute("aria-expanded",x===c&&on));
-    b.querySelectorAll(".mwbrk").forEach(x=>x.classList.toggle("on",on&&x.dataset.k===c.dataset.k));SFX.play("select");push();});
+    b.querySelectorAll(".mwbrk").forEach(x=>x.classList.toggle("on",on&&x.dataset.k===c.dataset.k));
+    if(on){const m=b.querySelector(`.mwbrk[data-k="${c.dataset.k}"]`);SFX.play("calc",m?m.querySelectorAll(".mt").length-1:4);}else SFX.play("fold");push();});
   new ResizeObserver(follow).observe(sheet);window.addEventListener("resize",()=>push(1));
   return{fill,place,close,isOpen:()=>cur!==null};})();
 /* 💾 save the question on screen as a PNG: badges + question + choices only: no 📌 note, solution or controls.
