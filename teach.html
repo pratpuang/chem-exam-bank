@@ -264,10 +264,6 @@ body.dopen #scrim{opacity:1;pointer-events:auto}
 .calhead .mn{font-size:clamp(2.3rem,5vw,3.6rem);font-weight:800;line-height:.95;letter-spacing:-.02em}
 .calhead .yr{font:800 1.6rem "JetBrains Mono";color:transparent;-webkit-text-stroke:2px var(--ink);margin-bottom:4px}
 .calhead .sp{flex:1}
-.exbtn{display:flex;align-items:center;gap:8px;margin:0 0 0 auto;align-self:center;padding:4px 12px 4px 6px;border:3px solid var(--ink);background:var(--card);color:var(--ink);box-shadow:4px 4px 0 var(--lav);font:800 .9rem inherit;cursor:pointer;text-align:left;transition:translate .2s var(--ez),box-shadow .2s var(--ez),background .15s}
-.exbtn:hover{background:color-mix(in srgb,var(--lav) 30%,var(--card))}.exbtn:active{translate:2px 2px;box-shadow:2px 2px 0 var(--lav)}
-.exbtn .exi{display:grid;place-items:center;width:30px;height:30px;background:var(--lav);border:2px solid var(--ink);font-size:.95rem}
-.exbtn small{display:block;font:700 .7rem "JetBrains Mono";color:var(--mut);margin-top:1px}
 .sheet.exsheet{width:min(560px,100%)}
 .exhd .eyebrow{color:var(--mut)}.exhd h2{margin:2px 0 4px}.exhd p{margin:0 0 16px;font-size:.84rem;color:var(--mut);font-weight:600}
 #exl{display:flex;flex-direction:column;gap:14px}
@@ -297,6 +293,13 @@ body.dopen #scrim{opacity:1;pointer-events:auto}
 .exadd{width:100%;margin-top:14px;padding:12px;border:2px dashed var(--ink);background:none;color:var(--ink);font:800 .95rem inherit;cursor:pointer;transition:background .15s,border-style .15s}
 .exadd:hover{background:color-mix(in srgb,var(--lav) 25%,transparent);border-style:solid}
 @media (max-width:480px){.exd{grid-template-columns:1fr auto 1fr}.exd em{grid-column:1 / -1}}
+.calctl{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.exbtn{align-items:center;gap:8px;padding:6px 12px 6px 9px;font:800 .9rem inherit;color:var(--ink);cursor:pointer;transition:background .15s,translate .15s var(--ez),box-shadow .15s var(--ez)}
+.exbtn:hover{background:color-mix(in srgb,var(--lav) 35%,var(--card))}.exbtn:active{translate:2px 2px;box-shadow:2px 2px 0 var(--sh)}
+.exsw{display:inline-block;width:16px;height:16px;border:2px solid var(--ink);background:repeating-linear-gradient(135deg,var(--card) 0 2px,var(--lav) 2px 5px)}
+.expen{font-size:.8rem;color:var(--mut);transition:color .15s,rotate .3s var(--sp)}.exbtn:hover .expen{color:var(--ink);rotate:-15deg}
+.lxb{display:inline-flex;align-items:center;border:0;background:none;padding:0;font:inherit;color:inherit;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+.lxb:hover{color:var(--blue)}
 .calnav{display:flex;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--sh);background:var(--card);margin-bottom:6px}
 .calnav button{border:0;border-right:3px solid var(--ink);background:transparent;font-weight:800;padding:6px 13px}
 .calnav button:last-child{border-right:0}
@@ -759,8 +762,13 @@ button.fg:hover{background:#fbf3dc}
 .paycard .pcm small{font:700 .8rem "JetBrains Mono";color:var(--mut)}
 .paycard .pcm em{font-style:normal;font-weight:700;font-size:.85rem;overflow-wrap:anywhere}
 .chp{display:inline-flex;align-items:stretch;vertical-align:middle;max-width:100%;height:26px;margin:0;border:2px solid var(--ink);background:var(--card);color:var(--ink);white-space:nowrap;letter-spacing:0;overflow:hidden}
-.chp>b{flex:none;display:flex;align-items:center;padding:0 7px;background:var(--ink);color:var(--paper);gap:4px;font:800 .76rem/1 "Anuphan",sans-serif}.chp>b i{font:800 1.05em/1 "JetBrains Mono",monospace;font-style:normal;letter-spacing:-.03em}
+.chp>b{flex:none;display:flex;align-items:center;padding:0 7px;background:var(--cc,var(--ink));color:var(--ct,var(--paper));border-right:2px solid var(--ink);gap:4px;font:800 .76rem/1 "Anuphan",sans-serif}.chp>b i{font:800 1.05em/1 "JetBrains Mono",monospace;font-style:normal;letter-spacing:-.03em}
 .chp>span{display:block;min-width:0;padding:0 9px;font:700 .84rem/22px "Anuphan",sans-serif;overflow:hidden;text-overflow:ellipsis}
+/* one colour per chapter (1–14), so the same บท reads the same everywhere */
+.chp.c1{--cc:#ef6c57;--ct:#fff}.chp.c2{--cc:#f2a33a;--ct:#141414}.chp.c3{--cc:#e8c547;--ct:#141414}.chp.c4{--cc:#9ccc4f;--ct:#141414}
+.chp.c5{--cc:#2e9e5b;--ct:#fff}.chp.c6{--cc:#1fa3a3;--ct:#fff}.chp.c7{--cc:#2f7fd8;--ct:#fff}.chp.c8{--cc:#5b5fd6;--ct:#fff}
+.chp.c9{--cc:#8e5bd6;--ct:#fff}.chp.c10{--cc:#c752b8;--ct:#fff}.chp.c11{--cc:#e05a8c;--ct:#fff}.chp.c12{--cc:#b5651d;--ct:#fff}
+.chp.c13{--cc:#4f7a3a;--ct:#fff}.chp.c14{--cc:#5a6273;--ct:#fff}
 .nb .chp,.sc2 .chp{height:30px}.nb .chp>b,.sc2 .chp>b{font-size:.84rem;padding:0 9px}.nb .chp>span,.sc2 .chp>span{font-size:.98rem;line-height:26px;padding:0 11px}
 .nb .chp{margin:0 10px 0 0}
 .sc2 .cm .chp{display:flex;width:max-content;max-width:100%;margin:10px 0 4px}
@@ -1348,10 +1356,11 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
   <div class="calwrap">
     <div>
       <div class="calhead"><span class="mn" id="cmn"></span><span class="yr" id="cyr"></span><span class="sp"></span>
-        <div class="calnav"><button id="cprev" aria-label="เดือนก่อน">◀</button><button id="ctoday">วันนี้</button><button id="cnext" aria-label="เดือนถัดไป">▶</button></div></div>
+        <div class="calctl"><div class="calnav"><button id="cprev" aria-label="เดือนก่อน">◀</button><button id="ctoday">วันนี้</button><button id="cnext" aria-label="เดือนถัดไป">▶</button></div>
+          <button class="calnav exbtn" id="cexam" onclick="editExams()"><i class="exsw"></i>ช่วงสอบ<span class="expen">✎</span></button></div></div>
       <div class="calfig" id="cfig"></div>
       <div class="mcal" id="mcal"></div>
-      <div class="calleg"><span><i class="lh"></i>วันหยุด</span><span><i class="lt"></i>วันนี้</span><span><i class="ld"></i>เดดไลน์</span><span><i class="lx"></i>ช่วงสอบ</span><span class="mut">ขีดฆ่า = ยกเลิก / ไม่นับ</span></div>
+      <div class="calleg"><span><i class="lh"></i>วันหยุด</span><span><i class="lt"></i>วันนี้</span><span><i class="ld"></i>เดดไลน์</span><button class="lxb" onclick="editExams()" title="ตั้งช่วงสอบ"><i class="lx"></i>ช่วงสอบ ✎</button><span class="mut">ขีดฆ่า = ยกเลิก / ไม่นับ</span></div>
     </div>
     <div class="agenda" id="daypane"></div>
   </div>
@@ -2087,7 +2096,7 @@ function prepOf(s){
   return {ch: cur >= 0 ? `บท ${cur+1} ${CH[cur]}` : '', last};
 }
 const chipOf = s => { const c = prepOf(s).ch; if (!c) return ''; const m = c.match(/^(บท \d+) (.*)$/);
-  return `<span class="chp" title="กำลังเรียน${esc(c)}"><b>${m ? `บท<i>${m[1].slice(3)}</i>` : esc(c)}</b>${m ? `<span>${esc(m[2])}</span>` : ''}</span>`; };
+  return `<span class="chp${m ? ' c' + m[1].slice(3) : ''}" title="กำลังเรียน${esc(c)}"><b>${m ? `บท<i>${m[1].slice(3)}</i>` : esc(c)}</b>${m ? `<span>${esc(m[2])}</span>` : ''}</span>`; };
 const lastOf = (s, tag, cls) => { const l = prepOf(s).last; return l ? `<${tag} class="${cls}" title="${esc(l)}"><em>ต่อจาก</em>${esc(l)}</${tag}>` : ''; };
 function strip(map){ return `<div class="strip">${map.split('').map(c => `<i class="${c==='t'?'':c}"></i>`).join('')}</div>`; }
 function renderSchedule(){
@@ -2643,11 +2652,10 @@ function toggleHol(iso){
 // days between two ISO dates (b - a)
 const dDiff = (a, b) => Math.round((new Date(b + 'T00:00') - new Date(a + 'T00:00')) / 864e5);
 const exState = e => { const t = isoD(NOW); return t > e.b ? ['past', 'ผ่านแล้ว'] : t >= e.a ? ['now', `กำลังสอบ · เหลือ ${dDiff(t, e.b) + 1} วัน`] : ['soon', `อีก ${dDiff(t, e.a)} วัน`]; };
-// the header button reads as a countdown to the next exam window, and opens the editor
-function examBtn(){
+// the button's tooltip says what's next
+function examTip(){
   const t = isoD(NOW), nx = [...(DB.exams || [])].filter(e => e.b >= t).sort((x, y) => x.a.localeCompare(y.a))[0];
-  if (!nx) return `<span class="exi">📝</span><span>ช่วงสอบ</span>`;
-  return `<span class="exi">📝</span><span>${esc(nx.t)}<small>${exState(nx)[1]}</small></span>`;
+  return nx ? `ตั้งช่วงสอบ · ถัดไป ${nx.t} ${exState(nx)[1]}` : 'ตั้งช่วงสอบ';
 }
 function editExams(){
   const list = (DB.exams || []).map(e => ({...e}));
@@ -2689,8 +2697,8 @@ $('#cnext').onclick = () => { cm++; if (cm > 11){ cm = 0; cy++; } renderCal(true
 $('#ctoday').onclick = () => { cy = NOW.getFullYear(); cm = NOW.getMonth(); cday = isoD(NOW); renderCal(true); };
 function renderCal(anim){
   const M = monthMoney(cy, cm), hols = (DB.holidays[mkey(cy,cm)] || []).length;
-  $('#cmn').textContent = TH_MF[cm]; $('#cyr').textContent = cy + 543;
-  $('#cfig').innerHTML = `<div><b>${M.n}</b><span>คาบ</span></div><div><b>${cash(M.earned)}</b><span>ได้แล้ว</span></div><div><b>${cash(M.forecast)}</b><span>คาดทั้งเดือน</span></div><div><b>${hols}</b><span>วันหยุด</span></div><button class="exbtn" id="cexam" onclick="editExams()" title="ตั้งช่วงสอบ">${examBtn()}</button>`;
+  $('#cmn').textContent = TH_MF[cm]; $('#cyr').textContent = cy + 543; $('#cexam').title = examTip();
+  $('#cfig').innerHTML = `<div><b>${M.n}</b><span>คาบ</span></div><div><b>${cash(M.earned)}</b><span>ได้แล้ว</span></div><div><b>${cash(M.forecast)}</b><span>คาดทั้งเดือน</span></div><div><b>${hols}</b><span>วันหยุด</span></div>`;
   const days = new Date(cy, cm+1, 0).getDate(), off = new Date(cy, cm, 1).getDay(), ses = monthSessions(cy, cm), prevDays = new Date(cy, cm, 0).getDate();
   let h = TH_D.map((d,i) => `<div class="h${i===0||i===6?' we':''}">${d}</div>`).join(''), i = 0;
   for (let k = off-1; k >= 0; k--) h += `<div class="mc out" style="--i:${i++}"><span class="n">${prevDays-k}</span></div>`;
