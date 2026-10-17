@@ -928,24 +928,32 @@ html.scrlock{overscroll-behavior:none}
 .mboard canvas{position:absolute;left:0;top:0;pointer-events:none}
 @media (orientation:portrait){#modal.split{flex-direction:column}
   #modal.split .mdiv{width:auto;height:28px;cursor:row-resize}#modal.split .mdiv:after{width:72px;height:8px}}
-/* card strips: tabs just outside the present card's top-left corner; each pulls a panel down over the card's corner.
-   #mstrips sits at the sheet's top-left (JS: STRIP.place) so absolute children can hang above (tab) and below (panel) it */
-#mstrips{position:absolute;left:0;top:0;width:0;height:0;z-index:4}
+/* card strips = files filed behind the present card. Each .msp is a file: a folder tab (.mstab) sticking up above the card's
+   top edge + a full-width body (.mspb) that slides UP from behind the card when opened. #mstrips comes before .sheet in the DOM
+   (same z layer) so the card paints over it; JS (STRIP.place) pins it to the card's top edge at the card's width. */
+#mstrips{position:absolute;left:0;top:0;width:0;height:0;z-index:0}
+#modal{transition:padding-top .26s cubic-bezier(.2,.9,.3,1)}
 #modal.hasstrip{padding-top:52px}
-.mstabs{position:absolute;left:0;bottom:-4px;display:flex;gap:8px}
-.mstab{background:var(--yel);color:#141414;border:3px solid var(--ink);border-bottom:0;padding:5px 15px 8px;font:800 .88rem "Anuphan",sans-serif;box-shadow:3px -3px 0 var(--sh);cursor:pointer;transition:transform .15s}
-.mstab:hover{transform:translateY(-3px)}.mstab.on{background:var(--ink);color:var(--paper)}
-.msp{position:absolute;left:0;top:0;width:min(380px,calc(100vw - 36px));max-height:min(60vh,calc(var(--shh,400px) - 16px));overflow:auto;background:var(--card);color:var(--ink);border:3px solid var(--ink);
-  box-shadow:6px 6px 0 var(--sh);padding:12px 14px 14px;display:none;transform-origin:top left;overscroll-behavior:contain}
-.msp.on{display:block;animation:mspIn .22s cubic-bezier(.2,1.1,.4,1)}
-@keyframes mspIn{from{transform:scaleY(.2);opacity:0}to{transform:none;opacity:1}}
-.msp h4{margin:0 34px 8px 0;font:800 .8rem "Anuphan",sans-serif;color:var(--mut)}
-.msp .mspx{position:absolute;right:8px;top:6px;border:2px solid var(--ink);background:var(--card);color:var(--ink);width:26px;height:26px;font-weight:800;cursor:pointer;line-height:1}
-.mwrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;border:0;border-top:2px solid var(--ink);background:transparent;color:var(--ink);padding:8px 2px;font:700 1.05rem "Anuphan",sans-serif;cursor:pointer;text-align:left}
-.mwrow b{font-variant-numeric:tabular-nums}.mwrow small{font-weight:600;color:var(--mut)}
-.mwrow:hover{background:var(--exg)}
-.mwbrk{display:none;padding:2px 2px 10px;font:600 .9rem "Anuphan",sans-serif;color:var(--ink);line-height:1.6}
-.mwrow[aria-expanded=true]+.mwbrk{display:block}
+.msp{position:absolute;left:0;right:0;bottom:-4px;transform:translateY(100%);transition:transform .26s cubic-bezier(.2,1.15,.4,1)}
+.msp.on{transform:none;z-index:1}
+.mstab{position:absolute;left:calc(26px + var(--i,0)*104px);bottom:calc(100% - 3px);z-index:1;display:flex;align-items:center;gap:7px;background:var(--stbg);color:var(--ink);
+  border:3px solid var(--ink);border-bottom:0;border-radius:10px 10px 0 0;padding:6px 16px 10px;font:800 .95rem "Anuphan",sans-serif;cursor:pointer;transition:transform .15s,background .15s}
+.mstab i{font-style:normal;font-size:.6rem;transition:transform .26s}.msp.on .mstab i{transform:rotate(180deg)}
+.msp:not(.on) .mstab:hover{background:var(--yel);color:#141414;transform:translateY(-4px)}
+.msp:not(.on) .mstab:active{background:var(--yel);color:#141414;transform:translateY(-1px)}.msp.on .mstab:active{transform:translateY(1px)}
+.mspb{position:relative;background:var(--stbg);color:var(--ink);border:3px solid var(--ink);border-radius:0 10px 0 0;padding:11px 16px 16px;max-height:35vh;overflow:auto;overscroll-behavior:contain;
+  visibility:hidden;transition:visibility 0s .26s}
+.msp.on .mspb{visibility:visible;transition:none}
+.mspb h4{margin:0 34px 9px 0;font:800 .8rem "Anuphan",sans-serif;color:var(--mut)}
+.mspb .mspx{position:absolute;right:8px;top:7px;border:2px solid var(--ink);background:var(--card);color:var(--ink);width:26px;height:26px;font-weight:800;cursor:pointer;line-height:1}
+.mwchips{display:flex;flex-wrap:wrap;gap:8px}
+.mwchip{display:inline-flex;align-items:baseline;gap:9px;border:2px solid var(--ink);background:var(--card);color:var(--ink);padding:4px 11px;font:700 1.02rem "Anuphan",sans-serif;
+  cursor:pointer;box-shadow:2px 2px 0 var(--ink);transition:transform .1s,box-shadow .1s}
+.mwchip b{font-variant-numeric:tabular-nums;font-weight:800}
+.mwchip:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}.mwchip:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.mwchip[aria-expanded=true]{background:var(--ink);color:var(--card)}
+.mwbrk{display:none;margin-top:11px;padding-top:8px;border-top:2px dashed var(--ink);font:600 .95rem "Anuphan",sans-serif;line-height:1.6}
+.mwbrk.on{display:block}
 /* ---------- export modal ---------- */
 .expwrap{position:fixed;inset:0;background:rgba(20,20,20,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
 .expwrap.show{display:flex}
@@ -1463,7 +1471,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 <div id="appbody"><main id="root"></main></div>
 </div>
 
-<div class="modal" id="modal"><div class="sheet">
+<div class="modal" id="modal"><div id="mstrips"></div><div class="sheet">
   <button class="x" id="mx">✕</button>
   <button class="x inkw" id="inkw" title="โหมดเขียน (P)" aria-pressed="false">✎</button>
   <div class="mink" id="mink">
@@ -1480,7 +1488,6 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
   <div class="mfrow"><span class="mhint" id="mhint"><span class="hc">‹ ปัดซ้าย/ขวาเพื่อเปลี่ยนข้อ ›</span><span class="hf">← → เปลี่ยนข้อ</span></span><span class="mpos" id="mpos"></span></div>
   <div class="foot" id="mfoot" style="margin-top:14px"></div>
 </div>
-<div id="mstrips"></div>
 <div class="mdiv" id="mdiv" role="separator" aria-label="ลากเพื่อปรับขนาด"></div>
 <div class="mboard" id="mboard"><canvas id="bhl"></canvas><canvas id="bpen"></canvas></div>
 <div class="inkbar" id="inkbar">
@@ -2477,31 +2484,42 @@ const MWQ=(()=>{
   const r1=x=>(Math.round(x*10+1e-6)/10).toFixed(1);
   function panel(q){
     const {parseF,fHTML,SYM}=PD,rows=find(q.bodyHtml||"",parseF);if(!rows.length)return null;
-    return`<h4>Mw ของสารในโจทย์ · g/mol</h4>`+rows.map(({f,c})=>{
+    const R=rows.map(({f,c})=>{
       const es=Object.entries(c),tot=es.reduce((a,[k,n])=>a+SYM[k].m*n,0),lone=es.length===1&&es[0][1]===1;
       const parts=es.map(([k,n])=>n===1?r1(SYM[k].m):`${n}(${r1(SYM[k].m)})`).join(" + "),sum=es.reduce((a,[k,n])=>a+n*+r1(SYM[k].m),0);
       const T=lone?r1(tot):r1(sum);   // Prat 2026-10-17: total = sum of the rounded parts (textbook style, NaCl 58.5), so the working always adds up
-      const eq=lone?`มวลอะตอม = ${T}`:`${fHTML(f)} = ${parts} = ${T}`;
-      return`<button class="mwrow" aria-expanded="false"><span>${fHTML(f)}</span><span><b>${T}</b> <small>g/mol</small></span></button><div class="mwbrk">${eq}</div>`;}).join("");}
+      return{F:fHTML(f),T,eq:lone?`${fHTML(f)} · มวลอะตอม = ${T}`:`${fHTML(f)} = ${parts} = ${T}`};});
+    return`<h4>Mw ของสารในโจทย์ · g/mol</h4><div class="mwchips">`+R.map((r,i)=>`<button class="mwchip" data-k="${i}" aria-expanded="false"><span>${r.F}</span><b>${r.T}</b></button>`).join("")+
+      `</div>`+R.map((r,i)=>`<div class="mwbrk" data-k="${i}">${r.eq}</div>`).join("");}
   return{find,panel};})();
 /*ENDMWQ*/
 const STRIP=(()=>{
   const el=$("#mstrips"),sheet=$("#modal .sheet"),modal=$("#modal");
   const STRIPS=[{label:"Mw",title:"มวลโมเลกุลของสารในโจทย์",build:q=>MWQ.panel(q)}];
-  let cur=null;
-  const show=i=>{cur=i;el.querySelectorAll(".mstab,.msp").forEach(x=>{const on=+x.dataset.s===i;x.classList.toggle("on",on);if(x.tagName==="BUTTON")x.setAttribute("aria-expanded",on);});};
-  function place(){el.style.left=sheet.offsetLeft+"px";el.style.top=sheet.offsetTop+"px";el.style.setProperty("--shh",sheet.offsetHeight+"px");}
-  function fill(q){cur=null;let tabs="",panels="";
-    STRIPS.forEach((d,i)=>{const h=d.build(q);if(!h)return;
-      tabs+=`<button class="mstab" data-s="${i}" title="${d.title}" aria-expanded="false">${d.label}</button>`;
-      panels+=`<div class="msp" data-s="${i}">${h}<button class="mspx" aria-label="ปิด">✕</button></div>`;});
-    el.innerHTML=(tabs?`<div class="mstabs">${tabs}</div>`:"")+panels;modal.classList.toggle("hasstrip",!!tabs);place();}
-  function close(quiet){if(cur===null)return;show(-1);cur=null;if(!quiet)SFX.play("select");}
+  let cur=null,raf=0;
+  function place(){el.style.left=sheet.offsetLeft+"px";el.style.top=sheet.offsetTop+"px";el.style.width=sheet.offsetWidth+"px";}
+  const follow=()=>{const t0=performance.now();cancelAnimationFrame(raf);(function f(){place();if(performance.now()-t0<420)raf=requestAnimationFrame(f);})();};
+  // an open file needs room above the card; when the modal hasn't got it, raise the modal's top padding (the card slides down)
+  // and cap the card's height so it scrolls instead of running off the bottom. Never shrinks while open, so no jitter.
+  function push(reset){const p=cur===null?null:el.querySelector(`.msp[data-s="${cur}"]`);
+    if(!p||reset)modal.style.paddingTop=sheet.style.maxHeight="";
+    if(p){const need=p.querySelector(".mspb").offsetHeight+p.querySelector(".mstab").offsetHeight+6;
+      if(sheet.offsetTop<need){modal.style.paddingTop=need+"px";sheet.style.maxHeight=Math.min(modal.clientHeight-need-18,innerHeight*.92)+"px";}}
+    follow();}
+  const show=i=>{cur=i<0?null:i;el.querySelectorAll(".msp").forEach(x=>{const on=+x.dataset.s===i;x.classList.toggle("on",on);x.querySelector(".mstab").setAttribute("aria-expanded",on);});push();};
+  function fill(q){cur=null;let h="",n=0;
+    STRIPS.forEach((d,i)=>{const b=d.build(q);if(!b)return;
+      h+=`<div class="msp" data-s="${i}"><button class="mstab" style="--i:${n++}" title="${d.title}" aria-expanded="false">${d.label}<i>▲</i></button>`+
+         `<div class="mspb">${b}<button class="mspx" aria-label="ปิด">✕</button></div></div>`;});
+    el.innerHTML=h;modal.classList.toggle("hasstrip",!!h);push(1);}
+  function close(quiet){if(cur===null)return;show(-1);if(!quiet)SFX.play("select");}
   el.addEventListener("click",e=>{
-    const t=e.target.closest(".mstab");if(t){const i=+t.dataset.s;if(cur===i)close();else{show(i);SFX.play("select");}return;}
+    const t=e.target.closest(".mstab");if(t){const i=+t.closest(".msp").dataset.s;if(cur===i)close();else{show(i);SFX.play("select");}return;}
     if(e.target.closest(".mspx")){close();return;}
-    const r=e.target.closest(".mwrow");if(r){r.setAttribute("aria-expanded",r.getAttribute("aria-expanded")!=="true");SFX.play("select");}});
-  new ResizeObserver(place).observe(sheet);window.addEventListener("resize",place);
+    const c=e.target.closest(".mwchip");if(!c)return;const on=c.getAttribute("aria-expanded")!=="true",b=c.closest(".mspb");   // one breakdown open at a time
+    b.querySelectorAll(".mwchip").forEach(x=>x.setAttribute("aria-expanded",x===c&&on));
+    b.querySelectorAll(".mwbrk").forEach(x=>x.classList.toggle("on",on&&x.dataset.k===c.dataset.k));SFX.play("select");push();});
+  new ResizeObserver(follow).observe(sheet);window.addEventListener("resize",()=>push(1));
   return{fill,place,close,isOpen:()=>cur!==null};})();
 /* 💾 save the question on screen as a PNG: badges + question + choices only: no 📌 note, solution or controls.
    html2canvas loads from the CDN on first use; on touch devices the share sheet offers "Save Image". */
