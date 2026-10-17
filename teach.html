@@ -1128,16 +1128,27 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 @media (hover:none){.mvlen:after{opacity:.25}}
 .mvlenon{outline:3px solid var(--yel);outline-offset:-3px;transition:outline-color .2s}
 .mvlenon>.mvlen:after{opacity:1;width:64px;height:5px;background:var(--yel);box-shadow:0 0 0 2px var(--ink)}
-#mvtip{position:fixed;left:0;top:0;z-index:200;pointer-events:none;display:flex;flex-direction:column;padding:6px 12px;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);opacity:0;scale:.85;will-change:translate;transition:opacity .15s,scale .3s var(--sp),background .2s,color .2s}
+#mvtip{position:fixed;left:0;top:0;z-index:200;pointer-events:none;width:230px;padding:9px 14px 7px;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);opacity:0;scale:.85;transform-origin:0 100%;will-change:translate;transition:opacity .15s,scale .3s var(--sp)}
 #mvtip.on{opacity:1;scale:1}#mvtip.out{opacity:0;scale:.85}
-#mvtip.bump{animation:mvbump .32s var(--sp)}
-@keyframes mvbump{40%{scale:1.14}}
-#mvtip b{font:800 1.2rem "JetBrains Mono"}#mvtip small{font:700 .75rem "JetBrains Mono";color:var(--mut)}
-#mvtip.chg{background:var(--yel);color:#141414}#mvtip.chg small{color:#141414}
+#mvtip .rh{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+#mvtip .rh b{font:800 1.35rem/1 "JetBrains Mono";letter-spacing:-.03em;display:inline-block;transition:color .2s}
+#mvtip .rh b.bump{animation:mvbump .32s var(--sp)}
+@keyframes mvbump{40%{scale:1.16}}
+#mvtip .rh small{font:700 .74rem "JetBrains Mono";color:var(--mut);white-space:nowrap}
+#mvtip.chg .rh b{color:var(--red)}
+#mvtip .rt{position:relative;height:12px;margin:9px 0 0;border:2px solid var(--ink);background:var(--paper)}
+#mvtip .rf{position:absolute;left:0;top:0;bottom:0;background:var(--ink);transition:width .35s var(--sp),background .2s}
+#mvtip.chg .rf{background:var(--yel);box-shadow:inset -2px 0 0 var(--ink)}
+#mvtip .ro{position:absolute;top:-6px;bottom:-6px;width:0;border-left:2px dashed var(--red);translate:-1px 0}
+#mvtip .rt span{position:absolute;bottom:0;width:0;height:4px;border-left:1.5px solid var(--mut);translate:-1px 0;opacity:.7}
+#mvtip .rt span.mj{height:7px;border-left-width:2px}
+#mvtip .rt span:last-child{display:none}
+#mvtip .rl{position:relative;height:14px;margin-top:3px;font:700 .66rem "JetBrains Mono";color:var(--mut)}
+#mvtip .rl span{position:absolute;translate:-50% 0}#mvtip .rl span:last-child{translate:-100% 0}
 .exr.new{animation:exin .4s var(--sp) both}.exr.gone{animation:exout .25s var(--ez) both}
 @keyframes exin{from{opacity:0;translate:0 -8px;scale:.96}}
 @keyframes exout{to{opacity:0;translate:16px 0;scale:.96}}
-@media (prefers-reduced-motion:reduce){.mvhold,.mvsrc,.mvback,.mvland,#mvdock.on .mvd,#mvtip.bump,.exr.new,.exr.gone{animation-duration:.01s!important}}
+@media (prefers-reduced-motion:reduce){.mvhold,.mvsrc,.mvback,.mvland,#mvdock.on .mvd,#mvtip .rh b.bump,.exr.new,.exr.gone{animation-duration:.01s!important}}
 /* exam windows */
 .mc.exam{background:repeating-linear-gradient(135deg,var(--card) 0 7px,color-mix(in srgb,var(--lav) 38%,var(--card)) 7px 14px)}
 .mc.exam.hol{background:#fbe4dd}
@@ -2314,11 +2325,17 @@ function askLen(s, h){
     tip = document.createElement('div'); tip.id = 'mvtip'; document.body.append(tip); paint(); later(() => tip?.classList.add('on')); loop();
   });
   const hOf = y => Math.min(4, Math.max(.5, L.s.h + Math.round((y - L.y0) / STEP) * .5));
-  const paint = () => { tip.innerHTML = `<b>${L.h} ชม.</b><small>${L.s.time}–${endOf({...L.s, h: L.h})}</small>`; tip.classList.toggle('chg', L.h !== +L.s.h); };
+  // the tag is a little ruler: 0.5–4 ชม. in half-hour notches, filled to the length you're on, a mark where it started
+  const pct = h => h / 4 * 100;
+  const build = () => { tip.innerHTML = `<div class="rh"><b></b><small></small></div><div class="rt"><i class="rf"></i><i class="ro" style="left:${pct(+L.s.h)}%"></i>${[...Array(8)].map((_, i) => `<span class="${(i + 1) % 2 ? '' : 'mj'}" style="left:${pct((i + 1) / 2)}%"></span>`).join('')}</div><div class="rl">${[1, 2, 3, 4].map(n => `<span style="left:${pct(n)}%">${n}</span>`).join('')}</div>`; };
+  const paint = () => { if (!tip.firstChild) build(); const chg = L.h !== +L.s.h;
+    tip.querySelector('.rh b').textContent = `${L.h} ชม.`; tip.querySelector('.rh small').textContent = `${L.s.time}–${endOf({...L.s, h: L.h})}${chg ? ` · ${L.h > L.s.h ? '+' : '−'}${Math.abs(L.h - L.s.h)}` : ''}`;
+    tip.querySelector('.rf').style.width = pct(L.h) + '%'; tip.classList.toggle('chg', chg); };
   const loop = () => { if (!L) return; L.x += (L.tx - L.x) * k; L.y += (L.ty - L.y) * k;
-    tip.style.translate = `${L.x + 18}px ${L.y - 22}px`; L.raf = requestAnimationFrame(loop); };
+    tip.style.translate = `${Math.min(L.x + 18, innerWidth - 244)}px ${Math.max(8, L.y - 104)}px`;   // above-right of the finger, kept on screen
+    L.raf = requestAnimationFrame(loop); };
   addEventListener('pointermove', e => { if (!L || e.pointerId !== L.id) return; L.tx = e.clientX; L.ty = e.clientY;
-    const h = hOf(e.clientY); if (h !== L.h){ L.h = h; paint(); tip.classList.remove('bump'); void tip.offsetWidth; tip.classList.add('bump'); navigator.vibrate?.(6); SFX.play('tick'); } });
+    const h = hOf(e.clientY); if (h !== L.h){ L.h = h; paint(); const b = tip.querySelector('.rh b'); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); navigator.vibrate?.(6); SFX.play('tick'); } });
   const stop = (e, go) => { if (!L || e.pointerId !== L.id) return; const {s, h, el} = L; cancelAnimationFrame(L.raf); el.classList.remove('mvlenon');
     const t = tip; tip = null; L = null; if (t){ t.classList.remove('on'); t.classList.add('out'); setTimeout(() => t.remove(), 200); }
     setTimeout(() => MV.on = false, 0);
