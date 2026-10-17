@@ -1089,6 +1089,24 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .dskip input{width:20px;height:20px;accent-color:var(--ink);grid-row:span 2}
 .dskip span{font-weight:700;font-size:.9rem}.dskip small{font-size:.74rem;color:var(--mut);font-weight:600}
 .dskip:has(input:checked){border-color:var(--ink);background:var(--stbg)}
+/* drag to reschedule */
+[data-sid]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.mvsrc{opacity:.35;outline:3px dashed var(--ink);outline-offset:-3px}
+#mvghost{position:fixed;left:0;top:0;z-index:200;pointer-events:none;display:flex;flex-direction:column;gap:2px;padding:8px 14px 8px 20px;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);opacity:0;scale:.8;transition:opacity .15s,scale .25s cubic-bezier(.3,1.6,.5,1)}
+#mvghost.on{opacity:1;scale:1}
+#mvghost i{position:absolute;left:0;top:0;bottom:0;width:8px;border-right:2px solid var(--ink)}
+#mvghost b{font-size:1.1rem;font-weight:800}#mvghost small{font:700 .78rem "JetBrains Mono";color:var(--mut)}
+#mvdock{position:fixed;left:50%;bottom:14px;z-index:199;width:min(560px,calc(100vw - 24px));translate:-50% 140%;background:var(--paper);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);padding:10px;transition:translate .3s cubic-bezier(.3,1.3,.5,1)}
+#mvdock.on{translate:-50% 0}
+#mvdock.top{bottom:auto;top:14px;translate:-50% -140%}#mvdock.top.on{translate:-50% 0}
+#mvdock .mvh{font-size:.78rem;font-weight:700;color:var(--mut);margin:0 2px 8px}
+#mvdock .mvg{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.mvd{position:relative;display:flex;flex-direction:column;align-items:center;padding:4px 0 5px;border:2px solid var(--ink);background:var(--card);font-size:.7rem;font-weight:700;line-height:1.1;transition:background .12s,transform .12s}
+.mvd b{font:800 1.05rem "JetBrains Mono"}.mvd em{position:absolute;top:-9px;right:-4px;font-style:normal;font-size:.6rem;background:var(--ink);color:var(--paper);padding:0 3px}
+.mvd.past{opacity:.45}.mvd.hol{background:#fbe4dd}.mvd.today{box-shadow:inset 0 -4px 0 var(--red)}
+.mvd.cur{border-style:dashed;opacity:.5}
+.mvover{background:var(--yel)!important;color:#141414!important;transform:scale(1.06);outline:3px solid var(--ink);outline-offset:-1px;z-index:2}
+.mvw{color:var(--red)}
 .dwarn{margin:12px 0 0;padding:8px 12px;border-left:4px solid var(--red);background:#fbe4dd;font-weight:700;font-size:.86rem}
 /* clashes */
 .rw.clash{background:linear-gradient(90deg,#fbe4dd,transparent 70%)}
@@ -1982,7 +2000,7 @@ function rgTick(){
 }
 { let d = null, ate = false;
   $('#slist').addEventListener('pointerdown', e => { const r = e.target.closest?.('.crow'); if (r) rgStop(); if (r && e.pointerType === 'mouse' && e.button === 0) d = {r, x: e.clientX, s: r.scrollLeft, moved: false, lx: e.clientX, lt: e.timeStamp, vel: 0}; });
-  addEventListener('pointermove', e => { if (!d) return; if (!d.r.isConnected){ const n = $('#slist .crow'); if (!n){ d = null; return; } d.s += n.scrollLeft - d.r.scrollLeft; d.r = n; }
+  addEventListener('pointermove', e => { if (!d) return; if (MV.on){ d.r.classList.remove('drag'); d = null; return; } if (!d.r.isConnected){ const n = $('#slist .crow'); if (!n){ d = null; return; } d.s += n.scrollLeft - d.r.scrollLeft; d.r = n; }
     const dx = e.clientX - d.x;
     if (!d.moved){ if (Math.abs(dx) < 6) return; d.moved = true; d.r.classList.add('drag'); }
     const dt = Math.max(1, e.timeStamp - d.lt); d.vel = .8 * ((d.lx - e.clientX) / dt) + .2 * d.vel; d.lx = e.clientX; d.lt = e.timeStamp;
@@ -1995,12 +2013,12 @@ function rgTick(){
   $('#slist').addEventListener('click', e => { if (ate){ e.stopPropagation(); e.preventDefault(); ate = false; } }, true); }
 function cardGroup(g){
   const x = new Date(g.date+'T00:00'), rel = relOnly(g.date), hol = isHolD(g.date);
-  return `<div class="cday ${g.date===isoD(NOW)?'today':''} ${hol?'hol':''}"><span class="cw">${TH_DF[x.getDay()]}</span><b>${x.getDate()}</b><small>${TH_M[x.getMonth()]}${rel ? '<br>'+rel : ''}</small><span class="cn">${g.items.length} คาบ</span><button title="เพิ่มคาบวันนี้" aria-label="เพิ่มคาบ" onclick="editSession(null,'${g.date}')">＋</button></div>`
+  return `<div class="cday ${g.date===isoD(NOW)?'today':''} ${hol?'hol':''}" data-drop="${g.date}"><span class="cw">${TH_DF[x.getDay()]}</span><b>${x.getDate()}</b><small>${TH_M[x.getMonth()]}${rel ? '<br>'+rel : ''}</small><span class="cn">${g.items.length} คาบ</span><button title="เพิ่มคาบวันนี้" aria-label="เพิ่มคาบ" onclick="editSession(null,'${g.date}')">＋</button></div>`
     + g.items.map(sCard).join('');
 }
 function sCard(s){
   const p = st(s.who), hol = isHolD(s.date) && s.status === 'plan', cw = clashWith(s);
-  return `<div class="sc2 ${s.status==='cancel'?'cancel':''} ${hol?'holi':''} ${cw.length?'clash':''}" onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}">
+  return `<div class="sc2 ${s.status==='cancel'?'cancel':''} ${hol?'holi':''} ${cw.length?'clash':''}" data-sid="${s.id}" onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}">
     <div class="cs ${colorOf(s.who)}"></div>
     ${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" aria-pressed="${s.status==='done'}" onclick="event.stopPropagation();${s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}
     <div class="ct">${s.time}<small>– ${endOf(s)}</small></div>
@@ -2011,13 +2029,13 @@ function sCard(s){
 }
 function dayCard(date, items, i = 0){
   const hol = isHolD(date), x = new Date(date+'T00:00'), sum = items.filter(counts).reduce((a,s)=>a+amt(s),0), rel = relOnly(date);
-  return `<section class="dc ${date===isoD(NOW)?'today':''} ${hol?'hol':''}" style="--i:${i}">
+  return `<section class="dc ${date===isoD(NOW)?'today':''} ${hol?'hol':''}" style="--i:${i}" data-drop="${date}">
     <header class="dch"><b>${x.getDate()}</b><span class="dw">${TH_DF[x.getDay()]}<small>${TH_MF[x.getMonth()]}${rel ? ' · '+rel : ''}</small></span>${hol ? '<span class="htag">วันหยุด</span>' : ''}<span class="sp"></span><span class="dsum">${items.length} คาบ · ${cash(sum)}</span><button class="dadd" title="เพิ่มคาบวันนี้" onclick="editSession(null,'${date}')">＋</button></header>
     ${items.map(s => rw(s)).join('')}</section>`;
 }
 function rw(s, pv){
   const p = st(s.who), hol = isHolD(s.date) && s.status === 'plan', cw = clashWith(s);
-  return `<div class="rw ${pv?'pv':''} ${s.status==='cancel'?'cancel':''} ${hol?'holi':''} ${cw.length?'clash':''}" ${pv ? '' : `onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}"`}>
+  return `<div class="rw ${pv?'pv':''} ${s.status==='cancel'?'cancel':''} ${hol?'holi':''} ${cw.length?'clash':''}" ${pv ? '' : `data-sid="${s.id}" onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}"`}>
     <span class="cb ${colorOf(s.who)}"></span>
     <span class="ckw">${s.status === 'cancel' ? '' : `<button class="ck ${s.status==='done'?'on':''}" ${pv ? 'tabindex="-1"' : ''} title="${s.status==='done' ? 'สอนแล้ว · แตะเพื่อยกเลิก' : 'ติ๊กเมื่อสอนเสร็จ'}" aria-label="สอนเสร็จแล้ว" aria-pressed="${s.status==='done'}" onclick="event.stopPropagation();${pv ? '' : s.status==='done' ? `undone('${s.id}')` : `markDone('${s.id}')`}">${s.status==='done' ? '✓' : ''}</button>`}</span>
     <span class="tm">${s.time}<small>– ${endOf(s)}</small></span>
@@ -2045,7 +2063,7 @@ function stampOf(s, pv){
 }
 function tk(s, o = {}){
   const p = st(s.who), hol = isHolD(s.date) && s.status === 'plan';
-  return `<div class="tk ${o.sm?'sm':''} ${o.pv?'pv':''} ${s.status==='cancel'?'cancel':''} ${hol?'holi':''}" ${o.pv ? '' : `onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}"`}>
+  return `<div class="tk ${o.sm?'sm':''} ${o.pv?'pv':''} ${s.status==='cancel'?'cancel':''} ${hol?'holi':''}" ${o.pv ? '' : `data-sid="${s.id}" onclick="editSession('${s.id}')" tabindex="0" role="button" aria-label="${esc(p?.name)} ${s.time}"`}>
     <span class="face ${colorOf(s.who)}"><b>${esc((p?.name || '?')[0])}</b></span>
     <span class="mid">${o.date ? `<span class="dl">${dLabel(s.date)}${relOnly(s.date) ? ' · '+relOnly(s.date) : ''}</span>` : ''}<span class="when">${s.time}<small>– ${endOf(s)} · ${s.h} ชม.</small></span><span class="who">${esc(p?.name ?? '?')}</span>${s.note ? `<span class="nt">📝 ${esc(s.note)}</span>` : ''}</span>
     <span class="stub">${stampOf(s, o.pv)}</span>
@@ -2170,6 +2188,82 @@ function delSession(id){
       : `<button class="go sm red" id="d1">ลบคาบนี้</button>`}</div>`);
   $('#d1').onclick = () => go(false); if ($('#d2')) $('#d2').onclick = () => go(true);
   setTimeout(() => $('#d1')?.focus(), 50);
+}
+
+/* ---------- drag to reschedule ----------
+   hold a class ~0.4 s (finger or mouse) until it lifts, drag it onto another day — a calendar cell, a day in the list /
+   cards view, or the date dock that slides up — and let go. Same time, new date. It asks first, like delete, with the
+   same "ไม่ต้องถามอีก 10 นาที" opt-out; moving a weekly class leaves its slot empty on purpose (same as editing it). */
+var MV = {on: false};
+const SKIPMOVE = 'teach-skipmove', skipMove = () => { try{ return +localStorage.getItem(SKIPMOVE) > Date.now(); }catch{ return false; } };
+function moveTo(s, date){
+  snap(); if (isGen(s)) addSkip(s);
+  const from = s.date; s.date = date; s.series = null;
+  save(); renderAll(); SFX.play('save');
+  toast(`เลื่อน ${st(s.who)?.name} ${dLabel(from)} → ${dLabel(date)} ${s.time}`, true);
+}
+function askMove(s, date){
+  if (skipMove()) return moveTo(s, date);
+  const tmp = {...s, date}, cw = clashWith(tmp), hol = isHolD(date);
+  openModal(`<h2>เลื่อนคาบนี้?</h2><div class="paycard"><span class="cb ${colorOf(s.who)}"></span><div class="pcm"><b>${esc(st(s.who)?.name ?? '?')}</b>
+      <small><s>${dLabel(s.date)}</s> → ${dLabel(date)} · ${s.time}–${endOf(s)}</small>${cw.length ? `<em class="mvw">⚠ ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time).join(', ')}</em>` : ''}${hol ? `<em class="mvw">☂ วันนั้นเป็นวันหยุด · ไม่นับเงิน</em>` : ''}</div>
+      <span class="pca">${cash(amt(s))}</span></div>
+    <label class="dskip"><input type="checkbox" id="mskip"><span>ไม่ต้องถามอีก 10 นาที</span><small>ลากแล้วเลื่อนทันที · ยังกดเลิกทำได้</small></label>
+    <div class="cfoot"><button class="ghostb" onclick="closeModal()">ยกเลิก</button><span class="sp"></span><button class="go sm" id="mv1">เลื่อนไป ${dLabel(date)}</button></div>`);
+  $('#mv1').onclick = () => { if ($('#mskip').checked){ try{ localStorage.setItem(SKIPMOVE, Date.now() + 10*60000); }catch{} } closeModal(); moveTo(s, date); };
+  setTimeout(() => $('#mv1')?.focus(), 50);
+}
+{
+  const HOLD = 380, SLOP = 8;
+  let h = null, eat = false, ghost = null, dock = null, over = null;
+  const mon = iso => { const d = new Date(iso + 'T00:00'); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoD(d); };
+  const lit = el => { if (over === el) return; over?.classList.remove('mvover'); over = el; el?.classList.add('mvover'); };
+  const drop = (x, y) => { const el = document.elementFromPoint(x, y)?.closest('[data-drop]'); return el && el.dataset.drop !== h.s.date ? el : null; };
+  function lift(){
+    MV.on = true; h.el.classList.add('mvsrc'); navigator.vibrate?.(12); SFX.play('select');
+    const p = st(h.s.who);
+    ghost = document.createElement('div'); ghost.id = 'mvghost';
+    ghost.innerHTML = `<i class="${colorOf(h.s.who)}"></i><b>${esc(p?.name ?? '?')}</b><small>${h.s.time} · ${dLabel(h.s.date)}</small>`;
+    document.body.append(ghost);
+    // the dock: three weeks of days, starting the week of the class (or this week, for a class that's already past)
+    const t0 = isoD(NOW), start = mon(h.s.date >= t0 ? h.s.date : t0); let k = '';
+    for (let i = 0; i < 21; i++){ const iso = shift(start, i), d = new Date(iso + 'T00:00');
+      k += `<span class="mvd${iso === h.s.date ? ' cur' : ''}${iso === t0 ? ' today' : ''}${iso < t0 ? ' past' : ''}${isHolD(iso) ? ' hol' : ''}" data-drop="${iso}">${TH_D[d.getDay()]}<b>${d.getDate()}</b>${d.getDate() === 1 || i === 0 ? `<em>${TH_M[d.getMonth()]}</em>` : ''}</span>`; }
+    dock = document.createElement('div'); dock.id = 'mvdock'; if (h.y > innerHeight * .55) dock.className = 'top';   // sits on the half you're not dragging from, so it never hides the day you want
+    dock.innerHTML = `<div class="mvh">ลากไปวางบนวันที่จะเลื่อนไป · ปล่อยที่อื่นเพื่อยกเลิก</div><div class="mvg">${k}</div>`;
+    document.body.append(dock); later(() => { dock?.classList.add('on'); ghost?.classList.add('on'); });
+    place(h.x, h.y);
+  }
+  const place = (x, y) => { if (ghost) ghost.style.transform = `translate(${x + 14}px, ${y - 46}px)`; };
+  function end(){
+    clearTimeout(h?.t); h?.el.classList.remove('mvsrc'); lit(null);
+    ghost?.remove(); ghost = null; const d = dock; dock = null; if (d){ d.classList.remove('on'); setTimeout(() => d.remove(), 250); }
+    if (MV.on){ eat = true; setTimeout(() => eat = false, 60); }
+    MV.on = false; h = null;
+  }
+  addEventListener('pointerdown', e => {
+    if (e.button !== 0 || h) return;
+    const el = e.target.closest?.('[data-sid]'); if (!el) return;
+    const b = e.target.closest('button,input,a,select,textarea'); if (b && el.contains(b) && b !== el) return;   // stamps / ticks keep their own tap
+    const s = DB.sessions.find(x => x.id === el.dataset.sid); if (!s) return;
+    h = {s, el, x: e.clientX, y: e.clientY, id: e.pointerId}; h.t = setTimeout(lift, HOLD);
+  });
+  addEventListener('pointermove', e => {
+    if (!h || e.pointerId !== h.id) return;
+    if (!MV.on){ if (Math.hypot(e.clientX - h.x, e.clientY - h.y) > SLOP){ clearTimeout(h.t); h = null; } return; }   // moved first = a scroll, not a drag
+    h.x = e.clientX; h.y = e.clientY; place(h.x, h.y); lit(drop(h.x, h.y));
+  });
+  addEventListener('pointerup', e => {
+    if (!h || e.pointerId !== h.id) return;
+    const was = MV.on, s = h.s, t = was ? drop(e.clientX, e.clientY) : null; end();
+    if (t) askMove(s, t.dataset.drop); else if (was) SFX.play('off');
+  });
+  addEventListener('pointercancel', () => h && end());
+  addEventListener('keydown', e => { if (e.key === 'Escape' && MV.on) end(); });
+  // once lifted, a finger drag must move the class, not scroll the page
+  addEventListener('touchmove', e => { if (MV.on) e.preventDefault(); }, {passive: false});
+  addEventListener('contextmenu', e => { if (h || MV.on || eat) e.preventDefault(); });
+  addEventListener('click', e => { if (eat){ e.stopPropagation(); e.preventDefault(); eat = false; } }, true);   // the drop isn't a tap on the class
 }
 
 /* ---------- session composer: one ticket bar, one picker at a time ---------- */
@@ -2325,8 +2419,8 @@ function renderCal(anim){
   for (let d = 1; d <= days; d++){
     const iso = `${cy}-${pad(cm+1)}-${pad(d)}`;
     const items = [...DB.deadlines.filter(x => x.d === iso).map(x => `<span class="ev dl">⚑ ${esc(x.t)}</span>`),
-      ...sorted(ses.filter(s => s.date === iso)).map(e => `<span class="ev ${colorOf(e.who)} ${counts(e)?'':'x'} ${clashWith(e).length?'clash':''}" title="${e.time}${clashWith(e).length ? ' · ⚠ ชน' : ''}"><em>${e.time}</em>${esc(st(e.who)?.name)}</span>`)];
-    h += `<button class="mc${iso===isoD(NOW)?' today':''}${isHolD(iso)?' hol':''}${iso===cday?' sel':''}" style="--i:${i++}" data-iso="${iso}"><span class="n">${d}</span><span class="evs">${items.slice(0,2).join('')}${items.length > 2 ? `<span class="more">+${items.length-2} อีก</span>` : ''}</span></button>`;
+      ...sorted(ses.filter(s => s.date === iso)).map(e => `<span data-sid="${e.id}" class="ev ${colorOf(e.who)} ${counts(e)?'':'x'} ${clashWith(e).length?'clash':''}" title="${e.time}${clashWith(e).length ? ' · ⚠ ชน' : ''}"><em>${e.time}</em>${esc(st(e.who)?.name)}</span>`)];
+    h += `<button class="mc${iso===isoD(NOW)?' today':''}${isHolD(iso)?' hol':''}${iso===cday?' sel':''}" style="--i:${i++}" data-iso="${iso}" data-drop="${iso}"><span class="n">${d}</span><span class="evs">${items.slice(0,2).join('')}${items.length > 2 ? `<span class="more">+${items.length-2} อีก</span>` : ''}</span></button>`;
   }
   const tail = (7 - (off + days) % 7) % 7; for (let k = 1; k <= tail; k++) h += `<div class="mc out" style="--i:${i++}"><span class="n">${k}</span></div>`;
   $('#mcal').classList.toggle('still', !anim);
