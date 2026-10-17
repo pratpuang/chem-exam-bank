@@ -928,6 +928,24 @@ html.scrlock{overscroll-behavior:none}
 .mboard canvas{position:absolute;left:0;top:0;pointer-events:none}
 @media (orientation:portrait){#modal.split{flex-direction:column}
   #modal.split .mdiv{width:auto;height:28px;cursor:row-resize}#modal.split .mdiv:after{width:72px;height:8px}}
+/* card strips: tabs just outside the present card's top-left corner; each pulls a panel down over the card's corner.
+   #mstrips sits at the sheet's top-left (JS: STRIP.place) so absolute children can hang above (tab) and below (panel) it */
+#mstrips{position:absolute;left:0;top:0;width:0;height:0;z-index:4}
+#modal.hasstrip{padding-top:52px}
+.mstabs{position:absolute;left:0;bottom:-4px;display:flex;gap:8px}
+.mstab{background:var(--yel);color:#141414;border:3px solid var(--ink);border-bottom:0;padding:5px 15px 8px;font:800 .88rem "Anuphan",sans-serif;box-shadow:3px -3px 0 var(--sh);cursor:pointer;transition:transform .15s}
+.mstab:hover{transform:translateY(-3px)}.mstab.on{background:var(--ink);color:var(--paper)}
+.msp{position:absolute;left:0;top:0;width:min(380px,calc(100vw - 36px));max-height:min(60vh,calc(var(--shh,400px) - 16px));overflow:auto;background:var(--card);color:var(--ink);border:3px solid var(--ink);
+  box-shadow:6px 6px 0 var(--sh);padding:12px 14px 14px;display:none;transform-origin:top left;overscroll-behavior:contain}
+.msp.on{display:block;animation:mspIn .22s cubic-bezier(.2,1.1,.4,1)}
+@keyframes mspIn{from{transform:scaleY(.2);opacity:0}to{transform:none;opacity:1}}
+.msp h4{margin:0 34px 8px 0;font:800 .8rem "Anuphan",sans-serif;color:var(--mut)}
+.msp .mspx{position:absolute;right:8px;top:6px;border:2px solid var(--ink);background:var(--card);color:var(--ink);width:26px;height:26px;font-weight:800;cursor:pointer;line-height:1}
+.mwrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px;width:100%;border:0;border-top:2px solid var(--ink);background:transparent;color:var(--ink);padding:8px 2px;font:700 1.05rem "Anuphan",sans-serif;cursor:pointer;text-align:left}
+.mwrow b{font-variant-numeric:tabular-nums}.mwrow small{font-weight:600;color:var(--mut)}
+.mwrow:hover{background:var(--exg)}
+.mwbrk{display:none;padding:2px 2px 10px;font:600 .9rem "Anuphan",sans-serif;color:var(--ink);line-height:1.6}
+.mwrow[aria-expanded=true]+.mwbrk{display:block}
 /* ---------- export modal ---------- */
 .expwrap{position:fixed;inset:0;background:rgba(20,20,20,.6);z-index:60;display:none;align-items:center;justify-content:center;padding:18px}
 .expwrap.show{display:flex}
@@ -1462,6 +1480,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
   <div class="mfrow"><span class="mhint" id="mhint"><span class="hc">‹ ปัดซ้าย/ขวาเพื่อเปลี่ยนข้อ ›</span><span class="hf">← → เปลี่ยนข้อ</span></span><span class="mpos" id="mpos"></span></div>
   <div class="foot" id="mfoot" style="margin-top:14px"></div>
 </div>
+<div id="mstrips"></div>
 <div class="mdiv" id="mdiv" role="separator" aria-label="ลากเพื่อปรับขนาด"></div>
 <div class="mboard" id="mboard"><canvas id="bhl"></canvas><canvas id="bpen"></canvas></div>
 <div class="inkbar" id="inkbar">
@@ -2009,15 +2028,15 @@ const SL=(()=>{const held=new Set();let y=0;
   return{lock,unlock,held:()=>[...held]};})();
 // a finger dragged on a dimmed backdrop itself: nothing there scrolls, so don't let it bounce the pinned page
 ["#modal","#pdscrim"].forEach(s=>$(s).addEventListener("touchmove",e=>{if(e.target===e.currentTarget&&e.cancelable)e.preventDefault();},{passive:false}));
-function openModal(i){mIdx=i;fillModal();$("#modal").classList.add("show");SL.lock("modal");INK.open();SFX.play(isEx(filtered[i])?"exOpen":"present");}
-function closeModal(){if(!$("#modal").classList.contains("show"))return;$("#modal").classList.remove("show");SL.unlock("modal");INK.close();SFX.play("dismiss");
+function openModal(i){mIdx=i;fillModal();$("#modal").classList.add("show");STRIP.place();SL.lock("modal");INK.open();SFX.play(isEx(filtered[i])?"exOpen":"present");}
+function closeModal(){if(!$("#modal").classList.contains("show"))return;STRIP.close(1);$("#modal").classList.remove("show");SL.unlock("modal");INK.close();SFX.play("dismiss");
   dwell(view==="poster"&&document.body.classList.contains("inapp")?filtered[pIdx]:null);}
 function fillModal(anim){
   const q=filtered[mIdx];dwell(q);
   $("#mtop").innerHTML=`${idBadge(q)}${chBadge(q)}${topicBadge(q,true)}${examBadge(q)}${diffBadge(q)}`;
   $("#mbody").innerHTML=q.bodyHtml+figHtml(q).replace(' loading="lazy"','');$("#mbody").classList.remove("rv");
   $("#mbody").classList.toggle("short",!/<li|<img|<table/i.test(q.bodyHtml)&&!figHtml(q)&&q.bodyHtml.replace(/<[^>]+>/g,"").trim().length<220);   // one/two-liner, no choices: bigger type + space
-  $("#mfoot").innerHTML=footHtml(q);
+  $("#mfoot").innerHTML=footHtml(q);STRIP.fill(q);
   const rb=$("#mreveal");rb.innerHTML=`<span class="nw">${revName(q).replace(" + ",'&nbsp;</span><span class="nw">+ ')}</span>`;rb.classList.toggle("flag",!!(q.solFlag||q.solPending));rb.setAttribute("aria-expanded","false");   // label wraps only between its words
   $("#msol").innerHTML=revWrap(q);tex($("#msol"));
   $("#mpos").textContent=`${mIdx+1} / ${filtered.length}`;
@@ -2240,7 +2259,7 @@ document.addEventListener("keydown",e=>{
   if(VS.isOpen()){if(e.key==="Escape")VS.close();return;}
   if(TM.isOpen()&&!typing){if(e.key==="Escape"){TM.close();return;}if(e.key===" "){e.preventDefault();TM.toggle();return;}}
   if($("#modal").classList.contains("show")){
-    if(e.key==="Escape")closeModal();
+    if(e.key==="Escape"){if(STRIP.isOpen())STRIP.close();else closeModal();}
     if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1);
     if(e.key==="Enter"&&!e.target.closest("button")){e.preventDefault();$("#mreveal").click();}
     if((e.key==="p"||e.key==="P")&&!e.ctrlKey&&!e.metaKey&&!e.altKey)INK.toggle();
@@ -2260,6 +2279,7 @@ document.addEventListener("keydown",e=>{
 
 /* ================= PERIODIC TABLE DRAWER + Mw CALCULATOR ================= */
 const PD=(()=>{
+  /*MWCORE*/
   const RAW="H,Hydrogen,1.008|He,Helium,4.0026|Li,Lithium,6.94|Be,Beryllium,9.0122|B,Boron,10.81|C,Carbon,12.011|N,Nitrogen,14.007|O,Oxygen,15.999|F,Fluorine,18.998|Ne,Neon,20.180|Na,Sodium,22.990|Mg,Magnesium,24.305|Al,Aluminium,26.982|Si,Silicon,28.085|P,Phosphorus,30.974|S,Sulfur,32.06|Cl,Chlorine,35.45|Ar,Argon,39.948|K,Potassium,39.098|Ca,Calcium,40.078|Sc,Scandium,44.956|Ti,Titanium,47.867|V,Vanadium,50.942|Cr,Chromium,51.996|Mn,Manganese,54.938|Fe,Iron,55.845|Co,Cobalt,58.933|Ni,Nickel,58.693|Cu,Copper,63.546|Zn,Zinc,65.38|Ga,Gallium,69.723|Ge,Germanium,72.630|As,Arsenic,74.922|Se,Selenium,78.971|Br,Bromine,79.904|Kr,Krypton,83.798|Rb,Rubidium,85.468|Sr,Strontium,87.62|Y,Yttrium,88.906|Zr,Zirconium,91.224|Nb,Niobium,92.906|Mo,Molybdenum,95.95|Tc,Technetium,98|Ru,Ruthenium,101.07|Rh,Rhodium,102.91|Pd,Palladium,106.42|Ag,Silver,107.87|Cd,Cadmium,112.41|In,Indium,114.82|Sn,Tin,118.71|Sb,Antimony,121.76|Te,Tellurium,127.60|I,Iodine,126.90|Xe,Xenon,131.29|Cs,Caesium,132.91|Ba,Barium,137.33|La,Lanthanum,138.91|Ce,Cerium,140.12|Pr,Praseodymium,140.91|Nd,Neodymium,144.24|Pm,Promethium,145|Sm,Samarium,150.36|Eu,Europium,151.96|Gd,Gadolinium,157.25|Tb,Terbium,158.93|Dy,Dysprosium,162.50|Ho,Holmium,164.93|Er,Erbium,167.26|Tm,Thulium,168.93|Yb,Ytterbium,173.05|Lu,Lutetium,174.97|Hf,Hafnium,178.49|Ta,Tantalum,180.95|W,Tungsten,183.84|Re,Rhenium,186.21|Os,Osmium,190.23|Ir,Iridium,192.22|Pt,Platinum,195.08|Au,Gold,196.97|Hg,Mercury,200.59|Tl,Thallium,204.38|Pb,Lead,207.2|Bi,Bismuth,208.98|Po,Polonium,209|At,Astatine,210|Rn,Radon,222|Fr,Francium,223|Ra,Radium,226|Ac,Actinium,227|Th,Thorium,232.04|Pa,Protactinium,231.04|U,Uranium,238.03|Np,Neptunium,237|Pu,Plutonium,244|Am,Americium,243|Cm,Curium,247|Bk,Berkelium,247|Cf,Californium,251|Es,Einsteinium,252|Fm,Fermium,257|Md,Mendelevium,258|No,Nobelium,259|Lr,Lawrencium,266|Rf,Rutherfordium,267|Db,Dubnium,268|Sg,Seaborgium,269|Bh,Bohrium,270|Hs,Hassium,277|Mt,Meitnerium,278|Ds,Darmstadtium,281|Rg,Roentgenium,282|Cn,Copernicium,285|Nh,Nihonium,286|Fl,Flerovium,289|Mc,Moscovium,290|Lv,Livermorium,293|Ts,Tennessine,294|Og,Oganesson,294";
   const cat=z=>[2,10,18,36,54,86,118].includes(z)?"ng":[3,11,19,37,55,87].includes(z)?"alk":[4,12,20,38,56,88].includes(z)?"ae":[5,14,32,33,51,52].includes(z)?"md":[9,17,35,53,85,117].includes(z)?"hal":[1,6,7,8,15,16,34].includes(z)?"nm":(z>=57&&z<=71)?"ln":(z>=89&&z<=103)?"an":((z>=21&&z<=30)||(z>=39&&z<=48)||(z>=72&&z<=80)||(z>=104&&z<=112))?"tm":"pt";
   const pg=z=>{const B=[0,2,10,18,36,54,86,118];let p=1;while(z>B[p])p++;const s=z-B[p-1];let g=null,f=null;
@@ -2287,6 +2307,7 @@ const PD=(()=>{
       for(const k in c)total[k]=(total[k]||0)+c[k]*coef;}
     return total;}
   const fHTML=str=>str.replace(/\s+/g,"").replace(/[•*.]/g,"·").split("·").map(p=>{const m=p.match(/^\d+/);const co=m?m[0]:"";return co+p.slice(co.length).replace(/(\d+)/g,"<sub>$1</sub>");}).join(" · ");
+  /*ENDMWCORE*/
   let built=false,last=null;const inp=$("#pdin"),G=$("#pdg");
   function build(){
     let h="";
@@ -2414,9 +2435,73 @@ const PD=(()=>{
     if(k=="bk")put(inp.value.slice(0,-1));else if(k=="clr")put("");else put(inp.value+k);});
   $("#pdq").addEventListener("click",e=>{const b=e.target.closest("button");if(b){put(b.dataset.f);SFX.play("select");}});
   $("#pdtab").onclick=open;$("#pdx").onclick=close;$("#pdscrim").onclick=close;
-  return{open,close,isOpen,parseF,curQ,load(v){open();if(!mwOn)setMw(true);put(v);}};
+  return{open,close,isOpen,parseF,fHTML,SYM,curQ,load(v){open();if(!mwOn)setMw(true);put(v);}};
 })();
 $("#mpt").onclick=()=>PD.open();
+/* ================= CARD STRIPS (present card) + the Mw strip =================
+   A strip = {label, title, build(q)}. build returns the panel's inner HTML, or null when the question has nothing for it
+   (then no tab is drawn). A second strip (ค่าที่ให้, hints...) is one more object in STRIPS. */
+/*MWQ*/
+const MWQ=(()=>{
+  const ONE=new Set("H2 N2 O2 O3 F2 I2 P4 S8".split(" "));            // lone one-letter elements are only real as these molecules
+  const PAIR=new Set("CO NO HF HI OH CN".split(" "));                  // all-one-letter, no digits: only these are real (not NB, HB, PV, CFC, SOS...)
+  const BAD=new Set("In As At He No Be Co Am Re Pa Ho Ne Hf Db SN1 SN2 CH CH2 CH3 NH NH2 COOH CHO HC C6H4 C6H5 C2H5 BOH H2C H3C H2N".split(" "));   // English words, units, and fragments that happen to parse
+  const PRESS=/^P(?:H2|CH4|SO2|SO3|NO2|N2|O2|CO2|CO|NH3|H2O|HCl)$/;    // P with a species subscript = partial pressure
+  const TOK=/(^|[^A-Za-zͰ-Ͽ∆])([A-Z(\[][A-Za-z0-9()\[\]]*(?:[·•][0-9]*[A-Z(][A-Za-z0-9()\[\]]*|\.\d*H2O)*)([+\-−]?)/g;
+  const text=html=>{const t=document.createElement("textarea");
+    t.innerHTML=html.replace(/<sup>[\s\S]*?<\/sup>/g,"").replace(/<\/?sub>/g,"").replace(/<[^>]+>/g," ")
+      .replace(/[₀-₉]/g,c=>"₀₁₂₃₄₅₆₇₈₉".indexOf(c)).replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻]+/g,"");   // charges and exponents drop out: Mw of an ion = formula mass
+    return t.value;};
+  const bal=(s,o,c)=>(s.match(o)||[]).length-(s.match(c)||[]).length;
+  function clean(tok,sign){
+    let m;while((m=tok.match(/\((?:s|l|g|aq)\)$/)))tok=tok.slice(0,-m[0].length);            // state symbols: Zn(s), CO2(g), NaCl(aq)
+    while(tok&&/[)\]]$/.test(tok)&&bal(tok,/[(\[]/g,/[)\]]/g)<0)tok=tok.slice(0,-1);
+    while(tok&&/^[(\[]/.test(tok)&&bal(tok,/[(\[]/g,/[)\]]/g)>0)tok=tok.slice(1);
+    for(let d,i;tok[0]==="("&&tok.slice(-1)===")";tok=tok.slice(1,-1)){                    // "(C6H12O6)", "(II)", "(N)": unwrap a fully bracketed token
+      for(d=0,i=0;i<tok.length-1&&d>=0;i++)d+=tok[i]==="("?1:tok[i]===")"?-1:0;if(d<=0)break;}
+    if(sign&&(m=tok.match(/(\d+)$/))){                                                     // plain-text charge: Fe3+, SO42-, [Cu(NH3)4]2+ (but NH4+, MnO4- keep their subscript)
+      if(m[1].length>1)tok=tok.slice(0,-1);
+      else if(/[)\]]\d$/.test(tok)||/^[A-Z][a-z]?\d$/.test(tok))tok=tok.slice(0,-1);}
+    return tok;}
+  function find(html,parseF){
+    const out=[],seen=new Set();let m;TOK.lastIndex=0;const t=text(html);
+    while((m=TOK.exec(t))){
+      const f=clean(m[2],m[3]);if(!f||seen.has(f))continue;
+      if(/[A-Za-z)\]]1(?!\d)/.test(f)||BAD.has(f)||PRESS.test(f)||/[VWYU](?![a-z])/.test(f)||/^\[[A-Z][a-z]?\]$/.test(f)||/·(?:\d*[A-Z][a-z]?)(?:·|$)/.test(f))continue;   // C1V1, K1, SN2, P(SO2), UV/PVC/HIV, [Ne]
+      let c;try{c=parseF(f);}catch(e){continue;}
+      const ks=c?Object.keys(c):[];if(!ks.length)continue;
+      if(ks.every(k=>k.length===1)&&!/[a-z]/.test(f)){                                    // one-letter symbols only
+        if(ks.length===1?!ONE.has(f):(!/\d/.test(f)&&!PAIR.has(f)))continue;}
+      seen.add(f);out.push({f,c});}
+    return out.slice(0,10);}
+  const r1=x=>(Math.round(x*10+1e-6)/10).toFixed(1);
+  function panel(q){
+    const {parseF,fHTML,SYM}=PD,rows=find(q.bodyHtml||"",parseF);if(!rows.length)return null;
+    return`<h4>Mw ของสารในโจทย์ · g/mol</h4>`+rows.map(({f,c})=>{
+      const es=Object.entries(c),tot=es.reduce((a,[k,n])=>a+SYM[k].m*n,0),lone=es.length===1&&es[0][1]===1;
+      const parts=es.map(([k,n])=>n===1?r1(SYM[k].m):`${n}(${r1(SYM[k].m)})`).join(" + "),sum=es.reduce((a,[k,n])=>a+n*+r1(SYM[k].m),0);
+      const eq=lone?`มวลอะตอม = ${r1(tot)}`:`${fHTML(f)} = ${parts} ${Math.abs(sum-+r1(tot))<.05?"=":"≈"} ${r1(tot)}`;
+      return`<button class="mwrow" aria-expanded="false"><span>${fHTML(f)}</span><span><b>${r1(tot)}</b> <small>g/mol</small></span></button><div class="mwbrk">${eq}</div>`;}).join("");}
+  return{find,panel};})();
+/*ENDMWQ*/
+const STRIP=(()=>{
+  const el=$("#mstrips"),sheet=$("#modal .sheet"),modal=$("#modal");
+  const STRIPS=[{label:"Mw",title:"มวลโมเลกุลของสารในโจทย์",build:q=>MWQ.panel(q)}];
+  let cur=null;
+  const show=i=>{cur=i;el.querySelectorAll(".mstab,.msp").forEach(x=>{const on=+x.dataset.s===i;x.classList.toggle("on",on);if(x.tagName==="BUTTON")x.setAttribute("aria-expanded",on);});};
+  function place(){el.style.left=sheet.offsetLeft+"px";el.style.top=sheet.offsetTop+"px";el.style.setProperty("--shh",sheet.offsetHeight+"px");}
+  function fill(q){cur=null;let tabs="",panels="";
+    STRIPS.forEach((d,i)=>{const h=d.build(q);if(!h)return;
+      tabs+=`<button class="mstab" data-s="${i}" title="${d.title}" aria-expanded="false">${d.label}</button>`;
+      panels+=`<div class="msp" data-s="${i}">${h}<button class="mspx" aria-label="ปิด">✕</button></div>`;});
+    el.innerHTML=(tabs?`<div class="mstabs">${tabs}</div>`:"")+panels;modal.classList.toggle("hasstrip",!!tabs);place();}
+  function close(quiet){if(cur===null)return;show(-1);cur=null;if(!quiet)SFX.play("select");}
+  el.addEventListener("click",e=>{
+    const t=e.target.closest(".mstab");if(t){const i=+t.dataset.s;if(cur===i)close();else{show(i);SFX.play("select");}return;}
+    if(e.target.closest(".mspx")){close();return;}
+    const r=e.target.closest(".mwrow");if(r){r.setAttribute("aria-expanded",r.getAttribute("aria-expanded")!=="true");SFX.play("select");}});
+  new ResizeObserver(place).observe(sheet);window.addEventListener("resize",place);
+  return{fill,place,close,isOpen:()=>cur!==null};})();
 /* 💾 save the question on screen as a PNG: badges + question + choices only: no 📌 note, solution or controls.
    html2canvas loads from the CDN on first use; on touch devices the share sheet offers "Save Image". */
 let h2cP=null;
