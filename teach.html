@@ -1065,6 +1065,9 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .mbr{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);background:var(--card)}
 .mbrt{display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-right:2px solid var(--grid);border-bottom:2px solid var(--grid);min-width:0;animation:enter .5s both;animation-delay:calc(.1s + var(--i,0)*40ms)}
 .mbrt b{font:800 1.45rem/1.1 "JetBrains Mono",monospace;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mbrt b em{font-style:normal;font-size:.62em;color:var(--mut);margin-left:1px}
+.mbpb{display:block;height:8px;margin-top:4px;border:2px solid var(--ink);background:var(--paper)}
+.mbpb i{display:block;height:100%;background:var(--ink);transition:width .8s var(--ez)}.mbpb.d i{background:var(--mut)}
 .mbrt.who b{font-family:"Anuphan",sans-serif;letter-spacing:0}
 .mbrt span{font-size:.78rem;font-weight:800}
 .mbrt small{font-size:.72rem;font-weight:600;color:var(--mut)}
@@ -1973,8 +1976,28 @@ function openMonthBreak(y, m){
   const bitsOf = r => [r.paid && `<span class="pd">ได้แล้ว ${cash(r.paid)}</span>`, r.owe && `<span class="ow">ค้าง ${cash(r.owe)}</span>`, r.left && `<span class="up">อีก ${cash(r.left)}</span>`].filter(Boolean).join('');
   const subOf = r => `${r.n < r.N ? `${r.n}/${r.N}` : r.N} คาบ · ${full ? Math.round(r.tot / full * 100) : 0}%`;
   const STL = {pd: 'จ่ายแล้ว', ow: 'ค้างจ่าย', up: 'ยังไม่ถึง'};
-  // month recap: the numbers behind the month (always the real month — the what-if ticks don't touch it)
+  // month recap: the numbers behind the month (always the real month — the what-if ticks don't touch it).
+  // A past month gets the recap; the month you're in gets 'so far' stats instead; a future month gets neither.
+  const ym = y * 12 + m, nowYm = NOW.getFullYear() * 12 + NOW.getMonth();
+  const soFar = (() => {
+    if (ym !== nowYm) return '';
+    const all = monthSessions(y, m), cnt = all.filter(counts); if (!all.length) return '';
+    const done = cnt.filter(s => s.status === 'done'), left = sorted(cnt.filter(s => s.status === 'plan')), owe = done.filter(s => !s.paid);
+    const dim = new Date(y, m + 1, 0).getDate(), day = NOW.getDate(), dPct = Math.round(day / dim * 100), cPct = cnt.length ? Math.round(done.length / cnt.length * 100) : 0;
+    const nx = left.find(s => atOf(s) > NOW), py = m ? y : y - 1, pm = m ? m - 1 : 11, prev = monthTotal(py, pm), dp = prev ? Math.round((full - prev) / prev * 100) : null;
+    const bar = (pc, cls = '') => `<span class="mbpb ${cls}"><i style="width:${pc}%"></i></span>`;
+    const T = (b, l, sm, cls = '') => `<div class="mbrt ${cls}"><b>${b}</b><span>${l}</span>${sm || ''}</div>`;
+    return `<div class="mbrc"><div class="mbrh"><span class="eyebrow">เดือนนี้จนถึงตอนนี้</span></div><div class="mbr">
+      ${T(`${day}<em>/${dim}</em>`, 'วันที่ผ่านไป', bar(dPct, 'd'))}
+      ${T(`${done.length}<em>/${cnt.length}</em>`, 'คาบที่สอนแล้ว', bar(cPct) + (cPct < dPct - 10 ? '<small>ช้ากว่าปฏิทินนิดหน่อย</small>' : ''))}
+      ${T(cash(left.reduce((a, s) => a + amt(s), 0)), `ยังเหลือ ${left.length} คาบ`, '<small>ถ้าสอนครบตามนัด</small>')}
+      ${T(cash(owe.reduce((a, s) => a + amt(s), 0)), 'รอเก็บเงิน', `<small>${owe.length ? `${owe.length} คาบ · ${[...new Set(owe.map(s => st(s.who)?.name ?? '?'))].join(', ')}` : 'ไม่มีค้าง 🎉'}</small>`, owe.length ? 'dn' : '')}
+      ${T(nx ? esc(st(nx.who)?.name ?? '?') : '—', 'คาบถัดไป', nx ? `<small>${relDay(nx.date)} · ${nx.time}</small>` : '<small>ไม่มีนัดแล้วเดือนนี้</small>', 'who')}
+      ${T(dp == null ? '—' : `${dp >= 0 ? '▲' : '▼'} ${Math.abs(dp)}%`, `คาดทั้งเดือน เทียบ ${TH_M[pm]}`, `<small>${prev ? cash(prev) : 'ไม่มีข้อมูล'}</small>`, dp == null ? '' : dp >= 0 ? 'up' : 'dn')}
+    </div></div>`;
+  })();
   const recap = (() => {
+    if (ym >= nowYm) return soFar;
     const all = monthSessions(y, m), cnt = all.filter(counts); if (!all.length) return '';
     const done = cnt.filter(s => s.status === 'done'), plan = cnt.filter(s => s.status === 'plan'), off = all.length - cnt.length;
     const hrs = cnt.reduce((a, s) => a + (+s.h || 0), 0), per = hrs ? Math.round(full / hrs) : 0;
