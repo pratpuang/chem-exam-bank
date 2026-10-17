@@ -264,57 +264,6 @@ body.dopen #scrim{opacity:1;pointer-events:auto}
 .calhead .mn{font-size:clamp(2.3rem,5vw,3.6rem);font-weight:800;line-height:.95;letter-spacing:-.02em}
 .calhead .yr{font:800 1.6rem "JetBrains Mono";color:transparent;-webkit-text-stroke:2px var(--ink);margin-bottom:4px}
 .calhead .sp{flex:1}
-.sheet.exsheet{width:min(600px,100%)}
-.exhd h2{margin:0 0 4px}.exhd p{margin:0 0 18px;font-size:.84rem;color:var(--mut);font-weight:600}
-/* timeline */
-.extl{margin:30px 0 22px}
-.exn::-webkit-calendar-picker-indicator{display:none!important;opacity:0}
-.extr{position:relative;height:30px;border:3px solid var(--ink);background:var(--paper);box-shadow:4px 4px 0 var(--sh)}
-.extb{position:absolute;top:4px;bottom:4px;min-width:6px;border:2px solid var(--ink);background:repeating-linear-gradient(135deg,var(--lav) 0 4px,color-mix(in srgb,var(--lav) 45%,var(--card)) 4px 8px);overflow:hidden;transition:left .4s var(--ez),width .4s var(--ez)}
-.extb b{position:absolute;left:5px;top:50%;translate:0 -50%;font:800 .66rem/1 "Anuphan",sans-serif;color:#141414;white-space:nowrap;background:var(--card);padding:1px 4px;border:1.5px solid var(--ink)}
-.extb.now{background:var(--red)}.extb.past{background:var(--dash);opacity:.7}
-.extr s{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed var(--grid)}
-.extn{position:absolute;top:-8px;bottom:-8px;width:0;border-left:3px solid var(--red);z-index:2;transition:left .4s var(--ez)}
-.extn span{position:absolute;top:-17px;left:0;translate:-50% 0;font:800 .62rem/1 "Anuphan",sans-serif;color:#fff;background:var(--red);padding:2px 5px;white-space:nowrap}
-.extm{position:relative;height:16px;margin-top:6px}
-.extm span{position:absolute;font:700 .7rem/1 "JetBrains Mono";color:var(--mut);padding-left:4px}
-/* one ticket per window */
-#exl{display:flex;flex-direction:column;gap:14px}
-.exc{display:grid;grid-template-columns:92px minmax(0,1fr) auto;align-items:stretch;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);animation:exin .45s var(--sp) both;animation-delay:calc(var(--i) * 50ms);transition:box-shadow .2s var(--ez),translate .2s var(--ez)}
-.exc:focus-within{box-shadow:7px 7px 0 var(--lav);translate:-1px -1px}
-.exk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:10px 6px;border-right:3px solid var(--ink);background:repeating-linear-gradient(135deg,var(--lav) 0 5px,color-mix(in srgb,var(--lav) 55%,var(--card)) 5px 10px);color:#141414;text-align:center}
-.exk b{font:800 2.1rem/1 "JetBrains Mono";letter-spacing:-.05em}
-.exk .exs{font:800 .64rem/1.2 "Anuphan",sans-serif}
-.exc.now .exk{background:var(--red);color:#fff}
-.exc.past .exk{background:var(--paper);color:var(--mut)}.exc.past{opacity:.72}
-.exc.bad .exk{background:var(--yel)}
-.exm{display:flex;flex-direction:column;justify-content:center;gap:8px;padding:12px 14px;min-width:0}
-.exn{width:100%;min-width:0;border:0;border-bottom:2px solid transparent;background:none;color:var(--ink);font:800 1.3rem/1.2 "Anuphan",sans-serif;padding:0 0 2px;transition:border-color .15s}
-.exn:hover{border-bottom-color:var(--grid)}.exn:focus{outline:none;border-bottom-color:var(--ink)}
-.exd{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px}
-.exp{position:relative;display:inline-flex;align-items:center;padding:4px 10px;border:2px solid var(--ink);background:var(--paper);cursor:pointer;transition:background .15s,box-shadow .2s var(--ez),translate .2s var(--ez)}
-.exp:hover{background:color-mix(in srgb,var(--lav) 30%,var(--paper));box-shadow:2px 2px 0 var(--ink);translate:-1px -1px}
-.exp b{font:800 .88rem/1.2 "JetBrains Mono";white-space:nowrap}
-.exp input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
-.exc.bad .exp{border-color:var(--red)}
-.exd i{font-style:normal;font-weight:800;color:var(--mut)}
-.exd em{font:700 .76rem "JetBrains Mono";font-style:normal;color:var(--mut);margin-left:2px}
-.exx{align-self:center;width:38px;height:38px;margin-right:10px;display:grid;place-items:center;border:2px solid transparent;background:none;color:var(--mut);cursor:pointer;opacity:.55;transition:opacity .15s,color .15s,border-color .15s,background .15s}
-.exc:hover .exx,.exx:focus-visible{opacity:1}
-.exx:hover{color:#fff;background:var(--red);border-color:var(--ink)}
-.exx svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-@media (hover:none){.exx{opacity:1}}
-.exnone{padding:22px;text-align:center;border:2px dashed var(--grid);color:var(--mut);font-weight:700}
-.exadd{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:14px;padding:12px;border:2px dashed var(--ink);background:none;color:var(--ink);font:800 .95rem inherit;cursor:pointer;transition:background .15s,border-style .15s}
-.exadd span{display:grid;place-items:center;width:24px;height:24px;background:var(--ink);color:var(--paper);font-size:.9rem;transition:rotate .3s var(--sp)}
-.exadd:hover{background:color-mix(in srgb,var(--lav) 25%,transparent);border-style:solid}.exadd:hover span{rotate:90deg}
-@media (max-width:480px){.exc{grid-template-columns:72px minmax(0,1fr) auto}.exk b{font-size:1.7rem}.exn{font-size:1.15rem}}
-.calctl{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
-.exbtn{align-items:center;gap:7px;padding:6px 13px;font:inherit;font-weight:800;line-height:inherit;color:var(--ink);cursor:pointer;transition:background .15s,translate .15s var(--ez),box-shadow .15s var(--ez)}
-.exbtn:hover{background:color-mix(in srgb,var(--lav) 35%,var(--card))}.exbtn:active{translate:2px 2px;box-shadow:2px 2px 0 var(--sh)}
-.exsw{display:inline-block;width:13px;height:13px;flex:none;border:2px solid var(--ink);background:repeating-linear-gradient(135deg,var(--card) 0 2px,var(--lav) 2px 5px)}
-.expen{font-size:.8rem;color:var(--mut);transition:color .15s,rotate .3s var(--sp)}.exbtn:hover .expen{color:var(--ink);rotate:-15deg}
-.calnav{display:flex;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--sh);background:var(--card);margin-bottom:6px}
 .calnav button{border:0;border-right:3px solid var(--ink);background:transparent;font-weight:800;padding:6px 13px}
 .calnav button:last-child{border-right:0}
 .calnav button:hover{background:var(--yel)}
@@ -340,7 +289,6 @@ button.mc:hover{background:#fbf3dc}
 .mc .more{font-size:.64rem;font-weight:800;color:var(--mut)}
 @media (max-width:640px){.mc{min-height:58px;padding:4px}.mc .ev{font-size:0;height:6px;padding:0}.mc .ev.x{display:none}.mc .more{display:none}.calfig{gap:16px}}
 .calleg{display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;font-size:.74rem;font-weight:700}.calleg i{display:inline-block;width:12px;height:12px;border:2px solid var(--ink);margin-right:6px;vertical-align:-2px}.calleg .lh{background:#fbe4dd}.calleg .lt{background:var(--red);border-radius:50%}.calleg .ld{background:var(--ink)}
-.calleg .lx{background:repeating-linear-gradient(135deg,var(--card) 0 2px,var(--lav) 2px 4px)}
 .agenda{position:sticky;top:70px;background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);overflow:hidden}
 .agenda .ah{position:relative;padding:16px 18px 14px;border-bottom:3px solid var(--ink);background:var(--blue);color:#fff;overflow:hidden;min-height:132px;display:flex;flex-direction:column;justify-content:flex-end}
 .agenda .ah .big{position:absolute;right:-6px;top:-26px;font:800 9rem/1 "JetBrains Mono";letter-spacing:-.06em;color:transparent;-webkit-text-stroke:3px rgba(255,255,255,.45);pointer-events:none}
@@ -775,14 +723,17 @@ button.fg:hover{background:#fbf3dc}
 .paycard .pcm>b{font-size:1.25rem;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .paycard .pcm small{font:700 .8rem "JetBrains Mono";color:var(--mut)}
 .paycard .pcm em{font-style:normal;font-weight:700;font-size:.85rem;overflow-wrap:anywhere}
-.hm{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;color:var(--ink)}
-.hmt{display:inline-flex;align-items:center;gap:2px}
-.hmt i{display:block;width:7px;height:13px;background:var(--ink);border-radius:1px}
-.hmt i.e{margin-right:4px}.hmt i:last-child{margin-right:0}
-.hm b{font:800 .9rem/1 "JetBrains Mono",monospace;letter-spacing:-.02em}.hm b small{font:700 .72rem "Anuphan",sans-serif;color:var(--mut);margin-left:3px}
-.hmi{display:none}
-.rw .tm .hmi .hmt i{width:5px;height:8px}
-.rw.cancel .hmt i,.sc2.cancel .hmt i{background:var(--mut)}
+.hm,.hmi{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;color:var(--ink)}
+.hm,.hmi{cursor:ew-resize;touch-action:none;padding:6px 4px;margin:-6px -4px;-webkit-user-select:none;user-select:none}
+.hmr{position:relative;flex:none;width:60px;height:9px;transition:box-shadow .2s var(--ez),background-color .2s;border:2px solid var(--ink);background:linear-gradient(90deg,transparent calc(25% - 1px),var(--grid) calc(25% - 1px) 25%,transparent 25% calc(50% - 1px),var(--grid) calc(50% - 1px) 50%,transparent 50% calc(75% - 1px),var(--grid) calc(75% - 1px) 75%,transparent 75%),var(--paper)}
+.hmr i{position:absolute;left:0;top:0;bottom:0;background:var(--ink);transition:width .25s var(--sp),background .2s}
+.hmr s{position:absolute;top:50%;width:8px;height:15px;translate:-50% -50%;background:var(--card);border:2px solid var(--ink);transition:left .25s var(--sp),background .2s,scale .2s var(--sp)}
+.hm:hover .hmr,.hmi:hover .hmr{box-shadow:2px 2px 0 var(--yel)}.hm:hover .hmr s,.hmi:hover .hmr s{background:var(--yel)}
+.hm.on .hmr,.hmi.on .hmr{box-shadow:3px 3px 0 var(--yel)}.hm.on .hmr s,.hmi.on .hmr s{background:var(--yel);scale:1.2}
+.hm.chg .hmr i,.hmi.chg .hmr i{background:var(--red)}.hm.chg b,.hmi.chg b{color:var(--red)}
+.hm b,.hmi b{font:800 .88rem/1 "JetBrains Mono",monospace;letter-spacing:-.02em}.hm b small,.hmi b small{font:700 .7rem "Anuphan",sans-serif;color:var(--mut);margin-left:3px}
+.hmi{display:none;gap:6px}.hmi .hmr{width:46px;height:8px}.hmi .hmr s{width:7px;height:13px}.hmi b{font-size:.74rem}
+.rw.cancel .hmr i,.sc2.cancel .hmr i{background:var(--mut)}
 @media (max-width:1000px){.rw .tm{display:flex;flex-direction:column;align-items:flex-start;gap:5px}.rw .tm .hmi{display:inline-flex}}
 .chp{display:inline-flex;align-items:stretch;vertical-align:middle;max-width:100%;height:26px;margin:0;border:2px solid var(--ink);background:var(--card);color:var(--ink);white-space:nowrap;letter-spacing:0;overflow:hidden}
 .chp>b{flex:none;display:flex;align-items:center;padding:0 7px;background:var(--cc,var(--ink));color:var(--ct,var(--paper));border-right:2px solid var(--ink);gap:4px;font:800 .76rem/1 "Anuphan",sans-serif}.chp .chpn{font:800 1.05em/1 "JetBrains Mono",monospace;letter-spacing:-.03em}
@@ -1194,7 +1145,7 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 #mvdock.on .mvd{animation:mvchip .4s var(--sp) both;animation-delay:calc(.06s + var(--i) * 12ms)}
 @keyframes mvchip{from{opacity:0;translate:0 10px;scale:.8}}
 .mvd b{font:800 1.05rem "JetBrains Mono"}.mvd em{position:absolute;top:-9px;right:-4px;font-style:normal;font-size:.6rem;background:var(--ink);color:var(--paper);padding:0 3px}
-.mvd.past{opacity:.45}.mvd.hol{background:#fbe4dd}.mvd.today{box-shadow:inset 0 -4px 0 var(--red)}.mvd.exam{background:repeating-linear-gradient(135deg,var(--card) 0 5px,color-mix(in srgb,var(--lav) 38%,var(--card)) 5px 10px)}
+.mvd.past{opacity:.45}.mvd.hol{background:#fbe4dd}.mvd.today{box-shadow:inset 0 -4px 0 var(--red)}
 .mvd.cur{border-style:dashed;opacity:.5}
 .mvover{background:var(--yel)!important;color:#141414!important;scale:1.07;outline:3px solid var(--ink);outline-offset:-1px;z-index:2;transition:scale .3s var(--sp),background .15s}
 .dc.mvover{scale:1.012}.cday.mvover{scale:1.04}
@@ -1215,16 +1166,10 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 @keyframes bingulp{30%{scale:1.18 .82}60%{scale:.92 1.1}100%{scale:1}}
 #mvghost.doom{scale:.82;rotate:-6deg!important;border-color:var(--red);box-shadow:5px 6px 0 var(--red)}
 @media (max-width:420px){.mvbin{width:58px}}
-.mvlen{position:absolute;left:0;right:0;bottom:-3px;height:14px;cursor:ns-resize;touch-action:none;z-index:3}
-.mvlen:after{content:"";position:absolute;left:50%;bottom:4px;width:34px;height:4px;translate:-50% 0;background:var(--ink);opacity:0;transition:opacity .2s,width .35s var(--sp),background .2s,height .2s}
-[data-sid]:hover>.mvlen:after{opacity:.55}
-@media (hover:none){.mvlen:after{opacity:.25}}
-.mvlenon{outline:3px solid var(--yel);outline-offset:-3px;transition:outline-color .2s}
-.mvlenon>.mvlen:after{opacity:1;width:64px;height:5px;background:var(--yel);box-shadow:0 0 0 2px var(--ink)}
 #mvtip{position:fixed;left:0;top:0;z-index:200;pointer-events:none;width:230px;padding:9px 14px 7px;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);opacity:0;scale:.85;transform-origin:0 100%;will-change:translate;transition:opacity .15s,scale .3s var(--sp)}
 #mvtip.on{opacity:1;scale:1}#mvtip.out{opacity:0;scale:.85}
 #mvtip .rh{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-#mvtip .rh b{font:800 1.35rem/1 "JetBrains Mono";letter-spacing:-.03em;display:inline-block;transition:color .2s}
+#mvtip .rh b{white-space:nowrap;font:800 1.35rem/1 "JetBrains Mono";letter-spacing:-.03em;display:inline-block;transition:color .2s}
 #mvtip .rh b.bump{animation:mvbump .32s var(--sp)}
 @keyframes mvbump{40%{scale:1.16}}
 #mvtip .rh small{font:700 .74rem "JetBrains Mono";color:var(--mut);white-space:nowrap}
@@ -1238,18 +1183,7 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 #mvtip .rt span:last-child{display:none}
 #mvtip .rl{position:relative;height:14px;margin-top:3px;font:700 .66rem "JetBrains Mono";color:var(--mut)}
 #mvtip .rl span{position:absolute;translate:-50% 0}#mvtip .rl span:last-child{translate:-100% 0}
-.exc.new{animation:exin .45s var(--sp) both}.exc.gone{animation:exout .25s var(--ez) both}
-@keyframes exin{from{opacity:0;translate:0 -8px;scale:.96}}
-@keyframes exout{to{opacity:0;translate:16px 0;scale:.96}}
-@media (prefers-reduced-motion:reduce){.mvhold,.mvsrc,.mvback,.mvland,#mvdock.on .mvd,#mvtip .rh b.bump,.exc.new,.exc.gone,.exc{animation-duration:.01s!important}}
-/* exam windows */
-.mc.exam{background:repeating-linear-gradient(135deg,var(--card) 0 7px,color-mix(in srgb,var(--lav) 38%,var(--card)) 7px 14px)}
-.mc.exam.hol{background:#fbe4dd}
-.extag{display:block;font:800 .6rem/1.2 "Noto Sans Thai",sans-serif;font-style:normal;background:var(--lav);color:#141414;border:1.5px solid var(--ink);padding:0 4px;margin-top:2px;width:max-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dc.exam .dch{box-shadow:inset 6px 0 0 var(--lav)}
-.dch .extg{background:var(--lav);color:#141414;border-color:var(--ink)}
-.cday.exam{box-shadow:5px 5px 0 var(--sh),inset 0 -8px 0 var(--lav)}
-.dt.exam{box-shadow:inset 0 4px 0 var(--lav)}
+@media (prefers-reduced-motion:reduce){.mvhold,.mvsrc,.mvback,.mvland,#mvdock.on .mvd,#mvtip .rh b.bump{animation-duration:.01s!important}}
 .dwarn{margin:12px 0 0;padding:8px 12px;border-left:4px solid var(--red);background:#fbe4dd;font-weight:700;font-size:.86rem}
 /* clashes */
 .rw.clash{background:linear-gradient(90deg,#fbe4dd,transparent 70%)}
@@ -1379,11 +1313,10 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
   <div class="calwrap">
     <div>
       <div class="calhead"><span class="mn" id="cmn"></span><span class="yr" id="cyr"></span><span class="sp"></span>
-        <div class="calctl"><div class="calnav"><button id="cprev" aria-label="เดือนก่อน">◀</button><button id="ctoday">วันนี้</button><button id="cnext" aria-label="เดือนถัดไป">▶</button></div>
-          <button class="calnav exbtn" id="cexam" onclick="editExams()"><i class="exsw"></i>ช่วงสอบ<span class="expen">✎</span></button></div></div>
+        <div class="calnav"><button id="cprev" aria-label="เดือนก่อน">◀</button><button id="ctoday">วันนี้</button><button id="cnext" aria-label="เดือนถัดไป">▶</button></div></div>
       <div class="calfig" id="cfig"></div>
       <div class="mcal" id="mcal"></div>
-      <div class="calleg"><span><i class="lh"></i>วันหยุด</span><span><i class="lt"></i>วันนี้</span><span><i class="ld"></i>เดดไลน์</span><span><i class="lx"></i>ช่วงสอบ</span><span class="mut">ขีดฆ่า = ยกเลิก / ไม่นับ</span></div>
+      <div class="calleg"><span><i class="lh"></i>วันหยุด</span><span><i class="lt"></i>วันนี้</span><span><i class="ld"></i>เดดไลน์</span><span class="mut">ขีดฆ่า = ยกเลิก / ไม่นับ</span></div>
     </div>
     <div class="agenda" id="daypane"></div>
   </div>
@@ -1453,7 +1386,7 @@ const uid = () => Math.random().toString(36).slice(2,9);
 let NOW = new Date();   // kept live by tick(): the page (and the bank's layer) can stay open for days
 
 // the real data lives in Supabase; this is the empty shape until the first load (or the offline cache) fills it
-const blankDB = () => ({v:4, students:[], archived:[], sessions:[], avail:defAvail(), tpl:defTpl(), rates:{solo:300, group:175}, buffer:{before:0, after:0, linked:true}, history:{}, holidays:{}, deadlines:[], expenses:[], skips:[], exams:[{a:'2026-09-28', b:'2026-10-09', t:'มิดเทอม'}, {a:'2026-11-30', b:'2026-12-09', t:'ไฟนอล'}]});
+const blankDB = () => ({v:4, students:[], archived:[], sessions:[], avail:defAvail(), tpl:defTpl(), rates:{solo:300, group:175}, buffer:{before:0, after:0, linked:true}, history:{}, holidays:{}, deadlines:[], expenses:[], skips:[]});
 let DB = blankDB();
 try{ localStorage.removeItem('teach-demo-v3'); }catch{}
 function defAvail(){ return {block:{0:[],1:[8,9,10,11,12,13,14,15,16],2:[8,9,10,11,12,13,14,15,16],3:[8,9,10,11,12,13,14,15,16],4:[8,9,10,11,12,13,14,15,16],5:[8,9,10,11,12,13,14,15,16],6:[]}}; }
@@ -1515,8 +1448,6 @@ const st = id => DB.students.find(s => s.id === id) || (DB.archived || []).find(
 const colorOf = id => COLORS[(st(id)?.color ?? 0) % COLORS.length];
 const mkey = (y,m) => `${y}-${m}`;
 const atOf = s => new Date(`${s.date}T${s.time}:00`);
-// your own exam windows (มิดเทอม / ไฟนอล): shaded on the calendar + day lists, and a class booked inside one gets a warning
-const examOf = date => (DB.exams || []).find(e => e.a && e.b && date >= e.a && date <= e.b);
 const isHolD = date => { const [y,m,d] = date.split('-').map(Number); return (DB.holidays[mkey(y,m-1)] || []).includes(d); };
 const amt = s => s.rate * s.h;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2118,9 +2049,10 @@ function prepOf(s){
   const last = pv ? (pv.log ? [pv.log.topic, pv.log.hw && 'การบ้าน ' + pv.log.hw].filter(Boolean).join(' · ') : pv.note) : '';
   return {ch: cur >= 0 ? `บท ${cur+1} ${CH[cur]}` : '', last};
 }
-// a class's length as blocks, one per half hour (a gap after each full hour); 'hm' adds the label, 'hmi' is blocks only
-const hmeter = (h, cls = 'hm') => { const n = Math.max(1, Math.round((+h || 1) * 2)); let c = ''; for (let i = 0; i < n; i++) c += `<i${i % 2 ? ' class="e"' : ''}></i>`;
-  return `<span class="${cls}" title="${h} ชม."><span class="hmt">${c}</span>${cls === 'hm' ? `<b>${h}<small>ชม.</small></b>` : ''}</span>`; };
+// a class's length as a mini slider: a track out of 4 ชม. with hour ticks, filled to the length, a handle on the end.
+// It IS the control: drag it sideways to change the length (see the length-drag block below).
+const hmeter = (h, cls = 'hm') => { h = +h || 1; const w = Math.min(100, h / 4 * 100);
+  return `<span class="${cls}" title="ลากซ้าย/ขวาเพื่อเปลี่ยนความยาว · ${h} ชม."><span class="hmr"><i style="width:${w}%"></i><s style="left:${w}%"></s></span><b>${h}<small>ชม.</small></b></span>`; };
 const chipOf = s => { const c = prepOf(s).ch; if (!c) return ''; const m = c.match(/^(บท \d+) (.*)$/);
   return `<span class="chp${m ? ' c' + m[1].slice(3) : ''}" title="กำลังเรียน${esc(c)}"><b>${m ? `บท<span class="chpn">${m[1].slice(3)}</span>` : esc(c)}</b>${m ? `<span>${esc(m[2])}</span>` : ''}</span>`; };
 const lastOf = (s, tag, cls) => { const l = prepOf(s).last; return l ? `<${tag} class="${cls}" title="${esc(l)}"><em>ต่อจาก</em>${esc(l)}</${tag}>` : ''; };
@@ -2205,7 +2137,7 @@ function rgTick(){
   $('#slist').addEventListener('click', e => { if (ate){ e.stopPropagation(); e.preventDefault(); ate = false; } }, true); }
 function cardGroup(g){
   const x = new Date(g.date+'T00:00'), rel = relOnly(g.date), hol = isHolD(g.date);
-  return `<div class="cday ${g.date===isoD(NOW)?'today':''} ${hol?'hol':''} ${examOf(g.date)?'exam':''}" data-drop="${g.date}"><span class="cw">${TH_DF[x.getDay()]}</span><b>${x.getDate()}</b><small>${TH_M[x.getMonth()]}${rel ? '<br>'+rel : ''}</small><span class="cn">${g.items.length} คาบ</span><button title="เพิ่มคาบวันนี้" aria-label="เพิ่มคาบ" onclick="editSession(null,'${g.date}')">＋</button></div>`
+  return `<div class="cday ${g.date===isoD(NOW)?'today':''} ${hol?'hol':''}" data-drop="${g.date}"><span class="cw">${TH_DF[x.getDay()]}</span><b>${x.getDate()}</b><small>${TH_M[x.getMonth()]}${rel ? '<br>'+rel : ''}</small><span class="cn">${g.items.length} คาบ</span><button title="เพิ่มคาบวันนี้" aria-label="เพิ่มคาบ" onclick="editSession(null,'${g.date}')">＋</button></div>`
     + g.items.map(sCard).join('');
 }
 function sCard(s){
@@ -2217,12 +2149,12 @@ function sCard(s){
     <div class="cm"><i class="${colorOf(s.who)}"></i>${esc(p?.name ?? '?')}${cw.length ? ' ⚠' : ''}${chipOf(s)}</div>
     <div class="cd">${hmeter(s.h)}${s.log?.topic ? `<span>📘 ${esc(s.log.topic)}</span>` : s.note ? `<span>${esc(s.note)}</span>` : ''}</div>
     ${lastOf(s, 'div', 'plast')}
-    <div class="cf">${stampOf(s)}</div>${s.status === 'cancel' ? '' : '<span class="mvlen" title="ลากขึ้น/ลงเพื่อเปลี่ยนความยาวคาบ"></span>'}</div>`;
+    <div class="cf">${stampOf(s)}</div></div>`;
 }
 function dayCard(date, items, i = 0){
   const hol = isHolD(date), x = new Date(date+'T00:00'), sum = items.filter(counts).reduce((a,s)=>a+amt(s),0), rel = relOnly(date);
-  return `<section class="dc ${date===isoD(NOW)?'today':''} ${hol?'hol':''} ${examOf(date)?'exam':''}" style="--i:${i}" data-drop="${date}">
-    <header class="dch"><b>${x.getDate()}</b><span class="dw">${TH_DF[x.getDay()]}<small>${TH_MF[x.getMonth()]}${rel ? ' · '+rel : ''}</small></span>${hol ? '<span class="htag">วันหยุด</span>' : ''}${examOf(date) ? `<span class="htag extg">📝 ${esc(examOf(date).t)}</span>` : ''}<span class="sp"></span><span class="dsum">${items.length} คาบ · ${cash(sum)}</span><button class="dadd" title="เพิ่มคาบวันนี้" onclick="editSession(null,'${date}')">＋</button></header>
+  return `<section class="dc ${date===isoD(NOW)?'today':''} ${hol?'hol':''}" style="--i:${i}" data-drop="${date}">
+    <header class="dch"><b>${x.getDate()}</b><span class="dw">${TH_DF[x.getDay()]}<small>${TH_MF[x.getMonth()]}${rel ? ' · '+rel : ''}</small></span>${hol ? '<span class="htag">วันหยุด</span>' : ''}<span class="sp"></span><span class="dsum">${items.length} คาบ · ${cash(sum)}</span><button class="dadd" title="เพิ่มคาบวันนี้" onclick="editSession(null,'${date}')">＋</button></header>
     ${items.map(s => rw(s)).join('')}</section>`;
 }
 function rw(s, pv){
@@ -2237,7 +2169,6 @@ function rw(s, pv){
     <span class="hr">${hmeter(s.h)}</span>
     <span class="nt">${s.status === 'done' && s.log?.topic ? `<b>📘 ${esc(s.log.topic)}</b>` : lastOf(s, 'span', 'plast') || (s.note ? `<b>${esc(s.note)}</b>` : '')}</span>
     <span class="st">${stampOf(s, pv)}</span>
-    ${pv || s.status === 'cancel' ? '' : '<span class="mvlen" title="ลากขึ้น/ลงเพื่อเปลี่ยนความยาวคาบ"></span>'}
   </div>`;
 }
 function stampOf(s, pv){
@@ -2407,30 +2338,34 @@ function askLen(s, h){
   $('#mv1').onclick = () => { if ($('#mskip').checked){ try{ localStorage.setItem(SKIPMOVE, Date.now() + 10*60000); }catch{} } closeModal(); setLen(s, h); };
   setTimeout(() => $('#mv1')?.focus(), 50);
 }
-// the grip along a class's bottom edge: drag down = longer, up = shorter, half an hour per notch.
-// The tag glides after your finger and bumps each time the length clicks to a new notch.
+// drag a class's length indicator sideways: right = longer, left = shorter, half an hour per notch. The indicator fills
+// live under your finger, and the ruler tag floats above so a finger never hides the number.
 {
-  const STEP = 26; let L = null, tip = null;
+  const STEP = 18; let L = null, tip = null;
   const k = reduced ? 1 : .3;
   addEventListener('pointerdown', e => {
-    if (e.button !== 0) return; const g = e.target.closest?.('.mvlen'); if (!g) return;
-    const el = g.closest('[data-sid]'), s = el && DB.sessions.find(x => x.id === el.dataset.sid); if (!s) return;
-    e.preventDefault(); MV.on = true; L = {s, el, y0: e.clientY, h: +s.h || 1, id: e.pointerId, tx: e.clientX, ty: e.clientY, x: e.clientX, y: e.clientY, raf: 0}; el.classList.add('mvlenon');
+    if (e.button !== 0) return; const g = e.target.closest?.('.hm,.hmi'); if (!g) return;
+    const el = g.closest('[data-sid]'), s = el && !el.classList.contains('cancel') && DB.sessions.find(x => x.id === el.dataset.sid); if (!s) return;
+    e.preventDefault(); e.stopPropagation(); MV.on = true;
+    L = {s, el, g, x0: e.clientX, h: +s.h || 1, id: e.pointerId, tx: e.clientX, ty: e.clientY, x: e.clientX, y: e.clientY, raf: 0}; g.classList.add('on');
     tip = document.createElement('div'); tip.id = 'mvtip'; document.body.append(tip); paint(); later(() => tip?.classList.add('on')); loop();
   });
-  const hOf = y => Math.min(4, Math.max(.5, L.s.h + Math.round((y - L.y0) / STEP) * .5));
-  // the tag is a little ruler: 0.5–4 ชม. in half-hour notches, filled to the length you're on, a mark where it started
+  const hOf = x => Math.min(4, Math.max(.5, L.s.h + Math.round((x - L.x0) / STEP) * .5));
   const pct = h => h / 4 * 100;
+  // the indicator itself shows the length you're on
+  const live = (g, h, chg) => { const w = Math.min(100, pct(h)) + '%'; g.querySelector('.hmr i').style.width = w; g.querySelector('.hmr s').style.left = w;
+    g.querySelector('b').innerHTML = `${h}<small>ชม.</small>`; g.classList.toggle('chg', chg); };
   const build = () => { tip.innerHTML = `<div class="rh"><b></b><small></small></div><div class="rt"><i class="rf"></i><i class="ro" style="left:${pct(+L.s.h)}%"></i>${[...Array(8)].map((_, i) => `<span class="${(i + 1) % 2 ? '' : 'mj'}" style="left:${pct((i + 1) / 2)}%"></span>`).join('')}</div><div class="rl">${[1, 2, 3, 4].map(n => `<span style="left:${pct(n)}%">${n}</span>`).join('')}</div>`; };
   const paint = () => { if (!tip.firstChild) build(); const chg = L.h !== +L.s.h;
     tip.querySelector('.rh b').textContent = `${L.h} ชม.`; tip.querySelector('.rh small').textContent = `${L.s.time}–${endOf({...L.s, h: L.h})}${chg ? ` · ${L.h > L.s.h ? '+' : '−'}${Math.abs(L.h - L.s.h)}` : ''}`;
-    tip.querySelector('.rf').style.width = pct(L.h) + '%'; tip.classList.toggle('chg', chg); };
+    tip.querySelector('.rf').style.width = pct(L.h) + '%'; tip.classList.toggle('chg', chg); live(L.g, L.h, chg); };
   const loop = () => { if (!L) return; L.x += (L.tx - L.x) * k; L.y += (L.ty - L.y) * k;
-    tip.style.translate = `${Math.min(L.x + 18, innerWidth - 244)}px ${Math.max(8, L.y - 104)}px`;   // above-right of the finger, kept on screen
+    tip.style.translate = `${Math.max(8, Math.min(L.x - 60, innerWidth - 244))}px ${Math.max(8, L.y - 112)}px`;   // above the finger, kept on screen
     L.raf = requestAnimationFrame(loop); };
   addEventListener('pointermove', e => { if (!L || e.pointerId !== L.id) return; L.tx = e.clientX; L.ty = e.clientY;
-    const h = hOf(e.clientY); if (h !== L.h){ L.h = h; paint(); const b = tip.querySelector('.rh b'); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); navigator.vibrate?.(6); SFX.play('tick'); } });
-  const stop = (e, go) => { if (!L || e.pointerId !== L.id) return; const {s, h, el} = L; cancelAnimationFrame(L.raf); el.classList.remove('mvlenon');
+    const h = hOf(e.clientX); if (h !== L.h){ L.h = h; paint(); const b = tip.querySelector('.rh b'); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); navigator.vibrate?.(6); SFX.play('tick'); } });
+  const stop = (e, go) => { if (!L || e.pointerId !== L.id) return; const {s, h, g} = L; cancelAnimationFrame(L.raf); g.classList.remove('on');
+    live(g, +s.h, false);   // back to the saved length; it re-draws with the new one once confirmed
     const t = tip; tip = null; L = null; if (t){ t.classList.remove('on'); t.classList.add('out'); setTimeout(() => t.remove(), 200); }
     setTimeout(() => MV.on = false, 0);
     const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 60);
@@ -2448,7 +2383,7 @@ function askMove(s, date){
   if (skipMove()) return moveTo(s, date);
   const tmp = {...s, date}, cw = clashWith(tmp), hol = isHolD(date);
   openModal(`<h2>เลื่อนคาบนี้?</h2><div class="paycard"><span class="cb ${colorOf(s.who)}"></span><div class="pcm"><b>${esc(st(s.who)?.name ?? '?')}</b>${chipOf(s)}
-      <small><s>${dLabel(s.date)}</s> → ${dLabel(date)} · ${s.time}–${endOf(s)}</small>${cw.length ? `<em class="mvw">⚠ ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time).join(', ')}</em>` : ''}${hol ? `<em class="mvw">☂ วันนั้นเป็นวันหยุด · ไม่นับเงิน</em>` : ''}${examOf(date) ? `<em class="mvw">📝 วันนั้นอยู่ในช่วงสอบ${esc(examOf(date).t)}</em>` : ''}</div>
+      <small><s>${dLabel(s.date)}</s> → ${dLabel(date)} · ${s.time}–${endOf(s)}</small>${cw.length ? `<em class="mvw">⚠ ชนกับ ${cw.map(x => esc(st(x.who)?.name) + ' ' + x.time).join(', ')}</em>` : ''}${hol ? `<em class="mvw">☂ วันนั้นเป็นวันหยุด · ไม่นับเงิน</em>` : ''}</div>
       <span class="pca">${cash(amt(s))}</span></div>
     <label class="dskip"><input type="checkbox" id="mskip"><span>ไม่ต้องถามอีก 10 นาที</span><small>ลากแล้วเลื่อนทันที · ยังกดเลิกทำได้</small></label>
     <div class="cfoot"><button class="ghostb" onclick="closeModal()">ยกเลิก</button><span class="sp"></span><button class="go sm" id="mv1">เลื่อนไป ${dLabel(date)}</button></div>`);
@@ -2476,7 +2411,7 @@ function askMove(s, date){
     ghost.style.translate = `${G.x}px ${G.y}px`;
     const t0 = isoD(NOW), start = mon(h.s.date >= t0 ? h.s.date : t0); let k = '';
     for (let i = 0; i < 21; i++){ const iso = shift(start, i), d = new Date(iso + 'T00:00');
-      k += `<span class="mvd${iso === h.s.date ? ' cur' : ''}${iso === t0 ? ' today' : ''}${iso < t0 ? ' past' : ''}${isHolD(iso) ? ' hol' : ''}${examOf(iso) ? ' exam' : ''}" style="--i:${i}" data-drop="${iso}">${TH_D[d.getDay()]}<b>${d.getDate()}</b>${d.getDate() === 1 || i === 0 ? `<em>${TH_M[d.getMonth()]}</em>` : ''}</span>`; }
+      k += `<span class="mvd${iso === h.s.date ? ' cur' : ''}${iso === t0 ? ' today' : ''}${iso < t0 ? ' past' : ''}${isHolD(iso) ? ' hol' : ''}" style="--i:${i}" data-drop="${iso}">${TH_D[d.getDay()]}<b>${d.getDate()}</b>${d.getDate() === 1 || i === 0 ? `<em>${TH_M[d.getMonth()]}</em>` : ''}</span>`; }
     dock = document.createElement('div'); dock.id = 'mvdock'; if (h.y > innerHeight * .55) dock.className = 'top';   // sits on the half you're not dragging from, so it never hides the day you want
     dock.innerHTML = `<div class="mvh">ลากไปวางบนวันที่จะเลื่อนไป · ลงถังเพื่อลบ · ปล่อยที่อื่นเพื่อยกเลิก</div><div class="mvb"><div class="mvg">${k}</div>
       <div class="mvbin" data-bin="1" aria-label="ถังขยะ"><svg viewBox="0 0 40 46" aria-hidden="true"><g class="lid"><rect x="3" y="7" width="34" height="5" rx="1"/><rect x="14" y="2" width="12" height="6" rx="1" fill="none" stroke-width="3"/></g><path class="can" d="M7 15h26l-2.4 27a2 2 0 0 1-2 1.8H11.4a2 2 0 0 1-2-1.8z"/><path class="ln" d="M15 21v16M20 21v16M25 21v16"/></svg><span>ลบ</span></div></div>`;
@@ -2510,7 +2445,7 @@ function askMove(s, date){
   addEventListener('pointerdown', e => {
     if (e.button !== 0 || h) return;
     const el = e.target.closest?.('[data-sid]'); if (!el) return;
-    if (e.target.closest('.mvlen')) return;   // that's the length grip
+    if (e.target.closest('.hm,.hmi')) return;   // that's the length slider
     const b = e.target.closest('button,input,a,select,textarea'); if (b && el.contains(b) && b !== el) return;   // stamps / ticks keep their own tap
     const s = DB.sessions.find(x => x.id === el.dataset.sid); if (!s) return;
     h = {s, el, x: e.clientX, y: e.clientY, id: e.pointerId}; h.t = setTimeout(lift, HOLD);
@@ -2541,7 +2476,7 @@ function stripFrom(iso, who = edit?.who){
   const start = new Date(iso+'T00:00'), t0 = isoD(NOW); let h = '';
   for (let k = 0; k < 35; k++){ const d = new Date(start); d.setDate(d.getDate()+k); const i = isoD(d), w = d.getDay();
     const reg = (st(who)?.slots || []).some(x => x[0] === w);
-    h += `<button class="dt${w===0||w===6?' we':''}${isHolD(i)?' hol':''}${examOf(i)?' exam':''}${i<t0?' past':''}${i===t0?' today':''}${reg?' reg':''}" data-d="${i}">${TH_D[w]}<b>${d.getDate()}</b>${d.getDate()===1||k===0?`<em>${TH_M[d.getMonth()]}</em>`:''}</button>`; }
+    h += `<button class="dt${w===0||w===6?' we':''}${isHolD(i)?' hol':''}${i<t0?' past':''}${i===t0?' today':''}${reg?' reg':''}" data-d="${i}">${TH_D[w]}<b>${d.getDate()}</b>${d.getDate()===1||k===0?`<em>${TH_M[d.getMonth()]}</em>`:''}</button>`; }
   return h;
 }
 const shift = (iso, n) => { const d = new Date(iso+'T00:00'); d.setDate(d.getDate()+n); return isoD(d); };
@@ -2609,8 +2544,7 @@ function picker(){
 function clashNote(){
   const [h0,m0] = edit.time.split(':').map(Number), a = h0*60+m0, b = a + edit.h*60;
   const clash = DB.sessions.filter(x => x.date === edit.date && x.id !== edit.id && x.status !== 'cancel' && (([h,m]) => h*60+m < b && h*60+m + x.h*60 > a)(x.time.split(':').map(Number)));
-  const ex = examOf(edit.date), en = ex ? `📝 ช่วงสอบ${ex.t}` : '';
-  return clash.length ? `⚠ ชนกับ ${clash.map(x => `${esc(st(x.who)?.name)} ${x.time}`).join(', ')}${en ? ' · ' + esc(en) : ''}` : isHolD(edit.date) ? '☂ วันหยุด · ไม่นับเงิน' : esc(en);
+  return clash.length ? `⚠ ชนกับ ${clash.map(x => `${esc(st(x.who)?.name)} ${x.time}`).join(', ')}` : isHolD(edit.date) ? '☂ วันหยุด · ไม่นับเงิน' : '';
 }
 function paintEdit(full){
   const p = st(edit.who), tok = (k, lab, val, cls='') => `<button class="tok ${cls} ${edit.pick===k?'on':''}" data-p="${k}"><small>${lab}</small><b>${val}</b></button>`;
@@ -2675,61 +2609,6 @@ function toggleHol(iso){
 }
 
 /* ---------- exam windows editor (opened from the calendar's day pane) ---------- */
-// days between two ISO dates (b - a)
-const dDiff = (a, b) => Math.round((new Date(b + 'T00:00') - new Date(a + 'T00:00')) / 864e5);
-const exState = e => { const t = isoD(NOW); return t > e.b ? ['past', 'ผ่านแล้ว'] : t >= e.a ? ['now', `กำลังสอบ · เหลือ ${dDiff(t, e.b) + 1} วัน`] : ['soon', `อีก ${dDiff(t, e.a)} วัน`]; };
-// the button's tooltip says what's next
-function examTip(){
-  const t = isoD(NOW), nx = [...(DB.exams || [])].filter(e => e.b >= t).sort((x, y) => x.a.localeCompare(y.a))[0];
-  return nx ? `ตั้งช่วงสอบ · ถัดไป ${nx.t} ${exState(nx)[1]}` : 'ตั้งช่วงสอบ';
-}
-function editExams(){
-  const list = (DB.exams || []).map(e => ({...e}));
-  const fmt = iso => { if (!iso) return '—'; const d = new Date(iso + 'T00:00'); return `${TH_D[d.getDay()]}. ${d.getDate()} ${TH_M[d.getMonth()]}`; };
-  const okR = e => e.a && e.b && e.a <= e.b;
-  // the timeline: the months the windows (and today) span, each window a striped block, today a red line
-  const tline = () => {
-    const t = isoD(NOW), ds = [t, ...list.filter(okR).flatMap(e => [e.a, e.b])].sort();
-    const a0 = new Date(ds[0] + 'T00:00'), b0 = new Date(ds[ds.length - 1] + 'T00:00');
-    const from = new Date(a0.getFullYear(), a0.getMonth(), 1), to = new Date(b0.getFullYear(), b0.getMonth() + 1, 1);
-    if ((to - from) / 864e5 < 90) to.setMonth(from.getMonth() + 3);   // never squash it below ~3 months
-    const span = (to - from) / 864e5, x = iso => ((new Date(iso + 'T00:00') - from) / 864e5) / span * 100;
-    let months = '', divs = ''; for (let d = new Date(from); d < to; d.setMonth(d.getMonth() + 1)){ months += `<span style="left:${x(isoD(d))}%">${TH_M[d.getMonth()]}</span>`; if (d > from) divs += `<s style="left:${x(isoD(d))}%"></s>`; }
-    const blocks = list.map((e, i) => okR(e) ? `<i class="extb ${exState(e)[0]}" style="left:${x(e.a)}%;width:${Math.max(.8, x(shift(e.b, 1)) - x(e.a))}%" title="${esc(e.t)} · ${fmt(e.a)} – ${fmt(e.b)}"></i>` : '').join('');
-    return `<div class="extl"><div class="extr">${divs}${blocks}<em class="extn" style="left:${x(t)}%"><span>วันนี้</span></em></div><div class="extm">${months}</div></div>`;
-  };
-  const card = (e, i) => { const ok = okR(e), [cls] = ok ? exState(e) : ['bad'], t = isoD(NOW);
-    const big = !ok ? '!' : cls === 'soon' ? dDiff(t, e.a) : cls === 'now' ? dDiff(t, e.b) + 1 : '✓';
-    const lab = !ok ? 'วันที่ไม่ถูก' : cls === 'soon' ? 'วันก่อนสอบ' : cls === 'now' ? 'วันที่เหลือ' : 'ผ่านแล้ว';
-    return `<div class="exc ${cls}" data-i="${i}" style="--i:${i}">
-      <div class="exk"><b>${big}</b><span class="exs">${lab}</span></div>
-      <div class="exm"><input class="exn" data-f="t" value="${esc(e.t)}" placeholder="ชื่อช่วงสอบ" list="expre" aria-label="ชื่อช่วงสอบ">
-        <div class="exd"><label class="exp"><b>${fmt(e.a)}</b><input type="date" data-f="a" value="${e.a}" aria-label="วันเริ่ม"></label><i>→</i>
-          <label class="exp"><b>${fmt(e.b)}</b><input type="date" data-f="b" value="${e.b}" aria-label="วันสุดท้าย"></label>${ok ? `<em>${dDiff(e.a, e.b) + 1} วัน</em>` : ''}</div></div>
-      <button class="exx" data-rm="${i}" title="ลบช่วงนี้" aria-label="ลบช่วงนี้"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 3h4M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button></div>`; };
-  const paint = () => { $('#exl').innerHTML = list.map(card).join('') || '<div class="exnone">ยังไม่มีช่วงสอบ</div>'; $('#extl').innerHTML = tline(); };
-  openModal(`<button class="pdx x" onclick="closeModal()" title="ปิด">✕</button>
-    <div class="exhd"><h2>ช่วงสอบ</h2><p>วันในช่วงนี้จะมีแถบสีบนปฏิทินและตารางสอน · นัดคาบในช่วงนี้จะมีเตือน</p></div>
-    <div id="extl"></div>
-    <datalist id="expre"><option value="มิดเทอม"><option value="ไฟนอล"><option value="ควิซ"><option value="สอบย่อย"><option value="สอบปฏิบัติ"></datalist>
-    <div id="exl"></div><button class="exadd" id="exadd"><span>＋</span>เพิ่มช่วงสอบ</button>
-    <div class="cfoot"><button class="ghostb" onclick="closeModal()">ยกเลิก</button><span class="sp"></span><button class="go sm" id="exsave">บันทึก</button></div>`);
-  $('#sheet').classList.add('exsheet'); paint();
-  // typing a name only updates the data + timeline label (re-painting the card would steal the cursor); a date change re-paints its card
-  $('#sheet').oninput = e => { const c = e.target.closest('.exc'), f = e.target.dataset.f; if (!c || !f) return; const x = list[+c.dataset.i]; x[f] = e.target.value;
-    if (f !== 't'){ const n = document.createElement('div'); n.innerHTML = card(x, +c.dataset.i); n.firstElementChild.style.animation = 'none'; c.replaceWith(n.firstElementChild); }
-    $('#extl').innerHTML = tline(); };
-  $('#sheet').onclick = e => {
-    const b = e.target.closest('button'); if (!b) return; const c = b.closest('.exc');
-    if (b.id === 'exadd'){ const t = isoD(NOW); list.push({a: t, b: shift(t, 6), t: 'สอบ'}); paint(); const r = [...qsa('.exc')].pop(); r?.classList.add('new'); r?.scrollIntoView({block: 'nearest', behavior: reduced ? 'auto' : 'smooth'}); r?.querySelector('.exn')?.select(); }
-    else if (b.dataset.rm !== undefined){ const i = +b.dataset.rm; if (reduced){ list.splice(i, 1); return paint(); }
-      c.classList.add('gone'); c.addEventListener('animationend', () => { list.splice(i, 1); paint(); }, {once: true}); }
-    else if (b.id === 'exsave'){
-      const ok = list.filter(e => e.a && e.b).map(e => e.a > e.b ? {...e, a: e.b, b: e.a} : e).map(e => ({...e, t: e.t.trim() || 'สอบ'})).sort((x, y) => x.a.localeCompare(y.a));
-      snap(); DB.exams = ok; save(); closeModal(); renderAll(); toast(`บันทึกช่วงสอบ ${ok.length} ช่วง`, true);
-    }
-  };
-}
 
 /* ---------- calendar drawer ---------- */
 let cy = NOW.getFullYear(), cm = NOW.getMonth(), cday = isoD(NOW);
@@ -2738,7 +2617,7 @@ $('#cnext').onclick = () => { cm++; if (cm > 11){ cm = 0; cy++; } renderCal(true
 $('#ctoday').onclick = () => { cy = NOW.getFullYear(); cm = NOW.getMonth(); cday = isoD(NOW); renderCal(true); };
 function renderCal(anim){
   const M = monthMoney(cy, cm), hols = (DB.holidays[mkey(cy,cm)] || []).length;
-  $('#cmn').textContent = TH_MF[cm]; $('#cyr').textContent = cy + 543; $('#cexam').title = examTip();
+  $('#cmn').textContent = TH_MF[cm]; $('#cyr').textContent = cy + 543;
   $('#cfig').innerHTML = `<div><b>${M.n}</b><span>คาบ</span></div><div><b>${cash(M.earned)}</b><span>ได้แล้ว</span></div><div><b>${cash(M.forecast)}</b><span>คาดทั้งเดือน</span></div><div><b>${hols}</b><span>วันหยุด</span></div>`;
   const days = new Date(cy, cm+1, 0).getDate(), off = new Date(cy, cm, 1).getDay(), ses = monthSessions(cy, cm), prevDays = new Date(cy, cm, 0).getDate();
   let h = TH_D.map((d,i) => `<div class="h${i===0||i===6?' we':''}">${d}</div>`).join(''), i = 0;
@@ -2747,8 +2626,7 @@ function renderCal(anim){
     const iso = `${cy}-${pad(cm+1)}-${pad(d)}`;
     const items = [...DB.deadlines.filter(x => x.d === iso).map(x => `<span class="ev dl">⚑ ${esc(x.t)}</span>`),
       ...sorted(ses.filter(s => s.date === iso)).map(e => `<span data-sid="${e.id}" class="ev ${colorOf(e.who)} ${counts(e)?'':'x'} ${clashWith(e).length?'clash':''}" title="${e.time}${clashWith(e).length ? ' · ⚠ ชน' : ''}"><em>${e.time}</em>${esc(st(e.who)?.name)}</span>`)];
-    const ex = examOf(iso);
-    h += `<button class="mc${iso===isoD(NOW)?' today':''}${isHolD(iso)?' hol':''}${ex?' exam':''}${iso===cday?' sel':''}" style="--i:${i++}" data-iso="${iso}" data-drop="${iso}"><span class="n">${d}${ex && (iso === ex.a || d === 1) ? `<em class="extag">📝 ${esc(ex.t)}</em>` : ''}</span><span class="evs">${items.slice(0,2).join('')}${items.length > 2 ? `<span class="more">+${items.length-2} อีก</span>` : ''}</span></button>`;
+    h += `<button class="mc${iso===isoD(NOW)?' today':''}${isHolD(iso)?' hol':''}${iso===cday?' sel':''}" style="--i:${i++}" data-iso="${iso}" data-drop="${iso}"><span class="n">${d}</span><span class="evs">${items.slice(0,2).join('')}${items.length > 2 ? `<span class="more">+${items.length-2} อีก</span>` : ''}</span></button>`;
   }
   const tail = (7 - (off + days) % 7) % 7; for (let k = 1; k <= tail; k++) h += `<div class="mc out" style="--i:${i++}"><span class="n">${k}</span></div>`;
   $('#mcal').classList.toggle('still', !anim);
@@ -2760,7 +2638,7 @@ function renderDay(){
   qsa('#mcal .mc[data-iso]').forEach(b => b.classList.toggle('sel', b.dataset.iso === cday));
   const x = new Date(cday+'T00:00'), hol = isHolD(cday), dayS = sorted(DB.sessions.filter(s => s.date === cday)), dl = DB.deadlines.filter(d => d.d === cday);
   const sum = dayS.filter(counts).reduce((a,s)=>a+amt(s),0);
-  $('#daypane').innerHTML = `<div class="ah ${cday===isoD(NOW)?'today':''} ${hol?'hol':''}"><span class="big">${x.getDate()}</span><h3>${TH_DF[x.getDay()]}</h3><p>${x.getDate()} ${TH_MF[x.getMonth()]} ${x.getFullYear()+543}${relOnly(cday) ? ' · '+relOnly(cday) : ''}</p><p class="ahs">${examOf(cday) ? `📝 ช่วงสอบ${esc(examOf(cday).t)} · ` : ''}${hol?'☂ วันหยุด · ':''}${dayS.length ? `${dayS.length} คาบ · ${cash(sum)}` : 'ไม่มีคาบ'}</p></div>
+  $('#daypane').innerHTML = `<div class="ah ${cday===isoD(NOW)?'today':''} ${hol?'hol':''}"><span class="big">${x.getDate()}</span><h3>${TH_DF[x.getDay()]}</h3><p>${x.getDate()} ${TH_MF[x.getMonth()]} ${x.getFullYear()+543}${relOnly(cday) ? ' · '+relOnly(cday) : ''}</p><p class="ahs">${hol?'☂ วันหยุด · ':''}${dayS.length ? `${dayS.length} คาบ · ${cash(sum)}` : 'ไม่มีคาบ'}</p></div>
     <div class="ab">${dl.map(d => `<div class="dlr">⚑ ${esc(d.t)}</div>`).join('')}${dayS.map(s => rw(s)).join('') || (dl.length ? '' : '<div class="free">ว่างทั้งวัน<small>พักได้ หรือเปิดรับน้องเพิ่ม</small></div>')}</div>
     <div class="acts"><button class="go sm" onclick="editSession(null,'${cday}')">＋ คาบวันนี้</button><button class="chip" onclick="toggleHol('${cday}')">${hol ? '↺ ยกเลิกวันหยุด' : '☂ ตั้งเป็นวันหยุด'}</button></div>`;
 }
