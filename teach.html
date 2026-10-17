@@ -1060,6 +1060,20 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .mbtick{position:absolute;right:12px;top:12px;width:30px;height:30px;border:3px solid var(--ink);background:var(--card);font:800 1rem/1 sans-serif;cursor:pointer;padding:0}
 .mbtick[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .mbk.off .mbtick{filter:none}
+.mbrc{margin-top:22px}
+.mbrh{margin-bottom:10px}
+.mbr{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);background:var(--card)}
+.mbrt{display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-right:2px solid var(--grid);border-bottom:2px solid var(--grid);min-width:0;animation:enter .5s both;animation-delay:calc(.1s + var(--i,0)*40ms)}
+.mbrt b{font:800 1.45rem/1.1 "JetBrains Mono",monospace;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mbrt.who b{font-family:"Anuphan",sans-serif;letter-spacing:0}
+.mbrt span{font-size:.78rem;font-weight:800}
+.mbrt small{font-size:.72rem;font-weight:600;color:var(--mut)}
+.mbrt.up b{color:var(--ok,#2e9e5b)}.mbrt.dn b{color:var(--red)}
+.mbtps{margin-top:14px}.mbtps>span{display:block;font-size:.78rem;font-weight:800;margin-bottom:8px}
+.mbtps>div{display:flex;flex-wrap:wrap;gap:8px}
+.mbtp{display:inline-flex;align-items:center;gap:7px;padding:4px 10px 4px 0;border:2px solid var(--ink);background:var(--card);font-size:.82rem;font-weight:700;max-width:100%}
+.mbtp i{align-self:stretch;width:8px;margin:-4px 0;border-right:2px solid var(--ink)}
+.mbtp small{font-size:.7rem;color:var(--mut);font-weight:600}
 .mbhint{font-size:.74rem;font-weight:700;color:var(--mut);margin-top:14px}
 .mbss{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 .mbs{width:42px;height:42px;padding:0;border:2px solid var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;font:800 1rem/1 "JetBrains Mono";cursor:pointer;transition:transform .15s,opacity .2s,background .2s}
@@ -1959,6 +1973,26 @@ function openMonthBreak(y, m){
   const bitsOf = r => [r.paid && `<span class="pd">ได้แล้ว ${cash(r.paid)}</span>`, r.owe && `<span class="ow">ค้าง ${cash(r.owe)}</span>`, r.left && `<span class="up">อีก ${cash(r.left)}</span>`].filter(Boolean).join('');
   const subOf = r => `${r.n < r.N ? `${r.n}/${r.N}` : r.N} คาบ · ${full ? Math.round(r.tot / full * 100) : 0}%`;
   const STL = {pd: 'จ่ายแล้ว', ow: 'ค้างจ่าย', up: 'ยังไม่ถึง'};
+  // month recap: the numbers behind the month (always the real month — the what-if ticks don't touch it)
+  const recap = (() => {
+    const all = monthSessions(y, m), cnt = all.filter(counts); if (!all.length) return '';
+    const done = cnt.filter(s => s.status === 'done'), plan = cnt.filter(s => s.status === 'plan'), off = all.length - cnt.length;
+    const hrs = cnt.reduce((a, s) => a + (+s.h || 0), 0), per = hrs ? Math.round(full / hrs) : 0;
+    const py = m ? y : y - 1, pm = m ? m - 1 : 11, prev = monthTotal(py, pm), dp = prev ? Math.round((full - prev) / prev * 100) : null;
+    const wd = [0, 0, 0, 0, 0, 0, 0]; cnt.forEach(s => wd[new Date(s.date + 'T00:00').getDay()]++); const bw = wd.indexOf(Math.max(...wd));
+    const top = rows[0], fmtH = h => Number.isInteger(h) ? h : h.toFixed(1);
+    const seen = new Set(), topics = sorted(done.filter(s => s.log?.topic)).filter(s => { const k = s.who + '|' + s.log.topic; return !seen.has(k) && seen.add(k); });
+    const T = (b, l, sm, cls = '') => `<div class="mbrt ${cls}"><b>${b}</b><span>${l}</span>${sm ? `<small>${sm}</small>` : ''}</div>`;
+    return `<div class="mbrc"><div class="mbrh"><span class="eyebrow">สรุปเดือน${TH_MF[m]}</span></div><div class="mbr">
+      ${T(cnt.length, 'คาบ', `สอนแล้ว ${done.length}${plan.length ? ` · รออีก ${plan.length}` : ''}`)}
+      ${T(fmtH(hrs), 'ชั่วโมง', done.length ? `สอนไปแล้ว ${fmtH(done.reduce((a, s) => a + (+s.h || 0), 0))} ชม.` : '')}
+      ${T(cash(per), 'เฉลี่ย / ชม.', '')}
+      ${T(dp == null ? '—' : `${dp >= 0 ? '▲' : '▼'} ${Math.abs(dp)}%`, `เทียบ ${TH_M[pm]}`, prev ? cash(prev) : 'ไม่มีข้อมูล', dp == null ? '' : dp >= 0 ? 'up' : 'dn')}
+      ${T(TH_DF[bw], 'วันที่สอนเยอะสุด', `${wd[bw]} คาบ`)}
+      ${top ? T(nm(top), 'เรียนเยอะสุด', `${top.N} คาบ · ${cash(top.full)}`, 'who') : ''}
+      ${off ? T(off, 'ยกเลิก / วันหยุด', 'ไม่นับเงิน') : ''}
+    </div>${topics.length ? `<div class="mbtps"><span>สอนเรื่องอะไรไปบ้าง</span><div>${topics.map(s => `<span class="mbtp"><i class="${colorOf(s.who)}"></i>${esc(s.log.topic)}<small>${esc(st(s.who)?.name ?? '?')}</small></span>`).join('')}</div></div>` : ''}</div>`;
+  })();
   const cards = rows.map((r, i) => `<article class="mbk" style="--i:${i}" data-i="${i}"><i class="${colorOf(r.who)}"></i>
       <button class="mbtick" aria-pressed="true" title="ติ๊กออกเพื่อดูว่าถ้าไม่มีคนนี้ จะได้เท่าไหร่">✓</button>
       <header><h3>${nm(r)}<small class="mbsub">${subOf(r)}</small></h3><b class="mbtot">${cash(r.tot)}</b></header>
@@ -1976,6 +2010,7 @@ function openMonthBreak(y, m){
       </div>
       <div class="mbst"><div><i class="pd"></i><span>ได้แล้ว</span><b id="mbgot"></b></div><div class="r"><i class="ow"></i><span>ค้างชำระ</span><b id="mbowe"></b></div><div><i class="up"></i><span>ยังไม่ถึง</span><b id="mbleft"></b></div></div>
     </div>
+    ${recap}
     ${rows.length ? `<div class="mbhint">ติ๊ก ✓ ออกทั้งคน หรือแตะกล่องวันที่เพื่อตัดแค่คาบนั้น · ดูว่าเดือนนี้จะได้เท่าไหร่ · แค่ดูเฉย ๆ ไม่บันทึกอะไร</div><div class="mbg">${cards}</div>` : `<div class="mbnone">${hist ? `เดือนนี้บันทึกไว้แค่ยอดรวม ${cash(hist)} · ไม่มีรายคาบให้แยกรายนักเรียน` : 'ไม่มีคาบเรียนเดือนนี้'}</div>`}`, true);
   $('#sheet').classList.add('mbig');
   const big = $('#mbbig'); big._v = full;
