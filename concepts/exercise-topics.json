@@ -634,5 +634,138 @@
  "E-ปริมาณสาร-45": [
   "mixture-purity",
   "percent-yield"
+ ],
+ "E-อะตอม-01": [
+  "atom-models"
+ ],
+ "E-อะตอม-02": [
+  "atom-models"
+ ],
+ "E-อะตอม-03": [
+  "atom-models"
+ ],
+ "E-อะตอม-04": [
+  "atom-models"
+ ],
+ "E-อะตอม-05": [
+  "atom-models"
+ ],
+ "E-อะตอม-06": [
+  "atom-models",
+  "particles-isotope"
+ ],
+ "E-อะตอม-07": [
+  "atom-models",
+  "particles-isotope"
+ ],
+ "E-อะตอม-08": [
+  "atom-models",
+  "particles-isotope"
+ ],
+ "E-อะตอม-09": [
+  "atom-models",
+  "particles-isotope"
+ ],
+ "E-อะตอม-10": [
+  "atom-models",
+  "particles-isotope"
+ ],
+ "E-อะตอม-11": [
+  "bohr-spectrum"
+ ],
+ "E-อะตอม-12": [
+  "bohr-spectrum"
+ ],
+ "E-อะตอม-13": [
+  "bohr-spectrum"
+ ],
+ "E-อะตอม-14": [
+  "bohr-spectrum"
+ ],
+ "E-อะตอม-15": [
+  "bohr-spectrum"
+ ],
+ "E-อะตอม-16": [
+  "particles-isotope"
+ ],
+ "E-อะตอม-17": [
+  "particles-isotope"
+ ],
+ "E-อะตอม-18": [
+  "particles-isotope"
+ ],
+ "E-อะตอม-19": [
+  "particles-isotope"
+ ],
+ "E-อะตอม-20": [
+  "particles-isotope"
+ ],
+ "E-อะตอม-21": [
+  "particles-isotope"
+ ],
+ "E-อะตอม-22": [
+  "particles-isotope"
+ ],
+ "E-อะตอม-23": [
+  "particles-isotope"
+ ],
+ "E-อะตอม-24": [
+  "particles-isotope"
+ ],
+ "E-อะตอม-25": [
+  "particles-isotope"
+ ],
+ "E-อะตอม-26": [
+  "e-config"
+ ],
+ "E-อะตอม-27": [
+  "e-config"
+ ],
+ "E-อะตอม-28": [
+  "e-config"
+ ],
+ "E-อะตอม-29": [
+  "e-config"
+ ],
+ "E-อะตอม-30": [
+  "e-config"
+ ],
+ "E-อะตอม-31": [
+  "orbital-rules"
+ ],
+ "E-อะตอม-32": [
+  "e-config",
+  "orbital-rules"
+ ],
+ "E-อะตอม-33": [
+  "e-config",
+  "orbital-rules"
+ ],
+ "E-อะตอม-34": [
+  "e-config",
+  "orbital-rules"
+ ],
+ "E-อะตอม-35": [
+  "orbital-rules"
+ ],
+ "E-อะตอม-36": [
+  "e-config",
+  "orbital-rules"
+ ],
+ "E-อะตอม-37": [
+  "e-config",
+  "orbital-rules"
+ ],
+ "E-อะตอม-38": [
+  "e-config",
+  "orbital-rules"
+ ],
+ "E-อะตอม-39": [
+  "e-config",
+  "orbital-rules"
+ ],
+ "E-อะตอม-40": [
+  "e-config",
+  "orbital-rules"
  ]
 }
