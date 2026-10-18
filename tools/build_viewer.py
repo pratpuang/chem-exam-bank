@@ -1137,7 +1137,7 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 #tdtab:hover{transform:translateX(4px)}
 #td{position:fixed;left:0;top:0;bottom:0;z-index:71;width:min(1040px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--yel);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 28px;overflow:auto}
 body.tdopen #td{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
-body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
+body.tdopen #pdscrim,body.tmopen #pdscrim,body.cpopen #pdscrim{opacity:1;pointer-events:auto}
 .tdtabs{display:flex;border:3px solid var(--ink);margin-bottom:14px;box-shadow:4px 4px 0 var(--sh)}
 .tdtabs button{flex:1;border:0;border-right:3px solid var(--ink);background:var(--card);font:800 .95rem "Anuphan",sans-serif;padding:9px 6px;cursor:pointer}
 .tdtabs button:last-child{border-right:0}
@@ -1260,6 +1260,21 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 #vstab:hover{transform:translateX(4px)}
 #vs{position:fixed;left:0;top:0;bottom:0;z-index:73;width:min(1040px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--red);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 18px;display:flex;flex-direction:column}
 body.vsopen #vs{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
+/* ข้อความโปรโมท: Prat's promo captions, 6 styles x 4 variations, pick + copy */
+#cptab{writing-mode:vertical-rl;background:var(--blue);color:#fff;border:3px solid var(--ink);border-left:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;transition:transform .2s}
+#cptab:hover{transform:translateX(4px)}
+#cp{position:fixed;left:0;top:0;bottom:0;z-index:74;width:min(760px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--blue);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 28px;overflow:auto}
+body.cpopen #cp{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
+#cptypes{flex-wrap:wrap}
+#cptypes button{flex:1 1 30%;border-bottom:3px solid var(--ink);margin-bottom:-3px}
+.cprow{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.cpvar{display:flex;border:3px solid var(--ink);box-shadow:3px 3px 0 var(--sh)}
+.cpvar button{width:46px;border:0;border-right:3px solid var(--ink);background:var(--card);color:var(--ink);font:800 1rem "JetBrains Mono",monospace;padding:7px 0;cursor:pointer}
+.cpvar button:last-child{border-right:0}
+.cpvar button.on{background:var(--yel);color:#141414}
+.cpcopy{margin-left:auto;border:3px solid var(--ink);background:var(--red);color:#fff;font:800 1rem "Anuphan",sans-serif;padding:7px 18px;box-shadow:3px 3px 0 var(--sh);cursor:pointer}
+.cpcopy.ok{background:#2f8f4e}
+.cptx{white-space:pre-wrap;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:16px 18px;font:400 1.02rem/1.65 "Anuphan",sans-serif}
 body.vsopen #pdscrim{opacity:1;pointer-events:auto}
 #vsf{flex:1;width:100%;border:0;background:var(--paper);min-height:0}
 #tmtab.run{background:var(--red);font-family:"JetBrains Mono",monospace}
@@ -1522,7 +1537,8 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 <nav id="stabs"><button id="pdtab" title="ตารางธาตุ + คำนวณ Mw">ตารางธาตุ</button>
 <button id="tdtab" title="ค่าคงที่ · แปลงหน่วย · ไอออน · สูตร">เครื่องมือ</button>
 <button id="tmtab" title="จับเวลา">จับเวลา</button>
-<button id="vstab" title="รูปร่างโมเลกุล 3 มิติ (VSEPR)">โมเลกุล 3D</button></nav>
+<button id="vstab" title="รูปร่างโมเลกุล 3 มิติ (VSEPR)">โมเลกุล 3D</button>
+<button id="cptab" title="ข้อความโปรโมทสอนพิเศษ">ข้อความ</button></nav>
 <aside id="td" aria-label="เครื่องมือ">
   <div class="pdh"><b>🧰 เครื่องมือ</b><span class="pdhov">ค่าคงที่ · แปลงหน่วย · ไอออน · สูตร</span><button class="pdx" id="tdx" title="ปิด (Esc)">✕</button></div>
   <div class="tdtabs" id="tdtabs"><button data-t="fx" id="fxtabb" class="on">สูตร</button><button data-t="k">ค่าคงที่</button><button data-t="cv">แปลงหน่วย</button><button data-t="io">ไอออน</button></div>
@@ -1531,6 +1547,12 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 <aside id="vs" aria-label="รูปร่างโมเลกุล">
   <div class="pdh"><b>รูปร่างโมเลกุล 3D</b><span class="pdhov">VSEPR · เพิ่ม/ลดพันธะและอิเล็กตรอนคู่โดดเดี่ยว · ลากหมุนได้</span><button class="pdx" id="vsx" title="ปิด (Esc)">✕</button></div>
   <iframe id="vsf" title="รูปร่างโมเลกุล 3D"></iframe>
+</aside>
+<aside id="cp" aria-label="ข้อความโปรโมท">
+  <div class="pdh"><b>📝 ข้อความโปรโมท</b><span class="pdhov">เลือกสไตล์ · เลือก a b c d · กด copy</span><button class="pdx" id="cpx" title="ปิด (Esc)">✕</button></div>
+  <div class="tdtabs" id="cptypes"></div>
+  <div class="cprow"><div class="cpvar" id="cpvar"></div><button class="cpcopy" id="cpcopy">copy</button></div>
+  <div class="cptx" id="cptx"></div>
 </aside>
 <div id="tmmini" aria-label="นาฬิกาจับเวลา"><div class="tmmd" id="tmmd" title="เปิดแผงจับเวลา">05:00</div><div class="tmmb"><i id="tmmbar"></i></div>
   <div class="tmmc"><button class="go" id="tmmgo">▶</button><button id="tmmreset" title="รีเซ็ต">↺</button><button id="tmmx" title="ซ่อน">✕</button></div></div>
@@ -2288,6 +2310,7 @@ document.addEventListener("keydown",e=>{
   if(PD.isOpen()){if(e.key==="Escape")PD.close();return;}   // drawer open: keys stay inside it
   if(TD.isOpen()){if(e.key==="Escape")TD.close();return;}
   if(VS.isOpen()){if(e.key==="Escape")VS.close();return;}
+  if(CP.isOpen()){if(e.key==="Escape")CP.close();return;}
   if(TM.isOpen()&&!typing){if(e.key==="Escape"){TM.close();return;}if(e.key===" "){e.preventDefault();TM.toggle();return;}}
   if($("#modal").classList.contains("show")){
     if(e.key==="Escape"){if(STRIP.isOpen())STRIP.close();else closeModal();}
@@ -2760,6 +2783,29 @@ const VS=(()=>{
   return{open,close,isOpen};
 })();
 
+/* ================= ข้อความโปรโมท (left drawer: promo captions from promo-captions.json) ================= */
+const CAPS = __CAPS__;
+const CP=(()=>{
+  const isOpen=()=>document.body.classList.contains("cpopen");
+  let t=0,v=0;
+  const ty=$("#cptypes"),va=$("#cpvar"),tx=$("#cptx"),cb=$("#cpcopy");
+  ty.innerHTML=CAPS.map((c,i)=>`<button data-i="${i}">${c.name}</button>`).join("");
+  va.innerHTML="abcd".split("").map((l,i)=>`<button data-i="${i}">${l}</button>`).join("");
+  function show(){ty.querySelectorAll("button").forEach((b,i)=>b.classList.toggle("on",i===t));
+    va.querySelectorAll("button").forEach((b,i)=>b.classList.toggle("on",i===v));tx.textContent=CAPS[t].v[v];}
+  ty.onclick=e=>{const b=e.target.closest("button");if(!b)return;t=+b.dataset.i;SFX.play("tab",t);show();};
+  va.onclick=e=>{const b=e.target.closest("button");if(!b)return;v=+b.dataset.i;SFX.play("tab",v);show();};
+  cb.onclick=()=>{navigator.clipboard.writeText(CAPS[t].v[v]).then(()=>{cb.textContent="copied ✓";cb.classList.add("ok");
+    setTimeout(()=>{cb.textContent="copy";cb.classList.remove("ok");},1500);});};
+  function open(){SL.lock("cp");if(PD.isOpen())PD.close();if(TD.isOpen())TD.close();if(VS.isOpen())VS.close();
+    show();document.body.classList.add("cpopen");SFX.play("drawer","cp");}
+  function close(){if(!isOpen())return;document.body.classList.remove("cpopen");SL.unlock("cp");SFX.play("undrawer");}
+  $("#cptab").onclick=()=>isOpen()?close():open();$("#cpx").onclick=close;
+  $("#pdscrim").addEventListener("click",close);
+  $("#stabs").addEventListener("click",e=>{const b=e.target.closest("button");if(b&&b.id!=="cptab")close();},true);
+  return{open,close,isOpen};
+})();
+
 /* ================= SIMPLE TIMER (right panel) ================= */
 const TM=(()=>{
   let mode="down",total=300,left=300,up=0,running=false,t0=0,base=0,iv=null,rang=false;
@@ -3178,5 +3224,6 @@ function openChapter(hash){const m=(hash||"").match(/^#ch=(\d\d)$/);if(!m)return
   openChapter(h);})();
 </script></body></html>"""
 
-open(OUT,"w",encoding="utf-8").write(HTML.replace("__DATA__", json.dumps(data, ensure_ascii=False)))
+CAPS = json.load(open(os.path.join(ROOT, "promo-captions.json"), encoding="utf-8")) if os.path.exists(os.path.join(ROOT, "promo-captions.json")) else []
+open(OUT,"w",encoding="utf-8").write(HTML.replace("__DATA__", json.dumps(data, ensure_ascii=False)).replace("__CAPS__", json.dumps(CAPS, ensure_ascii=False).replace("</", "<\\/")))
 print("wrote", OUT, "-", len(questions), "questions -", len(examcount), "exam type(s)")
