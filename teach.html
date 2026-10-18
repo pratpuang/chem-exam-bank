@@ -1311,6 +1311,8 @@ input.tin.scrub,#aw-t.scrub{background:color-mix(in srgb,var(--yel) 45%,transpar
 [data-sid]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .mvhold{animation:mvhold .38s var(--ez) both}
 @keyframes mvhold{to{scale:.975}}
+.arming{animation:mvhold .35s var(--ez) both}
+.armed{animation:none;scale:1.06;outline:2.5px solid var(--red);outline-offset:2px;transition:scale .15s var(--sp)}
 .mvsrc{animation:mvpick .3s var(--ez) both}
 @keyframes mvpick{from{scale:.975}to{opacity:.3;scale:.96;filter:grayscale(.6)}}
 .mvback{animation:mvback .45s var(--sp) both}
@@ -2248,10 +2250,15 @@ function openMonthBreak(y, m){
   let SW = null;
   const boxAt = (x, y) => document.elementFromPoint(x, y)?.closest('#sheet .mbs');
   const paintBox = b => { if (!SW || SW.seen.has(b)) return; SW.seen.add(b); const x = rows[+b.closest('.mbk').dataset.i].ss[+b.dataset.j]; if (x.on !== SW.on){ x.on = SW.on; upd(); SFX.play('nib'); } };
+  // a quick tap toggles one box; sweeping needs a short hold first
   $('#sheet').onpointerdown = e => { const b = e.target.closest('.mbs'); if (!b || e.button !== 0) return; e.preventDefault();
-    SW = {on: !rows[+b.closest('.mbk').dataset.i].ss[+b.dataset.j].on, seen: new Set(), id: e.pointerId}; paintBox(b); };
-  $('#sheet').onpointermove = e => { if (!SW || e.pointerId !== SW.id) return; const b = boxAt(e.clientX, e.clientY); if (b) paintBox(b); };
-  $('#sheet').onpointerup = $('#sheet').onpointercancel = e => { if (SW && e.pointerId === SW.id) SW = null; };
+    SW = {on: !rows[+b.closest('.mbk').dataset.i].ss[+b.dataset.j].on, seen: new Set(), id: e.pointerId, b0: b, x: e.clientX, y: e.clientY};
+    const sw = SW; holdArm(sw, b, () => SW === sw && paintBox(b)); };
+  $('#sheet').onpointermove = e => { if (!SW || e.pointerId !== SW.id) return; const g = holdGate(SW, e.clientX, e.clientY);
+    if (g === 'cancel'){ SW = null; return; } if (g === 'wait') return;
+    const b = boxAt(e.clientX, e.clientY); if (b) paintBox(b); };
+  $('#sheet').onpointerup = $('#sheet').onpointercancel = e => { if (!SW || e.pointerId !== SW.id) return; const sw = SW; holdDrop(sw);
+    if (!sw.wasArmed && e.type === 'pointerup') paintBox(sw.b0); SW = null; };
   $('#mbgot').textContent = cash(M.n ? M.earned : hist); $('#mbowe').textContent = cash(M.owe); $('#mbleft').textContent = cash(M.left);
   if ($('#mbpct')) $('#mbpct').textContent = `ได้แล้ว ${full ? Math.round((M.n ? M.earned : hist) / full * 100) : 0}%`;
   later(() => { document.querySelectorAll('.mbmix i').forEach(e => e.style.flexGrow = e.dataset.g); document.querySelectorAll('.mbseg i').forEach(e => e.style.width = e.dataset.w + '%'); });
@@ -2274,7 +2281,7 @@ function renderHolCal(){
   holSweep.ym = [y, m];
   const left = monthSessions(y,m).filter(s => s.status === 'plan' && counts(s) && atOf(s) > NOW).length;
   const labs = list.slice().sort((a, b) => a - b).map(d => { const iso = `${y}-${pad(m+1)}-${pad(d)}`; return [d, holLab(iso), holType(iso)]; }).filter(x => x[1]);
-  $('#cnote').innerHTML = `หยุด ${list.length} วัน · เหลือสอน ${left} คาบ${labs.length ? `<span class="hlabs">${labs.map(([d, t, ty]) => `<em class="ht-${ty}">${HOLT[ty][0]} ${d} ${esc(t)}</em>`).join('')}</span>` : ''}<small>แตะ / ลากผ่านหลายวันเพื่อสลับ · กดค้างเพื่อตั้งชื่อ</small>`;
+  $('#cnote').innerHTML = `หยุด ${list.length} วัน · เหลือสอน ${left} คาบ${labs.length ? `<span class="hlabs">${labs.map(([d, t, ty]) => `<em class="ht-${ty}">${HOLT[ty][0]} ${d} ${esc(t)}</em>`).join('')}</span>` : ''}<small>แตะเพื่อสลับ · กดค้างแล้วลากเพื่อเลือกหลายวัน · คลิกขวาเพื่อตั้งชื่อ</small>`;
 }
 
 // sweep holidays: press a day and drag across others — every day you pass takes the first day's new state
@@ -2285,12 +2292,15 @@ var holSweep = {ym: null};
   const dayAt = (x, y) => document.elementFromPoint(x, y)?.closest('#calendar .day');
   const paint = b => { if (!H || H.seen.has(b.dataset.d)) return; H.seen.add(b.dataset.d); b.classList.toggle('holiday', H.on); b.classList.add('swept'); SFX.play(H.on ? 'on' : 'off'); navigator.vibrate?.(4); };
   addEventListener('pointerdown', e => { const b = e.target.closest?.('#calendar .day'); if (!b || e.button !== 0) return; e.preventDefault();
-    H = {on: !b.classList.contains('holiday'), seen: new Set(), id: e.pointerId, b0: b, x: e.clientX, y: e.clientY,
-      lp: setTimeout(() => { if (!H || H.seen.size) return; const b0 = H.b0; H = null; navigator.vibrate?.(15); holLabel(b0); }, 550)}; b.classList.add('press'); });
-  addEventListener('pointermove', e => { if (!H || e.pointerId !== H.id) return; const b = dayAt(e.clientX, e.clientY);
-    if (b && b !== H.b0 && !H.seen.size){ clearTimeout(H.lp); paint(H.b0); }   // left the first day: it's a sweep
-    if (b && H.seen.size) paint(b); });
-  const end = e => { if (!H || e.pointerId !== H.id) return; clearTimeout(H.lp); H.b0.classList.remove('press'); if (!H.seen.size && e.type === 'pointerup') paint(H.b0);
+    H = {on: !b.classList.contains('holiday'), seen: new Set(), id: e.pointerId, b0: b, x: e.clientX, y: e.clientY}; b.classList.add('press');
+    const h = H; holdArm(h, b, () => H === h && paint(b)); });   // a quick tap toggles one day; sweeping needs a short hold first
+  addEventListener('pointermove', e => { if (!H || e.pointerId !== H.id) return; const g = holdGate(H, e.clientX, e.clientY);
+    if (g === 'cancel'){ H.b0.classList.remove('press'); H = null; return; } if (g === 'wait') return;
+    const b = dayAt(e.clientX, e.clientY); if (b) paint(b); });
+  // right-click a day to name it (สอบไฟนอล, กลับบ้าน…)
+  addEventListener('contextmenu', e => { const b = e.target.closest?.('#calendar .day'); if (!b) return; e.preventDefault();
+    if (H){ holdDrop(H); H.b0.classList.remove('press'); H = null; } holLabel(b); });
+  const end = e => { if (!H || e.pointerId !== H.id) return; holdDrop(H); H.b0.classList.remove('press'); if (!H.seen.size && e.type === 'pointerup') paint(H.b0);
     const h = H; H = null; const [y, m] = holSweep.ym, k = mkey(y, m), list = DB.holidays[k] || (DB.holidays[k] = []);
     const days = [...h.seen].map(Number).filter(d => h.on !== list.includes(d)); if (!days.length) return renderHolCal();
     snap(); days.forEach(d => h.on ? list.push(d) : list.splice(list.indexOf(d), 1));
@@ -2631,6 +2641,14 @@ function delSession(id){
    cards view, or the date dock that slides up — and let go. Same time, new date. It asks first, like delete, with the
    same "ไม่ต้องถามอีก 10 นาที" opt-out; moving a weekly class leaves its slot empty on purpose (same as editing it). */
 var MV = {on: false};
+// hold-to-drag: every drag and sweep waits for a short still press first, so a stray swipe or scroll can't move anything.
+// holdArm(o, el) on press · holdGate(o, x, y) on move → 'go' once armed, 'wait' while still holding, 'cancel' if it moved first · holdDrop(o) on release
+var ARM_MS = 350, ARM_SLOP = 8, ARMED = 0;
+addEventListener('touchmove', e => { if (ARMED) e.preventDefault(); }, {passive: false});   // armed: the finger drags, the page doesn't scroll
+function holdArm(o, el, onArm){ o.armed = false; o.hx = o.x0 ?? o.x; o.hy = o.y0 ?? o.y; o.hel = el; el?.classList.add('arming');
+  o.at = setTimeout(() => { o.armed = true; ARMED++; el?.classList.remove('arming'); el?.classList.add('armed'); navigator.vibrate?.(12); SFX.play('select'); onArm?.(); }, ARM_MS); }
+function holdGate(o, x, y){ if (o.armed) return 'go'; if (Math.hypot(x - o.hx, y - o.hy) > ARM_SLOP){ holdDrop(o); return 'cancel'; } return 'wait'; }
+function holdDrop(o){ if (!o) return; clearTimeout(o.at); if (o.armed){ ARMED = Math.max(0, ARMED - 1); o.armed = false; o.wasArmed = true; } o.hel?.classList.remove('arming', 'armed'); }
 const SKIPMOVE = 'teach-skipmove', skipMove = () => { try{ return +localStorage.getItem(SKIPMOVE) > Date.now(); }catch{ return false; } };
 // the class just edited by a drag pops where it now lives, so your eye can find it
 const land = id => later(() => qsa(`[data-sid="${id}"]`).forEach(e => { e.classList.remove('mvland'); void e.offsetWidth; e.classList.add('mvland'); e.addEventListener('animationend', () => e.classList.remove('mvland'), {once: true}); }));
@@ -2658,10 +2676,17 @@ function askLen(s, h){
   addEventListener('pointerdown', e => {
     if (e.button !== 0) return; const g = e.target.closest?.('.hm,.hmi'); if (!g) return;
     const el = g.closest('[data-sid]'), s = el && !el.classList.contains('cancel') && DB.sessions.find(x => x.id === el.dataset.sid); if (!s) return;
-    e.preventDefault(); e.stopPropagation(); MV.on = true;
-    L = {s, el, g, x0: e.clientX, step: Math.max(12, g.querySelector('.hmr').getBoundingClientRect().width / 8), h: +s.h || 1, id: e.pointerId, tx: e.clientX, ty: e.clientY, x: e.clientX, y: e.clientY, raf: 0}; g.classList.add('on');
-    tip = document.createElement('div'); tip.id = 'mvtip'; document.body.append(tip); paint(); later(() => tip?.classList.add('on')); loop();
+    e.preventDefault(); e.stopPropagation();
+    // it only grabs after a short still hold, so brushing past the indicator while scrolling can't change a length
+    const q = Q = {s, el, g, id: e.pointerId, x: e.clientX, y: e.clientY}; holdArm(q, g, () => { if (Q !== q) return; Q = null; holdDrop(q); MV.on = true;
+      L = {s, el, g, x0: q.x, step: Math.max(12, g.querySelector('.hmr').getBoundingClientRect().width / 8), h: +s.h || 1, id: q.id, tx: q.x, ty: q.y, x: q.x, y: q.y, raf: 0}; g.classList.add('on');
+      ARMED++; L.armedHold = true;   // keep the page from scrolling while the finger drags the length
+      tip = document.createElement('div'); tip.id = 'mvtip'; document.body.append(tip); paint(); later(() => tip?.classList.add('on')); loop(); });
   });
+  let Q = null;
+  addEventListener('pointermove', e => { if (!Q || e.pointerId !== Q.id) return; if (holdGate(Q, e.clientX, e.clientY) === 'cancel') Q = null; });
+  const qEnd = e => { if (Q && e.pointerId === Q.id){ holdDrop(Q); Q = null; } };
+  addEventListener('pointerup', qEnd); addEventListener('pointercancel', qEnd);
   const hOf = x => Math.min(4, Math.max(.5, L.s.h + Math.round((x - L.x0) / L.step) * .5));
   const pct = h => h / 4 * 100;
   // the indicator itself shows the length you're on
@@ -2677,6 +2702,7 @@ function askLen(s, h){
   addEventListener('pointermove', e => { if (!L || e.pointerId !== L.id) return; L.tx = e.clientX; L.ty = e.clientY;
     const h = hOf(e.clientX); if (h !== L.h){ L.h = h; paint(); const b = tip.querySelector('.rh b'); b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); navigator.vibrate?.(6); SFX.play('nib'); } });
   const stop = (e, go) => { if (!L || e.pointerId !== L.id) return; const {s, h, g} = L; cancelAnimationFrame(L.raf); g.classList.remove('on');
+    if (L.armedHold) ARMED = Math.max(0, ARMED - 1);
     live(g, +s.h, false);   // back to the saved length; it re-draws with the new one once confirmed
     const t = tip; tip = null; L = null; if (t){ t.classList.remove('on'); t.classList.add('out'); setTimeout(() => t.remove(), 200); }
     setTimeout(() => MV.on = false, 0);
@@ -2871,16 +2897,18 @@ function quickAdd(who, iso, cell){
   const loop = () => { if (!T?.on || !ghost) return; T.gx += (T.x + 14 - T.gx) * K; T.gy += (T.y - 46 - T.gy) * K; ghost.style.translate = `${T.gx}px ${T.gy}px`; T.raf = requestAnimationFrame(loop); };
   addEventListener('pointerdown', e => { const c = e.target.closest?.('.trc, #whof button[data-w]:not([data-w="*"])'); if (!c || e.button !== 0) return;
     if (c.classList.contains('trc')) e.preventDefault();
-    T = {who: c.dataset.who || c.dataset.w, el: c, legend: !c.classList.contains('trc'), x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, id: e.pointerId, on: false}; });
+    T = {who: c.dataset.who || c.dataset.w, el: c, legend: !c.classList.contains('trc'), x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, id: e.pointerId, on: false};
+    holdArm(T, c); });   // a name only lifts after a short still hold, so scrolling past it can't drag it
   addEventListener('pointermove', e => { if (!T || e.pointerId !== T.id) return; T.x = e.clientX; T.y = e.clientY;
-    if (!T.on){ if (Math.hypot(T.x - T.x0, T.y - T.y0) < 5) return;
+    if (!T.on){ const g = holdGate(T, T.x, T.y); if (g === 'cancel'){ T = null; return; } if (g === 'wait') return;
+      if (Math.hypot(T.x - T.x0, T.y - T.y0) < 5) return;
       T.on = true; MV.on = true; T.el.classList.add('trsrc'); SFX.play('select'); navigator.vibrate?.(10);
       const r = T.el.getBoundingClientRect(); T.gx = r.left; T.gy = r.top;
       ghost = document.createElement('div'); ghost.id = 'mvghost'; ghost.innerHTML = `<i class="${colorOf(T.who)}"></i><b>${esc(st(T.who)?.name ?? '?')}</b><small>วางบนวันที่จะเพิ่มคาบ</small>`;
       ghost.style.translate = `${T.gx}px ${T.gy}px`; document.body.append(ghost); later(() => ghost?.classList.add('on')); loop(); }
     lit(cellAt(T.x, T.y)); });
   const end = e => { if (!T || e.pointerId !== T.id) return; const t = T, cell = t.on ? cellAt(e.clientX, e.clientY) : null;
-    cancelAnimationFrame(t.raf); t.el.classList.remove('trsrc'); lit(null); T = null;
+    holdDrop(t); cancelAnimationFrame(t.raf); t.el.classList.remove('trsrc'); lit(null); T = null;
     const g = ghost; ghost = null;
     if (g){ if (cell && !reduced){ const r = cell.getBoundingClientRect(), gr = g.getBoundingClientRect(); g.classList.add('into'); g.style.translate = `${r.left + r.width / 2 - gr.width / 2}px ${r.top + r.height / 2 - gr.height / 2}px`; setTimeout(() => g.remove(), 260); }
       else if (!reduced){ g.classList.add('home'); g.style.translate = `${t.el.getBoundingClientRect().left}px ${t.el.getBoundingClientRect().top}px`; setTimeout(() => g.remove(), 360); } else g.remove(); }
@@ -2939,7 +2967,7 @@ function colorPick(anchor, cur, onPick){
     P = {el, who, x: e.clientX, y: e.clientY, id: e.pointerId, t: setTimeout(() => { if (!P || MV.on) return; const p = P; P = null; navigator.vibrate?.(15); SFX.play('select');
       const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 600);
       p.el.classList.add('cwpress'); setTimeout(() => p.el.classList.remove('cwpress'), 300);
-      colorPick(p.el, st(p.who).color ?? 0, v => setColor(p.who, v)); }, 550)}; });
+      colorPick(p.el, st(p.who).color ?? 0, v => setColor(p.who, v)); }, 900)}; });   // well past the 350ms drag-arm, so a hold-then-drag never opens it
   addEventListener('pointermove', e => { if (P && e.pointerId === P.id && Math.hypot(e.clientX - P.x, e.clientY - P.y) > 6){ clearTimeout(P.t); P = null; } });
   const end = e => { if (P && e.pointerId === P.id){ clearTimeout(P.t); P = null; } };
   addEventListener('pointerup', end); addEventListener('pointercancel', end);
@@ -2952,11 +2980,12 @@ function colorPick(anchor, cur, onPick){
   let Z = null;
   addEventListener('pointerdown', e => { const el = e.target.closest?.('input.tin, #aw-t'); if (!el || e.button !== 0 || document.activeElement === el) return;   // already typing in it: leave it alone
     e.preventDefault();   // no focus / text-selection yet, or the browser swallows the drag; a plain tap focuses it on release
-    Z = {el, y: e.clientY, x: e.clientX, v0: parseT(el.value) || el.value, id: e.pointerId, on: false, last: el.value}; });
+    Z = {el, y: e.clientY, x: e.clientX, v0: parseT(el.value) || el.value, id: e.pointerId, on: false, last: el.value}; holdArm(Z, el); });
   addEventListener('pointermove', e => { if (!Z || e.pointerId !== Z.id) return; const dy = Z.y - e.clientY;
-    if (!Z.on){ if (Math.abs(dy) < 6 || Math.abs(dy) < Math.abs(e.clientX - Z.x)) return; Z.on = true; Z.el.blur(); Z.el.classList.add('scrub'); }
+    if (!Z.on){ const g = holdGate(Z, e.clientX, e.clientY); if (g === 'cancel'){ Z = null; return; } if (g === 'wait') return;   // hold first, then scrub
+      if (Math.abs(dy) < 6 || Math.abs(dy) < Math.abs(e.clientX - Z.x)) return; Z.on = true; Z.el.blur(); Z.el.classList.add('scrub'); }
     e.preventDefault(); const v = addMin(Z.v0, Math.round(dy / 12) * 15); if (v !== Z.last){ Z.last = v; Z.el.value = v; SFX.play('nib'); navigator.vibrate?.(3); } }, {passive: false});
-  const end = e => { if (!Z || e.pointerId !== Z.id) return; const z = Z; Z = null; if (!z.on){ if (e.type === 'pointerup'){ z.el.focus(); z.el.select(); } return; } z.el.classList.remove('scrub');
+  const end = e => { if (!Z || e.pointerId !== Z.id) return; const z = Z; Z = null; holdDrop(z); if (!z.on){ if (e.type === 'pointerup'){ z.el.focus(); z.el.select(); } return; } z.el.classList.remove('scrub');
     const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 80);
     z.el.dispatchEvent(new Event('change', {bubbles: true})); };
   addEventListener('pointerup', end); addEventListener('pointercancel', end);
@@ -3597,11 +3626,13 @@ function chPick(id, j, el){
       btn.classList.toggle('swp', inR); btn.className = btn.className.replace(/\b(d|n)\b/g, '').trim(); const v = inR ? C.v : C.orig[j]; if (v === 'd' || v === 'n') btn.classList.add(v); }); };
   addEventListener('pointerdown', e => { const b = e.target.closest?.('.segbar button[data-j]'); if (!b || e.button !== 0) return;
     const p = st(b.dataset.sid2); if (!p?.map) return;
-    C = {id: p.id, bar: b.closest('.segbar'), j0: +b.dataset.j, j1: +b.dataset.j, orig: p.map.split(''), v: p.map[+b.dataset.j] === 'd' ? 't' : 'd', moved: false, ptr: e.pointerId}; });
-  addEventListener('pointermove', e => { if (!C || e.pointerId !== C.ptr) return; const b = boxAt(e.clientX, e.clientY);
+    C = {id: p.id, bar: b.closest('.segbar'), j0: +b.dataset.j, j1: +b.dataset.j, orig: p.map.split(''), v: p.map[+b.dataset.j] === 'd' ? 't' : 'd', moved: false, ptr: e.pointerId, x: e.clientX, y: e.clientY};
+    holdArm(C, b); });   // tap still opens the chapter pop-up; sweeping a range needs a short hold first
+  addEventListener('pointermove', e => { if (!C || e.pointerId !== C.ptr) return; const g = holdGate(C, e.clientX, e.clientY);
+    if (g === 'cancel'){ C = null; return; } if (g === 'wait') return; const b = boxAt(e.clientX, e.clientY);
     if (!b || b.closest('.segbar') !== C.bar || +b.dataset.j === C.j1) return;
     if (!C.moved){ C.moved = true; chClose(); MV.on = true; } C.j1 = +b.dataset.j; show(); SFX.play('nib'); navigator.vibrate?.(4); });
-  const end = e => { if (!C || e.pointerId !== C.ptr) return; const c = C; C = null; if (!c.moved) return;
+  const end = e => { if (!C || e.pointerId !== C.ptr) return; const c = C; C = null; holdDrop(c); if (!c.moved) return;
     setTimeout(() => MV.on = false, 0);
     const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 80);
     const p = st(c.id), a = c.orig.slice(), [lo, hi] = [Math.min(c.j0, c.j1), Math.max(c.j0, c.j1)];
