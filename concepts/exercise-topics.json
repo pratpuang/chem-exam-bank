@@ -890,5 +890,133 @@
  ],
  "E-แก๊ส-40": [
   "kinetic"
+ ],
+ "E-ตารางธาตุ-01": [
+  "locate"
+ ],
+ "E-ตารางธาตุ-02": [
+  "locate"
+ ],
+ "E-ตารางธาตุ-03": [
+  "locate"
+ ],
+ "E-ตารางธาตุ-04": [
+  "locate"
+ ],
+ "E-ตารางธาตุ-05": [
+  "locate"
+ ],
+ "E-ตารางธาตุ-06": [
+  "trends"
+ ],
+ "E-ตารางธาตุ-07": [
+  "trends"
+ ],
+ "E-ตารางธาตุ-08": [
+  "trends"
+ ],
+ "E-ตารางธาตุ-09": [
+  "trends"
+ ],
+ "E-ตารางธาตุ-10": [
+  "trends"
+ ],
+ "E-ตารางธาตุ-11": [
+  "ionization"
+ ],
+ "E-ตารางธาตุ-12": [
+  "ionization",
+  "trends"
+ ],
+ "E-ตารางธาตุ-13": [
+  "ionization"
+ ],
+ "E-ตารางธาตุ-14": [
+  "ionization"
+ ],
+ "E-ตารางธาตุ-15": [
+  "ionization",
+  "trends"
+ ],
+ "E-ตารางธาตุ-16": [
+  "trends",
+  "element-id"
+ ],
+ "E-ตารางธาตุ-17": [
+  "trends",
+  "element-id"
+ ],
+ "E-ตารางธาตุ-18": [
+  "trends",
+  "element-id"
+ ],
+ "E-ตารางธาตุ-19": [
+  "trends",
+  "element-id"
+ ],
+ "E-ตารางธาตุ-20": [
+  "element-id",
+  "trends"
+ ],
+ "E-ตารางธาตุ-21": [
+  "rep-elements"
+ ],
+ "E-ตารางธาตุ-22": [
+  "rep-elements"
+ ],
+ "E-ตารางธาตุ-23": [
+  "rep-elements"
+ ],
+ "E-ตารางธาตุ-24": [
+  "rep-elements"
+ ],
+ "E-ตารางธาตุ-25": [
+  "transition"
+ ],
+ "E-ตารางธาตุ-26": [
+  "oxide-chloride"
+ ],
+ "E-ตารางธาตุ-27": [
+  "oxide-chloride"
+ ],
+ "E-ตารางธาตุ-28": [
+  "oxide-chloride"
+ ],
+ "E-ตารางธาตุ-29": [
+  "oxide-chloride"
+ ],
+ "E-ตารางธาตุ-30": [
+  "oxide-chloride",
+  "element-id"
+ ],
+ "E-ตารางธาตุ-31": [
+  "transition"
+ ],
+ "E-ตารางธาตุ-32": [
+  "transition"
+ ],
+ "E-ตารางธาตุ-33": [
+  "transition"
+ ],
+ "E-ตารางธาตุ-34": [
+  "transition"
+ ],
+ "E-ตารางธาตุ-35": [
+  "transition"
+ ],
+ "E-ตารางธาตุ-36": [
+  "radioactive"
+ ],
+ "E-ตารางธาตุ-37": [
+  "radioactive"
+ ],
+ "E-ตารางธาตุ-38": [
+  "radioactive"
+ ],
+ "E-ตารางธาตุ-39": [
+  "radioactive"
+ ],
+ "E-ตารางธาตุ-40": [
+  "radioactive"
  ]
 }
