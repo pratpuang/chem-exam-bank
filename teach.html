@@ -1177,7 +1177,7 @@ input.tin.scrub,#aw-t.scrub{background:color-mix(in srgb,var(--yel) 45%,transpar
 /* colour wheel */
 .cwbtn{width:34px;height:34px;border:3px solid var(--ink);background:conic-gradient(red,#ff0,lime,cyan,blue,#f0f,red);transition:transform .12s,box-shadow .12s}
 .cwbtn.on{transform:translateY(-4px);box-shadow:0 4px 0 var(--ink)}
-.cwpress{animation:cwp .3s var(--sp)}@keyframes cwp{50%{scale:1.12}}
+
 #cwheel{position:fixed;z-index:190;width:248px;padding:14px;background:var(--card);color:var(--ink);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--sh);opacity:0;scale:.92;transition:opacity .15s,scale .3s var(--sp)}
 #cwheel.on{opacity:1;scale:1}#cwheel.out{opacity:0;scale:.94}
 .cw-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
@@ -2958,21 +2958,8 @@ function colorPick(anchor, cur, onPick){
   box.style.left = x + 'px'; box.style.top = y + 'px'; show(); later(() => box.classList.add('on'));
   setTimeout(() => addEventListener('pointerdown', outside, true), 0);
 }
-// long-press a student's dot / name (main-view legend, calendar name strip, student cards) → the wheel, saved straight away
-{
-  let P = null;
-  const whoOf = el => el.dataset.w || el.dataset.who || el.dataset.id;
-  addEventListener('pointerdown', e => { if (e.button !== 0) return; const el = e.target.closest?.('#whof button[data-w]:not([data-w="*"]), .trc, .sc[data-id]:not(.addcard)'); if (!el || e.target.closest('input,textarea,.segbar,.obody button,.obody a')) return;
-    const who = whoOf(el); if (!st(who)) return;
-    P = {el, who, x: e.clientX, y: e.clientY, id: e.pointerId, t: setTimeout(() => { if (!P || MV.on) return; const p = P; P = null; navigator.vibrate?.(15); SFX.play('select');
-      const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 600);
-      p.el.classList.add('cwpress'); setTimeout(() => p.el.classList.remove('cwpress'), 300);
-      colorPick(p.el, st(p.who).color ?? 0, v => setColor(p.who, v)); }, 900)}; });   // well past the 350ms drag-arm, so a hold-then-drag never opens it
-  addEventListener('pointermove', e => { if (P && e.pointerId === P.id && Math.hypot(e.clientX - P.x, e.clientY - P.y) > 6){ clearTimeout(P.t); P = null; } });
-  const end = e => { if (P && e.pointerId === P.id){ clearTimeout(P.t); P = null; } };
-  addEventListener('pointerup', end); addEventListener('pointercancel', end);
-  addEventListener('contextmenu', e => { if (e.target.closest?.('#whof button, .trc, .sc[data-id]') && e.pointerType !== 'mouse') e.preventDefault(); });
-}
+// holding a student's name only arms a drag; the colour wheel lives in the profile editor (🎨). No iOS callout menu on the hold:
+addEventListener('contextmenu', e => { if (e.target.closest?.('#whof button, .trc, .sc[data-id]') && e.pointerType !== 'mouse') e.preventDefault(); });
 
 // any time box (.tin / the add-flow time): drag up = later, down = earlier, 15 min per notch; a plain tap still types.
 // The new time is committed on release through the box's own change handler, so each screen keeps its own logic.
@@ -3344,7 +3331,6 @@ function renderStudents(anim){
   $('#scards').innerHTML = cardsOf(active) + add + fold + (showGone && !stuOwe ? cardsOf([...(DB.archived || [])].sort((a, b) => GONE.indexOf(kindOf(a)) - GONE.indexOf(kindOf(b))), active.length) : '');
   popStu = false;
 }
-function setColor(id, c){ snap(); st(id).color = c; save(); renderAll(); toast(`เปลี่ยนสี ${st(id).name} แล้ว`, true); }
 function cycle(id, i){ const p = st(id), o = 'tdns'; const a = p.map.split(''); a[i] = o[(o.indexOf(a[i])+1) % 4]; p.map = a.join(''); save(); renderStudents(); renderSchedule(); }
 function startMap(id){ st(id).map = 'tttttttttttttt'; save(); renderStudents(); }
 function addFb(id){ const el = $('#fb-'+id), t = el.value.trim(); if (!t) return; st(id).feed.push([fbKind[id] || 'pro', isoD(NOW), t]); fbOpen[id] = 0; save(); renderStudents(); renderSchedule(); toast('จดแล้ว'); }
