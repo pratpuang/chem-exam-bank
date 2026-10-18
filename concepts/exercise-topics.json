@@ -767,5 +767,128 @@
  "E-อะตอม-40": [
   "e-config",
   "orbital-rules"
+ ],
+ "E-แก๊ส-01": [
+  "kinetic"
+ ],
+ "E-แก๊ส-02": [
+  "kinetic"
+ ],
+ "E-แก๊ส-03": [
+  "kinetic"
+ ],
+ "E-แก๊ส-04": [
+  "kinetic"
+ ],
+ "E-แก๊ส-05": [
+  "kinetic"
+ ],
+ "E-แก๊ส-06": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-07": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-08": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-09": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-10": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-11": [
+  "pressure"
+ ],
+ "E-แก๊ส-12": [
+  "pressure"
+ ],
+ "E-แก๊ส-13": [
+  "pressure"
+ ],
+ "E-แก๊ส-14": [
+  "pressure"
+ ],
+ "E-แก๊ส-15": [
+  "pressure",
+  "ideal-gas"
+ ],
+ "E-แก๊ส-16": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-17": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-18": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-19": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-20": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-21": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-22": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-23": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-24": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-25": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-26": [
+  "ideal-gas"
+ ],
+ "E-แก๊ส-27": [
+  "ideal-gas"
+ ],
+ "E-แก๊ส-28": [
+  "ideal-gas"
+ ],
+ "E-แก๊ส-29": [
+  "ideal-gas"
+ ],
+ "E-แก๊ส-30": [
+  "ideal-gas",
+  "gas-mixture"
+ ],
+ "E-แก๊ส-31": [
+  "gas-mixture"
+ ],
+ "E-แก๊ส-32": [
+  "gas-mixture"
+ ],
+ "E-แก๊ส-33": [
+  "gas-mixture"
+ ],
+ "E-แก๊ส-34": [
+  "gas-mixture"
+ ],
+ "E-แก๊ส-35": [
+  "gas-mixture",
+  "ideal-gas"
+ ],
+ "E-แก๊ส-36": [
+  "diffusion"
+ ],
+ "E-แก๊ส-37": [
+  "kinetic"
+ ],
+ "E-แก๊ส-38": [
+  "diffusion"
+ ],
+ "E-แก๊ส-39": [
+  "diffusion"
+ ],
+ "E-แก๊ส-40": [
+  "kinetic"
  ]
 }
