@@ -494,5 +494,145 @@
  ],
  "E-เคมีไฟฟ้า-43": [
   "balance-redox"
+ ],
+ "E-ปริมาณสาร-01": [
+  "balancing"
+ ],
+ "E-ปริมาณสาร-02": [
+  "balancing"
+ ],
+ "E-ปริมาณสาร-03": [
+  "balancing",
+  "precipitation"
+ ],
+ "E-ปริมาณสาร-04": [
+  "balancing"
+ ],
+ "E-ปริมาณสาร-05": [
+  "balancing"
+ ],
+ "E-ปริมาณสาร-06": [
+  "balancing"
+ ],
+ "E-ปริมาณสาร-07": [
+  "balancing"
+ ],
+ "E-ปริมาณสาร-08": [
+  "balancing"
+ ],
+ "E-ปริมาณสาร-09": [
+  "balancing"
+ ],
+ "E-ปริมาณสาร-10": [
+  "balancing"
+ ],
+ "E-ปริมาณสาร-11": [
+  "mass-mass"
+ ],
+ "E-ปริมาณสาร-12": [
+  "mass-mass"
+ ],
+ "E-ปริมาณสาร-13": [
+  "mass-mass"
+ ],
+ "E-ปริมาณสาร-14": [
+  "mass-mass"
+ ],
+ "E-ปริมาณสาร-15": [
+  "mass-mass"
+ ],
+ "E-ปริมาณสาร-16": [
+  "gas-stoich"
+ ],
+ "E-ปริมาณสาร-17": [
+  "gas-stoich"
+ ],
+ "E-ปริมาณสาร-18": [
+  "gas-stoich"
+ ],
+ "E-ปริมาณสาร-19": [
+  "gas-stoich",
+  "mass-mass"
+ ],
+ "E-ปริมาณสาร-20": [
+  "gas-stoich"
+ ],
+ "E-ปริมาณสาร-21": [
+  "limiting"
+ ],
+ "E-ปริมาณสาร-22": [
+  "limiting"
+ ],
+ "E-ปริมาณสาร-23": [
+  "limiting"
+ ],
+ "E-ปริมาณสาร-24": [
+  "limiting"
+ ],
+ "E-ปริมาณสาร-25": [
+  "limiting",
+  "precipitation"
+ ],
+ "E-ปริมาณสาร-26": [
+  "multi-step"
+ ],
+ "E-ปริมาณสาร-27": [
+  "multi-step"
+ ],
+ "E-ปริมาณสาร-28": [
+  "multi-step"
+ ],
+ "E-ปริมาณสาร-29": [
+  "multi-step"
+ ],
+ "E-ปริมาณสาร-30": [
+  "multi-step"
+ ],
+ "E-ปริมาณสาร-31": [
+  "mixture-purity"
+ ],
+ "E-ปริมาณสาร-32": [
+  "mixture-purity"
+ ],
+ "E-ปริมาณสาร-33": [
+  "mixture-purity"
+ ],
+ "E-ปริมาณสาร-34": [
+  "mixture-purity"
+ ],
+ "E-ปริมาณสาร-35": [
+  "mixture-purity"
+ ],
+ "E-ปริมาณสาร-36": [
+  "percent-yield"
+ ],
+ "E-ปริมาณสาร-37": [
+  "percent-yield"
+ ],
+ "E-ปริมาณสาร-38": [
+  "percent-yield"
+ ],
+ "E-ปริมาณสาร-39": [
+  "percent-yield",
+  "limiting"
+ ],
+ "E-ปริมาณสาร-40": [
+  "percent-yield"
+ ],
+ "E-ปริมาณสาร-41": [
+  "mixture-purity"
+ ],
+ "E-ปริมาณสาร-42": [
+  "mixture-purity"
+ ],
+ "E-ปริมาณสาร-43": [
+  "mixture-purity"
+ ],
+ "E-ปริมาณสาร-44": [
+  "mixture-purity"
+ ],
+ "E-ปริมาณสาร-45": [
+  "mixture-purity",
+  "percent-yield"
  ]
 }
