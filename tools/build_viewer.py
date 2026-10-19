@@ -6,7 +6,8 @@ prefers-reduced-motion). Features: 4 switchable layouts (poster deck / cards / l
 present mode, random pick, full filters incl. subject/exam/solution status, collapsed solutions with
 in-browser ✓/✗ review marks exported for tools/apply_review.py. No AI-disclaimer banner (personal use)."""
 import re, json, markdown, os, sys
-STUDENT = "--student" in sys.argv   # one offline chemistry-only file for a student -> dist/chem-bank-student.html
+STUDENT_WEB = "--student-web" in sys.argv   # online variant -> student.html (repo root)
+STUDENT = STUDENT_WEB or "--student" in sys.argv   # one offline chemistry-only file for a student -> dist/chem-bank-student.html
 from formulas import FORMULAS
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -3183,7 +3184,18 @@ function openChapter(hash){const m=(hash||"").match(/^#ch=(\d\d)$/);if(!m)return
   openChapter(h);})();
 </script></body></html>"""
 
-if STUDENT:
+if STUDENT_WEB:   # online student site: a separate static folder (own Vercel project), nothing else from this repo
+    import student_pack, shutil
+    i = sys.argv.index("--student-web") + 1
+    WEBOUT = sys.argv[i] if i < len(sys.argv) and not sys.argv[i].startswith("--") else os.path.join(os.path.dirname(ROOT), "chem-bank-student")
+    page = student_pack.student_html(HTML, ROOT, web=True).replace("__DATA__", json.dumps(data, ensure_ascii=False))
+    os.makedirs(os.path.join(WEBOUT, "images"), exist_ok=True)
+    open(os.path.join(WEBOUT, "index.html"), "w", encoding="utf-8").write(page)
+    used = set(re.findall(r"images/[A-Za-z0-9_\-.]+\.(?:png|jpe?g|gif|svg|webp)", page))
+    for f in used: shutil.copy2(os.path.join(ROOT, f), os.path.join(WEBOUT, f))
+    shutil.copy2(os.path.join(ROOT, "vsepr.html"), WEBOUT)
+    OUT = os.path.join(WEBOUT, "index.html"); print("student web:", len(used), "figures ->", WEBOUT)
+elif STUDENT:
     import student_pack
     OUT = os.path.join(ROOT, "dist", "chem-bank-student.html"); os.makedirs(os.path.dirname(OUT), exist_ok=True)
     out, nimg = student_pack.inline_images(student_pack.student_html(HTML, ROOT).replace("__DATA__", json.dumps(data, ensure_ascii=False)), ROOT)

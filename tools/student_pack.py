@@ -74,8 +74,13 @@ HELP_CSS = """
 #help li b{background:var(--stbg);padding:0 4px}
 #help .hwarn{margin:8px 18px 18px;padding:10px 12px;border:3px solid var(--ink);background:var(--sxbg);font-size:.9rem;line-height:1.6}
 .hbtn.hq,.lbtn.hq{font-weight:800}
+#hint{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:1500;display:none;align-items:center;gap:10px;max-width:calc(100vw - 24px);
+  background:var(--yel);color:#141414;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--sh);padding:8px 8px 8px 14px;font:700 .88rem/1.4 "Anuphan",sans-serif}
+#hint.on{display:flex}
+#hint button{border:2px solid var(--ink);background:var(--card);color:var(--ink);font-weight:800;width:28px;height:28px;flex:none}
 """
-HELP_HTML = """<div id="help" role="dialog" aria-modal="true" aria-label="วิธีใช้"><div class="hsheet">
+HELP_HTML = """<div id="hint" role="status">ครั้งแรกใช่ไหม? กดปุ่ม ⓘ ที่แถบด้านบน ดูวิธีใช้ได้นะ<button id="hintx" title="ปิด" aria-label="ปิด">✕</button></div>
+<div id="help" role="dialog" aria-modal="true" aria-label="วิธีใช้"><div class="hsheet">
 <button class="hx" id="helpx" title="ปิด (Esc)">✕</button><h2>ⓘ วิธีใช้</h2>
 <ul>
 <li><b>เลือกบท</b> แตะบล็อกบทที่อยากฝึกในหน้าแรก หรือพิมพ์ค้นหา (สูตร / คำ / รหัสข้อ) ที่ช่องค้นหา</li>
@@ -91,43 +96,53 @@ HELP_HTML = """<div id="help" role="dialog" aria-modal="true" aria-label="วิ
 <div class="hwarn">⚠️ เฉลยและวิธีทำเขียนโดย AI อาจมีผิดพลาดได้ เฉลยบางข้อยังไม่ได้ตรวจ ถ้าข้อไหนแปลกๆ ถามพี่ได้</div>
 </div></div>"""
 HELP_JS = """
-(()=>{const h=document.getElementById("help"),open=()=>h.classList.add("on"),close=()=>h.classList.remove("on");
+(()=>{const h=document.getElementById("hint"),K="cqb_student_hint";let seen=false;
+  try{seen=!!localStorage.getItem(K);}catch(_){}
+  window.hintOff=()=>{h.classList.remove("on");try{localStorage.setItem(K,"1");}catch(_){}};
+  document.getElementById("hintx").addEventListener("click",hintOff);
+  if(!seen)h.classList.add("on");})();
+(()=>{const h=document.getElementById("help"),open=()=>{h.classList.add("on");hintOff();},close=()=>h.classList.remove("on");
   for(const id of ["helpbtn","lhelp"])document.getElementById(id).addEventListener("click",open);
   document.getElementById("helpx").addEventListener("click",close);
   h.addEventListener("click",e=>{if(e.target===h)close();});
   addEventListener("keydown",e=>{if(e.key==="Escape"&&h.classList.contains("on")){close();e.stopPropagation();}},true);})();
 """
 
-def student_html(HTML, root):
+def student_html(HTML, root, web=False):
     """HTML = the viewer template (still containing __DATA__). Returns the template with every network / teacher-only piece
     removed or inlined; the caller fills __DATA__ and runs inline_images on the result."""
     # --- head: CDN tags -> inline assets
-    head_old = HTML[HTML.index('<link rel="icon" href="icons/icon.svg"'):HTML.index("<style>")]
-    icon = _b64(open(os.path.join(root, "icons", "icon.svg"), "rb").read(), "image/svg+xml")
-    head_new = ('<link rel="icon" href="%s" type="image/svg+xml">\n<meta name="theme-color" content="#141414">\n<style>%s\n%s\n%s</style>\n'
-                '<script>%s</script>\n<script>%s</script>\n') % (
-        icon, katex_css(), google_css(), HELP_CSS,
-        js_safe(_get(KATEX + "katex.min.js", "katex.js").decode()), js_safe(_get(KATEX + "contrib/auto-render.min.js", "auto-render.js").decode()))
-    HTML = HTML.replace(head_old, head_new)
+    if web:   # online page: same CDN tags / images/ / vsepr.html as index.html, minus the PWA manifest
+        HTML = _sub1(HTML, '<link rel="manifest" href="manifest.webmanifest">', '')
+        HTML = _sub1(HTML, '<style>\n', '<style>' + HELP_CSS + '\n')
+    else:
+        head_old = HTML[HTML.index('<link rel="icon" href="icons/icon.svg"'):HTML.index("<style>")]
+        icon = _b64(open(os.path.join(root, "icons", "icon.svg"), "rb").read(), "image/svg+xml")
+        head_new = ('<link rel="icon" href="%s" type="image/svg+xml">\n<meta name="theme-color" content="#141414">\n<style>%s\n%s\n%s</style>\n'
+                    '<script>%s</script>\n<script>%s</script>\n') % (
+            icon, katex_css(), google_css(), HELP_CSS,
+            js_safe(_get(KATEX + "katex.min.js", "katex.js").decode()), js_safe(_get(KATEX + "contrib/auto-render.min.js", "auto-render.js").decode()))
+        HTML = HTML.replace(head_old, head_new)
     # --- teacher hand-off: CSS, markup, JS (whole blocks, not hidden)
     HTML = _cut(HTML, "/* slide the subject card up -> the teaching page (teach.html).", "/* circle reveal between landing and app */")
     HTML = _cut(HTML, "/* ---------- slide the subject card up -> teaching page", "</script></body>")
     HTML = re.sub(r'<div class="tup">.*?</div>(?=<div class="htrack">)', "", HTML)
     assert 'class="tup"' not in HTML
-    # --- VSEPR drawer: vsepr.html inlined as srcdoc (it needs three.js + fonts)
-    vs = open(os.path.join(root, "vsepr.html"), encoding="utf-8").read()
-    vs = re.sub(r'<link href="https://fonts\.googleapis[^>]*>', lambda m: "<style>%s</style>" % google_css(
-        "https://fonts.googleapis.com/css2?family=Anuphan:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap", "gfonts-vsepr.css"), vs)
-    vs = re.sub(r'<script src="https://cdn\.jsdelivr\.net/npm/three@[^"]*"></script>',
-                lambda m: "<script>%s</script>" % js_safe(_get("https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js", "three.js").decode()), vs)
-    vs = _sub1(vs, 'QS.get("embed")', '"1"')
-    assert "https://" not in re.sub(r"<script>.*?</script>", "", vs, flags=re.S).replace("http://www.w3.org", "")
-    import json
-    HTML = _sub1(HTML, "const DATA = __DATA__;", "const VSEPR_HTML=%s;\nconst DATA = __DATA__;" % js_safe(json.dumps(vs, ensure_ascii=False)))
-    HTML = _sub1(HTML, 'if(!f.src)f.src="vsepr.html?embed=1";', 'if(!f.srcdoc)f.srcdoc=VSEPR_HTML;')
-    # --- save-as-picture: html2canvas embedded instead of fetched
-    h2c = _b64(_get("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js", "html2canvas.js"), "text/javascript")
-    HTML = _sub1(HTML, 'sc.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";', 'sc.src="%s";' % h2c)
+    if not web:
+        # --- VSEPR drawer: vsepr.html inlined as srcdoc (it needs three.js + fonts)
+        vs = open(os.path.join(root, "vsepr.html"), encoding="utf-8").read()
+        vs = re.sub(r'<link href="https://fonts\.googleapis[^>]*>', lambda m: "<style>%s</style>" % google_css(
+            "https://fonts.googleapis.com/css2?family=Anuphan:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap", "gfonts-vsepr.css"), vs)
+        vs = re.sub(r'<script src="https://cdn\.jsdelivr\.net/npm/three@[^"]*"></script>',
+                    lambda m: "<script>%s</script>" % js_safe(_get("https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js", "three.js").decode()), vs)
+        vs = _sub1(vs, 'QS.get("embed")', '"1"')
+        assert "https://" not in re.sub(r"<script>.*?</script>", "", vs, flags=re.S).replace("http://www.w3.org", "")
+        import json
+        HTML = _sub1(HTML, "const DATA = __DATA__;", "const VSEPR_HTML=%s;\nconst DATA = __DATA__;" % js_safe(json.dumps(vs, ensure_ascii=False)))
+        HTML = _sub1(HTML, 'if(!f.src)f.src="vsepr.html?embed=1";', 'if(!f.srcdoc)f.srcdoc=VSEPR_HTML;')
+        # --- save-as-picture: html2canvas embedded instead of fetched
+        h2c = _b64(_get("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js", "html2canvas.js"), "text/javascript")
+        HTML = _sub1(HTML, 'sc.src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";', 'sc.src="%s";' % h2c)
     # --- wording for the student
     HTML = HTML.replace("แสดงให้นักเรียน", "ขยายเต็มจอ")
     HTML = HTML.replace("night mode + teaching (screen-share) mode", "night mode + screen-share mode")
