@@ -1540,6 +1540,8 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
         <div class="bub me"><div class="bt" id="free"></div><textarea class="tpl-e" aria-label="แก้ข้อความเวลาว่าง"></textarea><div class="bf"><span><span id="freeinfo"></span><span class="tplhint">{วันว่าง} = รายการวันที่ติ๊ก</span></span><span><button class="ghostb" onclick="editTpl('free',this)">✎ แก้</button><button class="ghostb" onclick="freePic()">🖼 บันทึกเป็นรูป</button><button class="cpy" onclick="copy('free')">คัดลอก</button></span></div></div>
         <h3 class="kh" style="margin-top:34px">ตอบแชท <small>ตอนมีคนทักมาถาม</small></h3>
         <div class="bub me"><div class="bt" id="dm"></div><textarea class="tpl-e" aria-label="แก้ข้อความตอบแชท"></textarea><div class="bf"><span class="tplhint">ใช้ {เดี่ยว} {กลุ่ม} แทนเรท</span><span><button class="ghostb" onclick="editTpl('dm',this)">✎ แก้</button><button class="cpy" onclick="copy('dm')">คัดลอก</button></span></div></div>
+        <h3 class="kh" style="margin-top:34px">QR รับเงิน <small>ส่งให้น้องตอนจ่ายค่าเรียน</small></h3>
+        <div class="bub me"><div class="bt" style="text-align:center"><img src="pay/promptpay-qr.jpg" alt="QR PromptPay" style="max-width:220px;width:100%;display:block;margin:0 auto;border:3px solid var(--ink)"></div><div class="bf"><span class="tplhint">PromptPay · รับได้ทุกธนาคาร</span><span><button class="ghostb" onclick="qrPic()">🖼 บันทึกเป็นรูป</button><button class="cpy" onclick="qrShare()">แชร์</button></span></div></div>
       </section>
     </div>
     <section style="grid-column:1/-1">
@@ -3526,6 +3528,22 @@ function setBuf(k, v){
   save(); renderAvail();
 }
 // the free times as a PNG card (canvas; Thai text uses the page's own Anuphan, so wait for the fonts)
+async function qrBlob(){ const r = await fetch('pay/promptpay-qr.jpg'); if (!r.ok) throw 0; return r.blob(); }
+// share sheet (LINE, Messenger…) where the browser can share files; otherwise fall back to saving the picture
+async function qrShare(){
+  try{
+    const f = new File([await qrBlob()], 'QR-พี่ปราช.jpg', {type:'image/jpeg'});
+    if (navigator.canShare?.({files:[f]})){ await navigator.share({files:[f]}); return; }
+  }catch(e){ if (e?.name === 'AbortError') return; }
+  qrPic();
+}
+async function qrPic(){
+  let blob; try{ blob = await qrBlob(); }catch{ return toast('โหลดรูป QR ไม่สำเร็จ'); }
+  const url = URL.createObjectURL(blob), name = 'QR-พี่ปราช.jpg';
+  if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform))){
+    openModal(`<h3 class="wq">QR รับเงิน</h3><img id="imgprev" src="${url}" alt="QR รับเงิน"><p class="mut" style="text-align:center;font-weight:600">กดค้างที่รูป → บันทึกรูปภาพ · หรือ <a href="${url}" download="${name}" target="_blank" rel="noopener">เปิดรูปในแท็บใหม่</a></p>`);
+  } else { const l = document.createElement('a'); l.href = url; l.download = name; document.body.append(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(url), 4e4); toast('บันทึกรูปแล้ว'); }
+}
 async function freePic(){
   const days = weekDays().filter(d => pickedD.has(isoD(d)) && freeOf(d).length);
   if (!days.length) return toast('ติ๊กวันที่ว่างก่อนนะ');
