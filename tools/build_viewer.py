@@ -5,7 +5,8 @@ into the bank), poster-deck question layout, kinetic animated background (toggle
 prefers-reduced-motion). Features: 4 switchable layouts (poster deck / cards / list / two-pane),
 present mode, random pick, full filters incl. subject/exam/solution status, collapsed solutions with
 in-browser ✓/✗ review marks exported for tools/apply_review.py. No AI-disclaimer banner (personal use)."""
-import re, json, markdown, os
+import re, json, markdown, os, sys
+STUDENT = "--student" in sys.argv   # one offline chemistry-only file for a student -> dist/chem-bank-student.html
 from formulas import FORMULAS
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -299,6 +300,7 @@ def _sortkey(q):  # chem by chapter, then bio bucket, then applied bucket, then 
     if q["subject"] == "applied":
         return (200, [q["app"]], q["id"])
     return (int(q["ch"] or 99), [], q["id"])
+if STUDENT: questions = [q for q in questions if q["subject"] != "bio"]   # chemistry only (applied chem stays)
 questions.sort(key=_sortkey)
 present = {}
 for q in questions:
@@ -403,7 +405,7 @@ EX_DIFF = {"ง่าย": "easy", "กลาง": "medium", "ยาก": "hard"
 EX_TOP = os.path.join(ROOT, "concepts", "exercise-topics.json")
 _EX_ANS = re.compile(r"(?:<br>\s*)?<b>ตอบ\s*(.+?)</b>\s*$", re.S)   # a trailing "ตอบ ..." line -> the answer box
 exercises, extitles = [], {}   # extitles: bank chapter -> worksheet title(s), for the ✎ tile's back face
-if os.path.isdir(EX_DIR):
+if os.path.isdir(EX_DIR) and not STUDENT:   # student edition: exam papers only, no exercises
     extop = json.load(open(EX_TOP, encoding="utf-8")) if os.path.isfile(EX_TOP) else {}
     for fn in sorted(os.listdir(EX_DIR)):
         if not fn.endswith(".py"): continue
@@ -506,9 +508,12 @@ for q in questions:
 print("correct option marked:", sum(c[0] for c in okcount.values()), "/", sum(c[1] for c in okcount.values()),
       "questions with a choice list |", {k: "%d/%d" % tuple(v) for k, v in sorted(okcount.items())})
 
+if STUDENT:   # a few ch04 solutions carry English asides written for Prat ("Which to teach: ..."): teacher-only, drop those blockquotes
+    for q in questions:
+        if q.get("solHtml"): q["solHtml"] = re.sub(r"<blockquote>(?:(?!</blockquote>).)*?teach.*?</blockquote>\s*", "", q["solHtml"], flags=re.S)
 data = {
  "questions": questions, "chapters": CHAPTERS, "solcount": solcount,
- "bioChapters": BIO_CHAPTERS, "appTopics": APP_TOPICS,
+ "bioChapters": {} if STUDENT else BIO_CHAPTERS, "appTopics": APP_TOPICS,
  "exams": {k:{"label":v[0],"color":v[1]} for k,v in EXAMS.items()},
  "years": sorted({q["year"] for q in questions if q["year"]}),
  "types": sorted({q["type"] for q in questions if q["type"]}),
@@ -3178,5 +3183,12 @@ function openChapter(hash){const m=(hash||"").match(/^#ch=(\d\d)$/);if(!m)return
   openChapter(h);})();
 </script></body></html>"""
 
-open(OUT,"w",encoding="utf-8").write(HTML.replace("__DATA__", json.dumps(data, ensure_ascii=False)))
+if STUDENT:
+    import student_pack
+    OUT = os.path.join(ROOT, "dist", "chem-bank-student.html"); os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    out, nimg = student_pack.inline_images(student_pack.student_html(HTML, ROOT).replace("__DATA__", json.dumps(data, ensure_ascii=False)), ROOT)
+    open(OUT, "w", encoding="utf-8").write(out)
+    print("student edition:", nimg, "figures embedded,", round(len(out.encode("utf-8")) / 1e6, 2), "MB")
+else:
+    open(OUT,"w",encoding="utf-8").write(HTML.replace("__DATA__", json.dumps(data, ensure_ascii=False)))
 print("wrote", OUT, "-", len(questions), "questions -", len(examcount), "exam type(s)")

@@ -17,3 +17,7 @@ Thumbs.db
 
 # Local agent config
 .claude/
+
+# student edition output + fetched third-party assets
+dist/
+tools/vendor/
