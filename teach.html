@@ -58,6 +58,8 @@ button{cursor:pointer}
 #app>header{background:var(--ink);color:var(--paper);position:sticky;top:0;z-index:40}
 .bar1{display:flex;align-items:stretch;flex-wrap:wrap;max-width:1180px;margin:0 auto}
 .home{border:0;background:var(--red);color:#fff;font-weight:800;padding:0 16px;font-size:.9rem;display:flex;align-items:center;gap:6px;text-decoration:none;min-height:48px}
+.home.ll{background:var(--blue)}
+@media (max-width:640px){.home{padding:0 12px}.home.ll span{display:none}.home.ll::before{content:"บันทึก"}}
 .home:hover{background:color-mix(in srgb,var(--red) 86%,#000)}
 .title{font-weight:800;font-size:1.05rem;padding:12px 16px;display:flex;align-items:center;gap:10px;white-space:nowrap}
 .title small{font-weight:400;opacity:.6;font-size:.75rem}
@@ -1442,6 +1444,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
 <header>
   <div class="bar1">
     <a class="home" href="index.html" onclick="return toBank()">⌂ <span>คลังข้อสอบ</span></a>
+    <a class="home ll" href="https://lifelog-ebon-seven.vercel.app/" onclick="return toLife()"><span>บันทึกชีวิต</span> ↗</a>
     <span class="title"><span class="shapes"><i class="c"></i><i class="s"></i><i class="t"></i></span>สอนพิเศษ <small>Teaching</small></span>
     <div class="hnav">
       <button class="hbtn" id="mprev" aria-label="เดือนก่อน">◀</button>
@@ -1710,6 +1713,13 @@ function toBank(hash = ''){
   const p = document.createElement('div'); p.className = 'bsheet'; document.body.appendChild(p);
   requestAnimationFrame(() => p.classList.add('on'));
   setTimeout(() => { location.href = 'index.html' + hash; }, 280);
+  return false;
+}
+function toLife(){   // the way back to lifelog (lifelog's สอนพิเศษ ↗ is the way here); same paper-sheet exit as toBank
+  SFX.play('home');
+  const p = document.createElement('div'); p.className = 'bsheet'; document.body.appendChild(p);
+  requestAnimationFrame(() => p.classList.add('on'));
+  setTimeout(() => { (EMBED ? top : window).location.href = 'https://lifelog-ebon-seven.vercel.app/'; }, 280);
   return false;
 }
 addEventListener('pageshow', () => document.querySelectorAll('.bsheet').forEach(p => p.remove()));
