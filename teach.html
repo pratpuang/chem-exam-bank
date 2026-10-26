@@ -7,11 +7,6 @@
 <meta name="color-scheme" content="light">
 <style>html{background:#efe9dc}html.authed #lock{display:none}@view-transition{navigation:auto}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.32s;animation-timing-function:cubic-bezier(.4,0,.2,1)}</style>
-<script>/* arrival from lifelog (?from=life) or a back-button restore: a paper sheet is already on screen and slides up off the page */
-window.arrive=(label)=>{try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;if(!document.getElementById('arrcss')){const s=document.createElement('style');s.id='arrcss';s.textContent='#arr{position:fixed;inset:0;z-index:9999;background:#efe9dc;clip-path:inset(0 0 0 0);transition:clip-path .8s cubic-bezier(.76,0,.24,1);pointer-events:none}#arr.go{clip-path:inset(0 0 100% 0)}#arr b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:800 2rem "Anuphan",sans-serif;color:#141414;transition:opacity .3s ease}#arr.go b{opacity:0}#arr i{position:absolute;left:0;right:0;bottom:0;height:14px;border-top:4px solid #141414;background:linear-gradient(90deg,#e4412b 0 33.3%,#f2b705 33.3% 66.6%,#1f3fbf 66.6% 100%)}';document.documentElement.appendChild(s)}const c=document.createElement('div');c.id='arr';c.innerHTML='<b>'+label+'</b><i></i>';document.documentElement.appendChild(c);requestAnimationFrame(()=>requestAnimationFrame(()=>c.classList.add('go')));setTimeout(()=>c.remove(),1000)}catch(e){}};
-try{if(/[?&]from=(life|teach)\b/.test(location.search))arrive('สอนพิเศษ')}catch(e){}
-addEventListener('pageshow',e=>{if(e.persisted)arrive('สอนพิเศษ')});
-</script>
 <script>/* a stored Supabase session + this device's cache = signed in: hide the login before anything paints */
 try{if(localStorage.getItem('sb-qxotevxhlbjvfyidmeyi-auth-token')&&localStorage.getItem('teach-cache-v1'))document.documentElement.classList.add('authed')}catch(e){}</script>
 <link rel="preconnect" href="https://qxotevxhlbjvfyidmeyi.supabase.co" crossorigin>
@@ -1724,7 +1719,7 @@ function toLife(){   // the way back to lifelog (lifelog's สอนพิเศ
   SFX.play('home');
   const p = document.createElement('div'); p.className = 'bsheet'; document.body.appendChild(p);
   requestAnimationFrame(() => p.classList.add('on'));
-  setTimeout(() => { (EMBED ? top : window).location.href = 'https://lifelog-ebon-seven.vercel.app/?from=teach'; }, 280);
+  setTimeout(() => { (EMBED ? top : window).location.href = 'https://lifelog-ebon-seven.vercel.app/'; }, 280);
   return false;
 }
 addEventListener('pageshow', () => document.querySelectorAll('.bsheet').forEach(p => p.remove()));
