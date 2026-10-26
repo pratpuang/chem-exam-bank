@@ -7,6 +7,11 @@
 <meta name="color-scheme" content="light">
 <style>html{background:#efe9dc}html.authed #lock{display:none}@view-transition{navigation:auto}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.32s;animation-timing-function:cubic-bezier(.4,0,.2,1)}</style>
+<script>/* arrival from lifelog (?from=life) or a back-button restore: a paper sheet is already on screen and slides up off the page */
+window.arrive=()=>{try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;if(!document.getElementById('arrcss')){const s=document.createElement('style');s.id='arrcss';s.textContent='#arr{position:fixed;inset:0;z-index:9999;background:#efe9dc;border-bottom:6px solid #e4412b;transition:transform .6s cubic-bezier(.7,0,.2,1);pointer-events:none}#arr.go{transform:translateY(-101%)}';document.documentElement.appendChild(s)}const c=document.createElement('div');c.id='arr';document.documentElement.appendChild(c);requestAnimationFrame(()=>requestAnimationFrame(()=>c.classList.add('go')));setTimeout(()=>c.remove(),900)}catch(e){}};
+try{if(/[?&]from=(life|teach)\b/.test(location.search))arrive()}catch(e){}
+addEventListener('pageshow',e=>{if(e.persisted)arrive()});
+</script>
 <script>/* a stored Supabase session + this device's cache = signed in: hide the login before anything paints */
 try{if(localStorage.getItem('sb-qxotevxhlbjvfyidmeyi-auth-token')&&localStorage.getItem('teach-cache-v1'))document.documentElement.classList.add('authed')}catch(e){}</script>
 <link rel="preconnect" href="https://qxotevxhlbjvfyidmeyi.supabase.co" crossorigin>
@@ -1719,7 +1724,7 @@ function toLife(){   // the way back to lifelog (lifelog's สอนพิเศ
   SFX.play('home');
   const p = document.createElement('div'); p.className = 'bsheet'; document.body.appendChild(p);
   requestAnimationFrame(() => p.classList.add('on'));
-  setTimeout(() => { (EMBED ? top : window).location.href = 'https://lifelog-ebon-seven.vercel.app/'; }, 280);
+  setTimeout(() => { (EMBED ? top : window).location.href = 'https://lifelog-ebon-seven.vercel.app/?from=teach'; }, 280);
   return false;
 }
 addEventListener('pageshow', () => document.querySelectorAll('.bsheet').forEach(p => p.remove()));
