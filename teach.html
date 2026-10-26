@@ -2297,9 +2297,10 @@ async function loadEvents(y, m){
   if (!sb) return;
   const a = isoD(new Date(y, m, 1)), b = isoD(new Date(y, m + 1, 0));
   const {data, error} = await sb.from('ll_entries').select('id,day,ts,fields').eq('kind', 'event').gte('day', a).lte('day', b);
-  if (error){ console.warn('events', error); return; }
+  if (EVS_KEY !== mkey(y, m)) return;   // he moved on to another month while this was loading: drop it
+  if (error){ console.warn('events', error); EVS_KEY = null; return; }   // retried on the next render
   EVS = {}; (data || []).forEach(r => (EVS[r.day] ||= []).push(r));
-  if (EVS_KEY === mkey(y, m)) renderHolCal();
+  renderHolCal();
 }
 const evRow = id => Object.values(EVS).flat().find(r => r.id === id);
 function showEvDetail(id){
