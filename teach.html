@@ -1215,14 +1215,17 @@ input.tin.scrub,#aw-t.scrub{background:color-mix(in srgb,var(--yel) 45%,transpar
 .ht-sick{--hc:#ef8fb3;--hp:linear-gradient(90deg,transparent 45%,color-mix(in srgb,#fff 60%,transparent) 45% 55%,transparent 55%) 50% 50%/12px 12px,linear-gradient(0deg,transparent 45%,color-mix(in srgb,#fff 60%,transparent) 45% 55%,transparent 55%) 50% 50%/12px 12px}
 .ht-errand{--hc:#f2a33a;--hp:repeating-linear-gradient(45deg,transparent 0 5px,color-mix(in srgb,#141414 12%,transparent) 5px 6px)}
 .ht-off{--hc:#f3b7a8;--hp:repeating-linear-gradient(45deg,transparent 0 7px,color-mix(in srgb,var(--red) 22%,transparent) 7px 9px)}
-/* ---- lifelog events + assignments on the holiday calendar (read-only list, drag a chip to move its day) ---- */
-.evs{display:flex;flex-direction:column;gap:2px;margin-top:3px;width:100%;min-width:0}
-.evc{display:block;font:700 .6rem/1.25 "Anuphan",sans-serif;padding:1px 3px;border:1.5px solid var(--ink);background:var(--card);color:var(--ink);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:grab;touch-action:none;user-select:none}
-.evc.ev-task{background:var(--yel)}
-.evc.ev-off{background:var(--ink);color:var(--paper)}
-.evc.lift{pointer-events:none;opacity:.85;box-shadow:3px 3px 0 var(--ink);position:relative;z-index:5}
-.evmore{font:700 .58rem "Anuphan",sans-serif;font-style:normal;color:var(--mut)}
-#evdet{margin-top:10px;padding:8px 12px;border:2px solid var(--ink);background:var(--card);font:600 .85rem/1.5 "Anuphan",sans-serif}
+/* ---- lifelog events + assignments (ll_entries) on the class calendar: hold a chip, drag it to another day ---- */
+.mc .ev.llev{background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.mc .ev.llev.t-task{background:var(--yel)}
+.mc .ev.llev.t-off{background:var(--red);color:#fff;box-shadow:none}
+.mc .ev.llev.held{opacity:.35}
+.llghost{position:fixed;z-index:400;pointer-events:none;translate:-50% -50%;font:800 .72rem "Anuphan",sans-serif;padding:3px 9px;border:2px solid var(--ink);background:var(--card);color:var(--ink);box-shadow:4px 4px 0 var(--ink);white-space:nowrap}
+.llghost.t-task{background:var(--yel)}.llghost.t-off{background:var(--red);color:#fff}
+#mcal .mc.lldrop{box-shadow:inset 0 0 0 3px var(--yel)}
+.agenda .dlr.llr{background:var(--card);color:var(--ink);border:2px solid var(--ink);border-left-width:8px}
+.agenda .dlr.llr.t-task{border-left-color:var(--yel)}.agenda .dlr.llr.t-off{border-left-color:var(--red)}
+.agenda .ab .dlr:last-child{margin-bottom:12px}
 /* calendar view cells */
 .mc.hol[class*="ht-"]{background:var(--hp),color-mix(in srgb,var(--hc) 38%,var(--card))}
 .mc.hol[class*="ht-"] .n{color:#141414}
@@ -2288,64 +2291,60 @@ function openMonthBreak(y, m){
 }
 
 
-// ---- lifelog events + assignments on this calendar (rows live in ll_entries, owner-only, same account) ----
+// ---- lifelog events + assignments (ll_entries, same account) on the class calendar + its day pane ----
 let EVS = {}, EVS_KEY = null, EVD = null;
-const evCls = f => f.type === 'task' ? 'ev-task' : (f.type === 'holiday' || f.type === 'noteach' || f.holiday) ? 'ev-off' : 'ev-ev';
-const evChips = iso => { const L = EVS[iso] || []; if (!L.length) return '';
-  return `<span class="evs">${L.slice(0, 2).map(r => `<i class="evc ${evCls(r.fields)}" data-eid="${esc(r.id)}">${esc(r.fields.title || 'อีเวนต์')}</i>`).join('')}${L.length > 2 ? `<em class="evmore">+${L.length - 2}</em>` : ''}</span>`; };
+const evT = f => f.type === 'task' ? 't-task' : (f.type === 'holiday' || f.type === 'noteach' || f.holiday) ? 't-off' : 't-ev';
+const evIcon = f => f.type === 'task' ? '📝' : (f.type === 'holiday' || f.holiday) ? '🏖' : f.type === 'noteach' ? '🚫' : '📅';
+const evWhen = f => f.allday ? 'ทั้งวัน' : `${f.time || ''}${f.end ? '–' + f.end : ''}`;
+const evChip = r => `<span class="ev llev ${evT(r.fields)}" data-eid="${esc(r.id)}" title="${esc(evWhen(r.fields))} · กดค้างแล้วลากไปวันอื่น">${evIcon(r.fields)} ${esc(r.fields.title || 'อีเวนต์')}</span>`;
 async function loadEvents(y, m){
   if (!sb) return;
-  const a = isoD(new Date(y, m, 1)), b = isoD(new Date(y, m + 1, 0));
+  const key = mkey(y, m), a = isoD(new Date(y, m, 1)), b = isoD(new Date(y, m + 1, 0));
   const {data, error} = await sb.from('ll_entries').select('id,day,ts,fields').eq('kind', 'event').gte('day', a).lte('day', b);
-  if (EVS_KEY !== mkey(y, m)) return;   // he moved on to another month while this was loading: drop it
+  if (EVS_KEY !== key) return;   // he moved to another month while this was loading
   if (error){ console.warn('events', error); EVS_KEY = null; return; }   // retried on the next render
   EVS = {}; (data || []).forEach(r => (EVS[r.day] ||= []).push(r));
-  renderHolCal();
+  renderCal(false);
 }
 const evRow = id => Object.values(EVS).flat().find(r => r.id === id);
-function showEvDetail(id){
-  const r = evRow(id); if (!r) return;
-  const f = r.fields, when = f.allday ? 'ทั้งวัน' : `${f.time || ''}${f.end ? '–' + f.end : ''}`;
-  const kind = f.type === 'task' ? '📝 งาน / ส่งงาน' : f.type === 'holiday' ? '🏖 วันหยุด' : f.type === 'noteach' ? '🚫 ไม่สอนวันนี้' : '📌 อีเวนต์';
-  let box = document.getElementById('evdet');
-  if (!box){ box = document.createElement('div'); box.id = 'evdet'; $('#calendar').after(box); }
-  box.innerHTML = `<b>${esc(f.title || 'อีเวนต์')}</b> · ${esc(r.day)} ${esc(when)}<br>${kind}${f.place ? ' · 📍 ' + esc(f.place) : ''}<br><span style="color:var(--mut)">ลากชิปไปวันอื่นเพื่อย้ายวัน · แก้รายละเอียดที่ lifelog</span>`;
-}
-async function moveEvent(id, nd){
-  const r = evRow(id); if (!r) return;
-  const newIso = `${my}-${pad(mm_ + 1)}-${pad(nd)}`;
-  if (newIso === r.day) return;
-  const delta = new Date(newIso + 'T00:00') - new Date(r.day + 'T00:00');
+async function moveEvent(id, iso){
+  const r = evRow(id); if (!r || iso === r.day) return;
+  const delta = new Date(iso + 'T00:00') - new Date(r.day + 'T00:00');
   const ts = new Date(new Date(r.ts).getTime() + delta).toISOString();
-  const {error} = await sb.from('ll_entries').update({day: newIso, ts}).eq('id', id);
+  const {error} = await sb.from('ll_entries').update({day: iso, ts}).eq('id', id);
   if (error){ console.warn('move event', error); alert('ย้ายอีเวนต์ไม่ได้ · ลองใหม่'); return; }
-  EVS_KEY = null; loadEvents(my, mm_);
+  EVS_KEY = null; cday = iso; renderCal(false);
 }
-addEventListener('pointerdown', e => { const c = e.target.closest?.('#calendar .evc'); if (!c || e.button !== 0) return;
-  e.stopPropagation(); e.preventDefault();   // the holiday sweep must not start on a chip
-  EVD = {id: c.dataset.eid, el: c, x: e.clientX, y: e.clientY, pid: e.pointerId, armed: false};
-  EVD.t = setTimeout(() => { if (EVD){ EVD.armed = true; c.classList.add('lift'); navigator.vibrate?.(10); } }, 280); }, true);
-addEventListener('pointermove', e => { if (!EVD || e.pointerId !== EVD.pid) return;
-  if (!EVD.armed){ if (Math.hypot(e.clientX - EVD.x, e.clientY - EVD.y) > 8){ clearTimeout(EVD.t); EVD = null; } return; }
-  EVD.el.style.translate = `${e.clientX - EVD.x}px ${e.clientY - EVD.y}px`; });
-const evEnd = async e => { if (!EVD || e.pointerId !== EVD.pid) return; const d = EVD; EVD = null; clearTimeout(d.t);
-  d.el.style.translate = ''; d.el.classList.remove('lift');
-  if (!d.armed){ showEvDetail(d.id); return; }
-  const dayEl = document.elementFromPoint(e.clientX, e.clientY)?.closest('#calendar .day[data-d]');
-  if (dayEl) await moveEvent(d.id, +dayEl.dataset.d); };
-addEventListener('pointerup', evEnd); addEventListener('pointercancel', evEnd);
+// hold a chip ~0.3 s, then drag it onto another day (a ghost follows the finger: the cells clip their own content).
+// A plain tap falls through to the day as usual, and the day pane lists that day's events.
+const dropAt = (x, y) => document.elementFromPoint(x, y)?.closest('#mcal .mc[data-iso]');
+addEventListener('pointerdown', e => { const c = e.target.closest?.('#mcal .llev'); if (!c || e.button !== 0) return;
+  e.stopPropagation();   // not a month swipe, not a class drag
+  const d = EVD = {id: c.dataset.eid, el: c, x: e.clientX, y: e.clientY, pid: e.pointerId, armed: false};
+  d.t = setTimeout(() => { if (EVD !== d) return; d.armed = true; c.classList.add('held'); navigator.vibrate?.(10);
+    d.g = document.createElement('div'); d.g.className = 'llghost ' + evT(evRow(d.id)?.fields || {}); d.g.textContent = c.textContent;
+    d.g.style.left = d.x + 'px'; d.g.style.top = d.y + 'px'; document.body.append(d.g); }, 300); }, true);
+addEventListener('pointermove', e => { const d = EVD; if (!d || e.pointerId !== d.pid) return;
+  if (!d.armed){ if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8){ clearTimeout(d.t); EVD = null; } return; }
+  d.g.style.left = e.clientX + 'px'; d.g.style.top = e.clientY + 'px';
+  const t = dropAt(e.clientX, e.clientY); if (t !== d.over){ d.over?.classList.remove('lldrop'); d.over = t; t?.classList.add('lldrop'); } });
+addEventListener('touchmove', e => { if (EVD?.armed) e.preventDefault(); }, {passive: false});   // armed: the finger drags, the page doesn't scroll
+const evEnd = async e => { const d = EVD; if (!d || e.pointerId !== d.pid) return; EVD = null; clearTimeout(d.t);
+  d.el.classList.remove('held'); d.g?.remove(); d.over?.classList.remove('lldrop');
+  if (!d.armed || e.type !== 'pointerup') return;
+  const t = dropAt(e.clientX, e.clientY); if (t) await moveEvent(d.id, t.dataset.iso); };
+addEventListener('pointerup', evEnd, true); addEventListener('pointercancel', evEnd, true);
 
 function renderHolCal(){
   const y = my, m = mm_, days = new Date(y, m+1, 0).getDate(), off = new Date(y, m, 1).getDay();
   const list = DB.holidays[mkey(y,m)] || (DB.holidays[mkey(y,m)] = []);
-  if (EVS_KEY !== mkey(y, m)){ EVS_KEY = mkey(y, m); loadEvents(y, m); }
   const ses = monthSessions(y, m).filter(s => s.status !== 'cancel');
   $('#ctitle').textContent = `${TH_M[m]} ${String(y+543).slice(-2)} · วันหยุด`;
   let h = TH_D.map(d => `<div class="wd">${d}</div>`).join('') + '<span></span>'.repeat(off);
   const today0 = new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate());
   for (let d = 1; d <= days; d++){
     const date = new Date(y, m, d), iso = isoD(date);
-    h += `<button class="day${date < today0?' past':''}${iso === isoD(NOW)?' today':''}${ses.some(s => s.date === iso)?' has':''}${list.includes(d)?` holiday ht-${holType(iso)}`:''}${holLab(iso)?' lab':''}" aria-pressed="${list.includes(d)}" data-d="${d}"${holLab(iso) ? ` title="${esc(holLab(iso))}"` : ''}>${d}${evChips(iso)}</button>`;
+    h += `<button class="day${date < today0?' past':''}${iso === isoD(NOW)?' today':''}${ses.some(s => s.date === iso)?' has':''}${list.includes(d)?` holiday ht-${holType(iso)}`:''}${holLab(iso)?' lab':''}" aria-pressed="${list.includes(d)}" data-d="${d}"${holLab(iso) ? ` title="${esc(holLab(iso))}"` : ''}>${d}</button>`;
   }
   $('#calendar').innerHTML = h;
   $('#calendar').onclick = null;   // taps and sweeps both go through the sweep below
@@ -3288,6 +3287,7 @@ function calMove(d){ cm += d; if (cm < 0){ cm = 11; cy--; } if (cm > 11){ cm = 0
   if (!reduced){ const g = $('#mcal'); g.classList.remove('slr', 'sll'); void g.offsetWidth; g.classList.add(d > 0 ? 'slr' : 'sll'); } }
 $('#ctoday').onclick = () => { cy = NOW.getFullYear(); cm = NOW.getMonth(); cday = isoD(NOW); renderCal(true); };
 function renderCal(anim){
+  if (EVS_KEY !== mkey(cy, cm)){ EVS_KEY = mkey(cy, cm); loadEvents(cy, cm); }
   const M = monthMoney(cy, cm), hols = (DB.holidays[mkey(cy,cm)] || []).length;
   $('#cmn').textContent = TH_MF[cm]; $('#cyr').textContent = cy + 543;
   $('#ctray').innerHTML = DB.students.length ? `<div class="ctr">${DB.students.map(p => `<span class="trc" data-who="${p.id}" title="ลาก ${esc(p.name)} ไปวางบนวันที่จะเพิ่มคาบ"><i class="${colorOf(p.id)}"></i>${esc(p.name)}</span>`).join('')}</div><span class="ctl">↓ ลากชื่อไปวางบนวัน</span>` : '';
@@ -3297,8 +3297,9 @@ function renderCal(anim){
   for (let k = off-1; k >= 0; k--) h += `<div class="mc out" style="--i:${i++}"><span class="n">${prevDays-k}</span></div>`;
   for (let d = 1; d <= days; d++){
     const iso = `${cy}-${pad(cm+1)}-${pad(d)}`;
-    const items = [...DB.deadlines.filter(x => x.d === iso).map(x => `<span class="ev dl">⚑ ${esc(x.t)}</span>`),
-      ...sorted(ses.filter(s => s.date === iso)).map(e => `<span data-sid="${e.id}" class="ev ${colorOf(e.who)} ${counts(e)?'':'x'} ${clashWith(e).length?'clash':''}" title="${e.time}${clashWith(e).length ? ' · ⚠ ชน' : ''}"><em>${e.time}</em>${esc(st(e.who)?.name)}</span>`)];
+    const evd = EVS[iso] || [];
+    const items = [...DB.deadlines.filter(x => x.d === iso).map(x => `<span class="ev dl">⚑ ${esc(x.t)}</span>`), ...evd.filter(r => evT(r.fields) === 't-off').map(evChip),
+      ...sorted(ses.filter(s => s.date === iso)).map(e => `<span data-sid="${e.id}" class="ev ${colorOf(e.who)} ${counts(e)?'':'x'} ${clashWith(e).length?'clash':''}" title="${e.time}${clashWith(e).length ? ' · ⚠ ชน' : ''}"><em>${e.time}</em>${esc(st(e.who)?.name)}</span>`), ...evd.filter(r => evT(r.fields) !== 't-off').map(evChip)];
     const ht = isHolD(iso) ? holType(iso) : '';
     h += `<button class="mc${iso===isoD(NOW)?' today':''}${ht?` hol ht-${ht}`:''}${iso===cday?' sel':''}" style="--i:${i++}" data-iso="${iso}" data-drop="${iso}"><span class="n">${d}</span>${ht ? `<em class="hltag">${HOLT[ht][0]} ${esc(holLab(iso) || HOLT[ht][1])}</em>` : ''}<span class="evs">${items.slice(0,2).join('')}${items.length > 2 ? `<span class="more">+${items.length-2} อีก</span>` : ''}</span></button>`;
   }
@@ -3314,7 +3315,7 @@ function renderDay(){
   const sum = dayS.filter(counts).reduce((a,s)=>a+amt(s),0);
   const dht = hol ? holType(cday) : '';
   $('#daypane').innerHTML = `<div class="ah ${cday===isoD(NOW)?'today':''} ${hol?`hol ht-${dht}`:''}">${hol ? `<span class="ahic">${HOLT[dht][0]}</span>` : ''}<span class="big">${x.getDate()}</span><h3>${TH_DF[x.getDay()]}</h3><p>${x.getDate()} ${TH_MF[x.getMonth()]} ${x.getFullYear()+543}${relOnly(cday) ? ' · '+relOnly(cday) : ''}</p><p class="ahs">${hol?`<span class="ahlab">${HOLT[dht][0]} ${esc(holLab(cday) || 'วันหยุด')}</span>`:''}${dayS.length ? `${dayS.length} คาบ · ${cash(sum)}` : 'ไม่มีคาบ'}</p></div>
-    <div class="ab">${dl.map(d => `<div class="dlr">⚑ ${esc(d.t)}</div>`).join('')}${dayS.map(s => rw(s)).join('') || (dl.length ? '' : '<div class="free">ว่างทั้งวัน<small>พักได้ หรือเปิดรับน้องเพิ่ม</small></div>')}</div>
+    <div class="ab">${dl.map(d => `<div class="dlr">⚑ ${esc(d.t)}</div>`).join('')}${(EVS[cday] || []).map(r => `<div class="dlr llr ${evT(r.fields)}">${evIcon(r.fields)} ${esc(r.fields.title || 'อีเวนต์')} · ${esc(evWhen(r.fields))}${r.fields.place ? ' · 📍 ' + esc(r.fields.place) : ''}</div>`).join('')}${dayS.map(s => rw(s)).join('') || (dl.length || (EVS[cday] || []).length ? '' : '<div class="free">ว่างทั้งวัน<small>พักได้ หรือเปิดรับน้องเพิ่ม</small></div>')}</div>
     <div class="acts"><button class="go sm" onclick="editSession(null,'${cday}')">＋ คาบวันนี้</button><button class="chip" onclick="toggleHol('${cday}')">${hol ? '↺ ยกเลิกวันหยุด' : '☂ ตั้งเป็นวันหยุด'}</button></div>`;
 }
 
