@@ -1215,17 +1215,22 @@ input.tin.scrub,#aw-t.scrub{background:color-mix(in srgb,var(--yel) 45%,transpar
 .ht-sick{--hc:#ef8fb3;--hp:linear-gradient(90deg,transparent 45%,color-mix(in srgb,#fff 60%,transparent) 45% 55%,transparent 55%) 50% 50%/12px 12px,linear-gradient(0deg,transparent 45%,color-mix(in srgb,#fff 60%,transparent) 45% 55%,transparent 55%) 50% 50%/12px 12px}
 .ht-errand{--hc:#f2a33a;--hp:repeating-linear-gradient(45deg,transparent 0 5px,color-mix(in srgb,#141414 12%,transparent) 5px 6px)}
 .ht-off{--hc:#f3b7a8;--hp:repeating-linear-gradient(45deg,transparent 0 7px,color-mix(in srgb,var(--red) 22%,transparent) 7px 9px)}
-/* ---- lifelog events + assignments (ll_entries) on the class calendar: hold a chip, drag it to another day ---- */
-.mc .ev.llev{background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
-.mc .ev.llev.t-task{background:var(--yel)}
-.mc .ev.llev.t-off{background:var(--red);color:#fff;box-shadow:none}
+/* ---- lifelog events + assignments (ll_entries) on the class calendar: tap = edit, hold + drag = move to another day ---- */
+.mc .ev.llev{background:var(--ink);color:var(--paper);cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .mc .ev.llev.held{opacity:.35}
-.llghost{position:fixed;z-index:400;pointer-events:none;translate:-50% -50%;font:800 .72rem "Anuphan",sans-serif;padding:3px 9px;border:2px solid var(--ink);background:var(--card);color:var(--ink);box-shadow:4px 4px 0 var(--ink);white-space:nowrap}
-.llghost.t-task{background:var(--yel)}.llghost.t-off{background:var(--red);color:#fff}
+.llghost{position:fixed;z-index:400;pointer-events:none;translate:-50% -50%;font:800 .72rem "Anuphan",sans-serif;padding:3px 9px;border:2px solid var(--ink);background:var(--ink);color:var(--paper);box-shadow:4px 4px 0 var(--red);white-space:nowrap}
 #mcal .mc.lldrop{box-shadow:inset 0 0 0 3px var(--yel)}
-.agenda .dlr.llr{background:var(--card);color:var(--ink);border:2px solid var(--ink);border-left-width:8px}
+.agenda .dlr.llr{background:var(--card);color:var(--ink);border:2px solid var(--ink);border-left-width:8px;cursor:pointer}
 .agenda .dlr.llr.t-task{border-left-color:var(--yel)}.agenda .dlr.llr.t-off{border-left-color:var(--red)}
 .agenda .ab .dlr:last-child{margin-bottom:12px}
+.lle label{display:block;font:800 .72rem "JetBrains Mono",monospace;color:var(--mut);margin:12px 0 4px}
+.lle input[type=text],.lle input[type=date],.lle input[type=time]{width:100%;box-sizing:border-box;border:3px solid var(--ink);background:var(--card);padding:8px 10px;font:700 1rem "Anuphan",sans-serif;color:var(--ink)}
+.lle .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lle .seg{display:flex;flex-wrap:wrap;gap:6px}
+.lle .seg button{border:2px solid var(--ink);background:var(--card);padding:6px 10px;font:800 .82rem "Anuphan",sans-serif;cursor:pointer}
+.lle .seg button.on{background:var(--yel)}
+.lle .acts{display:flex;gap:10px;align-items:center;margin-top:18px}
+.lle .warn{color:var(--red);font:700 .85rem "Anuphan",sans-serif;min-height:1.2em;margin-top:8px}
 /* calendar view cells */
 .mc.hol[class*="ht-"]{background:var(--hp),color-mix(in srgb,var(--hc) 38%,var(--card))}
 .mc.hol[class*="ht-"] .n{color:#141414}
@@ -1680,7 +1685,11 @@ const dLabel = date => { const x = new Date(date+'T00:00'); return `${TH_D[x.get
 const relDay = date => { const a = new Date(date+'T00:00'), b = new Date(NOW.getFullYear(),NOW.getMonth(),NOW.getDate()); const n = Math.round((a-b)/864e5); return n===0?'วันนี้':n===1?'พรุ่งนี้':n===-1?'เมื่อวาน':n>1&&n<=7?`อีก ${n} วัน`:n<-1&&n>-7?`${-n} วันก่อน`:dLabel(date); };
 const sorted = list => [...list].sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time));
 // counts toward money unless cancelled; a planned one on a holiday drops out of the forecast
-const counts = s => s.status !== 'cancel' && !(s.status === 'plan' && isHolD(s.date));
+const counts = s => s.status !== 'cancel' && !(s.status === 'plan' && (isHolD(s.date) || llOffHit(s)));
+// a lifelog วันหยุด / ไม่สอนวันนี้ event counts like a teach holiday for the classes it overlaps (all-day = the whole day; no end = its start minute)
+let LLOFF = {};
+const llMin = t => +t.slice(0, 2) * 60 + +t.slice(3, 5);
+const llOffHit = s => (LLOFF[s.date] || []).some(f => { if (f.allday || !f.time) return true; const a = llMin(f.time), b = f.end ? llMin(f.end) : a + 1, c = llMin(s.time), d = c + s.h * 60; return a < d && c < b; });
 // a class asks "สอนแล้ว?" only once it has ENDED; while it's running it reads as live
 const endTime = s => new Date(atOf(s).getTime() + (+s.h || 1) * 36e5);
 const needsConfirm = s => s.status === 'plan' && endTime(s) <= NOW;
@@ -2293,10 +2302,11 @@ function openMonthBreak(y, m){
 
 // ---- lifelog events + assignments (ll_entries, same account) on the class calendar + its day pane ----
 let EVS = {}, EVS_KEY = null, EVD = null;
-const evT = f => f.type === 'task' ? 't-task' : (f.type === 'holiday' || f.type === 'noteach' || f.holiday) ? 't-off' : 't-ev';
+const evOff = f => f.type === 'holiday' || f.type === 'noteach' || !!f.holiday;
+const evT = f => f.type === 'task' ? 't-task' : evOff(f) ? 't-off' : 't-ev';
 const evIcon = f => f.type === 'task' ? '📝' : (f.type === 'holiday' || f.holiday) ? '🏖' : f.type === 'noteach' ? '🚫' : '📅';
 const evWhen = f => f.allday ? 'ทั้งวัน' : `${f.time || ''}${f.end ? '–' + f.end : ''}`;
-const evChip = r => `<span class="ev llev ${evT(r.fields)}" data-eid="${esc(r.id)}" title="${esc(evWhen(r.fields))} · กดค้างแล้วลากไปวันอื่น">${evIcon(r.fields)} ${esc(r.fields.title || 'อีเวนต์')}</span>`;
+const evChip = r => `<span class="ev llev" data-eid="${esc(r.id)}" title="${esc(evWhen(r.fields))} · แตะ = แก้ · กดค้างแล้วลาก = ย้ายวัน">${evIcon(r.fields)} ${esc(r.fields.title || 'อีเวนต์')}</span>`;
 async function loadEvents(y, m){
   if (!sb) return;
   const key = mkey(y, m), a = isoD(new Date(y, m, 1)), b = isoD(new Date(y, m + 1, 0));
@@ -2306,34 +2316,87 @@ async function loadEvents(y, m){
   EVS = {}; (data || []).forEach(r => (EVS[r.day] ||= []).push(r));
   renderCal(false);
 }
+async function loadOff(){   // every lifelog no-teach event, for counts() in every month
+  if (!sb) return;
+  const {data, error} = await sb.from('ll_entries').select('day,fields').eq('kind', 'event');
+  if (error){ console.warn('no-teach events', error); return; }
+  LLOFF = {}; (data || []).filter(r => evOff(r.fields)).forEach(r => (LLOFF[r.day] ||= []).push(r.fields));
+  renderAll();
+}
+setTimeout(loadOff, 1500);
 const evRow = id => Object.values(EVS).flat().find(r => r.id === id);
+const evChanged = () => { EVS_KEY = null; loadOff(); if (openD === 'cal') renderCal(false); };
 async function moveEvent(id, iso){
   const r = evRow(id); if (!r || iso === r.day) return;
   const delta = new Date(iso + 'T00:00') - new Date(r.day + 'T00:00');
   const ts = new Date(new Date(r.ts).getTime() + delta).toISOString();
   const {error} = await sb.from('ll_entries').update({day: iso, ts}).eq('id', id);
   if (error){ console.warn('move event', error); alert('ย้ายอีเวนต์ไม่ได้ · ลองใหม่'); return; }
-  EVS_KEY = null; cday = iso; renderCal(false);
+  cday = iso; evChanged();
 }
-// hold a chip ~0.3 s, then drag it onto another day (a ghost follows the finger: the cells clip their own content).
-// A plain tap falls through to the day as usual, and the day pane lists that day's events.
+// tap a chip (or its row in the day pane) = edit it here; the row stays the same lifelog entry
+const EVTYPES = [['event', '📌 อีเวนต์'], ['holiday', '🏖 วันหยุด'], ['noteach', '🚫 ไม่สอนวันนี้'], ['task', '📝 งาน / ส่งงาน']];
+function editEvent(id){
+  const r = evRow(id); if (!r) return;
+  const f = r.fields, st = {type: f.type || (f.holiday ? 'holiday' : 'event'), allday: !!f.allday};
+  openModal(`<div class="lle"><h3 style="margin:0 0 4px">แก้อีเวนต์</h3><small style="color:var(--mut)">เป็นรายการเดียวกับใน lifelog</small>
+    <label>ชื่อ</label><input type="text" id="lleT" maxlength="80" value="${esc(f.title || '')}">
+    <label>วัน</label><input type="date" id="lleD" value="${esc(r.day)}">
+    <label>แบบ</label><div class="seg" id="lleA"><button data-a="0">⏱ เวลา</button><button data-a="1">☀ ทั้งวัน</button></div>
+    <div class="two" id="lleTm"><div><label>เริ่ม</label><input type="time" id="lleS" value="${esc(f.time || '')}"></div><div><label>จบ</label><input type="time" id="lleE" value="${esc(f.end || '')}"></div></div>
+    <label>ประเภท</label><div class="seg" id="lleY">${EVTYPES.map(([k, t]) => `<button data-y="${k}">${t}</button>`).join('')}</div>
+    <label>ที่ไหน</label><input type="text" id="lleP" maxlength="80" value="${esc(f.place || '')}">
+    <div class="warn" id="lleW"></div>
+    <div class="acts"><button class="go sm" id="lleSave">บันทึก</button><button class="chip" id="lleDel">ลบ</button><span style="flex:1"></span><button class="chip" id="lleX">ปิด</button></div></div>`);
+  const paint = () => { document.querySelectorAll('#lleA button').forEach(b => b.classList.toggle('on', (b.dataset.a === '1') === st.allday));
+    document.querySelectorAll('#lleY button').forEach(b => b.classList.toggle('on', b.dataset.y === st.type)); $('#lleTm').hidden = st.allday; };
+  paint();
+  $('#lleA').onclick = e => { const b = e.target.closest('button'); if (b){ st.allday = b.dataset.a === '1'; paint(); } };
+  $('#lleY').onclick = e => { const b = e.target.closest('button'); if (b){ st.type = b.dataset.y; paint(); } };
+  $('#lleX').onclick = closeModal;
+  $('#lleSave').onclick = async () => {
+    const title = $('#lleT').value.trim(), day = $('#lleD').value, t0 = $('#lleS').value, t1 = $('#lleE').value, w = m => $('#lleW').textContent = m;
+    if (!title) return w('ใส่ชื่อก่อน'); if (!day) return w('ใส่วันก่อน'); if (!st.allday && !t0) return w('ใส่เวลาเริ่ม หรือเลือกทั้งวัน');
+    if (!st.allday && t1 && t1 <= t0) return w('เวลาจบต้องหลังเวลาเริ่ม');
+    const fields = {...f, title, allday: st.allday, time: st.allday ? null : t0, end: st.allday || !t1 ? null : t1, type: st.type, place: $('#lleP').value.trim()};
+    delete fields.holiday;
+    const ts = new Date(`${day}T${st.allday ? '00:00' : t0}`).toISOString();
+    $('#lleSave').disabled = true;
+    const {error} = await sb.from('ll_entries').update({day, ts, fields}).eq('id', id);
+    if (error){ console.warn('edit event', error); $('#lleSave').disabled = false; return w('บันทึกไม่ได้ · ลองใหม่'); }
+    closeModal(); cday = day; evChanged();
+  };
+  $('#lleDel').onclick = async () => {
+    const b = $('#lleDel'); if (!b.classList.contains('sure')){ b.classList.add('sure'); b.textContent = 'ลบเลย?'; return; }
+    const {error} = await sb.from('ll_entries').delete().eq('id', id);
+    if (error){ console.warn('delete event', error); return $('#lleW').textContent = 'ลบไม่ได้ · ลองใหม่'; }
+    closeModal(); evChanged();
+  };
+}
+// hold a chip ~0.3 s, then drag it onto another day (a ghost follows the finger: the cells clip their own content). A quick tap opens the editor.
 const dropAt = (x, y) => document.elementFromPoint(x, y)?.closest('#mcal .mc[data-iso]');
 addEventListener('pointerdown', e => { const c = e.target.closest?.('#mcal .llev'); if (!c || e.button !== 0) return;
   e.stopPropagation();   // not a month swipe, not a class drag
   const d = EVD = {id: c.dataset.eid, el: c, x: e.clientX, y: e.clientY, pid: e.pointerId, armed: false};
   d.t = setTimeout(() => { if (EVD !== d) return; d.armed = true; c.classList.add('held'); navigator.vibrate?.(10);
-    d.g = document.createElement('div'); d.g.className = 'llghost ' + evT(evRow(d.id)?.fields || {}); d.g.textContent = c.textContent;
+    d.g = document.createElement('div'); d.g.className = 'llghost'; d.g.textContent = c.textContent;
     d.g.style.left = d.x + 'px'; d.g.style.top = d.y + 'px'; document.body.append(d.g); }, 300); }, true);
 addEventListener('pointermove', e => { const d = EVD; if (!d || e.pointerId !== d.pid) return;
   if (!d.armed){ if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 8){ clearTimeout(d.t); EVD = null; } return; }
   d.g.style.left = e.clientX + 'px'; d.g.style.top = e.clientY + 'px';
   const t = dropAt(e.clientX, e.clientY); if (t !== d.over){ d.over?.classList.remove('lldrop'); d.over = t; t?.classList.add('lldrop'); } });
 addEventListener('touchmove', e => { if (EVD?.armed) e.preventDefault(); }, {passive: false});   // armed: the finger drags, the page doesn't scroll
+addEventListener('contextmenu', e => { if (e.target.closest?.('#mcal .llev')) e.preventDefault(); });   // no long-press menu on a chip
 const evEnd = async e => { const d = EVD; if (!d || e.pointerId !== d.pid) return; EVD = null; clearTimeout(d.t);
   d.el.classList.remove('held'); d.g?.remove(); d.over?.classList.remove('lldrop');
-  if (!d.armed || e.type !== 'pointerup') return;
-  const t = dropAt(e.clientX, e.clientY); if (t) await moveEvent(d.id, t.dataset.iso); };
+  if (!d.armed) return;   // a tap: the click below opens the editor (opening it here, the tap's own click would land on the backdrop and close it)
+  evAte = Date.now() + 600;
+  // drop on the last day the ghost was over: iOS can end a long press with pointercancel instead of pointerup
+  const t = (e.type === 'pointerup' && dropAt(e.clientX, e.clientY)) || d.over; if (t) await moveEvent(d.id, t.dataset.iso); };
 addEventListener('pointerup', evEnd, true); addEventListener('pointercancel', evEnd, true);
+let evAte = 0;   // until this time, the click that follows a drag is swallowed
+addEventListener('click', e => { const c = e.target.closest?.('#mcal .llev'); if (!c) return; e.stopPropagation(); e.preventDefault();
+  if (Date.now() >= evAte) editEvent(c.dataset.eid); }, true);
 
 function renderHolCal(){
   const y = my, m = mm_, days = new Date(y, m+1, 0).getDate(), off = new Date(y, m, 1).getDay();
@@ -3315,7 +3378,7 @@ function renderDay(){
   const sum = dayS.filter(counts).reduce((a,s)=>a+amt(s),0);
   const dht = hol ? holType(cday) : '';
   $('#daypane').innerHTML = `<div class="ah ${cday===isoD(NOW)?'today':''} ${hol?`hol ht-${dht}`:''}">${hol ? `<span class="ahic">${HOLT[dht][0]}</span>` : ''}<span class="big">${x.getDate()}</span><h3>${TH_DF[x.getDay()]}</h3><p>${x.getDate()} ${TH_MF[x.getMonth()]} ${x.getFullYear()+543}${relOnly(cday) ? ' · '+relOnly(cday) : ''}</p><p class="ahs">${hol?`<span class="ahlab">${HOLT[dht][0]} ${esc(holLab(cday) || 'วันหยุด')}</span>`:''}${dayS.length ? `${dayS.length} คาบ · ${cash(sum)}` : 'ไม่มีคาบ'}</p></div>
-    <div class="ab">${dl.map(d => `<div class="dlr">⚑ ${esc(d.t)}</div>`).join('')}${(EVS[cday] || []).map(r => `<div class="dlr llr ${evT(r.fields)}">${evIcon(r.fields)} ${esc(r.fields.title || 'อีเวนต์')} · ${esc(evWhen(r.fields))}${r.fields.place ? ' · 📍 ' + esc(r.fields.place) : ''}</div>`).join('')}${dayS.map(s => rw(s)).join('') || (dl.length || (EVS[cday] || []).length ? '' : '<div class="free">ว่างทั้งวัน<small>พักได้ หรือเปิดรับน้องเพิ่ม</small></div>')}</div>
+    <div class="ab">${dl.map(d => `<div class="dlr">⚑ ${esc(d.t)}</div>`).join('')}${(EVS[cday] || []).map(r => `<div class="dlr llr ${evT(r.fields)}" onclick="editEvent('${esc(r.id)}')" role="button" tabindex="0">${evIcon(r.fields)} ${esc(r.fields.title || 'อีเวนต์')} · ${esc(evWhen(r.fields))}${r.fields.place ? ' · 📍 ' + esc(r.fields.place) : ''}</div>`).join('')}${dayS.map(s => rw(s)).join('') || (dl.length || (EVS[cday] || []).length ? '' : '<div class="free">ว่างทั้งวัน<small>พักได้ หรือเปิดรับน้องเพิ่ม</small></div>')}</div>
     <div class="acts"><button class="go sm" onclick="editSession(null,'${cday}')">＋ คาบวันนี้</button><button class="chip" onclick="toggleHol('${cday}')">${hol ? '↺ ยกเลิกวันหยุด' : '☂ ตั้งเป็นวันหยุด'}</button></div>`;
 }
 
