@@ -40,6 +40,7 @@ EXAMS = {
  "alevel": ("A-Level",      "#0d9488"),
  "samanya":("9 วิชาสามัญ",  "#7c3aed"),
  "pat2":   ("PAT2",         "#db2777"),
+ "ijso":   ("IJSO",         "#0284c7"),   # #ver/<edition> = ครั้งที่ N (see project CLAUDE.md)
  "onet":   ("O-NET",        "#16a34a"),
  "school": ("โรงเรียน",     "#d97706"),
  "unknown":("ยังไม่ระบุ",   "#64748b"),
@@ -237,6 +238,14 @@ def md_render(t):
 txt = open(SRC, encoding="utf-8").read()
 blocks = re.split(r"(?m)^### (Q-\d+)\b", txt)
 questions = []
+# printed order inside one paper, from the Source line: "…, ข้อ 12" -> 12; a numbered sub-section
+# ("ข้ออัตนัย 3") sorts after every plain ข้อ; no number at all -> last
+def pno(src):
+    m = re.search(r"ข้อ\s*(\d+)", src)
+    if m: return int(m.group(1))
+    m = re.search(r"ข้อ\S*\s*(\d+)", src)
+    return 10000 + int(m.group(1)) if m else 99999
+
 META = ("**Answer:**","**Source:**","**Note:**","**Also appears:**","**Figure:**")
 for i in range(1, len(blocks), 2):
     qid = blocks[i].strip()
@@ -290,7 +299,7 @@ for i in range(1, len(blocks), 2):
         "diff": tag("diff"), "type": tag("type"),
         "bodyHtml": md_render(body_md),
         "snippet": snip,
-        "answer": meta.get("Answer",""), "source": meta.get("Source",""),
+        "answer": meta.get("Answer",""), "source": meta.get("Source",""), "pno": pno(meta.get("Source","")),
         "note": chem_notation(meta.get("Note","")), "figure": meta.get("Figure",""),
         "search": (body_md+" "+header).lower(),
     })
@@ -1380,6 +1389,7 @@ body[data-subj=bio] .lfst{display:none}
 .sexb:hover,.sexb:focus-visible{background:var(--yel);color:#141414}
 /* the ✎ tile slides over like a chapter stats tile; its back lists the exercise chapters (tap a row = that chapter's exercises) */
 .exrows{display:flex;flex-direction:column;gap:5px}
+.pfam{margin-top:6px}.pfam i{display:inline-block;width:9px;height:9px;margin-right:6px}
 .exr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:10px;row-gap:5px;align-items:center;border:2px solid var(--ink);background:var(--card);color:var(--ink);padding:6px 10px;font:inherit;text-align:left;cursor:pointer}
 .exr:hover,.exr:focus-visible{background:var(--yel);color:#141414;outline:0}
 .exn{grid-row:span 2;font-size:1.7rem;font-weight:800;line-height:.9;text-align:center}
@@ -1916,6 +1926,7 @@ function qMatch(x,f,skip){
   if(f.st&&!["st","ch","subj"].includes(skip)&&!x.topics.includes(f.st)) return false;   // anywhere in its list; a topic lives under one chapter: it never narrows the chapter/subject lists
   if(skip!=="ex"&&f.ex&&!f.ex.split("+").includes(x.exam)) return false;   // "samanya+alevel" = either
   if(skip!=="yr"&&f.yr&&x.year!==f.yr) return false;
+  if(PAPER&&!["ex","yr","subj"].includes(skip)&&(x.ver!==PAPER.v||(subjOf(x)==="bio")!==PAPER.bio)) return false;   // one sitting (exam + year via the selects)
   if(skip!=="df"&&f.df&&x.diff!==f.df) return false;
   if(skip!=="tp"&&f.tp&&x.type!==f.tp) return false;
   if(skip!=="sl"&&f.sl){const hs=hasSol(x),sl=f.sl;
@@ -1951,13 +1962,16 @@ function syncFacets(f){
   if(SC.have){const pool=DATA.questions.filter(x=>qMatch(x,f,"sl"));
     fill($("#fsol"),"วิธีทำ: ทั้งหมด",SOLOPTS.map(([v,l])=>[v,l,pool.filter(x=>qMatch(x,{...f,sl:v},null)).length]));}}
 function apply(keepPos){
-  let f=fstate();syncFacets(f);f=fstate();   // a select can fall back to "all" when its value vanished
+  let f=fstate();
+  if(PAPER&&(f.ex!==PAPER.e||f.yr!==PAPER.y||f.subj&&(f.subj==="bio")!==PAPER.bio))PAPER=null;   // another exam/year/subject picked: no longer one paper
+  syncFacets(f);f=fstate();   // a select can fall back to "all" when its value vanished
   const had=filtered.length;filtered=DATA.questions.filter(x=>qMatch(x,f));
+  if(PAPER)filtered.sort((a,b)=>a.pno-b.pno||(a.id<b.id?-1:1));   // printed order: ข้อ 1 → N, unnumbered last
   // palette follows the subject on screen: the subject filter, else a result set that's all one subject
   const bioN=filtered.filter(x=>x.subject==="bio").length;
   setSubj(f.subj?(f.subj==="bio"?"bio":"chem"):!filtered.length?SUBJ:bioN===filtered.length?"bio":bioN?SUBJ:"chem");
   if(!keepPos) pIdx=0;
-  $("#count").textContent=`${filtered.length} / ${DATA.questions.length} ข้อ`;
+  $("#count").textContent=PAPER?`${paperLabel(PAPER.e,PAPER.y,PAPER.v)} · ${filtered.length} ข้อ`:`${filtered.length} / ${DATA.questions.length} ข้อ`;
   render();if(had&&!filtered.length)SFX.play("empty");   // only on the step INTO no results, not every keystroke there
   const id=$("#q").value.trim().toUpperCase();if(/^Q-\d{4}$/.test(id))seen(filtered.find(x=>x.id===id));
 }
@@ -2013,7 +2027,7 @@ function cardHtml(q,idx){return `<div class="card lv-${q.diff}${exCls(q)}${idx<1
 function renderCards(R){
   let html="",lastG=null;
   filtered.forEach((q,i)=>{
-    if(q.groupKey!==lastG){lastG=q.groupKey;html+=chapH(q);}
+    if(!PAPER&&q.groupKey!==lastG){lastG=q.groupKey;html+=chapH(q);}
     html+=cardHtml(q,i);
   });
   R.innerHTML=html;
@@ -2022,11 +2036,11 @@ function renderCards(R){
 function renderList(R){
   let html="",lastG=null;
   filtered.forEach((q,i)=>{
-    if(q.groupKey!==lastG){lastG=q.groupKey;html+=chapH(q);}
+    if(!PAPER&&q.groupKey!==lastG){lastG=q.groupKey;html+=chapH(q);}
     html+=`<div class="row${exCls(q)}" data-i="${i}">
       <div class="row-h"><span class="chev">▸</span><span class="row-id">${q.id}</span>
         <span class="diff-txt de-${q.diff}">${DIFF_TH[q.diff]||""}</span>
-        <span class="row-snip">${q.snippet||""}</span>${topicBadge(q,false,true)}${examBadge(q)}</div>
+        <span class="row-snip">${q.snippet||""}</span>${PAPER?chBadge(q):""}${topicBadge(q,false,true)}${examBadge(q)}</div>
       <div class="row-body"><div class="body">${q.bodyHtml}${figHtml(q)}</div>
         ${solHtml(q)}
         <div class="foot">${footHtml(q)}
@@ -2840,7 +2854,7 @@ function heroHtml(){
   const nav=SUBJS.length<2?"":`<div class="hnav"><button class="hdot${si===0?" on":""}" data-s="0">${ICON.chem}เคมี</button><button class="hdot${si===1?" on":""}" data-s="1">${ICON.bio}ชีววิทยา</button>
     <button class="harr hsp" data-d="-1" title="วิชาก่อนหน้า (←)">‹</button><button class="harr" data-d="1" title="วิชาถัดไป (→)">›</button></div>`;
   return `<div class="tile hero" tabindex="0" aria-label="เลือกวิชา · ปัดหรือกด ← →">${nav}<div class="tup"><span class="a">⇡ ปัดขึ้น → สอนพิเศษ</span><span class="b">ปล่อยเลย ✓</span></div><div class="htrack">
-    <div class="hpanel"><b>${DATA.chemcount}${ICON.chem}</b><span>ข้อสอบเคมี<br>แยกตามบท</span><small>สอวน. · PAT2 · A-Level · 9 วิชาสามัญ<br>เลือกบทด้านข้าง หรือกด ทุกบท</small></div>
+    <div class="hpanel"><b>${DATA.chemcount}${ICON.chem}</b><span>ข้อสอบเคมี<br>แยกตามบท</span><small>${PAPERS.filter(([k])=>DATA.questions.some(q=>q.exam===k&&subjOf(q)==="chem")).map(p=>p[1]).join(" · ")}<br>เลือกบทด้านข้าง หรือกด ทุกบท</small></div>
     ${SUBJS.length>1?`<div class="hpanel"><b>${DATA.biocount}${ICON.bio}</b><span>ข้อสอบชีววิทยา<br>แยกตามหัวข้อ</span><small>${bex}${yr}<br>เลือกหัวข้อด้านข้าง หรือกด ทุกหัวข้อ</small></div>`:""}</div></div>`;}
 /* every tile that depends on the chosen subject (rebuilt on a switch; hero + recent stay put) */
 function subjTiles(){
@@ -2851,6 +2865,9 @@ function subjTiles(){
   h+=`<button class="tile c-yel" data-go="random" style="--i:${i++}"><span class="no">🎲</span><span class="nm">สุ่ม 1 ข้อ</span><span class="ct">จาก${name}ทั้งหมด</span></button>`;
   if(!bio&&EXN)h+=`<div class="tile c-card ex st" data-ch="ex" style="--i:${i++}"><button class="tface" data-go="ex" aria-keyshortcuts="ArrowLeft ArrowRight"><span class="no">✎</span><span class="nm">แบบฝึกหัด</span><span class="ct">${EXN} ข้อ · มีเฉลยทุกข้อ</span></button>
     <div class="tback" role="region" aria-label="แบบฝึกหัดแยกตามบท"></div></div>`;   // slides like a chapter stats tile
+  const np=paperList().length;
+  if(np)h+=`<div class="tile c-blue st" data-ch="paper" style="--i:${i++}"><button class="tface" data-go="papers" aria-keyshortcuts="ArrowLeft ArrowRight"><span class="no">№</span><span class="nm">ข้อสอบทั้งฉบับ</span><span class="ct">${np} ฉบับ · เรียงตามข้อ</span></button>
+    <div class="tback" role="region" aria-label="ข้อสอบทั้งฉบับ"></div></div>`;   // same turn as the ✎ tile; a tap on the face turns it too
   groups.forEach(([k,gname,c],j)=>{if(!c)return;
     const cv=cov(pool.filter(q=>chOf(q,SUBJ)===k)),cls=`tile ${P[j%P.length]} ${tileSize(c,max)}`,n=parseInt(k),ii=i++;
     const face=`<span class="no">${n}</span><span class="nm">${gname}</span>
@@ -2939,10 +2956,14 @@ window.addEventListener("resize",()=>{if(document.body.classList.contains("inapp
    over to its sub-topic bars + difficulty split; slide either way / ←→ / ✕ / Esc turns it back. One open at a time; the paper
    chips are one global choice, remembered. A bar opens the app on that chapter + sub-topic + those papers. ---- */
 // exam papers only: exercises have their own ✎ button + ▾ bars on the tile (the old 5th "✎ แบบฝึกหัด" chip is gone, 2026-09-26)
-const PAPERS=[["posn","สอวน."],["pat2","PAT2"],["alevel","A-Level"],["samanya","9 วิชาสามัญ"]];
+const PAPERS=[["posn","สอวน."],["pat2","PAT2"],["alevel","A-Level"],["samanya","9 วิชาสามัญ"],["ijso","IJSO"]];
 let PSEL=[];try{PSEL=JSON.parse(ls.get("cqb_papers","[]"));}catch(e){}
+// a chip added later (IJSO, 2026-10) starts ON for anyone who had every chip they'd seen on; cqb_papers_known = those chips
+const PKNOWN=ls.get("cqb_papers_known","posn,pat2,alevel,samanya").split(",");
+if(Array.isArray(PSEL)&&PSEL.length&&PKNOWN.every(k=>PSEL.includes(k)))PSEL=PSEL.concat(PAPERS.map(p=>p[0]).filter(k=>!PKNOWN.includes(k)));
 PSEL=PAPERS.map(p=>p[0]).filter(k=>Array.isArray(PSEL)&&PSEL.includes(k));if(!PSEL.length)PSEL=PAPERS.map(p=>p[0]);
 ls.set("cqb_papers",JSON.stringify(PSEL));   // write the cleaned list back: drops a stale "ex" saved by the old chip
+ls.set("cqb_papers_known",PAPERS.map(p=>p[0]).join(","));
 const EXC={};DATA.questions.forEach(q=>{if(isEx(q))EXC[q.ch]=(EXC[q.ch]||0)+1;});   // exercises per chapter
 const examSel=()=>PSEL.length===PAPERS.length?(EXN?EXONLY:""):PSEL.join("+");   // every paper on = every exam, still no exercises
 const RM=matchMedia("(prefers-reduced-motion:reduce)");
@@ -2961,6 +2982,28 @@ function statBody(ch){
     ${EXC[ch]?`<div class="exi"><div class="exhd"><button class="sexb" data-go="exch" data-ch="${ch}">✎ +${EXC[ch]} แบบฝึกหัด</button>
       <button class="xtg" data-x="st${ch}" aria-expanded="${XOPEN.has("st"+ch)}" aria-controls="xb-st${ch}" aria-label="หัวข้อย่อยแบบฝึกหัดบท ${n}" title="หัวข้อย่อยแบบฝึกหัด"><i aria-hidden="true">▾</i></button></div>
       ${xBars(ch,"st"+ch)}</div>`:""}</div>`;}
+/* ---- whole papers: one row per real sitting = exam + year + ver (PAT2 mar/jul/oct, IJSO's edition #ver/NN), for the
+   subject on the board (chem board = chem + applied, bio board = bio), exercises never. A row opens that paper in
+   printed order (q.pno, the ข้อ number from its Source line). PAPER = the paper open in the app, null = none. ---- */
+let PAPER=null;
+const PVER={mar:"มี.ค.",jul:"ก.ค.",oct:"ต.ค."},VORD=v=>+v||["mar","jul","oct"].indexOf(v)+1;
+function paperLabel(e,y,v){const l=(DATA.exams[e]||{label:e}).label;
+  return e==="ijso"?(v?`${l} ครั้งที่ ${v} · ${y}`:`${l} · ${y}`):`${l} ${y}${v?" · "+(PVER[v]||v):""}`;}
+function paperList(){
+  const m={},fam=[...PAPERS.map(p=>p[0]),...Object.keys(DATA.examcount||{}).filter(k=>k!=="ex"&&!PAPERS.some(p=>p[0]===k))];
+  DATA.questions.forEach(q=>{if(isEx(q)||(subjOf(q)==="bio")!==(SUBJ==="bio"))return;const k=[q.exam,q.year,q.ver].join("|");m[k]=(m[k]||0)+1;});
+  return Object.entries(m).map(([k,n])=>{const[e,y,v]=k.split("|");return{k,e,y,v,n};})
+    .sort((a,b)=>fam.indexOf(a.e)-fam.indexOf(b.e)||b.y.localeCompare(a.y)||VORD(b.v)-VORD(a.v));}   // newest first
+function paperBody(){
+  const L=paperList();let h="",last=null;
+  L.forEach((p,k)=>{const lb=paperLabel(p.e,p.y,p.v);
+    if(p.e!==last){last=p.e;const x=DATA.exams[p.e]||{label:p.e,color:"#64748b"};
+      h+=`<div class="scap pfam"><i style="background:${x.color}"></i>${x.label} · ${L.filter(r=>r.e===p.e).length} ฉบับ</div>`;}
+    h+=`<button class="exr" data-go="paper" data-p="${p.k}" data-k="${k}" title="เปิด ${lb} เรียงตามข้อ"><span class="exn"><small>พ.ศ.</small>${p.y}</span>
+      <span class="ext"><span>${lb}</span></span><b>${p.n} ข้อ</b></button>`;});
+  return `<div class="sth"><span class="sn">№</span><span class="snm">ข้อสอบทั้งฉบับ · ${L.length} ฉบับ<small>เรียงตามข้อในกระดาษ</small></span>
+    <button class="tbx" title="กลับ (Esc)" aria-label="ปิดรายการข้อสอบทั้งฉบับ">✕</button></div>
+  <div class="sbody"><div class="scap">แตะเพื่อเปิดทั้งฉบับ · ข้อ 1 → ข้อสุดท้าย</div><div class="exrows">${h}</div></div>`;}
 // the ✎ tile's back: one row per exercise chapter -- count, difficulty mini-bar, ⚠ while its answers are unverified
 function exBody(){
   const rows=Object.keys(EXC).sort().map((ch,k)=>{const qs=DATA.questions.filter(q=>isEx(q)&&q.ch===ch),df={easy:0,medium:0,hard:0};
@@ -3007,7 +3050,7 @@ function statSet(t,open,tx=0,dir=open?-1:1){
     const kids=[...B.children].filter(el=>!el.classList.contains("deco")),F=new Map(kids.map(el=>[el,el.getBoundingClientRect()]));
     if(prev)prev.classList.remove("open");
     t.classList.toggle("open",open);
-    if(open){XOPEN.clear();t.querySelector(".tback").innerHTML=t.dataset.ch==="ex"?exBody():statBody(t.dataset.ch);}
+    if(open){XOPEN.clear();t.querySelector(".tback").innerHTML=t.dataset.ch==="ex"?exBody():t.dataset.ch==="paper"?paperBody():statBody(t.dataset.ch);}
     repack();B.querySelectorAll(".tile.deco").forEach(d=>d.style.animationDelay=".12s");
     if(!RM.matches)kids.forEach(el=>{const a=F.get(el),b=el.getBoundingClientRect(),E={duration:440,easing:"cubic-bezier(.2,.9,.3,1)"};
       if(turn.includes(el)){const dx=a.left+a.width/2-b.left-b.width/2,dy=a.top+a.height/2-b.top-b.height/2;
@@ -3062,7 +3105,7 @@ $("#lq").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();l
 $("#lgo").onclick=lsGo;
 // ...then re-list every option: syncFacets drops options that had 0 hits under the LAST filter, so
 // without this a tile could set #fsubj="bio" on a select that no longer has a "bio" option
-function resetFilters(){$("#q").value="";$("#fsubj").value="";populateChapters("");["#ftopic","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).value="");syncFacets(fstate());}
+function resetFilters(){PAPER=null;$("#q").value="";$("#fsubj").value="";populateChapters("");["#ftopic","#fexam","#fyear","#fdiff","#ftype","#fsol"].forEach(s=>$(s).value="");syncFacets(fstate());}
 function enterApp(x,y,fn){
   const app=$("#app");app.style.setProperty("--x",x+"px");app.style.setProperty("--y",y+"px");
   fn();document.body.classList.add("inapp");app.classList.add("show","opening");window.scrollTo(0,0);
@@ -3077,12 +3120,15 @@ $("#board").addEventListener("click",e=>{
   const tb=e.target.closest("button.b-st");if(tb){const r=tb.getBoundingClientRect();SFX.play("bar",0);setTimeout(()=>SFX.play("whoosh"),70);   // sub-topic badge on the recent block
     enterApp(r.left+r.width/2,r.top+r.height/2,()=>{resetFilters();topicFilters(tb.dataset.ch,tb.dataset.st);apply();});return;}
   const t=e.target.closest("[data-go]");if(!t||t.disabled)return;
+  if(t.dataset.go==="papers"){statSet(t.closest(".tile"),true);return;}
   const r=t.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,g=t.dataset.go;
   const xg=g==="ex"||g==="exch"||g==="extopic";   // ✎ destinations: exercises only
   SFX.play(g==="topic"?"bar":xg?"exOpen":"tile",+t.dataset.k);setTimeout(()=>SFX.play("whoosh"),70);
   enterApp(x,y,()=>{
     resetFilters();
     if(g==="qid"){$("#q").value=t.dataset.q;}
+    else if(g==="paper"){const[e,y,v]=t.dataset.p.split("|");PAPER={e,y,v,bio:SUBJ==="bio"};
+      if(PAPER.bio){$("#fsubj").value="bio";populateChapters("bio");}$("#fexam").value=e;$("#fyear").value=y;}
     else{const s=g==="applied"?"applied":SUBJ;$("#fsubj").value=s;populateChapters(s);   // every other tile is scoped to the subject
       if(EXN&&s==="chem"&&g!=="topic"){const ex=xg?"ex":EXONLY;opt($("#fexam"),ex,ex);$("#fexam").value=ex;}   // ✎ tiles: exercises only; the rest: exams only
       if(g==="ch"||g==="exch"||g==="extopic")$("#fch").value=t.dataset.ch;

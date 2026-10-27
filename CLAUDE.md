@@ -51,6 +51,16 @@ question bank. These rules keep every session consistent. Follow them exactly.
 `#ch/<NN>` `#exam/<slug>` `#year/<YYYY>` `#ver/<midterm|final|quiz|...>` `#diff/<easy|medium|hard>` `#type/<mcq|short|calc|essay>`
 - `#ch/NN` = two-digit chapter number 01–14 from the taxonomy above (e.g. ปริมาณสารสัมพันธ์ → `#ch/07`).
 - `#exam/` = which exam it's from: `posn` (สอวน.), `alevel`, etc. Add new slugs as needed; keep them lowercase ascii.
+- **One paper = `#exam` + `#year` + `#ver`.** The site's "ข้อสอบทั้งฉบับ" tile lists one row per distinct
+  combination and opens it in printed order, read from the `ข้อ N` in `**Source:**` — so every question
+  needs `ข้อ N` there. PAT2 uses `#ver/mar|jul|oct` (separate sittings in one year).
+- **IJSO (`#exam/ijso`) — the edition goes in `#ver/<N>`** (plain number, no leading zero), year is B.E.:
+  ```
+  **Tags:** #ch/04 #exam/ijso #year/2568 #ver/22 #diff/medium #type/mcq
+  **Source:** IJSO ครั้งที่ 22 รอบ 1, 2568, ข้อ 12
+  ```
+  The site labels that paper `IJSO ครั้งที่ 22 · 2568`; the label is built from the tags, never parsed
+  from Source. Missing `#ver` → it still lists, as `IJSO · 2568`.
 
 ## Per-question template (copy exactly)
 ```markdown
