@@ -856,16 +856,20 @@ body[data-subj=bio] .lfst{display:none}
 .exrows{display:flex;flex-direction:column;gap:5px}
 /* № paper sheet (PP): full window over the board -- the app's ink header bar, family sections, cards with the
    family colour as their offset shadow (the question sheet's language) */
-#pp{position:fixed;inset:0;z-index:74;background:var(--paper);overflow:auto;overscroll-behavior:contain;display:none}
-#pp.show{display:block;animation:ppIn .3s cubic-bezier(.2,1.1,.4,1)}
-@keyframes ppIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+#pp{position:fixed;inset:0;z-index:74;background:rgba(20,20,20,.5);display:none;align-items:center;justify-content:center;padding:18px}
+#pp.show{display:flex;animation:ppFade .2s ease-out}
+#pp.show .ppbox{animation:ppIn .3s cubic-bezier(.2,1.1,.4,1)}
+.ppbox{width:min(980px,100%);max-height:min(86vh,900px);overflow:auto;overscroll-behavior:contain;background:var(--paper);border:4px solid var(--ink);box-shadow:10px 10px 0 var(--ink)}
+@keyframes ppFade{from{opacity:0}to{opacity:1}}
+@keyframes ppIn{from{opacity:0;transform:translateY(28px) scale(.97)}to{opacity:1;transform:none}}
+@media(max-width:560px){#pp{padding:10px}.ppbox{max-height:88vh;box-shadow:6px 6px 0 var(--ink)}}
 .pphd{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:14px;background:var(--ink);color:var(--paper);padding:10px 12px 10px 18px}
 .pphd .sn{font-size:2.4rem;font-weight:800;line-height:.9}
 .pphd h2{flex:1;min-width:0;margin:0;font-size:1.2rem;font-weight:800;line-height:1.2}
 .pphd h2 small{display:block;font-size:.78rem;font-weight:600;opacity:.75}
 .ppx{flex:none;width:44px;height:44px;border:3px solid var(--paper);background:var(--ink);color:var(--paper);font-size:1.1rem;font-weight:800;cursor:pointer}
 .ppx:hover,.ppx:focus-visible{background:var(--paper);color:var(--ink);outline:0}
-.ppin{max-width:1180px;margin:0 auto;padding:4px 18px 48px}
+.ppin{padding:4px 18px 28px}
 .ppsec{margin-top:28px}
 .pph{display:flex;align-items:center;gap:12px;margin:0 0 16px;padding-bottom:8px;border-bottom:3px solid var(--ink);font-size:1.35rem;font-weight:800;line-height:1.2}
 .pph i{flex:none;width:24px;height:24px;background:var(--c);border:3px solid var(--ink)}
@@ -878,9 +882,11 @@ body[data-subj=bio] .lfst{display:none}
 .ppc .pn{font-weight:800;font-size:1.05rem;line-height:1.25}
 .ppc .pn em{font-style:normal;font-weight:700;opacity:.65}
 .ppc .py{font-size:2.3rem;font-weight:800;line-height:1}
+.ppc .psol{align-self:flex-start;margin-top:6px;padding:1px 7px;border:2px solid var(--ink);font:800 .72rem "JetBrains Mono",monospace;background:var(--yel);color:#141414}
+.ppc .psol.full{background:var(--ok,#2f9e5b);color:#fff}
 .ppc .pc{margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:8px;font:800 .82rem "JetBrains Mono",monospace}
 .ppc .pc:after{content:"→";font-size:1.1rem}
-@media (prefers-reduced-motion:reduce){#pp.show,.ppc{animation:none;transition:none}}
+@media (prefers-reduced-motion:reduce){#pp.show,#pp.show .ppbox,.ppc{animation:none;transition:none}}
 .exr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:10px;row-gap:5px;align-items:center;border:2px solid var(--ink);background:var(--card);color:var(--ink);padding:6px 10px;font:inherit;text-align:left;cursor:pointer}
 .exr:hover,.exr:focus-visible{background:var(--yel);color:#141414;outline:0}
 .exn{grid-row:span 2;font-size:1.7rem;font-weight:800;line-height:.9;text-align:center}
@@ -1051,7 +1057,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
   <p class="tdnote">เปิดทิ้งไว้ข้างโจทย์ได้ ปิดแผงแล้วเวลายังเดินต่อ (ดูเวลาที่แถบซ้าย)</p>
 </aside>
 <div id="pdscrim"></div>
-<div id="pp" role="dialog" aria-modal="true" aria-labelledby="ppt"><div class="pphd"><span class="sn" aria-hidden="true">№</span><h2 id="ppt">ข้อสอบทั้งฉบับ<small id="pps"></small></h2><button class="ppx" id="ppx" title="ปิด (Esc)" aria-label="ปิดรายการข้อสอบทั้งฉบับ">✕</button></div><div class="ppin" id="ppin"></div></div>
+<div id="pp" role="dialog" aria-modal="true" aria-labelledby="ppt"><div class="ppbox"><div class="pphd"><span class="sn" aria-hidden="true">📝</span><h2 id="ppt">ข้อสอบทั้งฉบับ<small id="pps"></small></h2><button class="ppx" id="ppx" title="ปิด (Esc)" aria-label="ปิดรายการข้อสอบทั้งฉบับ">✕</button></div><div class="ppin" id="ppin"></div></div></div>
 <aside id="pd" aria-label="ตารางธาตุ">
   <div class="pdh"><b>ตารางธาตุ</b><span class="pdq" id="pdq"></span><span class="pdhov" id="pdhov"></span><button class="pdmwt pdrst" id="pdrst" title="คว่ำทุกธาตุที่เปิดอยู่กลับทั้งหมด">↺ รีเซ็ต</button><button class="pdmwt pdmem" id="pdmem" aria-pressed="false" title="คว่ำทุกธาตุ เหลือแค่เลขอะตอม แล้วแตะเพื่อเปิดทีละตัว"><span>🃏 ท่องตารางธาตุ: ปิด</span><span>🃏 ท่องตารางธาตุ: เปิด</span></button><button class="pdmwt" id="pdmwt" title="เปิด/ปิดเครื่องคิด Mw">🧮 คิด Mw</button><button class="pdx" id="pdx" title="ปิด (Esc)">✕</button></div>
   <div class="pdw"><div class="pdg" id="pdg"></div></div>
@@ -2359,7 +2365,7 @@ function subjTiles(){
   if(!bio&&EXN)h+=`<div class="tile c-card ex st" data-ch="ex" style="--i:${i++}"><button class="tface" data-go="ex" aria-keyshortcuts="ArrowLeft ArrowRight"><span class="no">✎</span><span class="nm">แบบฝึกหัด</span><span class="ct">${EXN} ข้อ · มีเฉลยทุกข้อ</span></button>
     <div class="tback" role="region" aria-label="แบบฝึกหัดแยกตามบท"></div></div>`;   // slides like a chapter stats tile
   const np=paperList().length;
-  if(np)h+=`<button class="tile c-blue" data-go="papers" aria-haspopup="dialog" style="--i:${i++}"><span class="no">№</span><span class="nm">ข้อสอบทั้งฉบับ</span><span class="ct">${np} ฉบับ · เรียงตามข้อ</span></button>`;   // opens the full-window paper sheet (PP)
+  if(np)h+=`<button class="tile c-blue" data-go="papers" aria-haspopup="dialog" style="--i:${i++}"><span class="no">📝</span><span class="nm">ข้อสอบทั้งฉบับ</span><span class="ct">${np} ฉบับ · เรียงตามข้อ</span></button>`;   // opens the full-window paper sheet (PP)
   groups.forEach(([k,gname,c],j)=>{if(!c)return;
     const cv=cov(pool.filter(q=>chOf(q,SUBJ)===k)),cls=`tile ${P[j%P.length]} ${tileSize(c,max)}`,n=parseInt(k),ii=i++;
     const face=`<span class="no">${n}</span><span class="nm">${gname}</span>
@@ -2482,9 +2488,9 @@ const PVER={mar:"มี.ค.",jul:"ก.ค.",oct:"ต.ค."},VORD=v=>+v||["mar",
 function paperLabel(e,y,v){const l=(DATA.exams[e]||{label:e}).label;
   return e==="ijso"?(v?`${l} ครั้งที่ ${v} · ${y}`:`${l} · ${y}`):`${l} ${y}${v?" · "+(PVER[v]||v):""}`;}
 function paperList(){
-  const m={},fam=[...PAPERS.map(p=>p[0]),...Object.keys(DATA.examcount||{}).filter(k=>k!=="ex"&&!PAPERS.some(p=>p[0]===k))];
-  DATA.questions.forEach(q=>{if(isEx(q)||(subjOf(q)==="bio")!==(SUBJ==="bio"))return;const k=[q.exam,q.year,q.ver].join("|");m[k]=(m[k]||0)+1;});
-  return Object.entries(m).map(([k,n])=>{const[e,y,v]=k.split("|");return{k,e,y,v,n};})
+  const m={},sm={},fam=[...PAPERS.map(p=>p[0]),...Object.keys(DATA.examcount||{}).filter(k=>k!=="ex"&&!PAPERS.some(p=>p[0]===k))];
+  DATA.questions.forEach(q=>{if(isEx(q)||(subjOf(q)==="bio")!==(SUBJ==="bio"))return;const k=[q.exam,q.year,q.ver].join("|");m[k]=(m[k]||0)+1;if(q.solHtml)sm[k]=(sm[k]||0)+1;});
+  return Object.entries(m).map(([k,n])=>{const[e,y,v]=k.split("|");return{k,e,y,v,n,s:sm[k]||0};})
     .sort((a,b)=>fam.indexOf(a.e)-fam.indexOf(b.e)||b.y.localeCompare(a.y)||VORD(b.v)-VORD(a.v));}   // newest first
 /* the № tile opens a full-window sheet: one section per family (PAPERS order, empty ones skipped), one card per sitting,
    newest first, the family colour as the card's offset shadow. ✕ / Esc / the back gesture close it (one history entry
@@ -2496,8 +2502,8 @@ const PP=(()=>{const el=$("#pp");let pushed=false,back=null;
     $("#ppin").innerHTML=fam.map(e=>{const x=DATA.exams[e]||{label:e,color:"#64748b"},R=L.filter(p=>p.e===e);
       return `<section class="ppsec" style="--c:${x.color}"><h3 class="pph"><i></i>${x.label}<small>${R.length} ฉบับ</small></h3><div class="ppg">${R.map(p=>{
         const sub=p.v?(p.e==="ijso"?"ครั้งที่ "+p.v:PVER[p.v]||p.v):"";
-        return `<button class="ppc" data-go="paper" data-p="${p.k}" aria-label="${paperLabel(p.e,p.y,p.v)} · ${p.n} ข้อ"><span class="pn">${x.label}${sub?` <em>${sub}</em>`:""}</span><span class="py">${p.y}</span><span class="pc">${p.n} ข้อ</span></button>`;}).join("")}</div></section>`;}).join("");}
-  function open(opener){if(isOpen())return;back=opener;body();el.classList.add("show");el.scrollTop=0;SL.lock("pp");
+        return `<button class="ppc" data-go="paper" data-p="${p.k}" aria-label="${paperLabel(p.e,p.y,p.v)} · ${p.n} ข้อ"><span class="pn">${x.label}${sub?` <em>${sub}</em>`:""}</span><span class="py">${p.y}</span>${p.s?`<span class="psol${p.s>=p.n?" full":""}">${p.s>=p.n?"✓ มีเฉลยครบ":`◐ มีเฉลย ${p.s}/${p.n}`}</span>`:""}<span class="pc">${p.n} ข้อ</span></button>`;}).join("")}</div></section>`;}).join("");}
+  function open(opener){if(isOpen())return;back=opener;body();el.classList.add("show");el.firstElementChild.scrollTop=0;SL.lock("pp");
     if(!pushed){history.pushState({pp:1},"");pushed=true;}SFX.play("statOpen");$("#ppx").focus({preventScroll:true});}
   function shut(quiet){if(!isOpen())return;el.classList.remove("show");SL.unlock("pp");if(!quiet)SFX.play("statClose");
     if(back&&back.isConnected&&!document.body.classList.contains("inapp"))back.focus({preventScroll:true});}
@@ -2507,7 +2513,7 @@ const PP=(()=>{const el=$("#pp");let pushed=false,back=null;
     const f=[...el.querySelectorAll("button")],a=f[0],z=f[f.length-1],ae=document.activeElement;
     if(!el.contains(ae)){e.preventDefault();(e.shiftKey?z:a).focus();}
     else if(e.shiftKey&&ae===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&ae===z){e.preventDefault();a.focus();}}
-  el.addEventListener("click",e=>{if(e.target.closest("#ppx"))return close();const c=e.target.closest(".ppc");if(!c)return;
+  el.addEventListener("click",e=>{if(e.target===el||e.target.closest("#ppx"))return close();const c=e.target.closest(".ppc");if(!c)return;
     const r=c.getBoundingClientRect();close(true);boardGo(c,r);});   // close first: unlocking restores the board's scroll, then the app opens
   return{open,close,isOpen,key};})();
 // the ✎ tile's back: one row per exercise chapter -- count, difficulty mini-bar, ⚠ while its answers are unverified
