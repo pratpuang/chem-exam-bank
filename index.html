@@ -155,7 +155,7 @@ header{position:sticky;top:0;z-index:20;background:var(--ink);color:var(--paper)
 .hbtn{border:0;border-left:3px solid var(--paper);background:var(--ink);color:var(--paper);padding:0 14px;font-weight:700;font-size:.84rem;white-space:nowrap}
 .hbtn:hover{background:#2a2a2a}
 .hbtn.on{background:var(--yel);color:var(--ink)}
-#ftoggle{display:none}
+header.fhide .bar2{display:none}
 .bar2{background:var(--card);color:var(--ink);border-bottom:3px solid var(--ink)}
 .bar2 .in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 12px}
 select{padding:6px 8px;border:2px solid var(--ink);background:var(--card);font-size:.84rem;font-weight:600;max-width:46vw;border-radius:0;cursor:pointer}
@@ -176,7 +176,7 @@ select:focus{outline:3px solid var(--yel);outline-offset:1px}
 .lvol .vol{width:110px}
 #exportbtn.none{opacity:.5}
 #count{margin-left:auto;font-weight:700;font-size:.82rem;white-space:nowrap}
-@media(max-width:760px){#ftoggle{display:block}.bar2{display:none}header.fopen .bar2{display:block}.title small{display:none}.title{padding:10px 12px}}
+@media(max-width:760px){.bar2,header.fhide .bar2{display:none}header.fopen .bar2{display:block}.title small{display:none}.title{padding:10px 12px}}
 
 /* ================= MAIN / SHARED ================= */
 main{max-width:1060px;margin:18px auto 60px;padding:0 14px}
@@ -1755,7 +1755,15 @@ $("#layout").querySelectorAll("button").forEach(b=>{
 $("#fsubj").addEventListener("change",()=>{populateChapters($("#fsubj").value);apply();});
 ["#fsubj","#fch","#fexam","#fyear","#fdiff","#ftype","#fsol","#ftopic"].forEach((s,i)=>$(s).addEventListener("change",()=>SFX.play("filter",i)));
 $("#random").onclick=()=>{if(!filtered.length)return;SFX.play("dice");const i=Math.floor(Math.random()*filtered.length);setTimeout(()=>openModal(i),380);};
-$("#ftoggle").onclick=()=>{SFX.play($("#hdr").classList.toggle("fopen")?"unfold":"fold");};
+// filter bar tucks away: phone = opt-in "fopen" (closed by default); wider = "fhide" (open by default, remembered)
+const fMob=()=>matchMedia("(max-width:760px)").matches;
+const fLbl=()=>{const h=$("#hdr"),open=fMob()?h.classList.contains("fopen"):!h.classList.contains("fhide");$("#ftoggle").textContent="ตัวกรอง "+(open?"▴":"▾");};
+if(localStorage.getItem("cqb_fhide")==="1")$("#hdr").classList.add("fhide");
+fLbl();matchMedia("(max-width:760px)").addEventListener("change",fLbl);
+$("#ftoggle").onclick=()=>{const h=$("#hdr");let open;
+  if(fMob())open=h.classList.toggle("fopen");
+  else{open=!h.classList.toggle("fhide");localStorage.setItem("cqb_fhide",open?"0":"1");}
+  SFX.play(open?"unfold":"fold");fLbl();};
 
 /* the question a click landed in: the modal's, else the nearest [data-i] (poster / card / row) */
 const qAt=el=>el.closest("#modal")?filtered[mIdx]:(el=el.closest("[data-i]"))&&filtered[+el.dataset.i];
