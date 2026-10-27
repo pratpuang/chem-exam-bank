@@ -101,3 +101,9 @@ taking the whole bank 922 → 1,104.** 1 paper is part-drafted (2552·ต.ค., 
 | Source file | Year (B.E.) | Format | Status | Q-IDs | Notes |
 |---|---|---|---|---|---|
 | tcas68-chem-a-level.pdf | 2568 | born-digital PDF, **text layer mojibake** (subsetted AngsanaNew, no Unicode map) — transcribed from rendered page images instead | **extracted** (fragment drafted, not yet merged) | Q-1278–Q-1312 | 35 Q, all chem (chem-only paper — no bio/physics to skip). 5 figures cropped (Q-1286, Q-1287, Q-1288, Q-1295, Q-1310). **Official answer key WAS printed in this paper** (page 27) — every `**Answer:**` filled from it, not `_(no key)_`. 2 items flagged: ข้อ 8 has two accepted choices (3,5); ข้อ 19 and ข้อ 24 were voided by the official key ("ฟรีทุกข้อ" = full credit all choices). Fragment at `tools/incoming/tcas68-alevel.md`, STAGED — needs-review spot-check before merge (image-transcribed). |
+
+## IJSO (`#exam/ijso`) — 23rd IJSO round 1 เคมี, 1 source file, drafted
+
+| Source file | Year (B.E.) | Format | Status | Q-IDs | Notes |
+|---|---|---|---|---|---|
+| ijso23-2569-r1-chem.pdf | 2569 (สอบ 18 ม.ค. 2569) | born-digital text PDF (Thai sara-am mojibake in text layer — hand-transcribed) | **extracted** (fragment drafted, not yet merged) | Q-1313–Q-1362 | 50 Q ปรนัย 4 ตัวเลือก A-D, all chem. `#ver/23` (ครั้งที่ 23 printed on cover). **No answer key** in paper → all `_(no key)_`. 4 figures cropped (Q-1313, Q-1316, Q-1325, Q-1344). Notes on Q-1317/1341/1349/1353/1360/1361 (table check, missing R, ambiguous wording, printed typos). Fragment at `tools/incoming/ijso-23-2569-r1.md`, STAGED — spot-check before merge. |
