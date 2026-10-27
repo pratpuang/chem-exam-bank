@@ -692,7 +692,23 @@ header{position:sticky;top:0;z-index:20;background:var(--ink);color:var(--paper)
 .hbtn.on{background:var(--yel);color:var(--ink)}
 header.fhide .bar2{display:none}
 .bar2{background:var(--card);color:var(--ink);border-bottom:3px solid var(--ink)}
-.bar2 .in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 12px}
+.bar2 .in{max-width:1180px;margin:0 auto;padding:10px 12px 8px}
+/* filter grid: every select is a labelled cell of equal height; a cell that's actually filtering turns yellow */
+.fbox{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
+@media(max-width:1000px){.fbox{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:560px){.fbox{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fsel{position:relative;display:flex;flex-direction:column;border:2px solid var(--ink);background:var(--card);min-width:0;transition:background .12s}
+.fsel.wide{grid-column:span 2}
+.fsel:has(select[hidden]){display:none}
+.fsel>span{font:600 .62rem "JetBrains Mono",monospace;letter-spacing:.04em;color:var(--mut,#777);padding:4px 26px 0 9px;pointer-events:none}
+.fsel select{appearance:none;-webkit-appearance:none;border:0;background:transparent;max-width:none;width:100%;padding:0 26px 5px 9px;font-size:.86rem;font-weight:700;color:inherit;text-overflow:ellipsis}
+.fsel select:focus{outline:0}
+.fsel:focus-within{outline:3px solid var(--yel);outline-offset:1px}
+.fsel::after{content:"▾";position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:.8rem;pointer-events:none}
+.fsel:hover{background:color-mix(in srgb,var(--yel) 22%,var(--card))}
+.fsel:has(option:checked:not([value=""]):not([data-all])){background:var(--yel);color:#111}
+.fsel:has(option:checked:not([value=""]):not([data-all]))>span{color:#111;opacity:.7}
+.ftools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px;padding-top:8px;border-top:2px dashed color-mix(in srgb,var(--ink) 25%,transparent)}
 select{padding:6px 8px;border:2px solid var(--ink);background:var(--card);font-size:.84rem;font-weight:600;max-width:46vw;border-radius:0;cursor:pointer}
 select:focus{outline:3px solid var(--yel);outline-offset:1px}
 .seg{display:inline-flex;border:2px solid var(--ink)}
@@ -1512,14 +1528,17 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
    <button class="hbtn" id="ftoggle">ตัวกรอง ▾</button>
  </div>
  <div class="bar2"><div class="in">
-   <select id="fsubj"></select>
-   <select id="fch"></select>
-   <select id="ftopic" hidden></select>
-   <select id="fexam"></select>
-   <select id="fyear"></select>
-   <select id="fdiff"></select>
-   <select id="ftype"></select>
-   <select id="fsol"></select>
+  <div class="fbox">
+   <label class="fsel"><span>วิชา</span><select id="fsubj"></select></label>
+   <label class="fsel wide"><span>บท</span><select id="fch"></select></label>
+   <label class="fsel wide"><span>หัวข้อย่อย</span><select id="ftopic" hidden></select></label>
+   <label class="fsel"><span>สนามสอบ</span><select id="fexam"></select></label>
+   <label class="fsel"><span>ปี</span><select id="fyear"></select></label>
+   <label class="fsel"><span>ระดับ</span><select id="fdiff"></select></label>
+   <label class="fsel"><span>ชนิด</span><select id="ftype"></select></label>
+   <label class="fsel"><span>วิธีทำ</span><select id="fsol"></select></label>
+  </div>
+  <div class="ftools">
    <span class="seg" id="layout">
      <button data-v="poster">โปสเตอร์</button>
      <button data-v="cards">การ์ด</button>
@@ -1530,6 +1549,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
    <button class="btn" id="darkbtn" title="โหมดกลางคืน">🌙</button>
    <span class="volbox"><button class="sfxbtn" id="sfxbtn">🔊</button><input type="range" class="vol" min="0" max="100" aria-label="ระดับเสียง"></span>
    <span id="count"></span>
+  </div>
  </div></div>
 </header>
 <div id="appbody"><main id="root"></main></div>
@@ -1712,6 +1732,9 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=ls.get("cqb_sfx"
     select:()=>{pop(vary(pick([440,523,587]),.02),{vol:.13,rise:1.5,dur:.06});thock({f:vary(210),vol:.08});},   // soft pop
     unfold:()=>{noise(.09,{freq:900,sweep:2.2,q:.8,vol:.06,attack:.03});pluck(vary(392,.01),.3,{vol:.07,bright:.2});pluck(vary(523,.01),.35,{vol:.065,bright:.2,delay:.05});},
     fold:()=>{noise(.08,{freq:1800,sweep:.45,q:.8,vol:.05,attack:.02});pluck(vary(523,.01),.25,{vol:.07,bright:.2});pluck(vary(392,.01),.3,{vol:.07,bright:.2,delay:.05});},
+    // filter bar tuck/untuck: two soft sine notes a 4th apart, low-passed, no noise burst (the old fold/unfold read as harsh)
+    untuck:()=>[[294,0],[392,.06]].forEach(([f,t])=>tone(vary(f,.006),.32,{vol:.05,attack:.012,delay:t,lp:1400,wet:.25})),
+    tuck:()=>[[392,0],[294,.06]].forEach(([f,t])=>tone(vary(f,.006),.28,{vol:.045,attack:.012,delay:t,lp:1200,wet:.25})),
     key:k=>{const low=k==="bk"||k==="clr";tone(vary(low?250:330,.03),.035,{vol:.09,type:"triangle",lp:1200,attack:.001});thock({f:vary(low?150:185),vol:.1,nf:2600});},
     // ---- toggles: up = a pop rising a 5th, down = a plop falling one ----
     on:()=>{thock({f:vary(210),vol:.1});pop(vary(440,.02),{vol:.07,rise:1.5,dur:.06});pop(vary(660,.02),{vol:.075,rise:1.3,dur:.07,delay:.05});},
@@ -1882,7 +1905,7 @@ opt($("#fyear"),"","ทุกปี");DATA.years.forEach(y=>opt($("#fyear"),y,"�
 opt($("#fdiff"),"","ทุกระดับ");["easy","medium","hard"].forEach(d=>opt($("#fdiff"),d,DIFF_TH[d]));
 opt($("#ftype"),"","ทุกชนิด");DATA.types.forEach(t=>opt($("#ftype"),t,t));
 const SC=DATA.solcount||{have:0,flag:0,unchecked:0};
-opt($("#fsol"),"","วิธีทำ: ทั้งหมด");
+opt($("#fsol"),"","ทั้งหมด");
 if(SC.have){
   opt($("#fsol"),"has",`มีวิธีทำ (${SC.have})`);
   opt($("#fsol"),"none",`ยังไม่มีวิธีทำ (${DATA.questions.length-SC.have})`);
@@ -1986,14 +2009,16 @@ const SOLOPTS=[["has","มีวิธีทำ"],["none","ยังไม่ม
 // rebuild each select: only values that still have questions under the other filters (the chosen one always stays)
 function syncFacets(f){
   const fill=(sel,allLabel,items)=>{const cur=sel.value;sel.innerHTML="";opt(sel,"",allLabel);
-    items.forEach(([v,l,c])=>{if(c||v===cur)opt(sel,v,`${l} (${c})`);});sel.value=cur;if(sel.value!==cur)sel.value="";};
+    items.forEach(([v,l,c])=>{if(c||v===cur)opt(sel,v,`${l} (${c})`);});
+    if(EXONLY)for(const o of sel.options)if(o.value===EXONLY)o.dataset.all=1;   // "every exam" isn't a real filter: no yellow
+    sel.value=cur;if(sel.value!==cur)sel.value="";};
   for(const[sel,key,list,keyOf,all,countAll]of FACETS){
     const pool=DATA.questions.filter(x=>qMatch(x,f,key)),cnt={};
     pool.forEach(x=>[].concat(keyOf(x,f)).forEach(k=>cnt[k]=(cnt[k]||0)+1));
     fill($(sel),all(f)+(countAll?` (${pool.length})`:""),list(f).map(([v,l])=>[v,l,v.split("+").reduce((a,k)=>a+(cnt[k]||0),0)]));}
   $("#ftopic").hidden=!topicList(f).length;
   if(SC.have){const pool=DATA.questions.filter(x=>qMatch(x,f,"sl"));
-    fill($("#fsol"),"วิธีทำ: ทั้งหมด",SOLOPTS.map(([v,l])=>[v,l,pool.filter(x=>qMatch(x,{...f,sl:v},null)).length]));}}
+    fill($("#fsol"),"ทั้งหมด",SOLOPTS.map(([v,l])=>[v,l,pool.filter(x=>qMatch(x,{...f,sl:v},null)).length]));}}
 function apply(keepPos){
   let f=fstate();
   if(PAPER&&(f.ex!==PAPER.e||f.yr!==PAPER.y||f.subj&&(f.subj==="bio")!==PAPER.bio))PAPER=null;   // another exam/year/subject picked: no longer one paper
@@ -2298,7 +2323,7 @@ fLbl();matchMedia("(max-width:760px)").addEventListener("change",fLbl);
 $("#ftoggle").onclick=()=>{const h=$("#hdr");let open;
   if(fMob())open=h.classList.toggle("fopen");
   else{open=!h.classList.toggle("fhide");localStorage.setItem("cqb_fhide",open?"0":"1");}
-  SFX.play(open?"unfold":"fold");fLbl();};
+  SFX.play(open?"untuck":"tuck");fLbl();};
 
 /* the question a click landed in: the modal's, else the nearest [data-i] (poster / card / row) */
 const qAt=el=>el.closest("#modal")?filtered[mIdx]:(el=el.closest("[data-i]"))&&filtered[+el.dataset.i];
