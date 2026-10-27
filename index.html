@@ -882,8 +882,8 @@ body[data-subj=bio] .lfst{display:none}
 .ppc .pn{font-weight:800;font-size:1.05rem;line-height:1.25}
 .ppc .pn em{font-style:normal;font-weight:700;opacity:.65}
 .ppc .py{font-size:2.3rem;font-weight:800;line-height:1}
-.ppc .psol{align-self:flex-start;margin-top:6px;padding:1px 7px;border:2px solid var(--ink);font:800 .72rem "JetBrains Mono",monospace;background:var(--yel);color:#141414}
-.ppc .psol.full{background:var(--ok,#2f9e5b);color:#fff}
+.ppc .psol{margin-top:4px;font:600 .72rem "JetBrains Mono",monospace;color:var(--mut);opacity:.85}
+.ppc .psol.full{color:var(--ok,#2f8f4e);opacity:1}
 .ppc .pc{margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:8px;font:800 .82rem "JetBrains Mono",monospace}
 .ppc .pc:after{content:"→";font-size:1.1rem}
 @media (prefers-reduced-motion:reduce){#pp.show,#pp.show .ppbox,.ppc{animation:none;transition:none}}
@@ -2502,7 +2502,7 @@ const PP=(()=>{const el=$("#pp");let pushed=false,back=null;
     $("#ppin").innerHTML=fam.map(e=>{const x=DATA.exams[e]||{label:e,color:"#64748b"},R=L.filter(p=>p.e===e);
       return `<section class="ppsec" style="--c:${x.color}"><h3 class="pph"><i></i>${x.label}<small>${R.length} ฉบับ</small></h3><div class="ppg">${R.map(p=>{
         const sub=p.v?(p.e==="ijso"?"ครั้งที่ "+p.v:PVER[p.v]||p.v):"";
-        return `<button class="ppc" data-go="paper" data-p="${p.k}" aria-label="${paperLabel(p.e,p.y,p.v)} · ${p.n} ข้อ"><span class="pn">${x.label}${sub?` <em>${sub}</em>`:""}</span><span class="py">${p.y}</span>${p.s?`<span class="psol${p.s>=p.n?" full":""}">${p.s>=p.n?"✓ มีเฉลยครบ":`◐ มีเฉลย ${p.s}/${p.n}`}</span>`:""}<span class="pc">${p.n} ข้อ</span></button>`;}).join("")}</div></section>`;}).join("");}
+        return `<button class="ppc" data-go="paper" data-p="${p.k}" aria-label="${paperLabel(p.e,p.y,p.v)} · ${p.n} ข้อ"><span class="pn">${x.label}${sub?` <em>${sub}</em>`:""}</span><span class="py">${p.y}</span>${p.s?`<span class="psol${p.s>=p.n?" full":""}">${p.s>=p.n?"✓ เฉลยครบ":`เฉลย ${p.s}/${p.n}`}</span>`:""}<span class="pc">${p.n} ข้อ</span></button>`;}).join("")}</div></section>`;}).join("");}
   function open(opener){if(isOpen())return;back=opener;body();el.classList.add("show");el.firstElementChild.scrollTop=0;SL.lock("pp");
     if(!pushed){history.pushState({pp:1},"");pushed=true;}SFX.play("statOpen");$("#ppx").focus({preventScroll:true});}
   function shut(quiet){if(!isOpen())return;el.classList.remove("show");SL.unlock("pp");if(!quiet)SFX.play("statClose");
