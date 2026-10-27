@@ -1389,7 +1389,33 @@ body[data-subj=bio] .lfst{display:none}
 .sexb:hover,.sexb:focus-visible{background:var(--yel);color:#141414}
 /* the ✎ tile slides over like a chapter stats tile; its back lists the exercise chapters (tap a row = that chapter's exercises) */
 .exrows{display:flex;flex-direction:column;gap:5px}
-.pfam{margin-top:6px}.pfam i{display:inline-block;width:9px;height:9px;margin-right:6px}
+/* № paper sheet (PP): full window over the board -- the app's ink header bar, family sections, cards with the
+   family colour as their offset shadow (the question sheet's language) */
+#pp{position:fixed;inset:0;z-index:74;background:var(--paper);overflow:auto;overscroll-behavior:contain;display:none}
+#pp.show{display:block;animation:ppIn .3s cubic-bezier(.2,1.1,.4,1)}
+@keyframes ppIn{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+.pphd{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:14px;background:var(--ink);color:var(--paper);padding:10px 12px 10px 18px}
+.pphd .sn{font-size:2.4rem;font-weight:800;line-height:.9}
+.pphd h2{flex:1;min-width:0;margin:0;font-size:1.2rem;font-weight:800;line-height:1.2}
+.pphd h2 small{display:block;font-size:.78rem;font-weight:600;opacity:.75}
+.ppx{flex:none;width:44px;height:44px;border:3px solid var(--paper);background:var(--ink);color:var(--paper);font-size:1.1rem;font-weight:800;cursor:pointer}
+.ppx:hover,.ppx:focus-visible{background:var(--paper);color:var(--ink);outline:0}
+.ppin{max-width:1180px;margin:0 auto;padding:4px 18px 48px}
+.ppsec{margin-top:28px}
+.pph{display:flex;align-items:center;gap:12px;margin:0 0 16px;padding-bottom:8px;border-bottom:3px solid var(--ink);font-size:1.35rem;font-weight:800;line-height:1.2}
+.pph i{flex:none;width:24px;height:24px;background:var(--c);border:3px solid var(--ink)}
+.pph small{margin-left:auto;font:700 .8rem "JetBrains Mono",monospace;color:var(--mut)}
+.ppg{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:16px 18px}
+.ppc{display:flex;flex-direction:column;gap:2px;min-height:118px;border:3px solid var(--ink);background:var(--card);color:var(--ink);box-shadow:5px 5px 0 var(--c);padding:12px 14px 10px;font:inherit;text-align:left;cursor:pointer;transition:transform .12s,box-shadow .12s}
+.ppc:hover,.ppc:focus-visible{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--c);outline:0}
+.ppc:focus-visible{background:var(--yel);color:#141414}
+.ppc:active{transform:translate(5px,5px);box-shadow:0 0 0 var(--c)}
+.ppc .pn{font-weight:800;font-size:1.05rem;line-height:1.25}
+.ppc .pn em{font-style:normal;font-weight:700;opacity:.65}
+.ppc .py{font-size:2.3rem;font-weight:800;line-height:1}
+.ppc .pc{margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:8px;font:800 .82rem "JetBrains Mono",monospace}
+.ppc .pc:after{content:"→";font-size:1.1rem}
+@media (prefers-reduced-motion:reduce){#pp.show,.ppc{animation:none;transition:none}}
 .exr{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:10px;row-gap:5px;align-items:center;border:2px solid var(--ink);background:var(--card);color:var(--ink);padding:6px 10px;font:inherit;text-align:left;cursor:pointer}
 .exr:hover,.exr:focus-visible{background:var(--yel);color:#141414;outline:0}
 .exn{grid-row:span 2;font-size:1.7rem;font-weight:800;line-height:.9;text-align:center}
@@ -1560,6 +1586,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
   <p class="tdnote">เปิดทิ้งไว้ข้างโจทย์ได้ ปิดแผงแล้วเวลายังเดินต่อ (ดูเวลาที่แถบซ้าย)</p>
 </aside>
 <div id="pdscrim"></div>
+<div id="pp" role="dialog" aria-modal="true" aria-labelledby="ppt"><div class="pphd"><span class="sn" aria-hidden="true">№</span><h2 id="ppt">ข้อสอบทั้งฉบับ<small id="pps"></small></h2><button class="ppx" id="ppx" title="ปิด (Esc)" aria-label="ปิดรายการข้อสอบทั้งฉบับ">✕</button></div><div class="ppin" id="ppin"></div></div>
 <aside id="pd" aria-label="ตารางธาตุ">
   <div class="pdh"><b>ตารางธาตุ</b><span class="pdq" id="pdq"></span><span class="pdhov" id="pdhov"></span><button class="pdmwt pdrst" id="pdrst" title="คว่ำทุกธาตุที่เปิดอยู่กลับทั้งหมด">↺ รีเซ็ต</button><button class="pdmwt pdmem" id="pdmem" aria-pressed="false" title="คว่ำทุกธาตุ เหลือแค่เลขอะตอม แล้วแตะเพื่อเปิดทีละตัว"><span>🃏 ท่องตารางธาตุ: ปิด</span><span>🃏 ท่องตารางธาตุ: เปิด</span></button><button class="pdmwt" id="pdmwt" title="เปิด/ปิดเครื่องคิด Mw">🧮 คิด Mw</button><button class="pdx" id="pdx" title="ปิด (Esc)">✕</button></div>
   <div class="pdw"><div class="pdg" id="pdg"></div></div>
@@ -2305,6 +2332,7 @@ $("#mreveal").onclick=()=>{const w=$("#msol .solwrap");if(!w)return;const open=w
 document.addEventListener("keydown",e=>{
   if(e.target.classList&&e.target.classList.contains("vol"))return;   // arrows on the volume slider adjust volume only
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&e.target.type!=="range";
+  if(PP.isOpen())return PP.key(e);   // paper sheet open: Esc/Tab handled there, nothing reaches the board behind
   if(PD.isOpen()){if(e.key==="Escape")PD.close();return;}   // drawer open: keys stay inside it
   if(TD.isOpen()){if(e.key==="Escape")TD.close();return;}
   if(VS.isOpen()){if(e.key==="Escape")VS.close();return;}
@@ -2866,8 +2894,7 @@ function subjTiles(){
   if(!bio&&EXN)h+=`<div class="tile c-card ex st" data-ch="ex" style="--i:${i++}"><button class="tface" data-go="ex" aria-keyshortcuts="ArrowLeft ArrowRight"><span class="no">✎</span><span class="nm">แบบฝึกหัด</span><span class="ct">${EXN} ข้อ · มีเฉลยทุกข้อ</span></button>
     <div class="tback" role="region" aria-label="แบบฝึกหัดแยกตามบท"></div></div>`;   // slides like a chapter stats tile
   const np=paperList().length;
-  if(np)h+=`<div class="tile c-blue st" data-ch="paper" style="--i:${i++}"><button class="tface" data-go="papers" aria-keyshortcuts="ArrowLeft ArrowRight"><span class="no">№</span><span class="nm">ข้อสอบทั้งฉบับ</span><span class="ct">${np} ฉบับ · เรียงตามข้อ</span></button>
-    <div class="tback" role="region" aria-label="ข้อสอบทั้งฉบับ"></div></div>`;   // same turn as the ✎ tile; a tap on the face turns it too
+  if(np)h+=`<button class="tile c-blue" data-go="papers" aria-haspopup="dialog" style="--i:${i++}"><span class="no">№</span><span class="nm">ข้อสอบทั้งฉบับ</span><span class="ct">${np} ฉบับ · เรียงตามข้อ</span></button>`;   // opens the full-window paper sheet (PP)
   groups.forEach(([k,gname,c],j)=>{if(!c)return;
     const cv=cov(pool.filter(q=>chOf(q,SUBJ)===k)),cls=`tile ${P[j%P.length]} ${tileSize(c,max)}`,n=parseInt(k),ii=i++;
     const face=`<span class="no">${n}</span><span class="nm">${gname}</span>
@@ -2994,16 +3021,30 @@ function paperList(){
   DATA.questions.forEach(q=>{if(isEx(q)||(subjOf(q)==="bio")!==(SUBJ==="bio"))return;const k=[q.exam,q.year,q.ver].join("|");m[k]=(m[k]||0)+1;});
   return Object.entries(m).map(([k,n])=>{const[e,y,v]=k.split("|");return{k,e,y,v,n};})
     .sort((a,b)=>fam.indexOf(a.e)-fam.indexOf(b.e)||b.y.localeCompare(a.y)||VORD(b.v)-VORD(a.v));}   // newest first
-function paperBody(){
-  const L=paperList();let h="",last=null;
-  L.forEach((p,k)=>{const lb=paperLabel(p.e,p.y,p.v);
-    if(p.e!==last){last=p.e;const x=DATA.exams[p.e]||{label:p.e,color:"#64748b"};
-      h+=`<div class="scap pfam"><i style="background:${x.color}"></i>${x.label} · ${L.filter(r=>r.e===p.e).length} ฉบับ</div>`;}
-    h+=`<button class="exr" data-go="paper" data-p="${p.k}" data-k="${k}" title="เปิด ${lb} เรียงตามข้อ"><span class="exn"><small>พ.ศ.</small>${p.y}</span>
-      <span class="ext"><span>${lb}</span></span><b>${p.n} ข้อ</b></button>`;});
-  return `<div class="sth"><span class="sn">№</span><span class="snm">ข้อสอบทั้งฉบับ · ${L.length} ฉบับ<small>เรียงตามข้อในกระดาษ</small></span>
-    <button class="tbx" title="กลับ (Esc)" aria-label="ปิดรายการข้อสอบทั้งฉบับ">✕</button></div>
-  <div class="sbody"><div class="scap">แตะเพื่อเปิดทั้งฉบับ · ข้อ 1 → ข้อสุดท้าย</div><div class="exrows">${h}</div></div>`;}
+/* the № tile opens a full-window sheet: one section per family (PAPERS order, empty ones skipped), one card per sitting,
+   newest first, the family colour as the card's offset shadow. ✕ / Esc / the back gesture close it (one history entry
+   while open); Tab stays inside. A card closes it, then opens that paper in printed order like any board tile. */
+const PP=(()=>{const el=$("#pp");let pushed=false,back=null;
+  const isOpen=()=>el.classList.contains("show");
+  function body(){const L=paperList(),fam=[...new Set(L.map(p=>p.e))];
+    $("#pps").textContent=`${L.length} ฉบับ · เปิดเรียงข้อ 1 → ข้อสุดท้าย`;
+    $("#ppin").innerHTML=fam.map(e=>{const x=DATA.exams[e]||{label:e,color:"#64748b"},R=L.filter(p=>p.e===e);
+      return `<section class="ppsec" style="--c:${x.color}"><h3 class="pph"><i></i>${x.label}<small>${R.length} ฉบับ</small></h3><div class="ppg">${R.map(p=>{
+        const sub=p.v?(p.e==="ijso"?"ครั้งที่ "+p.v:PVER[p.v]||p.v):"";
+        return `<button class="ppc" data-go="paper" data-p="${p.k}" aria-label="${paperLabel(p.e,p.y,p.v)} · ${p.n} ข้อ"><span class="pn">${x.label}${sub?` <em>${sub}</em>`:""}</span><span class="py">${p.y}</span><span class="pc">${p.n} ข้อ</span></button>`;}).join("")}</div></section>`;}).join("");}
+  function open(opener){if(isOpen())return;back=opener;body();el.classList.add("show");el.scrollTop=0;SL.lock("pp");
+    if(!pushed){history.pushState({pp:1},"");pushed=true;}SFX.play("statOpen");$("#ppx").focus({preventScroll:true});}
+  function shut(quiet){if(!isOpen())return;el.classList.remove("show");SL.unlock("pp");if(!quiet)SFX.play("statClose");
+    if(back&&back.isConnected&&!document.body.classList.contains("inapp"))back.focus({preventScroll:true});}
+  function close(quiet){if(pushed){pushed=false;history.back();}shut(quiet);}   // our own entry goes too, so back never re-lands on it
+  addEventListener("popstate",()=>{if(pushed){pushed=false;shut();}});
+  function key(e){if(e.key==="Escape"){e.preventDefault();return close();}if(e.key!=="Tab")return;
+    const f=[...el.querySelectorAll("button")],a=f[0],z=f[f.length-1],ae=document.activeElement;
+    if(!el.contains(ae)){e.preventDefault();(e.shiftKey?z:a).focus();}
+    else if(e.shiftKey&&ae===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&ae===z){e.preventDefault();a.focus();}}
+  el.addEventListener("click",e=>{if(e.target.closest("#ppx"))return close();const c=e.target.closest(".ppc");if(!c)return;
+    const r=c.getBoundingClientRect();close(true);boardGo(c,r);});   // close first: unlocking restores the board's scroll, then the app opens
+  return{open,close,isOpen,key};})();
 // the ✎ tile's back: one row per exercise chapter -- count, difficulty mini-bar, ⚠ while its answers are unverified
 function exBody(){
   const rows=Object.keys(EXC).sort().map((ch,k)=>{const qs=DATA.questions.filter(q=>isEx(q)&&q.ch===ch),df={easy:0,medium:0,hard:0};
@@ -3050,7 +3091,7 @@ function statSet(t,open,tx=0,dir=open?-1:1){
     const kids=[...B.children].filter(el=>!el.classList.contains("deco")),F=new Map(kids.map(el=>[el,el.getBoundingClientRect()]));
     if(prev)prev.classList.remove("open");
     t.classList.toggle("open",open);
-    if(open){XOPEN.clear();t.querySelector(".tback").innerHTML=t.dataset.ch==="ex"?exBody():t.dataset.ch==="paper"?paperBody():statBody(t.dataset.ch);}
+    if(open){XOPEN.clear();t.querySelector(".tback").innerHTML=t.dataset.ch==="ex"?exBody():statBody(t.dataset.ch);}
     repack();B.querySelectorAll(".tile.deco").forEach(d=>d.style.animationDelay=".12s");
     if(!RM.matches)kids.forEach(el=>{const a=F.get(el),b=el.getBoundingClientRect(),E={duration:440,easing:"cubic-bezier(.2,.9,.3,1)"};
       if(turn.includes(el)){const dx=a.left+a.width/2-b.left-b.width/2,dy=a.top+a.height/2-b.top-b.height/2;
@@ -3120,8 +3161,12 @@ $("#board").addEventListener("click",e=>{
   const tb=e.target.closest("button.b-st");if(tb){const r=tb.getBoundingClientRect();SFX.play("bar",0);setTimeout(()=>SFX.play("whoosh"),70);   // sub-topic badge on the recent block
     enterApp(r.left+r.width/2,r.top+r.height/2,()=>{resetFilters();topicFilters(tb.dataset.ch,tb.dataset.st);apply();});return;}
   const t=e.target.closest("[data-go]");if(!t||t.disabled)return;
-  if(t.dataset.go==="papers"){statSet(t.closest(".tile"),true);return;}
-  const r=t.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,g=t.dataset.go;
+  if(t.dataset.go==="papers"){PP.open(t);return;}
+  boardGo(t);
+});
+// a [data-go] tap -> the app on that slice; r = where the tap was (the paper popup measures its card before it closes)
+function boardGo(t,r=t.getBoundingClientRect()){
+  const x=r.left+r.width/2,y=r.top+r.height/2,g=t.dataset.go;
   const xg=g==="ex"||g==="exch"||g==="extopic";   // ✎ destinations: exercises only
   SFX.play(g==="topic"?"bar":xg?"exOpen":"tile",+t.dataset.k);setTimeout(()=>SFX.play("whoosh"),70);
   enterApp(x,y,()=>{
@@ -3140,7 +3185,7 @@ $("#board").addEventListener("click",e=>{
     apply();
     if(g==="random"&&filtered.length){setTimeout(()=>SFX.play("dice"),250);setTimeout(()=>openModal(Math.floor(Math.random()*filtered.length)),650);}
   });
-});
+}
 $("#home").onclick=()=>{SFX.play("home");dwell(null);document.body.classList.remove("inapp");$("#app").classList.remove("show");window.scrollTo(0,0);buildBoard();};
 buildBoard();
 
