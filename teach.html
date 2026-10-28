@@ -922,6 +922,8 @@ button.ag-x.blk:hover{filter:brightness(.95)}
 .fbar i.free{background:var(--yel)}.fd:not(.on) .fbar i.free{background:#f6e7ad}
 .fbar i.blk,.fbar i.past{background:transparent}
 .fbar i.hol{background:#fbe4dd}
+.fbar i.ev{background:repeating-linear-gradient(135deg,var(--ink) 0 2px,transparent 2px 5px);opacity:.55}
+.fh.ev{background:repeating-linear-gradient(135deg,#cfc8b8 0 2px,var(--card) 2px 6px);color:var(--ink);border-color:#cfc8b8}
 .ftx{font:700 .78rem/1.5 "JetBrains Mono";text-align:right}
 .fed{width:30px;height:30px;border:0;background:transparent;font-size:.9rem;opacity:.5;transition:opacity .15s}
 .fed:hover,.fd.open .fed{opacity:1}
@@ -3456,6 +3458,19 @@ function weekDays(){
   mon.setDate(t.getDate() - (t.getDay()+6)%7 + 7*kweek);
   return [...Array(7)].map((_, k) => { const x = new Date(mon); x.setDate(mon.getDate()+k); return x; });
 }
+// lifelog events (ll_entries kind='event', same Supabase + login) also eat free time. ⚑ deadlines don't (they're a due date, not a place to be);
+// a timed event = time→end (no end = 1 ชม.) + the same buffer as a class; an all-day event blocks the whole day.
+const LLEV = {wk: null, by: {}};
+const evRanges = iso => (LLEV.by[iso] || []).map(f => { if (f.allday) return [0, 1440, f.title]; const [a, b] = String(f.time).split(':').map(Number), s0 = a*60 + (b || 0);
+  const e = f.end ? (([x, y]) => x*60 + (y || 0))(String(f.end).split(':').map(Number)) : s0 + 60; return [s0, e > s0 ? e : s0 + 60, f.title]; });
+function loadLLEv(days){
+  const a = isoD(days[0]), b = isoD(days[6]); if (!sb || LLEV.wk === a) return; LLEV.wk = a;
+  sb.from('ll_entries').select('day,fields').eq('kind', 'event').gte('day', a).lte('day', b).then(({data, error}) => {
+    if (error || LLEV.wk !== a) return console.warn('ll events', error);
+    LLEV.by = {}; (data || []).forEach(x => { const f = x.fields || {}; if (f.type === 'deadline' || (!f.allday && !f.time)) return; (LLEV.by[x.day] ||= []).push(f); });
+    pickInit = null; if ($('#agrid')) renderAvail();
+  });
+}
 const MIN_FREE = 30;   // free stretches shorter than this are dropped (not worth offering)
 // one day as a minute grid: 0 free · 1 class · 2 blocked hour · 3 buffer around a class (cancelled classes ignored)
 function dayMask(date){
@@ -3464,6 +3479,7 @@ function dayMask(date){
   const ses = DB.sessions.filter(x => x.date === iso && x.status !== 'cancel').map(x => { const [a, c] = x.time.split(':').map(Number), s0 = a*60+c; return [s0, s0 + Math.round(x.h*60)]; });
   for (const [a, e] of ses){ for (let k = Math.max(0, a-b.before); k < Math.min(1440, e+b.after); k++) if (m[k] !== 1) m[k] = 3; }
   for (const [a, e] of ses) m.fill(1, Math.max(0, a), Math.min(1440, e));
+  for (const [a, e] of evRanges(iso)){ for (let k = Math.max(0, a-b.before); k < Math.min(1440, e+b.after); k++) if (m[k] === 0) m[k] = 3; m.fill(4, Math.max(0, a), Math.min(1440, e)); }   // 4 = a lifelog event
   return m;
 }
 // free intervals [startMin, endMin] inside H0..H1: past + holidays excluded, slivers < MIN_FREE dropped
@@ -3482,6 +3498,7 @@ function cellState(date, h){
   const end = new Date(date); end.setHours(h+1, 0, 0, 0); if (end <= NOW) return {t:'past'};
   const ses = DB.sessions.find(x => { if (x.date !== iso || x.status === 'cancel') return false; const [a,b] = x.time.split(':').map(Number), s0 = a*60+b; return s0 < (h+1)*60 && s0 + x.h*60 > h*60; });
   if (ses) return {t:'ses', s:ses};
+  const ev = evRanges(iso).find(([a, b]) => a < (h+1)*60 && b > h*60); if (ev) return {t:'ev', n:ev[2]};
   if ((DB.avail.block[date.getDay()] || []).includes(h)) return {t:'blk'};
   return {t:'free'};
 }
@@ -3499,7 +3516,7 @@ function hatchOf(date, h, fr){
   return out;
 }
 function renderAvail(){
-  const days = weekDays(), bf = DB.buffer;
+  const days = weekDays(), bf = DB.buffer; loadLLEv(days);
   $('#bfb').value = bf.before; $('#bfa').value = bf.after; const lk = $('#bflk'); lk.classList.toggle('on', bf.linked); lk.textContent = bf.linked ? '🔗' : '⛓'; lk.setAttribute('aria-pressed', bf.linked);
   lk.title = bf.linked ? 'ก่อน-หลังเท่ากัน (กดเพื่อแยกตั้งเอง)' : 'แยกตั้งก่อน/หลัง (กดเพื่อให้เท่ากัน)'; $('#bufrow').classList.toggle('lkd', bf.linked);
   document.querySelectorAll('#bufpre button').forEach(x => x.classList.toggle('on', bf.before === +x.dataset.bp && bf.after === +x.dataset.bp));
@@ -3508,7 +3525,7 @@ function renderAvail(){
   $('#agrid').innerHTML = days.map(d => {
     const i = isoD(d), fr = freeOf(d), hol = isHolD(i), past = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23) < NOW, on = pickedD.has(i), open = kOpen === i;
     const cells = []; for (let h = H0; h < H1; h++) cells.push(cellState(d, h));
-    const bar = cells.map((c, n) => `<i class="${c.t} ${c.t==='ses' ? colorOf(c.s.who) : ''}">${c.t === 'free' ? hatchOf(d, H0+n, fr).map(([x, y]) => `<b class="hz" style="left:${x/.6}%;width:${(y-x)/.6}%"></b>`).join('') : ''}</i>`).join('');
+    const bar = cells.map((c, n) => `<i class="${c.t} ${c.t==='ses' ? colorOf(c.s.who) : ''}"${c.t === 'ev' ? ` title="${esc(c.n || 'อีเวนต์')}"` : ''}>${c.t === 'free' ? hatchOf(d, H0+n, fr).map(([x, y]) => `<b class="hz" style="left:${x/.6}%;width:${(y-x)/.6}%"></b>`).join('') : ''}</i>`).join('');
     const txt = hol ? 'วันหยุด' : past ? 'ผ่านไปแล้ว' : fr.length ? fr.map(rng).join('<br>') : 'ไม่ว่าง';
     return `<div class="fd ${on?'on':''} ${fr.length?'':'none'} ${open?'open':''}">
       <button class="fck" data-day="${i}" ${fr.length ? '' : 'disabled'} aria-label="ใส่วันนี้ในข้อความ">${on ? '✓' : ''}</button>
@@ -3519,14 +3536,15 @@ function renderAvail(){
       ${open ? `<div class="fhrs">${cells.map((c, n) => { const h = H0 + n;
           return c.t === 'ses' ? `<span class="fh ses ${colorOf(c.s.who)}" title="${esc(st(c.s.who)?.name)}">${pad(h)}</span>`
             : c.t === 'past' ? `<span class="fh past">${pad(h)}</span>`
+            : c.t === 'ev' ? `<span class="fh ev" title="${esc(c.n || 'อีเวนต์')}">${pad(h)}</span>`
             : `<button class="fh ${c.t}" data-wd="${d.getDay()}" data-h="${h}">${pad(h)}</button>`; }).join('')}
-        <div class="fnote">แตะชั่วโมงเพื่อสลับ ว่าง / ไม่ว่าง · ใช้กับทุกวัน${TH_DF[d.getDay()]} · ช่องสีคือคาบที่นัดแล้ว</div></div>` : ''}
+        <div class="fnote">แตะชั่วโมงเพื่อสลับ ว่าง / ไม่ว่าง · ใช้กับทุกวัน${TH_DF[d.getDay()]} · ช่องสีคือคาบที่นัดแล้ว · ช่องลายคืออีเวนต์จากบันทึกชีวิต</div></div>` : ''}
     </div>`;
   }).join('');
   const lines = pickedLines(days);
   $('#free').textContent = lines.length ? fillTpl(DB.tpl.free).replace('{วันว่าง}', lines.join('\n')) : 'ติ๊กวันด้านซ้าย แล้วข้อความจะขึ้นตรงนี้';
   $('#free').classList.toggle('hint', !lines.length);
-  $('#freeinfo').textContent = `${lines.length} วัน · หักคาบที่นัดไว้${bf.before || bf.after ? ` + เผื่อเวลา ${bf.before}/${bf.after} นาที` : ''} + วันหยุดให้แล้ว`;
+  $('#freeinfo').textContent = `${lines.length} วัน · หักคาบที่นัดไว้${bf.before || bf.after ? ` + เผื่อเวลา ${bf.before}/${bf.after} นาที` : ''} + วันหยุด${Object.keys(LLEV.by).length ? ' + อีเวนต์' : ''}ให้แล้ว`;
 }
 const pickedLines = days => days.filter(d => pickedD.has(isoD(d))).map(d => { const f = freeOf(d); return f.length ? `• ${TH_DF[d.getDay()]} ${d.getDate()} ${TH_M[d.getMonth()]}  ${f.map(rng).join(', ')}` : null; }).filter(Boolean);
 // buffer settings: minutes before / after each class; linked = editing one sets both
