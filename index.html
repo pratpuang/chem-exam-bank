@@ -362,7 +362,7 @@ html.scrlock{overscroll-behavior:none}
 .sheet:before{content:"";position:absolute;left:0;top:0;bottom:0;width:16px;background:var(--red)}
 .sheet.lv-medium{box-shadow:12px 12px 0 var(--yel)}.sheet.lv-medium:before{background:var(--yel)}
 .sheet.lv-easy{box-shadow:12px 12px 0 var(--blue)}.sheet.lv-easy:before{background:var(--blue)}
-.sheet .mtop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding-right:104px}
+.sheet .mtop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding-right:154px}
 .sheet .mtop .badge{white-space:normal}   /* a long chapter name wraps instead of running under ✎ ✕ on a phone */
 .sheet .body{font-size:1.38rem;line-height:1.85}
 /* a short no-choice question (one or two lines, no figure) gets bigger type + breathing room above the เฉลย/ตาราง/บันทึก row */
@@ -377,9 +377,14 @@ html.scrlock{overscroll-behavior:none}
 .sheet .solbody{font-size:1.05rem}
 .x{position:absolute;top:14px;right:16px;border:3px solid var(--ink);background:var(--ink);color:var(--paper);width:42px;height:42px;font-size:1.1rem;font-weight:800}
 /* present bottom row: three equal cells, one height (the tallest label sets it), labels centred */
-.mctrl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:20px}
+.mctrl{display:grid;grid-template-columns:1fr;margin-top:18px}
 .mctrl button{min-height:50px;padding:8px 10px;border:3px solid var(--ink);background:var(--card);font-size:1rem;font-weight:800;line-height:1.25;box-shadow:4px 4px 0 var(--sh);display:flex;flex-wrap:wrap;align-content:center;justify-content:center;text-align:center}   /* each .nw word group is a flex item: lines break only between them */
-.mctrl .reveal.flag{border-style:dashed}.nw{white-space:nowrap}
+.mctrl .reveal.flag{border-style:dashed}
+/* เฉลย: one slim line — bold label, small วิธีทำ tag, chevron that flips while open */
+.mctrl .reveal{min-height:42px;padding:6px 16px;flex-wrap:nowrap;justify-content:flex-start;gap:10px;font-size:1.05rem}
+.reveal .rtag{font-size:.78rem;font-weight:700;padding:1px 8px;border:2px solid currentColor;opacity:.85}
+.reveal .rchev{margin-left:auto;font-size:1.1rem;transition:transform .25s cubic-bezier(.3,1.4,.5,1)}
+.reveal[aria-expanded="true"] .rchev{transform:rotate(180deg)}.nw{white-space:nowrap}
 .mfrow{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:.8rem;color:var(--mut)}
 .mhint{transition:opacity .6s}.mhint.gone{opacity:0}body.swiped .mhint{display:none}
 .mhint .hf{display:none}@media (hover:hover) and (pointer:fine){.mhint .hc{display:none}.mhint .hf{display:inline}}
@@ -403,6 +408,7 @@ html.scrlock{overscroll-behavior:none}
 .sheet .x{z-index:3}.mctrl,#modal .solbtn{position:relative;z-index:3}
 .sheet .inkw{right:66px;background:var(--card);color:var(--ink);font-size:1.3rem;transition:background .15s,color .15s}
 .sheet .inkw.on{background:var(--yel);color:#141414}
+.sheet .shotx{right:116px;background:var(--card);color:var(--ink);font-size:1.05rem;padding:0}.sheet .shotx:disabled{opacity:.7}
 .inkbar{position:absolute;left:50%;bottom:18px;display:flex;gap:3px;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:4px;
   opacity:0;visibility:hidden;pointer-events:none;transform:translate(-50%,14px);transition:opacity .2s,transform .2s,visibility 0s .2s}
 .inkbar.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0);transition:opacity .2s,transform .2s}
@@ -1023,6 +1029,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 <div class="modal" id="modal"><div id="mstrips"></div><div class="sheet">
   <button class="x" id="mx">✕</button>
   <button class="x inkw" id="inkw" title="โหมดเขียน (P)" aria-pressed="false">✎</button>
+  <button class="x shotx" id="mshot" title="บันทึกโจทย์ข้อนี้เป็นรูป" aria-label="บันทึกเป็นรูป">💾</button>
   <div class="mink" id="mink">
   <div class="mtop" id="mtop"></div>
   <div class="body" id="mbody"></div>
@@ -1031,8 +1038,6 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
   </div>
   <div class="mctrl">
     <button id="mreveal" class="reveal" aria-expanded="false">เฉลย</button>
-    <button id="mpt" title="ตารางธาตุ"><span class="nw">เปิด</span><wbr><span class="nw">ตารางธาตุ</span></button>
-    <button id="mshot" title="บันทึกโจทย์ข้อนี้เป็นไฟล์ PNG"><span class="nw">💾 บันทึก</span><wbr><span class="nw">เป็นรูป</span></button>
   </div>
   <div class="mfrow"><span class="mhint" id="mhint"><span class="hc">‹ ปัดซ้าย/ขวาเพื่อเปลี่ยนข้อ ›</span><span class="hf">← → เปลี่ยนข้อ</span></span><span class="mpos" id="mpos"></span></div>
   <div class="foot" id="mfoot" style="margin-top:14px"></div>
@@ -1611,7 +1616,7 @@ function fillModal(anim){
   $("#mbody").innerHTML=q.bodyHtml+figHtml(q).replace(' loading="lazy"','');$("#mbody").classList.remove("rv");
   $("#mbody").classList.toggle("short",!/<li|<img|<table/i.test(q.bodyHtml)&&!figHtml(q)&&q.bodyHtml.replace(/<[^>]+>/g,"").trim().length<220);   // one/two-liner, no choices: bigger type + space
   $("#mfoot").innerHTML=footHtml(q);STRIP.fill(q);
-  const rb=$("#mreveal");rb.innerHTML=`<span class="nw">${revName(q).replace(" + ",'&nbsp;</span><span class="nw">+ ')}</span>`;rb.classList.toggle("flag",!!(q.solFlag||q.solPending));rb.setAttribute("aria-expanded","false");   // label wraps only between its words
+  const rb=$("#mreveal");{const [a,b]=revName(q).split(" + ");rb.innerHTML=`<b>${a}</b>${b?`<span class="rtag">${b}</span>`:""}<span class="rchev">▾</span>`;}rb.classList.toggle("flag",!!(q.solFlag||q.solPending));rb.setAttribute("aria-expanded","false");   // label wraps only between its words
   $("#msol").innerHTML=revWrap(q);tex($("#msol"));
   $("#mpos").textContent=`${mIdx+1} / ${filtered.length}`;
   const sh=$("#modal .sheet");sh.classList.remove("lv-easy","lv-medium","lv-hard");if(q.diff)sh.classList.add("lv-"+q.diff);sh.classList.toggle("ex",isEx(q));sh.classList.remove("inR","inL","outL","outR");sh.style.animation="none";void sh.offsetWidth;if(anim)sh.classList.add(anim);sh.style.animation="";
@@ -2020,7 +2025,6 @@ const PD=(()=>{
   $("#pdtab").onclick=open;$("#pdx").onclick=close;$("#pdscrim").onclick=close;
   return{open,close,isOpen,parseF,fHTML,SYM,curQ,load(v){open();if(!mwOn)setMw(true);put(v);}};
 })();
-$("#mpt").onclick=()=>PD.open();
 /* ================= CARD STRIPS (present card) + the Mw strip =================
    A strip = {label, title, build(q)}. build returns the panel's inner HTML, or null when the question has nothing for it
    (then no tab is drawn). A second strip (ค่าที่ให้, hints...) is one more object in STRIPS. */
@@ -2154,12 +2158,12 @@ function deliverShot(blob,name){const file=new File([blob],name,{type:blob.type}
     return navigator.share({files:[file]}).catch(e=>{if(e&&e.name!=="AbortError")dl();});
   dl();}
 async function saveShot(){const q=filtered[mIdx],b=$("#mshot");if(!q||b.disabled)return;
-  const lbl='<span class="nw">💾 บันทึก</span><wbr><span class="nw">เป็นรูป</span>',k=shotKey();const nm=b=>`${q.id}.${b.type==="image/jpeg"?"jpg":"png"}`;
-  if(shot.key===k&&shot.blob){deliverShot(shot.blob,nm(shot.blob));SFX.play("saved");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.innerHTML=lbl;},1200);return;}
-  b.disabled=true;b.textContent="กำลังสร้างรูป…";
+  const lbl="💾",k=shotKey();const nm=b=>`${q.id}.${b.type==="image/jpeg"?"jpg":"png"}`;
+  if(shot.key===k&&shot.blob){deliverShot(shot.blob,nm(shot.blob));SFX.play("saved");b.textContent="✅";setTimeout(()=>{b.innerHTML=lbl;},1200);return;}
+  b.disabled=true;b.textContent="⏳";
   try{if(!(shot.key===k&&shot.job)){const job=renderShot();shot={key:k,blob:null,job};}
     const blob=await shot.job;shot.blob=blob;deliverShot(blob,nm(blob));
-    SFX.play("saved");b.textContent="✅ บันทึกแล้ว";setTimeout(()=>{b.innerHTML=lbl;},1200);
+    SFX.play("saved");b.textContent="✅";setTimeout(()=>{b.innerHTML=lbl;},1200);
   }catch(e){shot={key:"",blob:null,job:null};b.innerHTML=lbl;console.error(e);alert(e&&e.cdn?"บันทึกรูปไม่ได้ — ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างรูป":"บันทึกรูปไม่ได้ — สร้างรูปข้อนี้ไม่สำเร็จ ลองอีกครั้ง");}
   finally{b.disabled=false;}}
 $("#mshot").onclick=saveShot;
