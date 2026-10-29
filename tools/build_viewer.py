@@ -693,6 +693,8 @@ header{position:sticky;top:0;z-index:20;background:var(--ink);color:var(--paper)
 header.fhide .bar2{display:none}
 .bar2{background:var(--card);color:var(--ink);border-bottom:3px solid var(--ink)}
 .bar2 .in{max-width:1180px;margin:0 auto;padding:10px 12px 8px}
+/* the fixed side tabs (ตารางธาตุ / เครื่องมือ / …, ~40px at left:0, over the header) sat on the filter fields on iPad: clear them */
+@media(max-width:1290px){.bar2 .in{padding-left:54px}}
 /* filter grid: every select is a labelled cell of equal height; a cell that's actually filtering turns yellow */
 .fbox{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
 @media(max-width:1000px){.fbox{grid-template-columns:repeat(4,minmax(0,1fr))}}
@@ -893,14 +895,14 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 html.scrlock{overscroll-behavior:none}
 .sheet,#pd,#td,#tm{overscroll-behavior:contain}
 #pdscrim{touch-action:none}
-.sheet{background:var(--card);border:4px solid var(--ink);box-shadow:12px 12px 0 var(--red);max-width:960px;width:100%;max-height:92vh;overflow:auto;padding:30px 34px 26px 44px;position:relative;animation:pIn .4s cubic-bezier(.2,1.2,.4,1)}
+.sheet{background:var(--card);border:4px solid var(--ink);box-shadow:12px 12px 0 var(--red);max-width:min(1240px,90vw);width:100%;max-height:92vh;overflow:auto;padding:34px 40px 30px 50px;position:relative;animation:pIn .4s cubic-bezier(.2,1.2,.4,1)}
 .sheet:before{content:"";position:absolute;left:0;top:0;bottom:0;width:16px;background:var(--red)}
 .sheet.lv-medium{box-shadow:12px 12px 0 var(--yel)}.sheet.lv-medium:before{background:var(--yel)}
 .sheet.lv-easy{box-shadow:12px 12px 0 var(--blue)}.sheet.lv-easy:before{background:var(--blue)}
 .sheet .mtop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 /* one toolbar line: badges (wrap) on the left, [⬇|✎] joined + ✕ on the right, centred on the first badge line */
 .sheet .mtop{padding-right:132px;min-height:26px}
-.sheet .mtools{position:absolute;top:25px;right:20px;display:flex;gap:8px;z-index:3}
+.sheet .mtools{position:absolute;top:29px;right:20px;display:flex;gap:8px;z-index:3}
 .sheet .mjoin{display:flex}.sheet .mjoin .x+.x{margin-left:-2.5px}
 .sheet .mtools .x{position:static;width:36px;height:36px;border-width:2.5px;padding:0;display:grid;place-items:center}
 .sheet .mtools .x svg{display:block}
@@ -909,9 +911,9 @@ html.scrlock{overscroll-behavior:none}
 .sheet .mtop .badge{min-height:26px;padding:2px 9px;font-size:.74rem;border:2px solid var(--ink);border-style:solid;background:var(--card);color:var(--ink)}
 .sheet .mtop .b-id{background:var(--ink);color:var(--paper)}
 .sheet .mtop .badge{white-space:normal}   /* a long chapter name wraps instead of running under ✎ ✕ on a phone */
-.sheet .body{font-size:1.38rem;line-height:1.85}
+.sheet .body{font-size:1.5rem;line-height:1.85}
 /* a short no-choice question (one or two lines, no figure) gets bigger type + breathing room above the เฉลย/ตาราง/บันทึก row */
-.sheet .body.short{font-size:1.75rem;line-height:1.7;min-height:7em;padding-bottom:12px}
+.sheet .body.short{font-size:1.9rem;line-height:1.7;min-height:7em;padding-bottom:12px}
 /* save-as-image: an off-screen copy of the sheet (badges + question + choices), fixed width so every PNG matches */
 .shotwrap{position:fixed;left:0;top:0;box-sizing:border-box;opacity:0;z-index:-1;pointer-events:none;width:1100px;padding:28px 46px 46px 28px;background:var(--paper)}
 .shotsd{position:absolute}
@@ -2242,10 +2244,17 @@ const INK=(()=>{
   // The live stroke is drawn with its tail running to the pen tip; pointerup stores that same tip, so nothing jumps.
   function draw(s,m){const st=getComputedStyle(s.cvP),C=["--ink","--red","--blue","--yel"].map(v=>st.getPropertyValue(v).trim()),
       a=cur&&cur.s===s&&cur.p?list(s).concat([{t:cur.t,c:cur.c,p:cur.p.concat(tail(cur))}]):list(s),xH=s.xH,xP=s.xP;
-    if(m&1){xH.clearRect(0,0,s.cvH.width,s.cvH.height);xH.save();xH.globalAlpha=.38;
+    // highlighter: every stroke is laid down OPAQUE on an offscreen layer, then that layer is blended once at .38.
+    // Stroking the translucent colour straight onto the canvas let WebKit seam the wide line where its tiny curve
+    // pieces meet (the gappy "ขาดๆ" swipe on iPad); one flat layer can't seam, and round caps keep the ends whole.
+    if(m&1&&s.cvH.width&&s.cvH.height){const cv=s.cvH,o=s.off||(s.off=document.createElement("canvas")),ox=o.getContext("2d"),d=window.devicePixelRatio||1;
+      if(o.width!==cv.width||o.height!==cv.height){o.width=cv.width;o.height=cv.height;}
+      ox.setTransform(1,0,0,1,0,0);ox.clearRect(0,0,o.width,o.height);ox.setTransform(d,0,0,d,0,0);
+      ox.strokeStyle=C[3];ox.lineWidth=22;ox.lineCap=ox.lineJoin="round";
+      a.forEach(t=>{if(t.t==="h"){path(s,ox,t.p);ox.stroke();}});
+      xH.save();xH.setTransform(1,0,0,1,0,0);xH.clearRect(0,0,cv.width,cv.height);xH.globalAlpha=.38;
       xH.globalCompositeOperation=document.body.classList.contains("dark")?"screen":"multiply";
-      xH.strokeStyle=C[3];xH.lineWidth=22;xH.lineCap="butt";xH.lineJoin="round";
-      a.forEach(t=>{if(t.t==="h"){path(s,xH,t.p);xH.stroke();}});xH.restore();}
+      xH.drawImage(o,0,0);xH.restore();}
     if(m&2){xP.clearRect(0,0,s.cvP.width,s.cvP.height);xP.lineWidth=3.2;xP.lineCap=xP.lineJoin="round";
       a.forEach(t=>{if(t.t==="p"){xP.strokeStyle=C[t.c]||C[0];path(s,xP,t.p);xP.stroke();}});}}
   function frame(m,s){(s?[s]:SF).forEach(x=>x.dirty|=m);
