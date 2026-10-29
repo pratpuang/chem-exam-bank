@@ -362,7 +362,14 @@ html.scrlock{overscroll-behavior:none}
 .sheet:before{content:"";position:absolute;left:0;top:0;bottom:0;width:16px;background:var(--red)}
 .sheet.lv-medium{box-shadow:12px 12px 0 var(--yel)}.sheet.lv-medium:before{background:var(--yel)}
 .sheet.lv-easy{box-shadow:12px 12px 0 var(--blue)}.sheet.lv-easy:before{background:var(--blue)}
-.sheet .mtop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding-right:154px}
+.sheet .mtop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+/* two tiers: tools bar (counter · ⬇ ✎ ✕) over one row of same-height, same-style badges */
+.sheet .mbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:-14px -14px 12px 0;position:relative;z-index:3}
+.sheet .mtools{display:flex;gap:6px}
+.sheet .mbar .x{position:static;width:36px;height:36px;border-width:2.5px;padding:0;display:grid;place-items:center}
+.sheet .mbar .x svg{display:block}
+.sheet .mtop .badge{min-height:26px;padding:2px 9px;font-size:.74rem;border:2px solid var(--ink);border-style:solid;background:var(--card);color:var(--ink)}
+.sheet .mtop .b-id{background:var(--ink);color:var(--paper)}
 .sheet .mtop .badge{white-space:normal}   /* a long chapter name wraps instead of running under ✎ ✕ on a phone */
 .sheet .body{font-size:1.38rem;line-height:1.85}
 /* a short no-choice question (one or two lines, no figure) gets bigger type + breathing room above the เฉลย/ตาราง/บันทึก row */
@@ -393,7 +400,7 @@ html.scrlock{overscroll-behavior:none}
 .mctrl button:active{transform:translate(4px,4px);box-shadow:none}
 .reveal{background:var(--blue)!important;color:#fff}
 .solnone{color:var(--mut)}
-.mpos{margin-left:auto;font-family:"JetBrains Mono";font-weight:700;font-size:.8rem;color:var(--mut)}
+.mpos{font-family:"JetBrains Mono";font-weight:700;font-size:.82rem;color:var(--mut)}
 /* poster-pen: two canvases over the sheet's content (highlighter under pen); inert until write mode (✎ beside ✕, or P)
    is on. The controls (✕ ✎ and the bottom button row) sit above them so they stay clickable while writing. The tool bar
    floats in the modal's bottom padding, which is always reserved, so showing/hiding it never moves the question.
@@ -406,9 +413,9 @@ html.scrlock{overscroll-behavior:none}
 #modal.inking,#modal .x,.inkbar{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #modal button{touch-action:manipulation}
 .sheet .x{z-index:3}.mctrl,#modal .solbtn{position:relative;z-index:3}
-.sheet .inkw{right:66px;background:var(--card);color:var(--ink);font-size:1.3rem;transition:background .15s,color .15s}
+.sheet .inkw{background:var(--card);color:var(--ink);font-size:1.3rem;transition:background .15s,color .15s}
 .sheet .inkw.on{background:var(--yel);color:#141414}
-.sheet .shotx{right:116px;background:var(--card);color:var(--ink);font-size:1.05rem;padding:0}.sheet .shotx:disabled{opacity:.7}
+.sheet .shotx{background:var(--card);color:var(--ink)}.sheet .shotx:disabled{opacity:.6}
 .inkbar{position:absolute;left:50%;bottom:18px;display:flex;gap:3px;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:4px;
   opacity:0;visibility:hidden;pointer-events:none;transform:translate(-50%,14px);transition:opacity .2s,transform .2s,visibility 0s .2s}
 .inkbar.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0);transition:opacity .2s,transform .2s}
@@ -1027,9 +1034,10 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 </div>
 
 <div class="modal" id="modal"><div id="mstrips"></div><div class="sheet">
-  <button class="x" id="mx">✕</button>
-  <button class="x inkw" id="inkw" title="โหมดเขียน (P)" aria-pressed="false">✎</button>
-  <button class="x shotx" id="mshot" title="บันทึกโจทย์ข้อนี้เป็นรูป" aria-label="บันทึกเป็นรูป">💾</button>
+  <div class="mbar"><span class="mpos" id="mpos"></span><div class="mtools">
+  <button class="x shotx" id="mshot" title="บันทึกโจทย์ข้อนี้เป็นรูป" aria-label="บันทึกเป็นรูป"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button>
+  <button class="x inkw" id="inkw" title="โหมดเขียน (P)" aria-pressed="false" aria-label="โหมดเขียน"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-5L16 4l4 4L9 19z"/></svg></button>
+  <button class="x" id="mx" title="ปิด (Esc)" aria-label="ปิด"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></div>
   <div class="mink" id="mink">
   <div class="mtop" id="mtop"></div>
   <div class="body" id="mbody"></div>
@@ -1616,7 +1624,7 @@ function fillModal(anim){
   STRIP.fill(q);
   const rb=$("#mreveal");{const n=revName(q),f=n.startsWith("⚠ ");rb.innerHTML=`${f?"⚠ ":""}ดู${n.replace("⚠ ","").split(" + ")[0]} <span class="rchev">▾</span>`;}rb.classList.toggle("flag",!!(q.solFlag||q.solPending));rb.setAttribute("aria-expanded","false");   // label wraps only between its words
   $("#msol").innerHTML=revWrap(q);tex($("#msol"));
-  $("#mtop").insertAdjacentHTML("beforeend",`<span class="mpos">${mIdx+1} / ${filtered.length}</span>`);
+  $("#mpos").textContent=`${mIdx+1} / ${filtered.length}`;
   const sh=$("#modal .sheet");sh.classList.remove("lv-easy","lv-medium","lv-hard");if(q.diff)sh.classList.add("lv-"+q.diff);sh.classList.toggle("ex",isEx(q));sh.classList.remove("inR","inL","outL","outR");sh.style.animation="none";void sh.offsetWidth;if(anim)sh.classList.add(anim);sh.style.animation="";
   if(window.prepShot)prepShot(150);
   INK.refresh();
@@ -2156,12 +2164,12 @@ function deliverShot(blob,name){const file=new File([blob],name,{type:blob.type}
     return navigator.share({files:[file]}).catch(e=>{if(e&&e.name!=="AbortError")dl();});
   dl();}
 async function saveShot(){const q=filtered[mIdx],b=$("#mshot");if(!q||b.disabled)return;
-  const lbl="💾",k=shotKey();const nm=b=>`${q.id}.${b.type==="image/jpeg"?"jpg":"png"}`;
-  if(shot.key===k&&shot.blob){deliverShot(shot.blob,nm(shot.blob));SFX.play("saved");b.textContent="✅";setTimeout(()=>{b.innerHTML=lbl;},1200);return;}
-  b.disabled=true;b.textContent="⏳";
+  const lbl='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>',k=shotKey();const nm=b=>`${q.id}.${b.type==="image/jpeg"?"jpg":"png"}`;
+  if(shot.key===k&&shot.blob){deliverShot(shot.blob,nm(shot.blob));SFX.play("saved");b.textContent="✓";setTimeout(()=>{b.innerHTML=lbl;},1200);return;}
+  b.disabled=true;b.textContent="…";
   try{if(!(shot.key===k&&shot.job)){const job=renderShot();shot={key:k,blob:null,job};}
     const blob=await shot.job;shot.blob=blob;deliverShot(blob,nm(blob));
-    SFX.play("saved");b.textContent="✅";setTimeout(()=>{b.innerHTML=lbl;},1200);
+    SFX.play("saved");b.textContent="✓";setTimeout(()=>{b.innerHTML=lbl;},1200);
   }catch(e){shot={key:"",blob:null,job:null};b.innerHTML=lbl;console.error(e);alert(e&&e.cdn?"บันทึกรูปไม่ได้ — ต้องต่ออินเทอร์เน็ตครั้งแรกเพื่อโหลดตัวสร้างรูป":"บันทึกรูปไม่ได้ — สร้างรูปข้อนี้ไม่สำเร็จ ลองอีกครั้ง");}
   finally{b.disabled=false;}}
 $("#mshot").onclick=saveShot;
