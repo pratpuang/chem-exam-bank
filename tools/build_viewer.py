@@ -912,13 +912,13 @@ html.scrlock{overscroll-behavior:none}
 .sheet .solbody{font-size:1.05rem}
 .x{position:absolute;top:14px;right:16px;border:3px solid var(--ink);background:var(--ink);color:var(--paper);width:42px;height:42px;font-size:1.1rem;font-weight:800}
 /* present bottom row: three equal cells, one height (the tallest label sets it), labels centred */
-.mctrl{display:grid;grid-template-columns:1fr;margin-top:18px}
+.mctrl{display:flex;justify-content:flex-end;margin-top:14px}
 .mctrl button{min-height:50px;padding:8px 10px;border:3px solid var(--ink);background:var(--card);font-size:1rem;font-weight:800;line-height:1.25;box-shadow:4px 4px 0 var(--sh);display:flex;flex-wrap:wrap;align-content:center;justify-content:center;text-align:center}   /* each .nw word group is a flex item: lines break only between them */
 .mctrl .reveal.flag{border-style:dashed}
-/* เฉลย: one slim line — bold label, small วิธีทำ tag, chevron that flips while open */
-.mctrl .reveal{min-height:42px;padding:6px 16px;flex-wrap:nowrap;justify-content:flex-start;gap:10px;font-size:1.05rem}
-.reveal .rtag{font-size:.78rem;font-weight:700;padding:1px 8px;border:2px solid currentColor;opacity:.85}
-.reveal .rchev{margin-left:auto;font-size:1.1rem;transition:transform .25s cubic-bezier(.3,1.4,.5,1)}
+/* เฉลย: a quiet text link under the choices, so the question owns the card */
+.mctrl .reveal{min-height:0;padding:4px 2px;border:0;box-shadow:none;background:none!important;color:var(--mut);font-size:.92rem;font-weight:700;text-decoration:underline;text-underline-offset:3px;gap:6px;flex-wrap:nowrap}
+.mctrl .reveal:hover,.mctrl .reveal[aria-expanded="true"]{color:var(--ink)}.mctrl .reveal:active{transform:none}
+.reveal .rchev{display:inline-block;text-decoration:none;transition:transform .25s cubic-bezier(.3,1.4,.5,1)}
 .reveal[aria-expanded="true"] .rchev{transform:rotate(180deg)}.nw{white-space:nowrap}
 .mfrow{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:.8rem;color:var(--mut)}
 .mhint{transition:opacity .6s}.mhint.gone{opacity:0}body.swiped .mhint{display:none}
@@ -928,7 +928,7 @@ html.scrlock{overscroll-behavior:none}
 .mctrl button:active{transform:translate(4px,4px);box-shadow:none}
 .reveal{background:var(--blue)!important;color:#fff}
 .solnone{color:var(--mut)}
-.mpos{margin-left:auto;font-family:"JetBrains Mono";font-weight:700;color:var(--ink)}
+.mpos{margin-left:auto;font-family:"JetBrains Mono";font-weight:700;font-size:.8rem;color:var(--mut)}
 /* poster-pen: two canvases over the sheet's content (highlighter under pen); inert until write mode (✎ beside ✕, or P)
    is on. The controls (✕ ✎ and the bottom button row) sit above them so they stay clickable while writing. The tool bar
    floats in the modal's bottom padding, which is always reserved, so showing/hiding it never moves the question.
@@ -1574,8 +1574,6 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
   <div class="mctrl">
     <button id="mreveal" class="reveal" aria-expanded="false">เฉลย</button>
   </div>
-  <div class="mfrow"><span class="mhint" id="mhint"><span class="hc">‹ ปัดซ้าย/ขวาเพื่อเปลี่ยนข้อ ›</span><span class="hf">← → เปลี่ยนข้อ</span></span><span class="mpos" id="mpos"></span></div>
-  <div class="foot" id="mfoot" style="margin-top:14px"></div>
 </div>
 <div class="mdiv" id="mdiv" role="separator" aria-label="ลากเพื่อปรับขนาด"></div>
 <div class="mboard" id="mboard"><canvas id="bhl"></canvas><canvas id="bpen"></canvas></div>
@@ -2150,10 +2148,10 @@ function fillModal(anim){
   $("#mtop").innerHTML=`${idBadge(q)}${chBadge(q)}${topicBadge(q,true)}${examBadge(q)}${diffBadge(q)}`;
   $("#mbody").innerHTML=q.bodyHtml+figHtml(q).replace(' loading="lazy"','');$("#mbody").classList.remove("rv");
   $("#mbody").classList.toggle("short",!/<li|<img|<table/i.test(q.bodyHtml)&&!figHtml(q)&&q.bodyHtml.replace(/<[^>]+>/g,"").trim().length<220);   // one/two-liner, no choices: bigger type + space
-  $("#mfoot").innerHTML=footHtml(q);STRIP.fill(q);
-  const rb=$("#mreveal");{const [a,b]=revName(q).split(" + ");rb.innerHTML=`<b>${a}</b>${b?`<span class="rtag">${b}</span>`:""}<span class="rchev">▾</span>`;}rb.classList.toggle("flag",!!(q.solFlag||q.solPending));rb.setAttribute("aria-expanded","false");   // label wraps only between its words
+  STRIP.fill(q);
+  const rb=$("#mreveal");{const n=revName(q),f=n.startsWith("⚠ ");rb.innerHTML=`${f?"⚠ ":""}ดู${n.replace("⚠ ","").split(" + ")[0]} <span class="rchev">▾</span>`;}rb.classList.toggle("flag",!!(q.solFlag||q.solPending));rb.setAttribute("aria-expanded","false");   // label wraps only between its words
   $("#msol").innerHTML=revWrap(q);tex($("#msol"));
-  $("#mpos").textContent=`${mIdx+1} / ${filtered.length}`;
+  $("#mtop").insertAdjacentHTML("beforeend",`<span class="mpos">${mIdx+1} / ${filtered.length}</span>`);
   const sh=$("#modal .sheet");sh.classList.remove("lv-easy","lv-medium","lv-hard");if(q.diff)sh.classList.add("lv-"+q.diff);sh.classList.toggle("ex",isEx(q));sh.classList.remove("inR","inL","outL","outR");sh.style.animation="none";void sh.offsetWidth;if(anim)sh.classList.add(anim);sh.style.animation="";
   if(window.prepShot)prepShot(150);
   INK.refresh();
@@ -2165,7 +2163,7 @@ let mBusy=false;
 function step(d){if(mBusy||!filtered.length)return;mBusy=true;SFX.play("flip",d);usedNav();
   $("#modal .sheet").classList.add(d>0?"outL":"outR");
   setTimeout(()=>{mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal(d>0?"inR":"inL");mBusy=false;},170);}
-function usedNav(){if(document.body.classList.contains("swiped"))return;ls.set("cqb_swiped","1");$("#mhint").classList.add("gone");
+function usedNav(){if(document.body.classList.contains("swiped"))return;ls.set("cqb_swiped","1");$("#mhint")?.classList.add("gone");
   setTimeout(()=>document.body.classList.add("swiped"),650);}
 if(ls.get("cqb_swiped","")==="1")document.body.classList.add("swiped");
 /* swipe = one FINGER moving mostly sideways >= 50px on the question card. Pencil (touchType "stylus") writes and never
@@ -2661,7 +2659,7 @@ async function renderShot(){const q=filtered[mIdx];const h2c=await loadH2C();
   const wrap=document.createElement("div");wrap.className="shotwrap";
   const sh=document.createElement("div");sh.className=$("#modal .sheet").className+" shot";
   ["#mtop","#mbody"].forEach(sel=>sh.appendChild($(sel).cloneNode(true)));
-  sh.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));sh.querySelectorAll(".rv").forEach(e=>e.classList.remove("rv"));sh.querySelectorAll("img").forEach(im=>im.loading="eager");   // .rv off: the PNG never carries the green answer
+  sh.querySelectorAll("[id]").forEach(e=>e.removeAttribute("id"));sh.querySelectorAll(".rv").forEach(e=>e.classList.remove("rv"));sh.querySelectorAll(".mpos").forEach(e=>e.remove());sh.querySelectorAll("img").forEach(im=>im.loading="eager");   // .rv off: the PNG never carries the green answer
   const sd=document.createElement("div");sd.className="shotsd";wrap.appendChild(sd);
   wrap.appendChild(sh);document.body.appendChild(wrap);
   try{
