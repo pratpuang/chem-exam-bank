@@ -902,6 +902,8 @@ html.scrlock{overscroll-behavior:none}
 .sheet .mtop{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px}
 /* one toolbar line: badges (wrap) on the left, [⬇|✎] joined + ✕ on the right, centred on the first badge line */
 .sheet .mtop{padding-right:132px;min-height:26px}
+/* popup shows only Q-id (+counter) and the paper; chapter / sub-topic / difficulty stay on the cards and in the 💾 image */
+.sheet:not(.shot) .mtop .badge:not(.b-id):not(.b-exam){display:none}
 .sheet .mtools{position:absolute;top:29px;right:20px;display:flex;gap:8px;z-index:3}
 .sheet .mjoin{display:flex}.sheet .mjoin .x+.x{margin-left:-2.5px}
 .sheet .mtools .x{position:static;width:36px;height:36px;border-width:2.5px;padding:0;display:grid;place-items:center}
