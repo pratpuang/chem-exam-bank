@@ -419,12 +419,18 @@ html.scrlock{overscroll-behavior:none}
 .sheet .inkw{background:var(--card);color:var(--ink);font-size:1.3rem;transition:background .15s,color .15s}
 .sheet .inkw.on{background:var(--yel);color:#141414}
 .sheet .shotx{background:var(--card);color:var(--ink)}.sheet .shotx:disabled{opacity:.6}
-.inkbar{position:absolute;left:50%;bottom:18px;display:flex;gap:3px;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:4px;
+.inkbar{position:absolute;left:50%;bottom:18px;display:flex;align-items:center;gap:2px;background:var(--card);border:2.5px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:5px;
   opacity:0;visibility:hidden;pointer-events:none;transform:translate(-50%,14px);transition:opacity .2s,transform .2s,visibility 0s .2s}
 .inkbar.show{opacity:1;visibility:visible;pointer-events:auto;transform:translate(-50%,0);transition:opacity .2s,transform .2s}
-.inkbar button{width:32px;height:32px;padding:0;border:2px solid var(--ink);background:var(--card);color:var(--ink);font-size:1rem;display:grid;place-items:center}
-.inkbar button.sel{background:var(--yel);color:#141414}
-.inkbar .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--ink)}
+/* one icon family (same line icons as ⬇ ✎ ✕): borderless 36px buttons in groups — colours | tools | history | view */
+.inkbar button{width:36px;height:36px;padding:0;border:0;background:none;color:var(--ink);display:grid;place-items:center;transition:background .12s,color .12s}
+.inkbar button svg{display:block}
+@media(hover:hover){.inkbar button:hover{background:color-mix(in srgb,var(--ink) 10%,transparent)}.inkbar .danger:hover{color:var(--red)}}
+.inkbar button.sel{background:var(--ink);color:var(--card)}
+.inkbar [data-c].sel{background:none}
+.inkbar .dot{width:18px;height:18px;border-radius:50%;transition:box-shadow .15s}
+.inkbar [data-c].sel .dot{box-shadow:0 0 0 2.5px var(--card),0 0 0 5px var(--ink)}
+.inkbar .sep{width:2px;height:22px;margin:0 5px;background:var(--ink);opacity:.2}
 /* split-scratch (▦ in the ink bar): question | draggable bar | grid-paper board; stacked in portrait.
    --sq is the question's size in px, set by JS from a remembered ratio and clamped to the current screen. */
 .mdiv,.mboard{display:none}
@@ -1057,12 +1063,15 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
   <button data-c="0" class="sel" title="ปากกาดำ"><span class="dot" style="background:var(--ink)"></span></button>
   <button data-c="1" title="ปากกาแดง"><span class="dot" style="background:var(--red)"></span></button>
   <button data-c="2" title="ปากกาน้ำเงิน"><span class="dot" style="background:var(--blue)"></span></button>
-  <button data-t="hl" title="ไฮไลต์">🖍</button>
-  <button data-t="er" title="ยางลบ (ลบทั้งเส้น)">⌫</button>
-  <button id="inkundo" title="ย้อนกลับ">↶</button>
-  <button id="inkclr" title="ล้างหมึกข้อนี้">🧹</button>
-  <button id="inkwipe" title="ล้างหมึกทั้งหมด">🗑</button>
-  <button id="inksplit" title="กระดาษทด (แบ่งจอ)" aria-pressed="false">▦</button>
+  <i class="sep"></i>
+  <button data-t="hl" title="ไฮไลต์" aria-label="ไฮไลต์"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4l5 5-8 8H7v-5z"/><path d="M7 17l-3 3h5"/><path d="M13 21h7"/></svg></button>
+  <button data-t="er" title="ยางลบ (ลบทั้งเส้น)" aria-label="ยางลบ"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 20l-4-4L14 6l6 6-8 8z"/><path d="M9 11l6 6"/><path d="M12 20h8"/></svg></button>
+  <i class="sep"></i>
+  <button id="inkundo" title="ย้อนกลับ" aria-label="ย้อนกลับ"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+  <button id="inkclr" title="ล้างหมึกข้อนี้" aria-label="ล้างหมึกข้อนี้"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M10 12l5 5M15 12l-5 5"/></svg></button>
+  <button id="inkwipe" class="danger" title="ล้างหมึกทั้งหมด" aria-label="ล้างหมึกทั้งหมด"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+  <i class="sep"></i>
+  <button id="inksplit" title="กระดาษทด (แบ่งจอ)" aria-label="กระดาษทด" aria-pressed="false"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16"/><path d="M12 4v16"/></svg></button>
 </div></div>
 
 
