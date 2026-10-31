@@ -2727,6 +2727,14 @@ function askLen(s, h){
     if (go && h !== +s.h) askLen(s, h); };
   addEventListener('pointerup', e => stop(e, true));
   addEventListener('pointercancel', e => stop(e, false));
+  // the wheel over the length bar: half an hour a notch, up = longer; asks the same question as a drag once the wheel stops
+  let W = null;
+  addEventListener('wheel', e => { const g = e.target.closest?.('.hm,.hmi'); if (!g) return;
+    const el = g.closest('[data-sid]'), s = el && !el.classList.contains('cancel') && DB.sessions.find(x => x.id === el.dataset.sid); if (!s) return;
+    const n = wheelStep(e); if (n === null) return; e.preventDefault(); if (!n) return;
+    if (W?.s !== s) W = {s, g, h: +s.h || 1}; const h = Math.min(4, Math.max(.5, W.h + n * .5)); if (h === W.h) return;
+    W.h = h; live(g, h, h !== +s.h); SFX.play('nib'); clearTimeout(W.T);
+    const w = W; W.T = setTimeout(() => { W = null; live(w.g, +w.s.h, false); if (w.h !== +w.s.h) askLen(w.s, w.h); }, 450); }, {passive: false});
 }
 function moveTo(s, date){
   snap(); if (isGen(s)) addSkip(s);
@@ -2993,7 +3001,20 @@ addEventListener('contextmenu', e => { if (e.target.closest?.('#whof button, .tr
     const kill = ev => { ev.stopPropagation(); ev.preventDefault(); }; addEventListener('click', kill, {capture: true, once: true}); setTimeout(() => removeEventListener('click', kill, true), 80);
     z.el.dispatchEvent(new Event('change', {bubbles: true})); };
   addEventListener('pointerup', end); addEventListener('pointercancel', end);
+  // the wheel over a time box: 15 min a notch, up = later; committed through the box's change handler once the wheel stops
+  addEventListener('wheel', e => { const el = e.target.closest?.('input.tin, #aw-t'); if (!el || document.activeElement === el || el.disabled || el.readOnly) return;
+    const n = wheelStep(e); if (n === null) return; e.preventDefault(); if (!n) return;
+    const v = addMin(parseT(el.value) || el.value, n * 15); if (v === el.value) return; el.value = v; el.classList.add('scrub'); SFX.play('nib');
+    clearTimeout(el._wt); el._wt = setTimeout(() => { el.classList.remove('scrub'); el.dispatchEvent(new Event('change', {bubbles: true})); }, 350); }, {passive: false});
 }
+// one mouse-wheel gesture on a drag-number: +1 up, -1 down, 0 = a trackpad still adding up to a step, null = the page is being scrolled, leave it alone
+// (a wheel that was already scrolling the page must not grab whatever slides under the cursor)
+let wheelOut = 0, wheelAcc = 0;
+function wheelStep(e){ const t = performance.now();
+  if (t - wheelOut < 300){ wheelOut = t; return null; }
+  wheelAcc = Math.abs(e.deltaY) >= 50 || e.deltaMode ? Math.sign(e.deltaY) * 50 : wheelAcc + e.deltaY; if (Math.abs(wheelAcc) < 50) return 0;
+  const n = wheelAcc < 0 ? 1 : -1; wheelAcc = 0; return n; }
+addEventListener('wheel', e => { if (!e.target.closest?.('input.tin, #aw-t, .hm, .hmi')) wheelOut = performance.now(); }, {passive: true});
 
 /* ---------- session composer: one ticket bar, one picker at a time ---------- */
 let edit = null;

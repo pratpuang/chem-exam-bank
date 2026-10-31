@@ -2394,6 +2394,12 @@ $("#root").addEventListener("click",e=>{
 $("#root").addEventListener("input",e=>{
   if(e.target.id==="pscrub"){pIdx=(+e.target.value)-1;fillPoster("");SFX.play("tick");return;}
 });
+// mouse wheel over a slider: the question scrubber moves one question a notch (down = next), the volume 5 (up = louder)
+{let acc=0;
+addEventListener("wheel",e=>{const r=e.target.closest&&e.target.closest("input[type=range]");if(!r||r.disabled||!e.deltaY)return;e.preventDefault();
+  acc=Math.abs(e.deltaY)>=50||e.deltaMode?Math.sign(e.deltaY)*50:acc+e.deltaY;if(Math.abs(acc)<50)return;
+  const down=acc>0,sc=r.id==="pscrub",d=(sc?1:5)*(down===sc?1:-1);acc=0;
+  const v=Math.min(+r.max,Math.max(+r.min,+r.value+d));if(v===+r.value)return;r.value=v;r.dispatchEvent(new Event("input",{bubbles:true}));r.dispatchEvent(new Event("change",{bubbles:true}));},{passive:false});}
 $("#mbody").addEventListener("click",e=>{if(markChoice(e)&&window.prepShot)prepShot(250);});
 
 $("#mx").onclick=closeModal;
