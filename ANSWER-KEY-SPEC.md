@@ -1,5 +1,7 @@
 # Answer key + solutions — LOCKED SPEC (scoped 2026-07-26)
 
+> **STATUS 2026-10-31: COMPLETE. Every question in the bank has a draft solution: 1,539 / 1,539, including IJSO, PAT2 bio (`solutions/bio.md`) and applied chem (`solutions/applied.md`). Everything below is history.**
+>
 > **STATUS: GREEN-LIT and IN PROGRESS.**
 > **Done so far: `ch07` 146/146 · `ch09` อัตราการเกิดปฏิกิริยาเคมี 27/27 · `ch10` สมดุลเคมี 25/25
 > (both added 2026-08-16, Prat's pick — "the สมดุล and อัตรา, this one is small cuz it has no สอวน paper";
