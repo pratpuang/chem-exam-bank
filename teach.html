@@ -1110,7 +1110,8 @@ body.frombank #app>nav{animation-delay:.06s}body.frombank #app>main{animation-de
 .qa-tk span:first-child{translate:0 0}.qa-tk span:last-child{translate:-100% 0}
 .qa-w{margin-top:8px;font-size:.76rem;font-weight:800;color:var(--red)}
 /* quick-add time: two big numbers you drag up/down + a 24h ring showing what it covers */
-#qadd .qa-big{text-align:center}#qadd .qa-big b{font-size:2.5rem}
+#qadd{width:400px}#qadd .qa-big{text-align:center}#qadd .qa-big b{font-size:min(3.6rem,12.5vw);letter-spacing:-.05em}#qadd .qa-big b em{font-size:.55em}
+.qa-ti{width:3.2ch;padding:0;border:0;border-bottom:4px solid var(--red);background:none;color:var(--red);font:inherit;letter-spacing:inherit;text-align:center;outline:0;border-radius:0}
 .qa-dn{cursor:ns-resize;touch-action:none;transition:color .12s}.qa-dn.on{color:var(--red)}
 .qa-ring{display:block;width:150px;height:150px;margin:2px auto 0;overflow:visible}
 .qa-ring .qr-bg,.qa-ring .qr-o,.qa-ring .qr-s{fill:none;stroke-width:12}
@@ -2881,12 +2882,28 @@ function quickAdd(who, iso, cell){
   let D = null;
   box.addEventListener('pointerdown', e => {
     const n = e.target.closest('.qa-dn'); if (!n || e.button !== 0) return; e.preventDefault();
-    D = {k: n.dataset.d, y0: e.clientY, t0: toM(q.time), h0: q.h, id: e.pointerId}; n.classList.add('on'); box.classList.add('dragging');
+    D = {k: n.dataset.d, y0: e.clientY, t0: toM(q.time), h0: q.h, id: e.pointerId, moved: false}; n.classList.add('on'); box.classList.add('dragging');
   });
-  const mv = e => { if (!D || e.pointerId !== D.id) return; const d = D.y0 - e.clientY;
+  const mv = e => { if (!D || e.pointerId !== D.id) return; const d = D.y0 - e.clientY; if (Math.abs(d) > 4) D.moved = true;
     if (D.k === 's'){ const t = toT(Math.max(0, Math.min(1435 - q.h * 60, D.t0 + Math.round(d / 9) * 5))); if (t !== q.time){ q.time = t; live(); } }
     else { const h = Math.max(.5, Math.min(6, (1435 - toM(q.time)) / 60, D.h0 + Math.round(d / 18) * .5)); if (h !== q.h){ q.h = h; live(); } } };
-  const up = e => { if (D && e.pointerId === D.id){ D = null; box.classList.remove('dragging'); paint(); } };
+  const up = e => { if (D && e.pointerId === D.id){ const tap = !D.moved && e.type === 'pointerup' ? D : null; D = null; box.classList.remove('dragging'); paint(); if (tap) typeTime(tap.k); } };
+  // tap a number (no drag) = type it: 1830 / 18:30 / 18.30 / 9 all work. Enter or tapping away keeps it, Esc throws it away.
+  // a typed end snaps to the nearest half hour, 0.5 to 6 h (same rule as the drag)
+  function typeTime(k){
+    const n = box.querySelector(`.qa-dn[data-d="${k}"]`); if (!n) return;
+    const inp = document.createElement('input'); inp.className = 'qa-ti'; inp.inputMode = 'numeric'; inp.maxLength = 5; inp.value = n.textContent; inp.setAttribute('aria-label', k === 'e' ? 'เวลาจบ' : 'เวลาเริ่ม');
+    n.replaceWith(inp); inp.focus(); inp.select();
+    let done = false;
+    const fin = ok => { if (done) return; done = true;
+      if (ok){ const d = inp.value.replace(/\D/g, ''), [hh, mm] = d.length <= 2 ? [d, '0'] : d.length === 3 ? [d[0], d.slice(1)] : [d.slice(0, 2), d.slice(2, 4)], h = +hh, m = +mm, t = h * 60 + m;
+        if (!d || h > 23 || m > 59) SFX.play('bad');
+        else if (k === 's'){ q.time = toT(Math.min(t, 1405)); q.h = Math.max(.5, Math.min(q.h, Math.floor((1435 - toM(q.time)) / 30) / 2)); SFX.play('select'); }
+        else if (t > toM(q.time)){ q.h = Math.max(.5, Math.min(6, Math.floor((1435 - toM(q.time)) / 30) / 2, Math.round((t - toM(q.time)) / 30) / 2)); SFX.play('select'); } else SFX.play('bad'); }
+      paint(); };
+    inp.onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); e.stopPropagation(); fin(true); } else if (e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); fin(false); } };
+    inp.onblur = () => fin(true);
+  }
   addEventListener('pointermove', mv); addEventListener('pointerup', up); addEventListener('pointercancel', up);
   // while dragging, update in place (no re-render, so the pointer keeps its grip)
   const live = () => { const c = clash(), [s, en] = box.querySelectorAll('.qa-dn');
@@ -2903,7 +2920,7 @@ function quickAdd(who, iso, cell){
   const close = () => { box.classList.add('out'); cell.classList.remove('qaon'); setTimeout(() => box.remove(), 180); removeEventListener('pointerdown', outside, true); removeEventListener('keydown', esc_, true);
     removeEventListener('pointermove', mv); removeEventListener('pointerup', up); removeEventListener('pointercancel', up); };
   const outside = e => { if (!box.contains(e.target)) close(); };
-  const esc_ = e => { if (e.key === 'Escape'){ e.stopPropagation(); close(); } if (e.key === 'Enter' && e.target.id !== 'qa-note'){ e.preventDefault(); box.querySelector('[data-q="add"]').click(); } };
+  const esc_ = e => { if (e.target.classList?.contains('qa-ti')) return; if (e.key === 'Escape'){ e.stopPropagation(); close(); } if (e.key === 'Enter' && e.target.id !== 'qa-note'){ e.preventDefault(); box.querySelector('[data-q="add"]').click(); } };
   box.onclick = e => { const b = e.target.closest('button'); if (!b) return; const d = b.dataset;
     if (d.q === 'x') return close();
     if (d.q === 'add'){
