@@ -9,7 +9,7 @@ create table if not exists students (
   grade      text,
   subj       text default 'chem',          -- chem | bio
   mode       text,                          -- ออนไลน์ | ออนไซต์
-  rate       int,
+  rate       numeric,                       -- per hour; can be fractional (400 baht over 1.5 h = 266.67)
   color      int default 0,
   slots      jsonb default '[]',            -- [[weekday,"HH:MM",hours], ...]
   goal       text,
@@ -28,7 +28,7 @@ create table if not exists sessions (
   date       date not null,
   time       text not null,                 -- "HH:MM" Bangkok time
   h          numeric not null default 1,
-  rate       int,
+  rate       numeric,                       -- per hour; can be fractional (400 baht over 1.5 h = 266.67)
   series     text,
   status     text not null default 'plan' check (status in ('plan','done','cancel')),
   paid       boolean default false,
