@@ -537,6 +537,22 @@ data = {
  "biocounts": biocounts, "appcounts": appcounts,
  "formulas": FORMULAS, "subtopics": subtopics,
 }
+# paper key (exam|year|ver) -> original scan in source/. source/ is gitignored (copyright), so this only works when
+# index.html is opened from this PC (file://); the live site never shows the swipe-up (Prat's call 2026-11-10).
+SOURCE_PDF = {
+ "posn|2560|":"posn1-60-chem.pdf","posn|2561|":"posn1-61-chem.pdf","posn|2562|":"posn1-62-chem.pdf",
+ "posn|2564|":"posn1-64-chem.pdf","posn|2565|":"posn1-65-chem.pdf","posn|2566|":"posn1-66-chem.pdf",
+ "posn|2567|":"posn1-67-chem.pdf","posn|2568|":"posn1-68-chem.pdf",
+ "samanya|2555|":"________________________ 2555.pdf","samanya|2558|":"9_common_58_Chemistry.pdf",
+ "samanya|2559|":"9_common_59_Chemistry.pdf","samanya|2561|":"9_common_61_Chemistry.pdf",
+ "pat2|2552|mar":"2017112152132.pdf","pat2|2552|jul":"2017112152148.pdf","pat2|2553|mar":"pat2 2553 .pdf",
+ "pat2|2553|jul":"2017112152247.pdf","pat2|2554|oct":"2017112152431.pdf",
+ "alevel|2568|":"tcas68-chem-a-level.pdf",
+ "ijso|2560|14":"เคมี-14th-IJSO.pdf","ijso|2562|16":"ijso16-r1-chem.pdf","ijso|2563|17":"ijso17-r1-chem.pdf",
+ "ijso|2565|19":"ijso19-r1-chem.pdf","ijso|2566|20":"ijso-20-r1.pdf","ijso|2567|21":"ijso-21-r1.pdf",
+ "ijso|2568|22":"ijso22-r1-chem.pdf","ijso|2569|23":"ijso23-2569-r1-chem.pdf",
+}
+data["pdfs"] = {} if STUDENT else {k:v for k,v in SOURCE_PDF.items() if os.path.isfile(os.path.join(ROOT,"source",v))}
 
 HTML = r"""<!doctype html><html lang="th"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
@@ -1468,6 +1484,9 @@ body[data-subj=bio] .lfst{display:none}
 .ppc .py{font-size:2.3rem;font-weight:800;line-height:1}
 .ppc .psol{margin-top:4px;font:600 .72rem "JetBrains Mono",monospace;color:var(--mut);opacity:.85}
 .ppc .psol.full{color:var(--ok,#2f8f4e);opacity:1}
+.ppc.drag{transition:none;cursor:grabbing}
+.ppc .pdfh{font:800 .66rem "JetBrains Mono",monospace;color:var(--mut);opacity:.7;transition:color .12s,opacity .12s}
+.ppc.ready .pdfh{color:var(--c);opacity:1}
 .ppc .pc{margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:8px;font:800 .82rem "JetBrains Mono",monospace}
 .ppc .pc:after{content:"→";font-size:1.1rem}
 @media (prefers-reduced-motion:reduce){#pp.show,#pp.show .ppbox,.ppc{animation:none;transition:none}}
@@ -3119,6 +3138,7 @@ function statBody(ch){
    subject on the board (chem board = chem + applied, bio board = bio), exercises never. A row opens that paper in
    printed order (q.pno, the ข้อ number from its Source line). PAPER = the paper open in the app, null = none. ---- */
 let PAPER=null;
+const PDFOK=location.protocol==="file:"&&!!DATA.pdfs;   // original scans only exist on this PC (source/ is gitignored)
 const PVER={mar:"มี.ค.",jul:"ก.ค.",oct:"ต.ค."},VORD=v=>+v||["mar","jul","oct"].indexOf(v)+1;
 function paperLabel(e,y,v){const l=(DATA.exams[e]||{label:e}).label;
   return e==="ijso"?(v?`${l} ครั้งที่ ${v} · ${y}`:`${l} · ${y}`):`${l} ${y}${v?" · "+(PVER[v]||v):""}`;}
@@ -3137,7 +3157,7 @@ const PP=(()=>{const el=$("#pp");let pushed=false,back=null;
     $("#ppin").innerHTML=fam.map(e=>{const x=DATA.exams[e]||{label:e,color:"#64748b"},R=L.filter(p=>p.e===e);
       return `<section class="ppsec" style="--c:${x.color}"><h3 class="pph"><i></i>${x.label}<small>${R.length} ฉบับ</small></h3><div class="ppg">${R.map(p=>{
         const sub=p.v?(p.e==="ijso"?"ครั้งที่ "+p.v:PVER[p.v]||p.v):"";
-        return `<button class="ppc" data-go="paper" data-p="${p.k}" aria-label="${paperLabel(p.e,p.y,p.v)} · ${p.n} ข้อ"><span class="pn">${x.label}${sub?` <em>${sub}</em>`:""}</span><span class="py">${p.y}</span>${p.s?`<span class="psol${p.s>=p.n?" full":""}">${p.s>=p.n?"✓ เฉลยครบ":`เฉลย ${p.s}/${p.n}`}</span>`:""}<span class="pc">${p.n} ข้อ</span></button>`;}).join("")}</div></section>`;}).join("");}
+        return `<button class="ppc" data-go="paper" data-p="${p.k}" aria-label="${paperLabel(p.e,p.y,p.v)} · ${p.n} ข้อ"><span class="pn">${x.label}${sub?` <em>${sub}</em>`:""}</span><span class="py">${p.y}</span>${p.s?`<span class="psol${p.s>=p.n?" full":""}">${p.s>=p.n?"✓ เฉลยครบ":`เฉลย ${p.s}/${p.n}`}</span>`:""}<span class="pc">${p.n} ข้อ${PDFOK&&DATA.pdfs[p.k]?`<span class="pdfh">↑ PDF</span>`:""}</span></button>`;}).join("")}</div></section>`;}).join("");}
   function open(opener){if(isOpen())return;back=opener;body();el.classList.add("show");el.firstElementChild.scrollTop=0;SL.lock("pp");
     if(!pushed){history.pushState({pp:1},"");pushed=true;}SFX.play("statOpen");$("#ppx").focus({preventScroll:true});}
   function shut(quiet){if(!isOpen())return;el.classList.remove("show");SL.unlock("pp");if(!quiet)SFX.play("statClose");
@@ -3148,7 +3168,20 @@ const PP=(()=>{const el=$("#pp");let pushed=false,back=null;
     const f=[...el.querySelectorAll("button")],a=f[0],z=f[f.length-1],ae=document.activeElement;
     if(!el.contains(ae)){e.preventDefault();(e.shiftKey?z:a).focus();}
     else if(e.shiftKey&&ae===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&ae===z){e.preventDefault();a.focus();}}
-  el.addEventListener("click",e=>{if(e.target===el||e.target.closest("#ppx"))return close();const c=e.target.closest(".ppc");if(!c)return;
+  /* swipe a card UP to open its original scan (source/, local copy only): the card follows the pointer, past 60px it
+     arms (hint lights up), release opens the PDF in a new tab and the click that follows is swallowed */
+  let dg=null,eat=false;
+  el.addEventListener("pointerdown",e=>{const c=e.target.closest(".ppc");if(!PDFOK||!c||!DATA.pdfs[c.dataset.p]||e.button>0)return;
+    dg={c,y:e.clientY,x:e.clientX,id:e.pointerId,on:false};});
+  el.addEventListener("pointermove",e=>{if(!dg||e.pointerId!==dg.id)return;const dy=dg.y-e.clientY;
+    if(!dg.on){if(dy<8||Math.abs(e.clientX-dg.x)>dy)return;dg.on=true;dg.c.classList.add("drag");try{dg.c.setPointerCapture(e.pointerId);}catch(_){}}
+    const d=Math.max(0,dy);dg.c.style.transform=`translateY(${-Math.min(d,90)}px)`;dg.c.classList.toggle("ready",d>=60);});
+  function dgEnd(e,ok){if(!dg||e.pointerId!==dg.id)return;const{c,on}=dg,go=ok&&on&&c.classList.contains("ready");dg=null;
+    if(!on)return;eat=true;setTimeout(()=>eat=false,350);c.classList.remove("drag","ready");c.style.transform="";
+    if(go){SFX.play("statOpen");window.open("source/"+DATA.pdfs[c.dataset.p].split("/").map(encodeURIComponent).join("/"),"_blank");}}
+  el.addEventListener("pointerup",e=>dgEnd(e,true));el.addEventListener("pointercancel",e=>dgEnd(e,false));
+  el.addEventListener("click",e=>{if(eat){eat=false;e.preventDefault();e.stopPropagation();return;}
+    if(e.target===el||e.target.closest("#ppx"))return close();const c=e.target.closest(".ppc");if(!c)return;
     const r=c.getBoundingClientRect();close(true);boardGo(c,r);});   // close first: unlocking restores the board's scroll, then the app opens
   return{open,close,isOpen,key};})();
 // the ✎ tile's back: one row per exercise chapter -- count, difficulty mini-bar, ⚠ while its answers are unverified
