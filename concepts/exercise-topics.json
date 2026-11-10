@@ -1646,5 +1646,39 @@
  "E-ปริมาณสาร-55": [
   "multi-step",
   "mass-mass"
+ ],
+ "E-แก๊ส-41": [
+  "pressure"
+ ],
+ "E-แก๊ส-42": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-43": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-44": [
+  "gas-laws"
+ ],
+ "E-แก๊ส-45": [
+  "gas-mixture"
+ ],
+ "E-แก๊ส-46": [
+  "gas-mixture",
+  "ideal-gas"
+ ],
+ "E-แก๊ส-47": [
+  "diffusion"
+ ],
+ "E-แก๊ส-48": [
+  "kinetic"
+ ],
+ "E-แก๊ส-49": [
+  "ideal-gas",
+  "gas-laws"
+ ],
+ "E-แก๊ส-50": [
+  "pressure",
+  "ideal-gas",
+  "gas-laws"
  ]
 }
