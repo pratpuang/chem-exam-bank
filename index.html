@@ -2584,7 +2584,13 @@ function statBody(ch){
    subject on the board (chem board = chem + applied, bio board = bio), exercises never. A row opens that paper in
    printed order (q.pno, the ข้อ number from its Source line). PAPER = the paper open in the app, null = none. ---- */
 let PAPER=null;
-const PDFOK=location.protocol==="file:"&&!!DATA.pdfs;   // scans live only on this PC (source/ is gitignored): live site = no swipe (Prat 2026-11-10)
+/* original scans live only on Prat's PC (source/ is gitignored, public repo). file:// opens them directly; the live site
+   asks tools/pdf_server.py on 127.0.0.1:8765 and gets the swipe only if it answers, so any other device sees nothing. */
+let PDFOK=location.protocol==="file:"&&!!DATA.pdfs,PDFBASE="source/";
+if(!PDFOK&&DATA.pdfs&&Object.keys(DATA.pdfs).length&&matchMedia("(pointer:fine)").matches){
+  const ac=new AbortController();setTimeout(()=>ac.abort(),1500);
+  fetch("http://127.0.0.1:8765/ping",{signal:ac.signal,cache:"no-store"}).then(r=>r.json()).then(j=>{if(!j||!j.ok)return;
+    PDFOK=true;PDFBASE="http://127.0.0.1:8765/";if(typeof PP!=="undefined"&&PP.isOpen())PP.refresh();}).catch(()=>{});}
 const PVER={mar:"มี.ค.",jul:"ก.ค.",oct:"ต.ค."},VORD=v=>+v||["mar","jul","oct"].indexOf(v)+1;
 function paperLabel(e,y,v){const l=(DATA.exams[e]||{label:e}).label;
   return e==="ijso"?(v?`${l} ครั้งที่ ${v} · ${y}`:`${l} · ${y}`):`${l} ${y}${v?" · "+(PVER[v]||v):""}`;}
@@ -2623,7 +2629,7 @@ const PP=(()=>{const el=$("#pp");let pushed=false,back=null;
   function dgArm(){dg.on=true;dg.c.classList.add("drag");}
   function dgStop(ok){clearTimeout(hold);if(!dg)return;const{c,on}=dg,go=ok&&on&&c.classList.contains("ready");dg=null;
     c.classList.remove("drag","ready","lift");c.style.transform="";if(!on)return;eat=true;setTimeout(()=>eat=false,350);
-    if(go){SFX.play("statOpen");window.open("source/"+DATA.pdfs[c.dataset.p].split("/").map(encodeURIComponent).join("/"),"_blank");}}
+    if(go){SFX.play("statOpen");window.open(PDFBASE+DATA.pdfs[c.dataset.p].split("/").map(encodeURIComponent).join("/"),"_blank");}}
   el.addEventListener("pointerdown",e=>{if(e.pointerType==="touch"||e.button>0)return;const c=pdfCard(e.target);if(!c)return;
     dg={c,y:e.clientY,x:e.clientX,id:e.pointerId,on:false};});
   el.addEventListener("pointermove",e=>{if(!dg||dg.t||e.pointerId!==dg.id)return;
@@ -2643,7 +2649,7 @@ const PP=(()=>{const el=$("#pp");let pushed=false,back=null;
   el.addEventListener("click",e=>{if(eat){eat=false;e.preventDefault();e.stopPropagation();return;}
     if(e.target===el||e.target.closest("#ppx"))return close();const c=e.target.closest(".ppc");if(!c)return;
     const r=c.getBoundingClientRect();close(true);boardGo(c,r);});   // close first: unlocking restores the board's scroll, then the app opens
-  return{open,close,isOpen,key};})();
+  return{open,close,isOpen,key,refresh:body};})();
 // the ✎ tile's back: one row per exercise chapter -- count, difficulty mini-bar, ⚠ while its answers are unverified
 function exBody(){
   const rows=Object.keys(EXC).sort().map((ch,k)=>{const qs=DATA.questions.filter(q=>isEx(q)&&q.ch===ch),df={easy:0,medium:0,hard:0};
