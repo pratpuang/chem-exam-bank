@@ -1680,5 +1680,38 @@
   "pressure",
   "ideal-gas",
   "gas-laws"
+ ],
+ "E-อัตรา-25": [
+  "rate-calc"
+ ],
+ "E-อัตรา-26": [
+  "energy-profile"
+ ],
+ "E-อัตรา-27": [
+  "rate-calc",
+  "conc-surface"
+ ],
+ "E-อัตรา-28": [
+  "rate-calc"
+ ],
+ "E-อัตรา-29": [
+  "rate-calc"
+ ],
+ "E-อัตรา-30": [
+  "energy-profile",
+  "temp-catalyst"
+ ],
+ "E-อัตรา-31": [
+  "rate-calc"
+ ],
+ "E-อัตรา-32": [
+  "temp-catalyst"
+ ],
+ "E-อัตรา-33": [
+  "conc-surface",
+  "rate-calc"
+ ],
+ "E-อัตรา-34": [
+  "energy-profile"
  ]
 }
