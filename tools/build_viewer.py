@@ -421,7 +421,9 @@ if os.path.isdir(EX_DIR) and not STUDENT:   # student edition: exam papers only,
         if not fn.endswith(".py"): continue
         ns, src = {}, open(os.path.join(EX_DIR, fn), encoding="utf-8").read()   # own namespace: the file only builds a dict
         exec(compile(src, fn, "exec"), ns)
-        pending = "PENDING" in re.match(r"(?:[ \t]*#.*\n)*", src).group()   # header comment says answers aren't verified
+        hdr = re.match(r"(?:[ \t]*#.*\n)*", src).group()
+        pending = "PENDING" in hdr.replace("PENDING-FIG", "")   # header comment says answers aren't verified
+        pendfig = "PENDING-FIG" in hdr   # only the figure section (title has "โจทย์รูปภาพ") is unverified
         C = ns.get("CHAPTER") or {}
         ck = EX_MAP.get(C.get("id"))
         if not ck:
@@ -429,7 +431,9 @@ if os.path.isdir(EX_DIR) and not STUDENT:   # student edition: exam papers only,
         ids, n = {t["id"] for t in subtopics.get(ck, [])}, 0
         extitles[ck] = " + ".join(filter(None, (extitles.get(ck), C.get("title", ""))))
         for sec, items in C.get("sections", []):
-            for diff, qtext, _box, sol in items:
+            for it in items:   # (diff, question, box_mm, solution_html[, figure path rel. to bank root[, 3D spec]])
+                diff, qtext, _box, sol = it[:4]; fig = it[4] if len(it) > 4 else ""
+                pend = pending or (pendfig and "โจทย์รูปภาพ" in sec)
                 n += 1
                 eid = "E-%s-%02d" % (C["id"], n)
                 ts = [t for t in dict.fromkeys(extop.get(eid, [])) if t in ids]
@@ -442,9 +446,9 @@ if os.path.isdir(EX_DIR) and not STUDENT:   # student edition: exam papers only,
                     "bodyHtml": "<p>%s</p>" % _html.escape(qtext, quote=False),   # question is plain text, solution is HTML
                     "snippet": _html.escape(qtext[:90], quote=False),
                     "answer": "", "source": f"แบบฝึกหัด {C.get('title', '')} · {sec} · ข้อ {n}",
-                    "note": "", "figure": "", "search": " ".join((qtext, sec, "แบบฝึกหัด", C.get("title", ""))).lower(),
+                    "note": "", "figure": fig, "search": " ".join((qtext, sec, "แบบฝึกหัด", C.get("title", ""))).lower(),
                     "solHtml": sol[:m.start()] if m else sol, "solAnswer": m.group(1).strip() if m else "",
-                    "solFlag": pending, "solPending": pending, "solChecked": not pending, "topics": ts,
+                    "solFlag": pend, "solPending": pend, "solChecked": not pend, "topics": ts,
                 })
     questions += exercises
     questions.sort(key=lambda q: (*_sortkey(q)[:2], q["exam"] == "ex", q["id"]))   # "E-" < "Q-": keep exams first per chapter
