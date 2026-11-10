@@ -1851,5 +1851,45 @@
  ],
  "E-อินทรีย์-40": [
   "biomolecule"
+ ],
+ "E-พอลิเมอร์-23": [
+  "polymer-type",
+  "monomer"
+ ],
+ "E-พอลิเมอร์-24": [
+  "structure-props",
+  "polymer-type"
+ ],
+ "E-พอลิเมอร์-25": [
+  "polymer-type",
+  "monomer"
+ ],
+ "E-พอลิเมอร์-26": [
+  "monomer",
+  "polymer-type"
+ ],
+ "E-พอลิเมอร์-27": [
+  "polymer-type"
+ ],
+ "E-พอลิเมอร์-28": [
+  "polymer-type",
+  "monomer"
+ ],
+ "E-พอลิเมอร์-29": [
+  "structure-props",
+  "polymer-type"
+ ],
+ "E-พอลิเมอร์-30": [
+  "structure-props",
+  "polymer-type"
+ ],
+ "E-พอลิเมอร์-31": [
+  "monomer",
+  "polymer-type",
+  "structure-props"
+ ],
+ "E-พอลิเมอร์-32": [
+  "structure-props",
+  "polymer-type"
  ]
 }
