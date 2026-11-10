@@ -58,7 +58,7 @@ Full file→paper→Q-id map lives in `tools/PAT2-EXTRACTION-METHOD.md` (source 
 | 2555 · มี.ค. | `2017112152455.pdf` | **⬜ queued (pending)** | Q-1523–1622 (block reserved) | |
 | 2555 · ต.ค. | `2017112152510.pdf` | **⬜ queued (pending)** | Q-1623–1722 (block reserved) | |
 | 2556 · มี.ค. | `2017112152559.pdf` | **⬜ queued (pending)** | Q-1723–1822 (block reserved) | |
-| _(unidentified)_ | `________________________ 2555.pdf` | **pending / unclassified** | — | Odd filename (looks corrupted/renamed), not in `PAT2-EXTRACTION-METHOD.md`'s inventory. Possibly a duplicate of `2017112152455.pdf` (also 2555) — needs a look before extracting to avoid double-counting a paper. |
+| _(was unidentified: it is วิชาสามัญ 2555, the scan behind Q-0646–Q-0695; renamed 2026-11-10)_ | `samanya-2555-chem.pdf` | **pending / unclassified** | — | Odd filename (looks corrupted/renamed), not in `PAT2-EXTRACTION-METHOD.md`'s inventory. Possibly a duplicate of `2017112152455.pdf` (also 2555) — needs a look before extracting to avoid double-counting a paper. |
 
 **309 questions merged** (`#exam/pat2`, 5 papers) — **the 3 finished fragments were built in on 2026-07-26,
 taking the whole bank 922 → 1,104.** 1 paper is part-drafted (2552·ต.ค., 8 questions short); 5 papers

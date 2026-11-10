@@ -537,13 +537,13 @@ data = {
  "biocounts": biocounts, "appcounts": appcounts,
  "formulas": FORMULAS, "subtopics": subtopics,
 }
-# paper key (exam|year|ver) -> original scan in source/. source/ is gitignored (copyright), so this only works when
-# index.html is opened from this PC (file://); the live site never shows the swipe-up (Prat's call 2026-11-10).
+# paper key (exam|year|ver) -> original scan in source/. source/ is gitignored (copyright, public repo), so the swipe-up only
+# works when index.html is opened from this PC (file://). Prat asked for every device, then chose PC-only (2026-11-10).
 SOURCE_PDF = {
  "posn|2560|":"posn1-60-chem.pdf","posn|2561|":"posn1-61-chem.pdf","posn|2562|":"posn1-62-chem.pdf",
  "posn|2564|":"posn1-64-chem.pdf","posn|2565|":"posn1-65-chem.pdf","posn|2566|":"posn1-66-chem.pdf",
  "posn|2567|":"posn1-67-chem.pdf","posn|2568|":"posn1-68-chem.pdf",
- "samanya|2555|":"________________________ 2555.pdf","samanya|2558|":"9_common_58_Chemistry.pdf",
+ "samanya|2555|":"samanya-2555-chem.pdf","samanya|2558|":"9_common_58_Chemistry.pdf",
  "samanya|2559|":"9_common_59_Chemistry.pdf","samanya|2561|":"9_common_61_Chemistry.pdf",
  "pat2|2552|mar":"2017112152132.pdf","pat2|2552|jul":"2017112152148.pdf","pat2|2553|mar":"pat2 2553 .pdf",
  "pat2|2553|jul":"2017112152247.pdf","pat2|2554|oct":"2017112152431.pdf",
@@ -1484,7 +1484,9 @@ body[data-subj=bio] .lfst{display:none}
 .ppc .py{font-size:2.3rem;font-weight:800;line-height:1}
 .ppc .psol{margin-top:4px;font:600 .72rem "JetBrains Mono",monospace;color:var(--mut);opacity:.85}
 .ppc .psol.full{color:var(--ok,#2f8f4e);opacity:1}
+.ppc{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .ppc.drag{transition:none;cursor:grabbing}
+.ppc.lift{box-shadow:9px 9px 0 var(--c)}
 .ppc .pdfh{font:800 .66rem "JetBrains Mono",monospace;color:var(--mut);opacity:.7;transition:color .12s,opacity .12s}
 .ppc.ready .pdfh{color:var(--c);opacity:1}
 .ppc .pc{margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:8px;font:800 .82rem "JetBrains Mono",monospace}
@@ -3138,7 +3140,7 @@ function statBody(ch){
    subject on the board (chem board = chem + applied, bio board = bio), exercises never. A row opens that paper in
    printed order (q.pno, the ข้อ number from its Source line). PAPER = the paper open in the app, null = none. ---- */
 let PAPER=null;
-const PDFOK=location.protocol==="file:"&&!!DATA.pdfs;   // original scans only exist on this PC (source/ is gitignored)
+const PDFOK=location.protocol==="file:"&&!!DATA.pdfs;   // scans live only on this PC (source/ is gitignored): live site = no swipe (Prat 2026-11-10)
 const PVER={mar:"มี.ค.",jul:"ก.ค.",oct:"ต.ค."},VORD=v=>+v||["mar","jul","oct"].indexOf(v)+1;
 function paperLabel(e,y,v){const l=(DATA.exams[e]||{label:e}).label;
   return e==="ijso"?(v?`${l} ครั้งที่ ${v} · ${y}`:`${l} · ${y}`):`${l} ${y}${v?" · "+(PVER[v]||v):""}`;}
@@ -3168,18 +3170,32 @@ const PP=(()=>{const el=$("#pp");let pushed=false,back=null;
     const f=[...el.querySelectorAll("button")],a=f[0],z=f[f.length-1],ae=document.activeElement;
     if(!el.contains(ae)){e.preventDefault();(e.shiftKey?z:a).focus();}
     else if(e.shiftKey&&ae===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&ae===z){e.preventDefault();a.focus();}}
-  /* swipe a card UP to open its original scan (source/, local copy only): the card follows the pointer, past 60px it
-     arms (hint lights up), release opens the PDF in a new tab and the click that follows is swallowed */
-  let dg=null,eat=false;
-  el.addEventListener("pointerdown",e=>{const c=e.target.closest(".ppc");if(!PDFOK||!c||!DATA.pdfs[c.dataset.p]||e.button>0)return;
-    dg={c,y:e.clientY,x:e.clientX,id:e.pointerId,on:false};});
-  el.addEventListener("pointermove",e=>{if(!dg||e.pointerId!==dg.id)return;const dy=dg.y-e.clientY;
-    if(!dg.on){if(dy<8||Math.abs(e.clientX-dg.x)>dy)return;dg.on=true;dg.c.classList.add("drag");try{dg.c.setPointerCapture(e.pointerId);}catch(_){}}
-    const d=Math.max(0,dy);dg.c.style.transform=`translateY(${-Math.min(d,90)}px)`;dg.c.classList.toggle("ready",d>=60);});
-  function dgEnd(e,ok){if(!dg||e.pointerId!==dg.id)return;const{c,on}=dg,go=ok&&on&&c.classList.contains("ready");dg=null;
-    if(!on)return;eat=true;setTimeout(()=>eat=false,350);c.classList.remove("drag","ready");c.style.transform="";
+  /* swipe a card UP to open its original scan (source/): the card follows, past 60px it arms (hint lights up), release
+     opens the PDF in a new tab and the click that follows is swallowed. Mouse/pen: just drag up. Touch: a flick still
+     scrolls the sheet, so hold ~250ms first (the card lifts), then swipe up. */
+  let dg=null,eat=false,hold=null;
+  const pdfCard=t=>{const c=t.closest&&t.closest(".ppc");return PDFOK&&c&&DATA.pdfs[c.dataset.p]?c:null;};
+  function dgMove(y){const d=Math.max(0,dg.y-y);dg.c.style.transform=`translateY(${-Math.min(d,90)}px)`;dg.c.classList.toggle("ready",d>=60);}
+  function dgArm(){dg.on=true;dg.c.classList.add("drag");}
+  function dgStop(ok){clearTimeout(hold);if(!dg)return;const{c,on}=dg,go=ok&&on&&c.classList.contains("ready");dg=null;
+    c.classList.remove("drag","ready","lift");c.style.transform="";if(!on)return;eat=true;setTimeout(()=>eat=false,350);
     if(go){SFX.play("statOpen");window.open("source/"+DATA.pdfs[c.dataset.p].split("/").map(encodeURIComponent).join("/"),"_blank");}}
-  el.addEventListener("pointerup",e=>dgEnd(e,true));el.addEventListener("pointercancel",e=>dgEnd(e,false));
+  el.addEventListener("pointerdown",e=>{if(e.pointerType==="touch"||e.button>0)return;const c=pdfCard(e.target);if(!c)return;
+    dg={c,y:e.clientY,x:e.clientX,id:e.pointerId,on:false};});
+  el.addEventListener("pointermove",e=>{if(!dg||dg.t||e.pointerId!==dg.id)return;
+    if(!dg.on){const dy=dg.y-e.clientY;if(dy<8||Math.abs(e.clientX-dg.x)>dy)return;dgArm();try{dg.c.setPointerCapture(e.pointerId);}catch(_){}}
+    dgMove(e.clientY);});
+  el.addEventListener("pointerup",e=>{if(dg&&!dg.t&&e.pointerId===dg.id)dgStop(true);});
+  el.addEventListener("pointercancel",e=>{if(dg&&!dg.t&&e.pointerId===dg.id)dgStop(false);});
+  el.addEventListener("touchstart",e=>{if(e.touches.length>1){dgStop(false);return;}const c=pdfCard(e.target);if(!c)return;const t=e.touches[0];
+    dg={c,y:t.clientY,x:t.clientX,t:1,on:false};clearTimeout(hold);
+    hold=setTimeout(()=>{if(!dg)return;dgArm();dg.c.classList.add("lift");if(navigator.vibrate)navigator.vibrate(8);},250);},{passive:true});
+  el.addEventListener("touchmove",e=>{if(!dg||!dg.t)return;const t=e.touches[0];
+    if(!dg.on){if(Math.hypot(t.clientX-dg.x,t.clientY-dg.y)>8){clearTimeout(hold);dg=null;}return;}   // moved before the hold: it's a scroll
+    e.preventDefault();dgMove(t.clientY);},{passive:false});
+  el.addEventListener("touchend",e=>{if(dg&&dg.t){if(dg.on)e.preventDefault();dgStop(true);}});
+  el.addEventListener("touchcancel",()=>{if(dg&&dg.t)dgStop(false);});
+  el.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest(".ppc"))e.preventDefault();});
   el.addEventListener("click",e=>{if(eat){eat=false;e.preventDefault();e.stopPropagation();return;}
     if(e.target===el||e.target.closest("#ppx"))return close();const c=e.target.closest(".ppc");if(!c)return;
     const r=c.getBoundingClientRect();close(true);boardGo(c,r);});   // close first: unlocking restores the board's scroll, then the app opens
