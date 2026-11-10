@@ -2588,8 +2588,8 @@ let PAPER=null;
    asks tools/pdf_server.py on 127.0.0.1:8765 and gets the swipe only if it answers, so any other device sees nothing. */
 let PDFOK=location.protocol==="file:"&&!!DATA.pdfs,PDFBASE="source/";
 if(!PDFOK&&DATA.pdfs&&Object.keys(DATA.pdfs).length&&matchMedia("(pointer:fine)").matches){
-  const ac=new AbortController();setTimeout(()=>ac.abort(),1500);
-  fetch("http://127.0.0.1:8765/ping",{signal:ac.signal,cache:"no-store"}).then(r=>r.json()).then(j=>{if(!j||!j.ok)return;
+  const ac=new AbortController();setTimeout(()=>ac.abort(),20000);
+  fetch("http://127.0.0.1:8765/ping",{signal:ac.signal,cache:"no-store",targetAddressSpace:"loopback"}).then(r=>r.json()).then(j=>{if(!j||!j.ok)return;
     PDFOK=true;PDFBASE="http://127.0.0.1:8765/";if(typeof PP!=="undefined"&&PP.isOpen())PP.refresh();}).catch(()=>{});}
 const PVER={mar:"มี.ค.",jul:"ก.ค.",oct:"ต.ค."},VORD=v=>+v||["mar","jul","oct"].indexOf(v)+1;
 function paperLabel(e,y,v){const l=(DATA.exams[e]||{label:e}).label;
