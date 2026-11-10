@@ -1398,5 +1398,90 @@
  ],
  "E-อินทรีย์-30": [
   "biomolecule"
+ ],
+ "E-พอลิเมอร์-01": [
+  "polymer-type",
+  "monomer"
+ ],
+ "E-พอลิเมอร์-02": [
+  "polymer-type",
+  "monomer"
+ ],
+ "E-พอลิเมอร์-03": [
+  "polymer-type"
+ ],
+ "E-พอลิเมอร์-04": [
+  "polymer-type",
+  "monomer"
+ ],
+ "E-พอลิเมอร์-05": [
+  "polymer-type",
+  "monomer"
+ ],
+ "E-พอลิเมอร์-06": [
+  "monomer"
+ ],
+ "E-พอลิเมอร์-07": [
+  "monomer"
+ ],
+ "E-พอลิเมอร์-08": [
+  "monomer"
+ ],
+ "E-พอลิเมอร์-09": [
+  "monomer",
+  "polymer-type"
+ ],
+ "E-พอลิเมอร์-10": [
+  "monomer",
+  "polymer-type"
+ ],
+ "E-พอลิเมอร์-11": [
+  "structure-props",
+  "polymer-type"
+ ],
+ "E-พอลิเมอร์-12": [
+  "structure-props"
+ ],
+ "E-พอลิเมอร์-13": [
+  "structure-props"
+ ],
+ "E-พอลิเมอร์-14": [
+  "structure-props"
+ ],
+ "E-พอลิเมอร์-15": [
+  "structure-props"
+ ],
+ "E-พอลิเมอร์-16": [
+  "polymer-type",
+  "monomer"
+ ],
+ "E-พอลิเมอร์-17": [
+  "monomer",
+  "structure-props",
+  "polymer-type"
+ ],
+ "E-พอลิเมอร์-18": [
+  "polymer-type",
+  "monomer"
+ ],
+ "E-พอลิเมอร์-19": [
+  "polymer-type",
+  "monomer",
+  "structure-props"
+ ],
+ "E-พอลิเมอร์-20": [
+  "monomer",
+  "structure-props",
+  "polymer-type"
+ ],
+ "E-พอลิเมอร์-21": [
+  "structure-props",
+  "polymer-type",
+  "monomer"
+ ],
+ "E-พอลิเมอร์-22": [
+  "monomer",
+  "polymer-type",
+  "structure-props"
  ]
 }
