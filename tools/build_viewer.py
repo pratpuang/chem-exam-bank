@@ -433,6 +433,7 @@ if os.path.isdir(EX_DIR) and not STUDENT:   # student edition: exam papers only,
         for sec, items in C.get("sections", []):
             for it in items:   # (diff, question, box_mm, solution_html[, figure path rel. to bank root[, 3D spec]])
                 diff, qtext, _box, sol = it[:4]; fig = it[4] if len(it) > 4 else ""
+                s3 = json.load(open(os.path.join(ROOT, it[5]), encoding="utf-8")) if len(it) > 5 else None   # 3D spec (inline, no fetch)
                 pend = pending or (pendfig and "โจทย์รูปภาพ" in sec)
                 n += 1
                 eid = "E-%s-%02d" % (C["id"], n)
@@ -446,7 +447,7 @@ if os.path.isdir(EX_DIR) and not STUDENT:   # student edition: exam papers only,
                     "bodyHtml": "<p>%s</p>" % _html.escape(qtext, quote=False),   # question is plain text, solution is HTML
                     "snippet": _html.escape(qtext[:90], quote=False),
                     "answer": "", "source": f"แบบฝึกหัด {C.get('title', '')} · {sec} · ข้อ {n}",
-                    "note": "", "figure": fig, "search": " ".join((qtext, sec, "แบบฝึกหัด", C.get("title", ""))).lower(),
+                    "note": "", "figure": fig, **({"fig3d": s3} if s3 else {}), "search": " ".join((qtext, sec, "แบบฝึกหัด", C.get("title", ""))).lower(),
                     "solHtml": sol[:m.start()] if m else sol, "solAnswer": m.group(1).strip() if m else "",
                     "solFlag": pend, "solPending": pend, "solChecked": not pend, "topics": ts,
                 })
@@ -784,6 +785,8 @@ button.b-st{cursor:pointer}button.b-st:hover{background:var(--acc);color:#141414
 .body table{border-collapse:collapse;font-size:.92em;margin:.5em 0}
 .body td,.body th,.solbody td,.solbody th{border:2px solid var(--ink);padding:3px 8px}
 .fig{display:block;max-width:100%;height:auto;margin:12px auto;border:3px solid var(--ink);background:#fff;padding:6px}
+.v3d{position:relative;max-width:420px;height:300px;margin:10px auto 16px;outline:3px solid var(--ink);overflow:hidden;background:#fff;cursor:grab}.v3d .cap{position:absolute;left:0;right:0;top:3px;text-align:center;font:13px/1.2 'Times New Roman',serif;color:#000;pointer-events:none}
+@media print{.v3d{display:none}}
 .note{background:#fff4cc;border:2px solid var(--ink);padding:7px 11px;margin-top:10px;font-size:.86rem}
 .foot{margin-top:12px;padding-top:9px;border-top:2px dashed #cfc5b0;font-size:.8rem;color:var(--mut);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .present-btn{margin-left:auto;border:2px solid var(--ink);background:var(--card);padding:4px 11px;font-size:.8rem;font-weight:700;box-shadow:3px 3px 0 var(--sh)}
@@ -1965,7 +1968,28 @@ function chBadge(q){
 const NOKEY=/no key/i;
 function keyTxt(q){return (q.answer&&!NOKEY.test(q.answer))?q.answer:"";}
 function footHtml(q){return `📄 ${q.source}`;}   // the official key lives behind the เฉลย button now
-function figHtml(q){return q.figure?`<img class="fig" src="${q.figure}" alt="${q.id} figure" loading="lazy">`:"";}
+function figHtml(q){return q.figure?`<img class="fig" src="${q.figure}" alt="${q.id} figure" loading="lazy">`+(q.fig3d?`<div class="v3d" data-q="${q.id}"></div>`:""):"";}
+// ---- rotatable 3D (3Dmol.js, CDN, loaded only when a .v3d scrolls into view). Depth rules: perspective, fog, shaded ball+stick with ink outline, +-20deg rock that stops on drag, labels on top.
+let _3dp=null;const load3d=()=>_3dp||(_3dp=new Promise((ok,no)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/3dmol@2.4.2/build/3Dmol-min.js";s.onload=ok;s.onerror=no;document.head.appendChild(s)}));
+function mount3d(el){
+  if(el.dataset.m)return;el.dataset.m=1;const q=DATA.questions.find(x=>x.id===el.dataset.q),sp=q&&q.fig3d;if(!sp)return;
+  load3d().then(()=>{
+    const v=$3Dmol.createViewer(el,{backgroundColor:"white",antialias:true}),st=sp.style,R=e=>(st[e]||[.5,"#ddd"])[0],C=e=>(st[e]||[.5,"#ddd"])[1],A=sp.atoms,V=a=>({x:a[1],y:a[2],z:a[3]});
+    A.forEach(a=>v.addSphere({center:V(a),radius:R(a[0]),color:C(a[0])}));
+    sp.bonds.forEach(([i,j])=>v.addCylinder({start:V(A[i]),end:V(A[j]),radius:sp.bondr||.11,color:"#333",fromCap:1,toCap:1}));
+    if(sp.box){const h=sp.box/2,P=[-h,h];
+      const pts=[];for(const x of P)for(const y of P)for(const z of P)pts.push([x,y,z]);
+      pts.forEach((p,i)=>pts.forEach((r,j)=>{if(j>i&&p.filter((n,k)=>n!==r[k]).length===1)v.addLine({start:{x:p[0],y:p[1],z:p[2]},end:{x:r[0],y:r[1],z:r[2]},color:"#000",dashed:true,dashLength:.3,gapLength:.2})}))}
+    if(sp.label)A.forEach(a=>v.addLabel(a[0],{position:V(a),fontSize:18,fontColor:"black",fontOpacity:1,bold:true,backgroundOpacity:0,inFront:true,showBackground:false,alignment:"center"}));
+    v.setViewStyle({style:"outline",color:"black",width:.05});v.enableFog&&v.enableFog(true);
+    v.setCameraParameters&&v.setCameraParameters({fov:40});v.zoomTo();v.zoom(sp.zoom||1.5);v.rotate((sp.view||[0,0])[1],"x",0);v.rotate((sp.view||[0,0])[0],"y",0);v.render();
+    const cap=document.createElement("div");cap.className="cap";cap.textContent=sp.cap||"";el.appendChild(cap);
+    let t0=null,done=false,last=0;const stop=()=>{done=true};["mousedown","touchstart","wheel"].forEach(ev=>el.addEventListener(ev,stop,{passive:true}));
+    (function rock(ts){if(done||!el.isConnected)return;if(t0===null)t0=ts;const a=20*Math.sin((ts-t0)/1200);v.rotate(a-last,"y",0);last=a;v.render();requestAnimationFrame(rock)})(performance.now());
+  }).catch(()=>{el.textContent="โหลดภาพ 3 มิติไม่ได้ (ต้องต่ออินเทอร์เน็ต) — ดูรูป 2 มิติด้านบนแทน"});
+}
+if(window.IntersectionObserver){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){io.unobserve(e.target);mount3d(e.target)}}),{rootMargin:"200px"});
+  new MutationObserver(()=>document.querySelectorAll(".v3d:not([data-m])").forEach(el=>{if(!el.dataset.o){el.dataset.o=1;io.observe(el)}})).observe(document.body,{childList:true,subtree:true});}
 function noteHtml(q){return q.note?`<div class="note">📌 ${q.note}</div>`:"";}
 const qnum=q=>parseInt(q.id.slice(q.id.lastIndexOf("-")+1),10);   // Q-0038 -> 38, E-mol-07 -> 7
 function chapH(q){const cls=q.subject==="bio"?" bio":q.subject==="applied"?" app":"";
