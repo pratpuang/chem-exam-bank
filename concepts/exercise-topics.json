@@ -1018,5 +1018,140 @@
  ],
  "E-ตารางธาตุ-40": [
   "radioactive"
+ ],
+ "E-พันธะ-01": [
+  "lewis"
+ ],
+ "E-พันธะ-02": [
+  "lewis"
+ ],
+ "E-พันธะ-03": [
+  "lewis"
+ ],
+ "E-พันธะ-04": [
+  "lewis"
+ ],
+ "E-พันธะ-05": [
+  "lewis"
+ ],
+ "E-พันธะ-06": [
+  "vsepr"
+ ],
+ "E-พันธะ-07": [
+  "vsepr"
+ ],
+ "E-พันธะ-08": [
+  "vsepr"
+ ],
+ "E-พันธะ-09": [
+  "vsepr"
+ ],
+ "E-พันธะ-10": [
+  "vsepr"
+ ],
+ "E-พันธะ-11": [
+  "polarity"
+ ],
+ "E-พันธะ-12": [
+  "polarity"
+ ],
+ "E-พันธะ-13": [
+  "polarity"
+ ],
+ "E-พันธะ-14": [
+  "polarity"
+ ],
+ "E-พันธะ-15": [
+  "polarity"
+ ],
+ "E-พันธะ-16": [
+  "imf"
+ ],
+ "E-พันธะ-17": [
+  "imf"
+ ],
+ "E-พันธะ-18": [
+  "imf"
+ ],
+ "E-พันธะ-19": [
+  "imf"
+ ],
+ "E-พันธะ-20": [
+  "imf"
+ ],
+ "E-พันธะ-21": [
+  "liquid"
+ ],
+ "E-พันธะ-22": [
+  "liquid"
+ ],
+ "E-พันธะ-23": [
+  "liquid"
+ ],
+ "E-พันธะ-24": [
+  "liquid"
+ ],
+ "E-พันธะ-25": [
+  "liquid"
+ ],
+ "E-พันธะ-26": [
+  "bond-energy"
+ ],
+ "E-พันธะ-27": [
+  "bond-energy"
+ ],
+ "E-พันธะ-28": [
+  "bond-energy"
+ ],
+ "E-พันธะ-29": [
+  "bond-energy"
+ ],
+ "E-พันธะ-30": [
+  "bond-energy"
+ ],
+ "E-พันธะ-31": [
+  "lattice-energy"
+ ],
+ "E-พันธะ-32": [
+  "lattice-energy"
+ ],
+ "E-พันธะ-33": [
+  "lattice-energy"
+ ],
+ "E-พันธะ-34": [
+  "lattice-energy"
+ ],
+ "E-พันธะ-35": [
+  "lattice-energy"
+ ],
+ "E-พันธะ-36": [
+  "formula-naming"
+ ],
+ "E-พันธะ-37": [
+  "formula-naming"
+ ],
+ "E-พันธะ-38": [
+  "formula-naming"
+ ],
+ "E-พันธะ-39": [
+  "formula-naming"
+ ],
+ "E-พันธะ-40": [
+  "formula-naming"
+ ],
+ "E-พันธะ-41": [
+  "solid-types"
+ ],
+ "E-พันธะ-42": [
+  "solid-types"
+ ],
+ "E-พันธะ-43": [
+  "solid-types"
+ ],
+ "E-พันธะ-44": [
+  "solid-types"
+ ],
+ "E-พันธะ-45": [
+  "solid-types"
  ]
 }
