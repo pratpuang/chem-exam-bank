@@ -1750,5 +1750,44 @@
  ],
  "E-อัตรา-34": [
   "energy-profile"
+ ],
+ "E-กรดเบส-35": [
+  "ph-strong",
+  "titration"
+ ],
+ "E-กรดเบส-36": [
+  "titration-curve"
+ ],
+ "E-กรดเบส-37": [
+  "titration-curve",
+  "weak-acid"
+ ],
+ "E-กรดเบส-38": [
+  "titration-curve",
+  "weak-acid",
+  "salt-hydrolysis"
+ ],
+ "E-กรดเบส-39": [
+  "weak-acid"
+ ],
+ "E-กรดเบส-40": [
+  "titration-curve"
+ ],
+ "E-กรดเบส-41": [
+  "titration-curve",
+  "weak-acid"
+ ],
+ "E-กรดเบส-42": [
+  "buffer"
+ ],
+ "E-กรดเบส-43": [
+  "titration-curve",
+  "weak-acid",
+  "salt-hydrolysis"
+ ],
+ "E-กรดเบส-44": [
+  "titration-curve",
+  "weak-acid",
+  "titration"
  ]
 }
