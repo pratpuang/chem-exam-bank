@@ -1606,5 +1606,45 @@
  ],
  "E-อะตอม-50": [
   "half-life"
+ ],
+ "E-ปริมาณสาร-46": [
+  "balancing",
+  "limiting"
+ ],
+ "E-ปริมาณสาร-47": [
+  "gas-stoich",
+  "mass-mass"
+ ],
+ "E-ปริมาณสาร-48": [
+  "gas-stoich",
+  "limiting"
+ ],
+ "E-ปริมาณสาร-49": [
+  "precipitation",
+  "limiting"
+ ],
+ "E-ปริมาณสาร-50": [
+  "percent-yield"
+ ],
+ "E-ปริมาณสาร-51": [
+  "mixture-purity",
+  "mass-mass"
+ ],
+ "E-ปริมาณสาร-52": [
+  "multi-step",
+  "percent-yield"
+ ],
+ "E-ปริมาณสาร-53": [
+  "limiting",
+  "percent-yield",
+  "balancing"
+ ],
+ "E-ปริมาณสาร-54": [
+  "precipitation",
+  "limiting"
+ ],
+ "E-ปริมาณสาร-55": [
+  "multi-step",
+  "mass-mass"
  ]
 }
