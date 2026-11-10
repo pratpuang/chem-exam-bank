@@ -1153,5 +1153,85 @@
  ],
  "E-พันธะ-45": [
   "solid-types"
+ ],
+ "E-อัตรา-01": [
+  "rate-calc"
+ ],
+ "E-อัตรา-02": [
+  "rate-calc"
+ ],
+ "E-อัตรา-03": [
+  "rate-calc"
+ ],
+ "E-อัตรา-04": [
+  "rate-calc"
+ ],
+ "E-อัตรา-05": [
+  "rate-calc"
+ ],
+ "E-อัตรา-06": [
+  "energy-profile"
+ ],
+ "E-อัตรา-07": [
+  "energy-profile"
+ ],
+ "E-อัตรา-08": [
+  "energy-profile"
+ ],
+ "E-อัตรา-09": [
+  "energy-profile",
+  "temp-catalyst"
+ ],
+ "E-อัตรา-10": [
+  "temp-catalyst"
+ ],
+ "E-อัตรา-11": [
+  "temp-catalyst"
+ ],
+ "E-อัตรา-12": [
+  "temp-catalyst"
+ ],
+ "E-อัตรา-13": [
+  "temp-catalyst"
+ ],
+ "E-อัตรา-14": [
+  "conc-surface"
+ ],
+ "E-อัตรา-15": [
+  "conc-surface"
+ ],
+ "E-อัตรา-16": [
+  "conc-surface"
+ ],
+ "E-อัตรา-17": [
+  "conc-surface"
+ ],
+ "E-อัตรา-18": [
+  "rate-calc"
+ ],
+ "E-อัตรา-19": [
+  "rate-calc"
+ ],
+ "E-อัตรา-20": [
+  "rate-calc",
+  "conc-surface"
+ ],
+ "E-อัตรา-21": [
+  "temp-catalyst",
+  "energy-profile"
+ ],
+ "E-อัตรา-22": [
+  "energy-profile",
+  "temp-catalyst"
+ ],
+ "E-อัตรา-23": [
+  "conc-surface",
+  "rate-calc",
+  "temp-catalyst"
+ ],
+ "E-อัตรา-24": [
+  "rate-calc",
+  "temp-catalyst",
+  "conc-surface"
  ]
 }
