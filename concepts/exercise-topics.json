@@ -1402,6 +1402,43 @@
  "E-สมดุล-25": [
   "ksp"
  ],
+ "E-สมดุล-26": [
+  "eq-concept",
+  "k-calc"
+ ],
+ "E-สมดุล-27": [
+  "eq-concept"
+ ],
+ "E-สมดุล-28": [
+  "eq-concept",
+  "k-calc"
+ ],
+ "E-สมดุล-29": [
+  "le-chatelier",
+  "k-calc"
+ ],
+ "E-สมดุล-30": [
+  "le-chatelier"
+ ],
+ "E-สมดุล-31": [
+  "le-chatelier"
+ ],
+ "E-สมดุล-32": [
+  "le-chatelier",
+  "k-calc",
+  "k-manip"
+ ],
+ "E-สมดุล-33": [
+  "k-calc",
+  "k-manip",
+  "le-chatelier"
+ ],
+ "E-สมดุล-34": [
+  "ksp"
+ ],
+ "E-สมดุล-35": [
+  "k-calc"
+ ],
  "E-อินทรีย์-01": [
   "naming"
  ],
