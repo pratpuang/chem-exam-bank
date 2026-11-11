@@ -90,23 +90,17 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
   check("print called", (await ev(`window.__printed`)) === 1, await ev(`window.__printed`));
   const sh = await ev(`({cards:document.querySelectorAll("#psheet .ps-c").length,ok:document.querySelectorAll("#psheet .okopt").length,h1:$("#psheet h1").textContent,sc:$("#psheet .ps-sc").textContent,ws:document.querySelectorAll("#psheet .ps-w").length})`);
   check("sheet = cart, no answer marks", sh.cards === before && sh.ok === 0, sh); check("title + count", sh.h1 === "ทดสอบตะกร้า" && sh.sc.includes(before + " ข้อ"), sh);
-  check("QR drawn in the sheet header (vendored, no CDN)", await ev(`!!document.querySelector("#psheet .ps-hd #psqr svg")`));
   check("sheet header is not a sticky <header>", await ev(`getComputedStyle(document.querySelector("#psheet .ps-hd")).position==="static"`));
   await cdp("Emulation.setEmulatedMedia", { media: "print" });
   const pdf = await cdp("Page.printToPDF", { preferCSSPageSize: true, printBackground: true, displayHeaderFooter: false });
   fs.writeFileSync(path.join(OUT, "cart-test-print.pdf"), Buffer.from(pdf.result.data, "base64"));
   await cdp("Emulation.setEmulatedMedia", { media: "" }); await ev(`dispatchEvent(new Event("afterprint"))`);
-  check("after print: keep-it nudge", await ev(`$("#cpkeep").classList.contains("nudge")`));
 
-  console.log("6 · keep");
-  await ev(`$("#cpname").value="ไคด้า"`); await click("#cpsave"); await click("#cpgive");
-  check("set saved + given recorded", (await ev(`JSON.parse(localStorage.getItem("cqb_sets")).length===1&&JSON.parse(localStorage.getItem("cqb_given"))["ไคด้า"].length`)) === before);
-  await shot("cart-7-drawer-kept.png");
+  console.log("6 · close + pick a carted card");
   await click("#cpx"); await sleep(500); check("drawer closes", !(await ev(`document.body.classList.contains("cartopen")`)));
   await ev(`document.querySelector('#layout [data-v="cards"]').click()`); await sleep(800);
-  await ev(`(()=>{const g=JSON.parse(localStorage.getItem("cqb_given"))["ไคด้า"][0];window.__g=g;const c=document.querySelector('#root .cpin[data-id="'+g+'"]').parentElement;c.id="cg";})()`);
-  await click("#cg>.cpin.done"); await mdrag("#cg .body", 170);
-  check("re-adding a given Q warns", (await ev(`$("#ctmsg").textContent`)).includes("ไคด้า") && await ev(`$("#ctoast").classList.contains("warn")`));
+  await ev(`(()=>{const g=JSON.parse(localStorage.getItem("cqb_cart")).ids[0];window.__g=g;const c=document.querySelector('#root .cpin[data-id="'+g+'"]').parentElement;c.id="cg";})()`);
+  check("no keep box, no sets/given", await ev(`!document.querySelector("#cpkeep,#cpsave,#cpgive,#cpsets")`));
 
   console.log("7 · present mode bookmark");
   await click("#cg .present-btn"); await sleep(900);
@@ -119,6 +113,11 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
   await go("about:blank"); await go(link);
   const sv = await ev(`({on:document.body.classList.contains("sheetview"),cards:document.querySelectorAll("#psheet .ps-c").length,t:$("#psheet h1")?.textContent,tab:getComputedStyle($("#carttab")).visibility,top:(()=>{const r=$("#psheet .ps-c").getBoundingClientRect();const t=document.elementFromPoint(r.left+20,r.top+20);return !!t.closest("#psheet")})()})`);
   check("link opens the sheet on top, no tab", sv.on && sv.cards > 0 && sv.t === "ชุดนักเรียน" && sv.top && sv.tab === "hidden", sv);
+  await click("#psprint"); check("student พิมพ์ opens the workspace picker", await ev(`!$("#pspop").hidden`));
+  await click('#psws [data-v="60"]'); await ev(`window.print=()=>{window.__sp=1}`); await click("#psgo");
+  for (let i = 0; i < 20 && !(await ev(`window.__sp`)); i++) await sleep(500);
+  check("student picks มาก → printed with 60mm boxes", await ev(`window.__sp===1&&[...document.querySelectorAll("#psheet .ps-w")].length>0&&[...document.querySelectorAll("#psheet .ps-w")].every(x=>x.style.height==="60mm")`));
+  await ev(`dispatchEvent(new Event("afterprint"))`);
 
   console.log("9 · looks: long cart, dark, iPad, phone, empty (eyeball the cart-9*.png)");
   const vp = async (w, h, mobile) => { await cdp("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: !!mobile }); await sleep(400); };
@@ -158,7 +157,7 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
   check("emptied in the drawer: empty state shows, actions disabled", await ev(`!!document.querySelector(".cpempty")&&$("#cpprint").disabled&&$("#cpsort").disabled`));
   await shot("cart-9i-phone-empty.png");
   await ev(`$("#cpx").click()`); await sleep(500);
-  check("empty cart but saved sets exist: the tab stays so the sets are reachable", await ev(`getComputedStyle($("#carttab")).display!=="none"&&$("#cartn").textContent==="0"`));
+  check("empty cart: the tab hides", await ev(`getComputedStyle($("#carttab")).display==="none"`));
   await vp(1200, 900, false);
   check("no JS errors", errs.length === 0, errs);
   console.log(`\n${ok} passed, ${bad} failed`); ws.close(); ch.kill(); process.exit(bad ? 1 : 0);

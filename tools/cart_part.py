@@ -99,27 +99,15 @@ body.cartopen .cartpanel{transform:none}
 .cpmeta .badge{font-size:.62rem;padding:1px 6px}
 .cpi .ps-paper{background:var(--yel);color:#141414}
 .cps{grid-column:2;grid-row:2;font-size:.82rem;line-height:1.5;color:var(--ink);opacity:.85;margin:4px 0 9px 11px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;align-self:start}
-.cpg{font:800 .64rem "Anuphan",sans-serif;color:#fff;background:var(--red);padding:2px 6px}
 .cpdel{grid-column:3;grid-row:1/3;border:0;background:none;color:var(--mut)!important;font-size:.95rem;font-weight:800;display:grid;place-items:center}
 .cpdel:hover{background:var(--red);color:#fff!important}
 .cpempty{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:0 14px 28px;border:3px dashed var(--mut);color:var(--mut);font-size:.9rem;line-height:1.7}
 .cpempty b{color:var(--ink);font-size:1rem}
 .cpempty .rbdemo{width:20px;height:36px;margin-bottom:6px;background:var(--red);clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%)}
-.cpkeep{border:2px solid var(--ink);background:var(--card);padding:11px 12px 12px;display:flex;flex-direction:column;gap:9px}
-.cpkeep.nudge{border-color:var(--red);box-shadow:5px 5px 0 var(--red)}
-.cpkeep.nudge>.cplab{color:var(--red)}
-.cpkeep .row2{display:flex;gap:7px;flex-wrap:wrap}
-.cpkeep input{flex:1 1 130px;min-width:0;font:700 .88rem "Anuphan",sans-serif;border:2px solid var(--ink);background:var(--paper);color:var(--ink);padding:7px 10px;border-radius:0}
-.cpkeep input:focus{outline:3px solid var(--yel);outline-offset:1px}
 .cpbtn{font-size:.8rem;font-weight:800;border:2px solid var(--ink);background:var(--card);padding:7px 11px;box-shadow:3px 3px 0 var(--sh);white-space:nowrap;transition:transform .08s,box-shadow .08s}
 .cpbtn:hover{background:var(--yel);color:#141414}
 .cpbtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--sh)}
-.cpsets{display:flex;flex-direction:column}
-.cpsets:empty{display:none}
-.cpsets .cplab{padding-top:9px;border-top:2px dashed var(--mut)}
-.cpset{display:flex;align-items:center;gap:6px;padding:7px 0 0;font-size:.86rem}
-.cpset span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cpset small{color:var(--mut)}
-.cpfoot{flex:none;display:flex;gap:12px;padding:14px 22px calc(16px + env(safe-area-inset-bottom,0px)) 18px;border-top:3px solid var(--ink);background:var(--paper)}
+.cpset span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cpfoot{flex:none;display:flex;gap:12px;padding:14px 22px calc(16px + env(safe-area-inset-bottom,0px)) 18px;border-top:3px solid var(--ink);background:var(--paper)}
 .cpprint,.cplink{font-weight:800;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--sh);padding:11px 12px;transition:transform .08s,box-shadow .08s;min-height:50px}
 .cpprint{flex:1.5;font-size:1.02rem;background:var(--yel);color:#141414!important}
 .cplink{flex:1;font-size:.88rem;background:var(--card)}
@@ -129,8 +117,7 @@ body.cartopen .cartpanel{transform:none}
 @media(max-width:560px){
   .cphead{padding:10px 12px 9px 14px}.cphead h3{font-size:1.15rem}
   .cpscroll{padding:14px 18px 20px 14px;gap:16px}
-  .cpkeep input{flex-basis:100%}.cpkeep .row2 .cpbtn{flex:1}
-  .cpfoot{padding-left:14px;padding-right:18px;gap:10px}
+    .cpfoot{padding-left:14px;padding-right:18px;gap:10px}
   .cpprint,.cplink{padding:10px 6px}
 }
 /* present mode: a bookmark in the tools */
@@ -142,7 +129,7 @@ body.cartopen .cartpanel{transform:none}
 body.sheetview{overflow:hidden}
 body.sheetview .psheet{display:block;position:fixed;inset:0;z-index:90;overflow-y:auto;background:#efe9dc;padding:0 0 40px}
 .psbar{position:sticky;top:0;z-index:2;background:#141414;color:#efe9dc;display:flex;gap:10px;align-items:center;padding:10px 14px;border-bottom:5px solid #f2b705;font:700 .9rem "Anuphan",sans-serif}
-.psbar button{margin-left:auto;font:800 .9rem "Anuphan",sans-serif;background:#f2b705;border:2px solid #efe9dc;padding:7px 14px;cursor:pointer}
+.psbar>button{margin-left:auto;font:800 .9rem "Anuphan",sans-serif;background:#f2b705;border:2px solid #efe9dc;padding:7px 14px;cursor:pointer}
 .pspage{max-width:820px;margin:16px auto;padding:0 12px}
 .psheet{color:#141414;font-family:"Anuphan","IBM Plex Sans Thai",system-ui,sans-serif}
 .ps-hd{position:static;display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:stretch;border:3px solid #141414;box-shadow:6px 6px 0 #141414;padding:12px 14px;margin:0 6px 16px 0;background:#fffdf7;border-top:9px solid #e4412b}
@@ -173,11 +160,6 @@ body.sheetview .psheet{display:block;position:fixed;inset:0;z-index:90;overflow-
 .ps-ft svg{width:20mm;height:20mm;flex:none}
 .ps-ft span{color:#6b6457}
 
-.ps-hd.hasqr{grid-template-columns:1fr auto auto auto}
-.ps-qr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:24mm}
-.ps-qr svg{width:20mm;height:20mm;display:block}
-.ps-qr small{font:700 .55rem "Anuphan",sans-serif;color:#6b6457;white-space:nowrap}
-.ps-qr:not(:has(svg)){display:none}
 @media screen{
 /* ---- the student link, on screen ---- */
 body.sheetview .psheet{background:#efe9dc}
@@ -186,7 +168,7 @@ body.sheetview .psbar{gap:12px;padding:10px 14px calc(10px) 16px}
 .psbt small{font:800 .62rem "JetBrains Mono","Anuphan",monospace;letter-spacing:.1em;color:#f2b705}
 .psbt b{font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .psprog{font:800 .78rem "JetBrains Mono","Anuphan",monospace;background:#f2b705;color:#141414;padding:4px 9px;white-space:nowrap}
-body.sheetview .psbar button{margin-left:0;background:none;color:#efe9dc;border:2px solid #efe9dc;padding:6px 12px;font-size:.82rem}
+body.sheetview .psbar>button{margin-left:0;background:none;color:#efe9dc;border:2px solid #efe9dc;padding:6px 12px;font-size:.82rem}
 body.sheetview .ps-f,body.sheetview .ps-sc{display:none}
 body.sheetview .ps-hd{grid-template-columns:1fr;margin-top:6px}
 body.sheetview .ps-hd h1{font-size:1.7rem;line-height:1.25}
@@ -202,6 +184,18 @@ body.sheetview .psheet .body ul+p,body.sheetview .psheet .body ol+p{margin-top:.
   body.sheetview .psheet .body{font-size:.95rem}
   .psprog{font-size:.7rem;padding:3px 7px}
 }
+}
+
+@media screen{
+.psbar{position:sticky}
+.pspop{position:absolute;right:12px;top:calc(100% + 8px);z-index:3;background:#fffdf7;color:#141414;border:3px solid #141414;box-shadow:6px 6px 0 #141414;padding:12px;display:flex;flex-direction:column;gap:10px;min-width:240px}
+.pspop[hidden]{display:none}
+.pspop p{margin:0;font:800 .78rem "Anuphan",sans-serif}
+.pspop .seg{display:flex;border:2px solid #141414}
+.pspop .seg button{flex:1;margin:0;border:0;border-right:2px solid #141414;background:#fffdf7;color:#141414;padding:8px 6px;font:700 .85rem "Anuphan",sans-serif;cursor:pointer}
+.pspop .seg button:last-child{border-right:0}
+.pspop .seg button.on{background:#141414;color:#efe9dc}
+body.sheetview .pspop .psgo{background:#f2b705;color:#141414;border:3px solid #141414;box-shadow:4px 4px 0 #141414;padding:9px;font:800 .95rem "Anuphan",sans-serif;cursor:pointer}
 }
 @page{size:A4;margin:12mm 11mm;@top-center{content:""}@bottom-center{content:"หน้า " counter(page) " / " counter(pages);font:700 9pt "Anuphan",sans-serif;color:#6b6457}}
 @media print{
@@ -228,11 +222,6 @@ MARKUP = r"""
       <div class="cplh"><p class="cplab">โจทย์ในชีต</p><button class="cpmini" id="cpsort" title="เรียงจากง่ายไปยาก">ง่าย → ยาก</button><button class="cpmini" id="cpshuf" title="สลับลำดับแบบสุ่ม">สุ่มลำดับ</button><button class="cpmini quiet" id="cpclear">ล้าง</button></div>
       <ol class="cplist" id="cplist"></ol>
     </div>
-    <div class="cpkeep" id="cpkeep"><p class="cplab" id="cpkl">เก็บตะกร้านี้</p>
-      <div class="row2"><input id="cpname" placeholder="ชื่อชุด หรือ ชื่อนักเรียน" list="cpnames" autocomplete="off"><datalist id="cpnames"></datalist>
-        <button class="cpbtn" id="cpsave" title="เก็บเป็นชุดไว้เปิดใช้ทีหลัง">บันทึกชุด</button><button class="cpbtn" id="cpgive" title="จำว่าให้ข้อพวกนี้กับนักเรียนคนนี้แล้ว">ให้นักเรียนแล้ว</button></div>
-      <div class="cpsets" id="cpsets"></div>
-    </div>
   </div>
   <div class="cpfoot"><button class="cpprint" id="cpprint">พิมพ์ / PDF</button><button class="cplink" id="cplink">ลิงก์ให้นักเรียน</button></div>
 </aside></div>
@@ -242,7 +231,7 @@ MARKUP = r"""
 JS = r"""
 /* ===== 🛒 cart -> A4 แบบฝึกหัด (tools/cart_part.py) ===== */
 const CART=(()=>{
-  const K="cqb_cart",KS="cqb_sets",KG="cqb_given",KW="cqb_cart_ws";
+  const K="cqb_cart",KW="cqb_cart_ws";
   const J=(k,d)=>{try{const v=JSON.parse(ls.get(k,"null"));return v==null?d:v;}catch(_){return d;}};
   const W=(k,v)=>ls.set(k,JSON.stringify(v));
   const BY=new Map(DATA.questions.map(q=>[q.id,q]));
@@ -251,8 +240,6 @@ const CART=(()=>{
   const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const has=id=>cart.ids.includes(id);
   const save=()=>{W(K,cart);sync();};
-  const given=()=>J(KG,{});
-  const givenTo=id=>{const g=given();return Object.keys(g).filter(n=>(g[n]||[]).includes(id));};
   const rm=()=>typeof RM!=="undefined"&&RM.matches;
   const snd=k=>{try{SFX.play(k);}catch(_){}};
   let tt=0;function toast(m,o){o=o||{};const t=$("#ctoast"),a=$("#ctact");$("#ctmsg").textContent=m;t.classList.toggle("warn",!!o.warn);
@@ -260,8 +247,8 @@ const CART=(()=>{
     t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),o.act?4200:2400);}
   function bump(){const t=$("#carttab");t.classList.remove("bump");void t.offsetWidth;t.classList.add("bump");}
   function add(id){if(!BY.has(id))return false;if(has(id)){toast("ข้อนี้อยู่ในตะกร้าแล้ว — แตะริบบิ้นแดงเพื่อเอาออก");return false;}
-    cart.ids.push(id);save();bump();const g=givenTo(id);
-    toast(g.length?`ใส่ตะกร้าแล้ว · เคยให้ ${g.join(", ")} ไปแล้ว`:`ใส่ตะกร้าแล้ว · ${cart.ids.length} ข้อ`,{warn:g.length>0});return true;}
+    cart.ids.push(id);save();bump();
+    toast(`ใส่ตะกร้าแล้ว · ${cart.ids.length} ข้อ`);return true;}
   function remove(id,undo){const at=cart.ids.indexOf(id);if(at<0)return;cart.ids.splice(at,1);save();snd("chip");
     if(undo)toast("เอาออกจากตะกร้าแล้ว",{act:"ย้อนกลับ",fn:()=>{if(!has(id)){cart.ids.splice(Math.min(at,cart.ids.length),0,id);save();}}});}
   const toggle=id=>has(id)?remove(id,true):add(id);
@@ -277,23 +264,28 @@ const CART=(()=>{
       <div class="body">${q.bodyHtml.replace(/\bokopt\b/g,"")}${q.figure?`<img class="fig" src="${q.figure}" alt="">`:""}</div>
       ${w>0?`<div class="ps-w" style="height:${w}mm"></div>`:""}</div>`).join("");
     return `<div class="psbar"><div class="psbt"><small>แบบฝึกหัด</small><b>${esc(t)}</b></div><span class="psprog">${n} ข้อ</span><button id="psprint" aria-label="พิมพ์">พิมพ์</button></div><div class="pspage">
-      <div class="ps-hd${link?" hasqr":""}"><div><div class="ps-k">แบบฝึกหัด</div><h1>${esc(t)}</h1></div>
+      <div class="ps-hd"><div><div class="ps-k">แบบฝึกหัด</div><h1>${esc(t)}</h1></div>
       <div class="ps-f"><div>ชื่อ <span></span></div><div>วันที่ <span></span></div></div>
-      <div class="ps-sc"><div>คะแนน · ${n} ข้อ</div><b>&nbsp;&nbsp;&nbsp;/ ${n}</b></div>${link?`<div class="ps-qr" id="psqr"><small>สแกนทำออนไลน์</small></div>`:""}</div>
+      <div class="ps-sc"><div>คะแนน · ${n} ข้อ</div><b>&nbsp;&nbsp;&nbsp;/ ${n}</b></div></div>
       ${cards}</div>`;}
   function linkFor(ids,t){return location.origin+location.pathname+"#sheet="+ids.map(encodeURIComponent).join(",")+"&t="+encodeURIComponent(t);}
-  let qrLib=null;function qr(){return qrLib||(qrLib=new Promise(res=>{if(window.qrcode)return res(window.qrcode);const s=document.createElement("script");
-    s.src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js";s.onload=()=>res(window.qrcode||null);s.onerror=()=>res(null);document.head.appendChild(s);setTimeout(()=>res(window.qrcode||null),4000);}));}
   async function fill(ids,t,w,withLink){const ps=$("#psheet"),link=withLink?linkFor(ids,t):"";ps.innerHTML=sheetHtml(ids,t,w,link);tex(ps);
-    if(link){const Q=await qr();const ft=$("#psqr");if(Q&&ft){try{const c=Q(0,"M");c.addData(link);c.make();ft.insertAdjacentHTML("afterbegin",c.createSvgTag({cellSize:2,margin:0,scalable:true}));}catch(_){}}}
     await Promise.all([...ps.querySelectorAll("img")].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r;setTimeout(r,5000);})));
-    const p=$("#psprint");if(p)p.onclick=()=>doPrint(false);}
+    const p=$("#psprint");if(!p)return;
+    if(withLink){p.onclick=()=>doPrint();return;}
+    /* the student link: พิมพ์ opens a small sheet to pick the workspace size first (same four sizes as the cart) */
+    p.insertAdjacentHTML("afterend",`<div class="pspop" id="pspop" hidden><p>พื้นที่ให้ทดใต้แต่ละข้อ</p><span class="seg" id="psws">${[[0,"ไม่มี"],[22,"น้อย"],[38,"กลาง"],[60,"มาก"]].map(([v,l])=>`<button data-v="${v}"${v===sw?' class="on"':""}>${l}</button>`).join("")}</span><button class="psgo" id="psgo">พิมพ์ / PDF</button></div>`);
+    const pop=$("#pspop");p.setAttribute("aria-expanded","false");
+    p.onclick=e=>{e.stopPropagation();pop.hidden=!pop.hidden;p.setAttribute("aria-expanded",String(!pop.hidden));};
+    $("#psws").onclick=e=>{const b=e.target.closest("button");if(!b)return;sw=+b.dataset.v;ls.set("cqb_sheet_ws",String(sw));$("#psws").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));};
+    $("#psgo").onclick=async()=>{await fill(ids,t,sw,false);doPrint();};
+    if(!ps._pop){ps._pop=1;ps.addEventListener("click",e=>{const q=$("#pspop");if(q&&!q.hidden&&!e.target.closest("#pspop,#psprint")){q.hidden=true;}});}}
+  let sw=(()=>{const v=parseInt(ls.get("cqb_sheet_ws","38"),10);return isNaN(v)?38:v;})();
 
-  let printed=false;
-  function doPrint(nudge){document.body.classList.add("printing");printed=nudge;
+    function doPrint(){document.body.classList.add("printing");
     if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>window.print());else window.print();}
-  addEventListener("afterprint",()=>{document.body.classList.remove("printing");
-    if(printed){printed=false;const k=$("#cpkeep");k.classList.add("nudge");$("#cpkl").textContent="พิมพ์แล้ว — เก็บตะกร้านี้ไว้ยังไง?";}});
+  addEventListener("afterprint",()=>{document.body.classList.remove("printing");});
+
 
   /* ---- ribbons: same pin state machine as drug-webapp (only a CHANGE animates) ---- */
   function pinSet(b,on){const was=b.dataset.st,now=on?"1":"0";b.dataset.st=now;b.setAttribute("aria-pressed",on?"true":"false");
@@ -306,21 +298,18 @@ const CART=(()=>{
     const m=$("#mcart"),q=typeof mIdx!=="undefined"&&filtered[mIdx];if(m&&q){const on=has(q.id);m.classList.toggle("on",on);m.setAttribute("aria-pressed",on);m.title=on?"เอาออกจากตะกร้า (C)":"ใส่ตะกร้า (C)";}
     if(ins)snd("ribbon");}
   /* ---- the drawer ---- */
-  function names(){const s=new Set([...J(KS,[]).map(x=>x.n),...Object.keys(given())]);$("#cpnames").innerHTML=[...s].map(n=>`<option value="${esc(n)}">`).join("");}
   function list(){const L=$("#cplist");
     if(!cart.ids.length){L.innerHTML=`<li class="cpempty"><span class="rbdemo"></span><b>ตะกร้ายังว่าง</b>ลากโจทย์ไปด้านข้าง (เมาส์หรือนิ้ว) หรือกด C<br>ข้อที่อยู่ในตะกร้าจะมีริบบิ้นแดงห้อยอยู่</li>`;return;}
-    L.innerHTML=cart.ids.map((id,i)=>{const q=BY.get(id),g=givenTo(id);return `<li class="cpi d-${q.diff}" data-id="${esc(id)}"><span class="cph" title="ลากเพื่อเรียงลำดับ"><span class="cpno">${i+1}</span><i>⋮⋮</i></span>
-      <div class="cpmeta"><span class="badge b-id">${esc(id)}</span><span class="badge ps-paper">${esc(paperTxt(q))}</span>${g.length?`<span class="cpg">ให้ ${esc(g.join(", "))} แล้ว</span>`:""}</div>
+    L.innerHTML=cart.ids.map((id,i)=>{const q=BY.get(id);return `<li class="cpi d-${q.diff}" data-id="${esc(id)}"><span class="cph" title="ลากเพื่อเรียงลำดับ"><span class="cpno">${i+1}</span><i>⋮⋮</i></span>
+      <div class="cpmeta"><span class="badge b-id">${esc(id)}</span><span class="badge ps-paper">${esc(paperTxt(q))}</span></div>
       <button class="cpdel" title="เอาออก" aria-label="เอาออก">✕</button><span class="cps">${q.snippet||""}</span></li>`;}).join("");}
-  function sets(){const S=J(KS,[]);$("#cpsets").innerHTML=S.length?`<p class="cplab">ชุดที่บันทึกไว้</p>`+S.map((s,i)=>`<div class="cpset"><span><b>${esc(s.n)}</b> <small>· ${s.ids.length} ข้อ</small></span>
-      <button class="cpmini" data-open="${i}">เปิด</button><button class="cpmini quiet" data-del="${i}">ลบ</button></div>`).join(""):"";}
   function wsBtns(){$("#cpws").querySelectorAll("button").forEach(b=>b.classList.toggle("on",+b.dataset.v===ws));}
   function panel(){const n=cart.ids.length;$("#cptitle").value=cart.t||"";$("#cptitle").placeholder=n?autoTitle():"ตั้งชื่อชีต";$("#cphn").textContent=n+" ข้อ";
-    list();sets();names();wsBtns();["#cpprint","#cplink","#cpsort","#cpshuf","#cpsave","#cpgive","#cpclear"].forEach(s=>$(s).disabled=!n);}
+    list();wsBtns();["#cpprint","#cplink","#cpsort","#cpshuf","#cpclear"].forEach(s=>$(s).disabled=!n);}
   const isOpen=()=>document.body.classList.contains("cartopen");
-  function open(){panel();$("#cpkeep").classList.remove("nudge");$("#cpkl").textContent="เก็บตะกร้านี้";document.body.classList.add("cartopen");try{SL.lock("cart");}catch(_){}snd("drawer");}
+  function open(){panel();document.body.classList.add("cartopen");try{SL.lock("cart");}catch(_){}snd("drawer");}
   function close(){if(!isOpen())return;document.body.classList.remove("cartopen");try{SL.unlock("cart");}catch(_){}}
-  function sync(){const n=cart.ids.length;$("#cartn").textContent=n;document.body.classList.toggle("hascart",n>0||J(KS,[]).length>0);mark();if(isOpen())panel();}
+  function sync(){const n=cart.ids.length;$("#cartn").textContent=n;document.body.classList.toggle("hascart",n>0);mark();if(isOpen())panel();}
   /* ---- drag a question sideways: mouse or finger (never the Pencil). Forked from drug-webapp dkGesture: one drag at a
      time, ended by pointerup/cancel/lostpointercapture, blur, or the element leaving the DOM. ---- */
   let D=null,EAT=0;const BTN="button,a,input,textarea,select,label,canvas,.v3d,.cph,.badge,.mink";
@@ -377,18 +366,12 @@ const CART=(()=>{
       const up=()=>{h.removeEventListener("pointermove",mv);h.removeEventListener("pointerup",up);h.removeEventListener("pointercancel",up);
         li.classList.remove("lift");li.style.transform="";cart.ids=[...L.querySelectorAll(".cpi")].map(x=>x.dataset.id);save();};
       h.addEventListener("pointermove",mv);h.addEventListener("pointerup",up);h.addEventListener("pointercancel",up);});
-    $("#cpprint").onclick=async()=>{if(!cart.ids.length)return;await fill(cart.ids,title(),ws,true);doPrint(true);};
+    $("#cpprint").onclick=async()=>{if(!cart.ids.length)return;await fill(cart.ids,title(),ws,true);doPrint();};
     $("#cplink").onclick=async()=>{if(!cart.ids.length)return;const u=linkFor(cart.ids,title());
       try{if(navigator.share&&matchMedia("(pointer:coarse)").matches){await navigator.share({title:title(),url:u});return;}}catch(_){return;}
       try{await navigator.clipboard.writeText(u);toast("คัดลอกลิงก์แล้ว — ส่งให้นักเรียนได้เลย");}catch(_){prompt("คัดลอกลิงก์นี้",u);}};
-    const nm=()=>{const n=$("#cpname").value.trim();if(!n){toast("ใส่ชื่อก่อน",{warn:true});$("#cpname").focus();}return n;};
-    $("#cpsave").onclick=()=>{const n=nm();if(!n||!cart.ids.length)return;const S=J(KS,[]).filter(x=>x.n!==n);S.unshift({n,t:title(),ids:[...cart.ids],w:ws,d:Date.now()});W(KS,S);sync();toast(`บันทึกชุด “${n}” แล้ว`);};
-    $("#cpgive").onclick=()=>{const n=nm();if(!n||!cart.ids.length)return;const g=given();g[n]=[...new Set([...(g[n]||[]),...cart.ids])];W(KG,g);list();names();toast(`บันทึกว่าให้ ${n} แล้ว · ${cart.ids.length} ข้อ`);};
     $("#cpclear").onclick=()=>{if(!cart.ids.length)return;const old={t:cart.t,ids:[...cart.ids]};cart={t:"",ids:[]};save();close();
       toast(`ล้างตะกร้าแล้ว (${old.ids.length} ข้อ)`,{act:"ย้อนกลับ",fn:()=>{cart=old;save();}});};
-    $("#cpsets").onclick=e=>{const S=J(KS,[]),o=e.target.dataset.open,d=e.target.dataset.del;
-      if(o!=null){const s=S[+o];if(!s)return;cart={t:s.t||"",ids:s.ids.filter(id=>BY.has(id))};if(s.w!=null){ws=s.w;ls.set(KW,String(ws));}save();$("#cpname").value=s.n;toast(`เปิดชุด “${s.n}” แล้ว`);}
-      if(d!=null){const s=S[+d];if(!s||!confirm(`ลบชุด “${s.n}”?`))return;S.splice(+d,1);W(KS,S);sync();}};
     addEventListener("keydown",e=>{if((e.key!=="c"&&e.key!=="C")||e.metaKey||e.ctrlKey||e.altKey||e.target.closest("input,textarea,select,[contenteditable]")||isOpen())return;
       let q=null;if($("#modal").classList.contains("show"))q=filtered[mIdx];
       else if(view==="poster"&&document.body.classList.contains("inapp"))q=filtered[pIdx];
@@ -427,6 +410,5 @@ def apply(html):
     rep('<div class="row${exCls(q)}" data-i="${i}">', '<div class="row${exCls(q)}" data-i="${i}">' + PIN)
     rep('<button class="x shotx" id="mshot"', BOOKMARK + '<button class="x shotx" id="mshot"')
     rep("    chip:on=>", RIBBON_SFX + "    chip:on=>")
-    qr = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "qrcode-generator-1.4.4.min.js"), encoding="utf-8").read()
-    rep("</script></body></html>", JS.replace("__MARKUP__", MARKUP) + "</script><script>/* qrcode-generator 1.4.4 (MIT, Kazuhiko Arase), vendored so the sheet's QR never waits on a CDN */" + chr(10) + qr + chr(10) + "</script></body></html>")
+    rep("</script></body></html>", JS.replace("__MARKUP__", MARKUP) + "</script></body></html>")
     return html
