@@ -450,6 +450,6 @@ def apply(html):
     rep('<div class="row${exCls(q)}" data-i="${i}">', '<div class="row${exCls(q)}" data-i="${i}">' + PIN)
     rep('<button class="x shotx" id="mshot"', BOOKMARK + '<button class="x shotx" id="mshot"')
     rep("    chip:on=>", RIBBON_SFX + "    chip:on=>")
-    qr = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor", "qrcode-generator-1.4.4.min.js"), encoding="utf-8").read()
+    qr = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "qrcode-generator-1.4.4.min.js"), encoding="utf-8").read()
     rep("</script></body></html>", JS.replace("__MARKUP__", MARKUP) + "</script><script>/* qrcode-generator 1.4.4 (MIT, Kazuhiko Arase), vendored so the sheet's QR never waits on a CDN */" + chr(10) + qr + chr(10) + "</script></body></html>")
     return html
