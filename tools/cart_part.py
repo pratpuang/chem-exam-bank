@@ -178,7 +178,6 @@ body.sheetview .psheet{display:block;position:fixed;inset:0;z-index:90;overflow-
 .ps-qr svg{width:20mm;height:20mm;display:block}
 .ps-qr small{font:700 .55rem "Anuphan",sans-serif;color:#6b6457;white-space:nowrap}
 .ps-qr:not(:has(svg)){display:none}
-.ps-done{display:none}
 @media screen{
 /* ---- the student link, on screen ---- */
 body.sheetview .psheet{background:#efe9dc}
@@ -191,17 +190,9 @@ body.sheetview .psbar button{margin-left:0;background:none;color:#efe9dc;border:
 body.sheetview .ps-f,body.sheetview .ps-sc{display:none}
 body.sheetview .ps-hd{grid-template-columns:1fr;margin-top:6px}
 body.sheetview .ps-hd h1{font-size:1.7rem;line-height:1.25}
-body.sheetview .ps-hd:after{content:"แตะตัวเลือกเพื่อเลือกคำตอบ แล้วกดคัดลอกคำตอบส่งครูท้ายหน้า";font:600 .8rem "Anuphan",sans-serif;color:#6b6457;margin-top:6px}
-body.sheetview .psheet .ps-opts>li{padding:9px 12px;margin:6px 0;border:2px solid #d8cfbb;background:#fff;cursor:pointer;transition:background .15s,border-color .15s}
-body.sheetview .psheet .ps-opts>li:hover{border-color:#141414}
-body.sheetview .psheet .ps-opts>li.mk{background:#141414!important;color:#efe9dc;border-color:#141414}
-body.sheetview .psheet .ps-opts>li.mk *{color:#efe9dc}
-body.sheetview .ps-c.answered .ps-n{-webkit-text-stroke-color:#2f8f4e}
-body.sheetview .ps-done{display:block;background:#fffdf7;border:3px solid #141414;box-shadow:5px 5px 0 #141414;padding:14px;margin:6px 6px 0 0}
-.ps-dl{margin:0 0 8px;font-weight:800}
-.ps-dr{display:flex;gap:8px;flex-wrap:wrap}
-.ps-dr input{flex:1 1 160px;min-width:0;font:700 1rem "Anuphan",sans-serif;border:2px solid #141414;background:#efe9dc;padding:9px 10px;color:#141414}
-.ps-dr button{font:800 .95rem "Anuphan",sans-serif;background:#f2b705;color:#141414;border:3px solid #141414;box-shadow:4px 4px 0 #141414;padding:9px 16px;cursor:pointer}
+body.sheetview .psheet .body{font-size:1.02rem;line-height:1.75}
+body.sheetview .psheet .body li{padding:3px 4px 3px 12px;margin:2px 0}
+body.sheetview .psheet .body ul+p,body.sheetview .psheet .body ol+p{margin-top:.6em}
 @media(max-width:600px){
   body.sheetview .pspage{padding:0 10px;margin-top:12px}
   body.sheetview .ps-hd{padding:12px;margin-right:4px;box-shadow:4px 4px 0 #141414}
@@ -285,33 +276,19 @@ const CART=(()=>{
       <div class="ps-top">${idBadge(q)}<span class="badge ps-paper">${esc(paperTxt(q))}</span><span class="badge ps-ch">${esc(chTxt(q))}</span>${diffBadge(q)}</div>
       <div class="body">${q.bodyHtml.replace(/\bokopt\b/g,"")}${q.figure?`<img class="fig" src="${q.figure}" alt="">`:""}</div>
       ${w>0?`<div class="ps-w" style="height:${w}mm"></div>`:""}</div>`).join("");
-    return `<div class="psbar"><div class="psbt"><small>แบบฝึกหัด</small><b>${esc(t)}</b></div><span class="psprog" id="psprog">ตอบแล้ว 0/${n}</span><button id="psprint" aria-label="พิมพ์">พิมพ์</button></div><div class="pspage">
+    return `<div class="psbar"><div class="psbt"><small>แบบฝึกหัด</small><b>${esc(t)}</b></div><span class="psprog">${n} ข้อ</span><button id="psprint" aria-label="พิมพ์">พิมพ์</button></div><div class="pspage">
       <div class="ps-hd${link?" hasqr":""}"><div><div class="ps-k">แบบฝึกหัด</div><h1>${esc(t)}</h1></div>
       <div class="ps-f"><div>ชื่อ <span></span></div><div>วันที่ <span></span></div></div>
       <div class="ps-sc"><div>คะแนน · ${n} ข้อ</div><b>&nbsp;&nbsp;&nbsp;/ ${n}</b></div>${link?`<div class="ps-qr" id="psqr"><small>สแกนทำออนไลน์</small></div>`:""}</div>
-      ${cards}<div class="ps-done"><p class="ps-dl">ทำครบแล้ว? ส่งคำตอบให้ครู</p><div class="ps-dr"><input id="psname" placeholder="ชื่อของเรา" autocomplete="name"><button id="pscopy">คัดลอกคำตอบ</button></div></div></div>`;}
+      ${cards}</div>`;}
   function linkFor(ids,t){return location.origin+location.pathname+"#sheet="+ids.map(encodeURIComponent).join(",")+"&t="+encodeURIComponent(t);}
   let qrLib=null;function qr(){return qrLib||(qrLib=new Promise(res=>{if(window.qrcode)return res(window.qrcode);const s=document.createElement("script");
     s.src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js";s.onload=()=>res(window.qrcode||null);s.onerror=()=>res(null);document.head.appendChild(s);setTimeout(()=>res(window.qrcode||null),4000);}));}
   async function fill(ids,t,w,withLink){const ps=$("#psheet"),link=withLink?linkFor(ids,t):"";ps.innerHTML=sheetHtml(ids,t,w,link);tex(ps);
     if(link){const Q=await qr();const ft=$("#psqr");if(Q&&ft){try{const c=Q(0,"M");c.addData(link);c.make();ft.insertAdjacentHTML("afterbegin",c.createSvgTag({cellSize:2,margin:0,scalable:true}));}catch(_){}}}
     await Promise.all([...ps.querySelectorAll("img")].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r;setTimeout(r,5000);})));
-    const p=$("#psprint");if(p)p.onclick=()=>doPrint(false);
-    if(!withLink)student(ids,t);}
-  /* the student link: tap a choice to pick it (one per question, kept on this phone), progress in the bar, copy the answers */
-  function student(ids,t){const ps=$("#psheet"),KEY="cqb_sheet:"+ids.join(","),pick=J(KEY,{}),cards=[...ps.querySelectorAll(".ps-c")];
-    const opts=c=>{const L=c.querySelectorAll(".body ul,.body ol");return L.length?[...L[L.length-1].children].filter(x=>x.tagName==="LI"):[];};
-    cards.forEach(c=>{const L=c.querySelectorAll(".body ul,.body ol");if(L.length)L[L.length-1].classList.add("ps-opts");});
-    const lab=li=>{const m=li.textContent.trim().match(/^\(?([ก-ฮ1-9A-Za-z])[.)]/);return m?m[1]:li.textContent.trim().slice(0,12);};
-    const paint=()=>{let done=0;cards.forEach((c,i)=>{const L=opts(c),k=pick[ids[i]];L.forEach((li,j)=>li.classList.toggle("mk",j===k));
-        const a=k!=null&&L[k];c.classList.toggle("answered",!!a);if(a)done++;});$("#psprog").textContent=`ตอบแล้ว ${done}/${ids.length}`;};
-    ps.addEventListener("click",e=>{const li=e.target.closest(".ps-opts>li");if(!li)return;const c=li.closest(".ps-c"),i=cards.indexOf(c),j=opts(c).indexOf(li);
-      pick[ids[i]]=pick[ids[i]]===j?undefined:j;W(KEY,pick);paint();});
-    const nm=$("#psname");nm.value=ls.get("cqb_sheet_name","");nm.oninput=()=>ls.set("cqb_sheet_name",nm.value);
-    $("#pscopy").onclick=async()=>{const lines=cards.map((c,i)=>{const L=opts(c),k=pick[ids[i]];return `${i+1}) ${k!=null&&L[k]?lab(L[k]):"-"}`;});
-      const txt=`${t}${nm.value.trim()?" · "+nm.value.trim():""}\n`+lines.join("\n");
-      try{await navigator.clipboard.writeText(txt);toast("คัดลอกคำตอบแล้ว — วางในแชทส่งครูได้เลย");}catch(_){prompt("คัดลอกคำตอบนี้",txt);}};
-    paint();}
+    const p=$("#psprint");if(p)p.onclick=()=>doPrint(false);}
+
   let printed=false;
   function doPrint(nudge){document.body.classList.add("printing");printed=nudge;
     if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>window.print());else window.print();}
