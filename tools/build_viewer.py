@@ -3454,5 +3454,6 @@ elif STUDENT:
     open(OUT, "w", encoding="utf-8").write(out)
     print("student edition:", nimg, "figures embedded,", round(len(out.encode("utf-8")) / 1e6, 2), "MB")
 else:
-    open(OUT,"w",encoding="utf-8").write(HTML.replace("__DATA__", json.dumps(data, ensure_ascii=False)))
+    import cart_part   # 🛒 swipe-to-cart -> A4 แบบฝึกหัด (main site only)
+    open(OUT,"w",encoding="utf-8").write(cart_part.apply(HTML).replace("__DATA__", json.dumps(data, ensure_ascii=False)))
 print("wrote", OUT, "-", len(questions), "questions -", len(examcount), "exam type(s)")
