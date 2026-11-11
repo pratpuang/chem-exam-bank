@@ -90,6 +90,8 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
   check("print called", (await ev(`window.__printed`)) === 1, await ev(`window.__printed`));
   const sh = await ev(`({cards:document.querySelectorAll("#psheet .ps-c").length,ok:document.querySelectorAll("#psheet .okopt").length,h1:$("#psheet h1").textContent,sc:$("#psheet .ps-sc").textContent,ws:document.querySelectorAll("#psheet .ps-w").length})`);
   check("sheet = cart, no answer marks", sh.cards === before && sh.ok === 0, sh); check("title + count", sh.h1 === "ทดสอบตะกร้า" && sh.sc.includes(before + " ข้อ"), sh);
+  check("QR drawn in the sheet header (vendored, no CDN)", await ev(`!!document.querySelector("#psheet .ps-hd #psqr svg")`));
+  check("sheet header is not a sticky <header>", await ev(`getComputedStyle(document.querySelector("#psheet .ps-hd")).position==="static"`));
   await cdp("Emulation.setEmulatedMedia", { media: "print" });
   const pdf = await cdp("Page.printToPDF", { preferCSSPageSize: true, printBackground: true, displayHeaderFooter: false });
   fs.writeFileSync(path.join(OUT, "cart-test-print.pdf"), Buffer.from(pdf.result.data, "base64"));

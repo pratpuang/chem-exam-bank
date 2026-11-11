@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 """🛒 cart -> A4 แบบฝึกหัด (Prat's spec 2026-11-11; v2 redesign same day: drug-webapp ribbon, mouse drag, ribbon tap removes).
 Drag / swipe a question SIDEWAYS (mouse or finger; Pencil never) -> it goes into a per-device cart (localStorage) and a red
 ribbon bookmark slides out of the card's top edge (forked from drug-webapp v2's dock pin). Tap the ribbon -> it slides back
@@ -144,7 +145,7 @@ body.sheetview .psheet{display:block;position:fixed;inset:0;z-index:90;overflow-
 .psbar button{margin-left:auto;font:800 .9rem "Anuphan",sans-serif;background:#f2b705;border:2px solid #efe9dc;padding:7px 14px;cursor:pointer}
 .pspage{max-width:820px;margin:16px auto;padding:0 12px}
 .psheet{color:#141414;font-family:"Anuphan","IBM Plex Sans Thai",system-ui,sans-serif}
-.ps-hd{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:stretch;border:3px solid #141414;box-shadow:6px 6px 0 #141414;padding:12px 14px;margin:0 6px 16px 0;background:#fffdf7;border-top:9px solid #e4412b}
+.ps-hd{position:static;display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:stretch;border:3px solid #141414;box-shadow:6px 6px 0 #141414;padding:12px 14px;margin:0 6px 16px 0;background:#fffdf7;border-top:9px solid #e4412b}
 .ps-k{font:800 .68rem "JetBrains Mono","Anuphan",monospace;letter-spacing:.08em;color:#e4412b}
 .ps-hd h1{margin:2px 0 0;font-size:1.45rem;font-weight:800;color:#141414}
 .ps-f div,.ps-sc,.ps-sc b{color:#141414}
@@ -171,7 +172,47 @@ body.sheetview .psheet{display:block;position:fixed;inset:0;z-index:90;overflow-
 .ps-ft{display:flex;gap:12px;align-items:center;margin-top:8px;padding-top:10px;border-top:3px solid #141414;font-size:.74rem;break-inside:avoid}
 .ps-ft svg{width:20mm;height:20mm;flex:none}
 .ps-ft span{color:#6b6457}
-@page{size:A4;margin:12mm 11mm;@bottom-center{content:"หน้า " counter(page) " / " counter(pages);font:700 9pt "Anuphan",sans-serif;color:#6b6457}}
+
+.ps-hd.hasqr{grid-template-columns:1fr auto auto auto}
+.ps-qr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:24mm}
+.ps-qr svg{width:20mm;height:20mm;display:block}
+.ps-qr small{font:700 .55rem "Anuphan",sans-serif;color:#6b6457;white-space:nowrap}
+.ps-qr:not(:has(svg)){display:none}
+.ps-done{display:none}
+@media screen{
+/* ---- the student link, on screen ---- */
+body.sheetview .psheet{background:#efe9dc}
+body.sheetview .psbar{gap:12px;padding:10px 14px calc(10px) 16px}
+.psbt{display:flex;flex-direction:column;min-width:0;flex:1;line-height:1.25}
+.psbt small{font:800 .62rem "JetBrains Mono","Anuphan",monospace;letter-spacing:.1em;color:#f2b705}
+.psbt b{font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.psprog{font:800 .78rem "JetBrains Mono","Anuphan",monospace;background:#f2b705;color:#141414;padding:4px 9px;white-space:nowrap}
+body.sheetview .psbar button{margin-left:0;background:none;color:#efe9dc;border:2px solid #efe9dc;padding:6px 12px;font-size:.82rem}
+body.sheetview .ps-f,body.sheetview .ps-sc{display:none}
+body.sheetview .ps-hd{grid-template-columns:1fr;margin-top:6px}
+body.sheetview .ps-hd h1{font-size:1.7rem;line-height:1.25}
+body.sheetview .ps-hd:after{content:"แตะตัวเลือกเพื่อเลือกคำตอบ แล้วกดคัดลอกคำตอบส่งครูท้ายหน้า";font:600 .8rem "Anuphan",sans-serif;color:#6b6457;margin-top:6px}
+body.sheetview .psheet .ps-opts>li{padding:9px 12px;margin:6px 0;border:2px solid #d8cfbb;background:#fff;cursor:pointer;transition:background .15s,border-color .15s}
+body.sheetview .psheet .ps-opts>li:hover{border-color:#141414}
+body.sheetview .psheet .ps-opts>li.mk{background:#141414!important;color:#efe9dc;border-color:#141414}
+body.sheetview .psheet .ps-opts>li.mk *{color:#efe9dc}
+body.sheetview .ps-c.answered .ps-n{-webkit-text-stroke-color:#2f8f4e}
+body.sheetview .ps-done{display:block;background:#fffdf7;border:3px solid #141414;box-shadow:5px 5px 0 #141414;padding:14px;margin:6px 6px 0 0}
+.ps-dl{margin:0 0 8px;font-weight:800}
+.ps-dr{display:flex;gap:8px;flex-wrap:wrap}
+.ps-dr input{flex:1 1 160px;min-width:0;font:700 1rem "Anuphan",sans-serif;border:2px solid #141414;background:#efe9dc;padding:9px 10px;color:#141414}
+.ps-dr button{font:800 .95rem "Anuphan",sans-serif;background:#f2b705;color:#141414;border:3px solid #141414;box-shadow:4px 4px 0 #141414;padding:9px 16px;cursor:pointer}
+@media(max-width:600px){
+  body.sheetview .pspage{padding:0 10px;margin-top:12px}
+  body.sheetview .ps-hd{padding:12px;margin-right:4px;box-shadow:4px 4px 0 #141414}
+  body.sheetview .ps-c{padding:12px 12px 12px 20px;margin-right:4px;box-shadow:4px 4px 0 #141414}
+  body.sheetview .ps-n{font-size:2.2rem;right:8px}
+  body.sheetview .ps-top{padding-right:36px}
+  body.sheetview .psheet .body{font-size:.95rem}
+  .psprog{font-size:.7rem;padding:3px 7px}
+}
+}
+@page{size:A4;margin:12mm 11mm;@top-center{content:""}@bottom-center{content:"หน้า " counter(page) " / " counter(pages);font:700 9pt "Anuphan",sans-serif;color:#6b6457}}
 @media print{
   body.printing{background:#fff!important;overflow:visible!important;position:static!important;top:auto!important;left:auto!important;right:auto!important;width:auto!important;height:auto!important}
   body.printing>*:not(#psheet){display:none!important}
@@ -244,18 +285,33 @@ const CART=(()=>{
       <div class="ps-top">${idBadge(q)}<span class="badge ps-paper">${esc(paperTxt(q))}</span><span class="badge ps-ch">${esc(chTxt(q))}</span>${diffBadge(q)}</div>
       <div class="body">${q.bodyHtml.replace(/\bokopt\b/g,"")}${q.figure?`<img class="fig" src="${q.figure}" alt="">`:""}</div>
       ${w>0?`<div class="ps-w" style="height:${w}mm"></div>`:""}</div>`).join("");
-    return `<div class="psbar">แบบฝึกหัด · ${n} ข้อ<button id="psprint">🖨 พิมพ์</button></div><div class="pspage">
-      <header class="ps-hd"><div><div class="ps-k">แบบฝึกหัด</div><h1>${esc(t)}</h1></div>
+    return `<div class="psbar"><div class="psbt"><small>แบบฝึกหัด</small><b>${esc(t)}</b></div><span class="psprog" id="psprog">ตอบแล้ว 0/${n}</span><button id="psprint" aria-label="พิมพ์">พิมพ์</button></div><div class="pspage">
+      <div class="ps-hd${link?" hasqr":""}"><div><div class="ps-k">แบบฝึกหัด</div><h1>${esc(t)}</h1></div>
       <div class="ps-f"><div>ชื่อ <span></span></div><div>วันที่ <span></span></div></div>
-      <div class="ps-sc"><div>คะแนน · ${n} ข้อ</div><b>&nbsp;&nbsp;&nbsp;/ ${n}</b></div></header>
-      ${cards}${link?`<div class="ps-ft" id="psft"><div><b>สแกนเพื่อทำออนไลน์บนมือถือ</b><br><span>chem-exam-bank.vercel.app · ${n} ข้อ</span></div></div>`:""}</div>`;}
+      <div class="ps-sc"><div>คะแนน · ${n} ข้อ</div><b>&nbsp;&nbsp;&nbsp;/ ${n}</b></div>${link?`<div class="ps-qr" id="psqr"><small>สแกนทำออนไลน์</small></div>`:""}</div>
+      ${cards}<div class="ps-done"><p class="ps-dl">ทำครบแล้ว? ส่งคำตอบให้ครู</p><div class="ps-dr"><input id="psname" placeholder="ชื่อของเรา" autocomplete="name"><button id="pscopy">คัดลอกคำตอบ</button></div></div></div>`;}
   function linkFor(ids,t){return location.origin+location.pathname+"#sheet="+ids.map(encodeURIComponent).join(",")+"&t="+encodeURIComponent(t);}
   let qrLib=null;function qr(){return qrLib||(qrLib=new Promise(res=>{if(window.qrcode)return res(window.qrcode);const s=document.createElement("script");
     s.src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js";s.onload=()=>res(window.qrcode||null);s.onerror=()=>res(null);document.head.appendChild(s);setTimeout(()=>res(window.qrcode||null),4000);}));}
   async function fill(ids,t,w,withLink){const ps=$("#psheet"),link=withLink?linkFor(ids,t):"";ps.innerHTML=sheetHtml(ids,t,w,link);tex(ps);
-    if(link){const Q=await qr();const ft=$("#psft");if(Q&&ft){try{const c=Q(0,"M");c.addData(link);c.make();ft.insertAdjacentHTML("afterbegin",c.createSvgTag({cellSize:2,margin:0,scalable:true}));}catch(_){}}}
+    if(link){const Q=await qr();const ft=$("#psqr");if(Q&&ft){try{const c=Q(0,"M");c.addData(link);c.make();ft.insertAdjacentHTML("afterbegin",c.createSvgTag({cellSize:2,margin:0,scalable:true}));}catch(_){}}}
     await Promise.all([...ps.querySelectorAll("img")].map(i=>i.complete?0:new Promise(r=>{i.onload=i.onerror=r;setTimeout(r,5000);})));
-    const p=$("#psprint");if(p)p.onclick=()=>doPrint(false);}
+    const p=$("#psprint");if(p)p.onclick=()=>doPrint(false);
+    if(!withLink)student(ids,t);}
+  /* the student link: tap a choice to pick it (one per question, kept on this phone), progress in the bar, copy the answers */
+  function student(ids,t){const ps=$("#psheet"),KEY="cqb_sheet:"+ids.join(","),pick=J(KEY,{}),cards=[...ps.querySelectorAll(".ps-c")];
+    const opts=c=>{const L=c.querySelectorAll(".body ul,.body ol");return L.length?[...L[L.length-1].children].filter(x=>x.tagName==="LI"):[];};
+    cards.forEach(c=>{const L=c.querySelectorAll(".body ul,.body ol");if(L.length)L[L.length-1].classList.add("ps-opts");});
+    const lab=li=>{const m=li.textContent.trim().match(/^\(?([ก-ฮ1-9A-Za-z])[.)]/);return m?m[1]:li.textContent.trim().slice(0,12);};
+    const paint=()=>{let done=0;cards.forEach((c,i)=>{const L=opts(c),k=pick[ids[i]];L.forEach((li,j)=>li.classList.toggle("mk",j===k));
+        const a=k!=null&&L[k];c.classList.toggle("answered",!!a);if(a)done++;});$("#psprog").textContent=`ตอบแล้ว ${done}/${ids.length}`;};
+    ps.addEventListener("click",e=>{const li=e.target.closest(".ps-opts>li");if(!li)return;const c=li.closest(".ps-c"),i=cards.indexOf(c),j=opts(c).indexOf(li);
+      pick[ids[i]]=pick[ids[i]]===j?undefined:j;W(KEY,pick);paint();});
+    const nm=$("#psname");nm.value=ls.get("cqb_sheet_name","");nm.oninput=()=>ls.set("cqb_sheet_name",nm.value);
+    $("#pscopy").onclick=async()=>{const lines=cards.map((c,i)=>{const L=opts(c),k=pick[ids[i]];return `${i+1}) ${k!=null&&L[k]?lab(L[k]):"-"}`;});
+      const txt=`${t}${nm.value.trim()?" · "+nm.value.trim():""}\n`+lines.join("\n");
+      try{await navigator.clipboard.writeText(txt);toast("คัดลอกคำตอบแล้ว — วางในแชทส่งครูได้เลย");}catch(_){prompt("คัดลอกคำตอบนี้",txt);}};
+    paint();}
   let printed=false;
   function doPrint(nudge){document.body.classList.add("printing");printed=nudge;
     if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>window.print());else window.print();}
@@ -394,5 +450,6 @@ def apply(html):
     rep('<div class="row${exCls(q)}" data-i="${i}">', '<div class="row${exCls(q)}" data-i="${i}">' + PIN)
     rep('<button class="x shotx" id="mshot"', BOOKMARK + '<button class="x shotx" id="mshot"')
     rep("    chip:on=>", RIBBON_SFX + "    chip:on=>")
-    rep("</script></body></html>", JS.replace("__MARKUP__", MARKUP) + "</script></body></html>")
+    qr = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vendor", "qrcode-generator-1.4.4.min.js"), encoding="utf-8").read()
+    rep("</script></body></html>", JS.replace("__MARKUP__", MARKUP) + "</script><script>/* qrcode-generator 1.4.4 (MIT, Kazuhiko Arase), vendored so the sheet's QR never waits on a CDN */" + chr(10) + qr + chr(10) + "</script></body></html>")
     return html
