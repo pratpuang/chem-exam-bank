@@ -1005,8 +1005,8 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 /* ===== 🛒 cart (tools/cart_part.py) ===== */
 /* the ribbon: forked from drug-webapp v2 .pin (2026-09-27). Nothing shows on a question that isn't carted; carted, a red
    ribbon slides down out of the card's top edge and hangs there, swaying to rest. The button clips it at the card's edge. */
-.cpin{position:absolute;z-index:4;top:-3px;right:10px;width:44px;height:50px;padding:0;border:0;background:none;overflow:hidden;opacity:0;pointer-events:none;cursor:pointer}
-.cpin .rb{position:absolute;left:12px;top:0;width:20px;height:42px;transform:translateY(-105%);transform-origin:50% 0;filter:drop-shadow(2px 2px 0 rgba(0,0,0,.28))}
+.cpin{position:absolute;z-index:4;top:-3px;right:16px;width:44px;height:56px;padding:0;border:0;background:none;overflow:hidden;opacity:0;pointer-events:none;cursor:pointer}
+.cpin .rb{position:absolute;left:10px;top:0;width:24px;height:48px;transform:translateY(-105%);transform-origin:50% 0;filter:drop-shadow(2px 2px 0 rgba(0,0,0,.28))}
 .cpin .rb i{display:block;width:100%;height:100%;background:linear-gradient(90deg,rgba(0,0,0,.14),transparent 30%,transparent 70%,rgba(0,0,0,.14)),var(--red);clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%)}
 body.dark .cpin .rb{filter:drop-shadow(2px 2px 0 rgba(0,0,0,.6))}
 .cpin.done{opacity:1;pointer-events:auto}.cpin.done .rb{transform:none}
@@ -1016,87 +1016,119 @@ body.dark .cpin .rb{filter:drop-shadow(2px 2px 0 rgba(0,0,0,.6))}
 .cpin.unpop .rb{animation:cribOut .3s cubic-bezier(.5,0,.9,.5) both}
 @keyframes cribIn{0%{transform:translateY(-105%)}55%{transform:translateY(7%)}70%{transform:translateY(-3%) rotate(4deg)}84%{transform:translateY(1%) rotate(-2.5deg)}100%{transform:none}}
 @keyframes cribOut{0%{transform:none}25%{transform:translateY(5%)}100%{transform:translateY(-105%)}}
+/* the ribbon takes the corner: the ghost number steps aside (card: fades, poster: slides left) so the two never stack */
+.card>.cnum{transition:opacity .25s}.card.incart>.cnum{opacity:0}
+.poster>.pnum{transition:transform .35s cubic-bezier(.3,1.2,.5,1)}.poster.incart>.pnum{transform:translateX(-52px)}
+.poster>.cpin{right:22px;height:70px}.poster>.cpin .rb{left:8px;width:28px;height:60px}
 .row{position:relative}
-.row>.cpin{height:40px;right:8px}.row>.cpin .rb{height:34px}
-.row.incart .row-h{padding-right:52px}
+.row>.cpin{height:38px;right:8px;width:36px}.row>.cpin .rb{left:9px;width:18px;height:31px}
+.row.incart .row-h{padding-right:50px}
 /* the drag: the question follows the pointer sideways, past the line it arms (dashed yellow), release = into the cart */
 .poster,.card,.row{touch-action:pan-y pinch-zoom}
 .cdrag{position:relative;z-index:5;transition:none!important;will-change:transform}
 .carmed{outline:3px dashed var(--yel);outline-offset:4px}
 html.cdragging,html.cdragging *{user-select:none!important;-webkit-user-select:none!important;cursor:grabbing!important}
-/* the right-edge tab (forked from drug-webapp #dktab) */
-#carttab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:60;writing-mode:vertical-rl;background:var(--yel);color:#141414;border:3px solid var(--ink);border-right:0;padding:14px 8px;font:800 .88rem "Anuphan",sans-serif;box-shadow:-4px 4px 0 var(--sh);min-height:104px;min-width:40px;display:none;cursor:pointer;transition:transform .2s}
-#carttab b{font:800 .9rem "JetBrains Mono",monospace;writing-mode:horizontal-tb;display:inline-block;background:#141414;color:var(--yel);min-width:22px;text-align:center;margin-top:8px;padding:2px 4px}
-#carttab:hover{transform:translate(-4px,-50%)}
-body.hascart #carttab{display:block}
+/* the right-edge tab: the left tool tabs (#pdtab ...) mirrored */
+#carttab{position:fixed;right:0;top:calc(50% - 58px);z-index:45;writing-mode:vertical-rl;background:var(--yel);color:#141414;border:3px solid var(--ink);border-right:0;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:-4px 4px 0 var(--sh);display:none;align-items:center;gap:9px;cursor:pointer;transition:transform .2s}
+#carttab b{font:800 .82rem "JetBrains Mono",monospace;writing-mode:horizontal-tb;background:#141414;color:#f2b705;min-width:24px;text-align:center;padding:3px 4px}
+#carttab:hover{transform:translateX(-4px)}
+body.hascart #carttab{display:flex}
 body.cartopen #carttab,body.sheetview #carttab{visibility:hidden}
 #carttab.bump{animation:cbump .45s cubic-bezier(.3,1.6,.5,1)}
-@keyframes cbump{40%{transform:translate(-10px,-50%) scale(1.08)}}
-@media(max-width:560px){#carttab{padding:12px 6px;font-size:.8rem;min-height:92px;min-width:32px}}
+@keyframes cbump{40%{transform:translateX(-10px) scale(1.08)}}
+@media(max-width:560px){#carttab{padding:12px 5px;font-size:.84rem}}
 /* toast */
 .ctoast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(16px);z-index:95;display:flex;align-items:center;gap:12px;
   background:#141414;color:#efe9dc;border:3px solid #141414;border-left:10px solid var(--yel);box-shadow:5px 5px 0 var(--yel);padding:10px 14px;font:700 .88rem "Anuphan",sans-serif;
   opacity:0;pointer-events:none;transition:opacity .2s,transform .25s cubic-bezier(.3,1.4,.5,1);max-width:min(92vw,520px)}
-body.cartopen .ctoast{left:auto;right:16px;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translateY(16px)}
+body.dark .ctoast{border-color:#e8e2d4;border-left-color:var(--yel)}
+body.cartopen .ctoast{left:auto;right:21px;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateY(16px);max-width:min(438px,calc(100vw - 42px))}
 body.cartopen .ctoast.show{transform:none}
 .ctoast.show{opacity:1;transform:translateX(-50%);pointer-events:auto}
 .ctoast.warn{border-left-color:var(--red);box-shadow:5px 5px 0 var(--red)}
+body.dark .ctoast.warn{border-left-color:var(--red)}
 .ctoast button{font:800 .8rem "Anuphan",sans-serif;background:var(--yel);color:#141414;border:2px solid #efe9dc;padding:4px 10px;cursor:pointer;white-space:nowrap}
-/* the drawer (forked from drug-webapp #dock) */
-.cartwrap{position:fixed;inset:0;z-index:66;background:rgba(20,20,20,.38);opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s .25s}
-body.cartopen .cartwrap{opacity:1;visibility:visible;transition:opacity .25s}
-.cartpanel{position:absolute;right:0;top:0;bottom:0;width:min(500px,100vw);background:var(--paper);color:var(--ink);border-left:4px solid var(--ink);box-shadow:-10px 0 0 var(--yel);
-  display:flex;flex-direction:column;font-family:"Anuphan",sans-serif;transform:translateX(calc(100% + 20px));transition:transform .45s cubic-bezier(.34,1.2,.64,1)}
+/* the drawer: the site's own drawer (#pd) mirrored to the right edge */
+.cartwrap{position:fixed;inset:0;z-index:72;background:rgba(20,20,20,.35);opacity:0;visibility:hidden;transition:opacity .35s,visibility 0s .35s}
+body.cartopen .cartwrap{opacity:1;visibility:visible;transition:opacity .35s}
+.cartpanel{position:absolute;right:0;top:0;bottom:0;width:min(480px,100vw);background:var(--paper);color:var(--ink);border-left:4px solid var(--ink);box-shadow:-10px 0 0 var(--sh);
+  display:flex;flex-direction:column;font-family:"Anuphan",sans-serif;transform:translateX(calc(100% + 20px));transition:transform .5s cubic-bezier(.34,1.25,.64,1)}
 body.cartopen .cartpanel{transform:none}
-.cphead{flex:none;display:flex;align-items:center;gap:10px;background:#141414;color:#efe9dc;padding:12px 12px 12px 16px;border-bottom:5px solid var(--yel)}
-.cphead h3{margin:0;font-size:1.15rem;font-weight:800}
-.cphead .n{font:800 .82rem "JetBrains Mono",monospace;background:var(--yel);color:#141414;padding:2px 9px}
-.cphead .cpx{margin-left:auto;width:40px;height:40px;border:2px solid #efe9dc;background:none;color:#efe9dc;font-size:1.1rem;cursor:pointer;display:grid;place-items:center}
-.cpscroll{flex:1;overflow-y:auto;padding:14px 16px 18px;display:flex;flex-direction:column;gap:14px;overscroll-behavior:contain}
-.cplab{font:800 .66rem "JetBrains Mono","Anuphan",monospace;letter-spacing:.1em;color:var(--mut);text-transform:uppercase;margin:0 0 5px}
-.cptitle{width:100%;font:800 1.3rem "Anuphan",sans-serif;color:var(--ink);background:none;border:0;border-bottom:3px solid var(--ink);padding:2px 0 6px;outline:0;border-radius:0}
-.cptitle::placeholder{color:var(--mut);opacity:.75}
-.cptitle:focus{border-bottom-color:var(--red)}
-.cptools{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between}
-.cartpanel .seg button{font-family:inherit;min-height:36px;cursor:pointer;color:var(--ink)}
+.cartpanel button{font-family:inherit;color:var(--ink);cursor:pointer}
+.cphead{flex:none;display:flex;align-items:center;gap:10px;padding:14px 16px 12px 18px;border-bottom:3px solid var(--ink)}
+.cphead .cprb{flex:none;width:16px;height:30px;margin-top:-14px;align-self:flex-start;background:var(--red);clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%)}
+.cphead h3{margin:0;font-size:1.3rem;font-weight:800;line-height:1.2}
+.cphead .n{font:800 .78rem "JetBrains Mono","Anuphan",monospace;background:var(--yel);color:#141414;border:2px solid var(--ink);padding:1px 8px;white-space:nowrap}
+.cphead .cpx{margin-left:auto;flex:none;width:42px;height:42px;border:3px solid var(--ink);background:var(--ink);color:var(--paper);font-size:1.1rem;font-weight:800;display:grid;place-items:center}
+.cphead .cpx:hover{background:var(--red);color:#fff}
+.cpscroll{flex:1;overflow-y:auto;padding:16px 22px 22px 18px;display:flex;flex-direction:column;gap:18px;overscroll-behavior:contain}
+.cpsec{display:flex;flex-direction:column;gap:9px}
+.cplab{font:800 .68rem "JetBrains Mono","Anuphan",monospace;letter-spacing:.06em;color:var(--mut);margin:0}
+/* the title: the filter bar's labelled box (.fsel) */
+.cpfield{display:flex;flex-direction:column;border:2px solid var(--ink);background:var(--card);cursor:text}
+.cpfield>span{font:600 .62rem "JetBrains Mono","Anuphan",monospace;letter-spacing:.04em;color:var(--mut);padding:5px 11px 0}
+.cpfield:focus-within{outline:3px solid var(--yel);outline-offset:1px}
+.cptitle{width:100%;font:800 1.12rem "Anuphan",sans-serif;color:var(--ink);background:none;border:0;padding:0 11px 7px;outline:0;border-radius:0;min-width:0}
+.cptitle::placeholder{color:var(--mut);opacity:.7}
+.cpopt{display:flex;align-items:center;justify-content:space-between;gap:8px 10px;flex-wrap:wrap}
+.cartpanel .seg button{min-height:34px;padding:5px 12px}
 .cartpanel .seg button.on{color:var(--paper)}
+.cplh{display:flex;align-items:center;gap:6px;border-bottom:3px solid var(--ink);padding-bottom:7px}
+.cplh .cplab{margin-right:auto;font:800 .92rem "Anuphan",sans-serif;color:var(--ink);letter-spacing:0}
+.cpmini{font-size:.76rem;font-weight:800;border:2px solid var(--ink);background:var(--card);padding:4px 9px;white-space:nowrap}
+.cpmini:hover{background:var(--yel);color:#141414}
+.cpmini.quiet{border-color:transparent;background:none;color:var(--mut);text-decoration:underline dotted;padding:4px 4px}
+.cpmini.quiet:hover{background:none;color:var(--red)}
 .cplist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
-.cpi{position:relative;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 10px;background:var(--card);border:2px solid var(--ink);box-shadow:3px 3px 0 var(--sh);padding:8px 8px 8px 0;touch-action:pan-y}
-.cpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background:var(--red)}
-.cpi.d-easy:before{background:var(--blue)}.cpi.d-medium:before{background:var(--yel)}
+.cpi{position:relative;display:grid;grid-template-columns:44px minmax(0,1fr) 40px;background:var(--card);border:2px solid var(--ink);box-shadow:3px 3px 0 var(--sh);touch-action:pan-y}
 .cpi.lift{z-index:3;box-shadow:7px 7px 0 var(--sh);transition:none}
-.cph{grid-column:1;grid-row:1/3;align-self:stretch;display:flex;align-items:center;cursor:grab;touch-action:none;padding:0 4px 0 15px;color:var(--mut);font:800 1rem "JetBrains Mono",monospace;user-select:none}
+.cph{grid-column:1;grid-row:1/3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:var(--red);color:#fff;border-right:2px solid var(--ink);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.cpi.d-easy .cph{background:var(--blue)}.cpi.d-medium .cph{background:var(--yel);color:#141414}
 .cph:active{cursor:grabbing}
-.cpno{font:800 1.05rem "JetBrains Mono",monospace;margin-right:2px}
-.cpmeta{grid-column:2;grid-row:1;display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.cpno{font:800 1.02rem "JetBrains Mono",monospace;line-height:1.1}
+.cph i{font:800 .72rem "JetBrains Mono",monospace;font-style:normal;letter-spacing:1px;opacity:.65;line-height:1}
+.cpmeta{grid-column:2;grid-row:1;display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:8px 0 0 11px}
 .cpmeta .badge{font-size:.62rem;padding:1px 6px}
 .cpi .ps-paper{background:var(--yel);color:#141414}
-.cps{grid-column:2;grid-row:2;font-size:.8rem;line-height:1.45;color:var(--mut);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.cpg{font:800 .66rem "Anuphan",sans-serif;color:#fff;background:var(--red);padding:1px 6px}
-.cpdel{grid-column:3;grid-row:1/3;width:34px;height:34px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font-weight:800;cursor:pointer;display:grid;place-items:center}
-.cpdel:hover{background:var(--red);color:#fff}
-.cpempty{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:30px 14px;border:3px dashed var(--mut);color:var(--mut);font-size:.9rem;line-height:1.6}
-.cpempty .rbdemo{width:20px;height:34px;background:var(--red);clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%)}
-.cpkeep{border:2px solid var(--ink);background:var(--card);padding:12px;display:flex;flex-direction:column;gap:8px}
+.cps{grid-column:2;grid-row:2;font-size:.82rem;line-height:1.5;color:var(--ink);opacity:.85;margin:4px 0 9px 11px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;align-self:start}
+.cpg{font:800 .64rem "Anuphan",sans-serif;color:#fff;background:var(--red);padding:2px 6px}
+.cpdel{grid-column:3;grid-row:1/3;border:0;background:none;color:var(--mut)!important;font-size:.95rem;font-weight:800;display:grid;place-items:center}
+.cpdel:hover{background:var(--red);color:#fff!important}
+.cpempty{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:0 14px 28px;border:3px dashed var(--mut);color:var(--mut);font-size:.9rem;line-height:1.7}
+.cpempty b{color:var(--ink);font-size:1rem}
+.cpempty .rbdemo{width:20px;height:36px;margin-bottom:6px;background:var(--red);clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%)}
+.cpkeep{border:2px solid var(--ink);background:var(--card);padding:11px 12px 12px;display:flex;flex-direction:column;gap:9px}
 .cpkeep.nudge{border-color:var(--red);box-shadow:5px 5px 0 var(--red)}
-.cpkeep .row2{display:flex;gap:6px;flex-wrap:wrap}
-.cpkeep input{flex:1 1 160px;min-width:0;font:700 .9rem "Anuphan",sans-serif;border:2px solid var(--ink);background:var(--paper);color:var(--ink);padding:8px 10px}
-.cpbtn{font:800 .82rem "Anuphan",sans-serif;border:2px solid var(--ink);background:var(--card);color:var(--ink);padding:8px 11px;cursor:pointer;box-shadow:2px 2px 0 var(--sh);white-space:nowrap}
-.cpbtn:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--sh)}
-.cpbtn.quiet{box-shadow:none;border-color:var(--mut);color:var(--mut)}
-.cpsets{display:flex;flex-direction:column;gap:6px}
-.cpset{display:flex;align-items:center;gap:8px;border-bottom:2px dashed var(--mut);padding:5px 0;font-size:.85rem}
-.cpset span{flex:1;min-width:0}.cpset small{color:var(--mut)}
-.cpset .cpbtn{padding:4px 9px;font-size:.75rem}
-.cpfoot{flex:none;display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:3px solid var(--ink);background:var(--paper)}
-.cpprint{flex:1;font:800 1.05rem "Anuphan",sans-serif;background:var(--yel);color:#141414;border:3px solid #141414;box-shadow:5px 5px 0 #141414;padding:12px;cursor:pointer}
-.cpprint:active{transform:translate(3px,3px);box-shadow:2px 2px 0 #141414}
-.cplink{font:800 .9rem "Anuphan",sans-serif;background:var(--card);color:var(--ink);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:10px 14px;cursor:pointer}
-.cpfoot button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.cpkeep.nudge>.cplab{color:var(--red)}
+.cpkeep .row2{display:flex;gap:7px;flex-wrap:wrap}
+.cpkeep input{flex:1 1 130px;min-width:0;font:700 .88rem "Anuphan",sans-serif;border:2px solid var(--ink);background:var(--paper);color:var(--ink);padding:7px 10px;border-radius:0}
+.cpkeep input:focus{outline:3px solid var(--yel);outline-offset:1px}
+.cpbtn{font-size:.8rem;font-weight:800;border:2px solid var(--ink);background:var(--card);padding:7px 11px;box-shadow:3px 3px 0 var(--sh);white-space:nowrap;transition:transform .08s,box-shadow .08s}
+.cpbtn:hover{background:var(--yel);color:#141414}
+.cpbtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--sh)}
+.cpsets{display:flex;flex-direction:column}
+.cpsets:empty{display:none}
+.cpsets .cplab{padding-top:9px;border-top:2px dashed var(--mut)}
+.cpset{display:flex;align-items:center;gap:6px;padding:7px 0 0;font-size:.86rem}
+.cpset span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cpset small{color:var(--mut)}
+.cpfoot{flex:none;display:flex;gap:12px;padding:14px 22px calc(16px + env(safe-area-inset-bottom,0px)) 18px;border-top:3px solid var(--ink);background:var(--paper)}
+.cpprint,.cplink{font-weight:800;border:3px solid var(--ink);box-shadow:4px 4px 0 var(--sh);padding:11px 12px;transition:transform .08s,box-shadow .08s;min-height:50px}
+.cpprint{flex:1.5;font-size:1.02rem;background:var(--yel);color:#141414!important}
+.cplink{flex:1;font-size:.88rem;background:var(--card)}
+.cplink:hover{background:var(--ink);color:var(--paper)}
+.cpfoot button:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--sh)}
+.cartpanel button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;pointer-events:none}
+@media(max-width:560px){
+  .cphead{padding:10px 12px 9px 14px}.cphead h3{font-size:1.15rem}
+  .cpscroll{padding:14px 18px 20px 14px;gap:16px}
+  .cpkeep input{flex-basis:100%}.cpkeep .row2 .cpbtn{flex:1}
+  .cpfoot{padding-left:14px;padding-right:18px;gap:10px}
+  .cpprint,.cplink{padding:10px 6px}
+}
 /* present mode: a bookmark in the tools */
 #mcart svg path{fill:none;transition:fill .2s}
 #mcart.on svg path{fill:var(--red);stroke:var(--red)}
-@media(prefers-reduced-motion:reduce){.cartpanel,.cartwrap,.ctoast{transition:none}#carttab.bump{animation:none}}
+@media(prefers-reduced-motion:reduce){.cartpanel,.cartwrap,.ctoast,.poster>.pnum{transition:none}#carttab.bump{animation:none}}
 /* the sheet itself (print, and the student link on screen) */
 .psheet{display:none}
 body.sheetview{overflow:hidden}
@@ -3087,19 +3119,19 @@ const CART=(()=>{
   /* ---- the drawer ---- */
   function names(){const s=new Set([...J(KS,[]).map(x=>x.n),...Object.keys(given())]);$("#cpnames").innerHTML=[...s].map(n=>`<option value="${esc(n)}">`).join("");}
   function list(){const L=$("#cplist");
-    if(!cart.ids.length){L.innerHTML=`<li class="cpempty"><span class="rbdemo"></span>ตะกร้ายังว่าง<br>ลากโจทย์ไปด้านข้าง (เมาส์หรือนิ้ว) หรือกด C<br>ข้อที่อยู่ในตะกร้าจะมีริบบิ้นแดง</li>`;return;}
-    L.innerHTML=cart.ids.map((id,i)=>{const q=BY.get(id),g=givenTo(id);return `<li class="cpi d-${q.diff}" data-id="${esc(id)}"><span class="cph" title="ลากเพื่อเรียง">⋮⋮</span>
-      <div class="cpmeta"><span class="cpno">${String(i+1).padStart(2,"0")}</span><span class="badge b-id">${esc(id)}</span><span class="badge ps-paper">${esc(paperTxt(q))}</span>${g.length?`<span class="cpg">ให้ ${esc(g.join(", "))} แล้ว</span>`:""}</div>
+    if(!cart.ids.length){L.innerHTML=`<li class="cpempty"><span class="rbdemo"></span><b>ตะกร้ายังว่าง</b>ลากโจทย์ไปด้านข้าง (เมาส์หรือนิ้ว) หรือกด C<br>ข้อที่อยู่ในตะกร้าจะมีริบบิ้นแดงห้อยอยู่</li>`;return;}
+    L.innerHTML=cart.ids.map((id,i)=>{const q=BY.get(id),g=givenTo(id);return `<li class="cpi d-${q.diff}" data-id="${esc(id)}"><span class="cph" title="ลากเพื่อเรียงลำดับ"><span class="cpno">${i+1}</span><i>⋮⋮</i></span>
+      <div class="cpmeta"><span class="badge b-id">${esc(id)}</span><span class="badge ps-paper">${esc(paperTxt(q))}</span>${g.length?`<span class="cpg">ให้ ${esc(g.join(", "))} แล้ว</span>`:""}</div>
       <button class="cpdel" title="เอาออก" aria-label="เอาออก">✕</button><span class="cps">${q.snippet||""}</span></li>`;}).join("");}
-  function sets(){const S=J(KS,[]);$("#cpsets").innerHTML=S.length?`<p class="cplab" style="margin-top:6px">ชุดที่บันทึกไว้</p>`+S.map((s,i)=>`<div class="cpset"><span><b>${esc(s.n)}</b> <small>· ${s.ids.length} ข้อ</small></span>
-      <button class="cpbtn" data-open="${i}">เปิด</button><button class="cpbtn quiet" data-del="${i}">ลบ</button></div>`).join(""):"";}
+  function sets(){const S=J(KS,[]);$("#cpsets").innerHTML=S.length?`<p class="cplab">ชุดที่บันทึกไว้</p>`+S.map((s,i)=>`<div class="cpset"><span><b>${esc(s.n)}</b> <small>· ${s.ids.length} ข้อ</small></span>
+      <button class="cpmini" data-open="${i}">เปิด</button><button class="cpmini quiet" data-del="${i}">ลบ</button></div>`).join(""):"";}
   function wsBtns(){$("#cpws").querySelectorAll("button").forEach(b=>b.classList.toggle("on",+b.dataset.v===ws));}
   function panel(){const n=cart.ids.length;$("#cptitle").value=cart.t||"";$("#cptitle").placeholder=n?autoTitle():"ตั้งชื่อชีต";$("#cphn").textContent=n+" ข้อ";
-    list();sets();names();wsBtns();["#cpprint","#cplink","#cpsort","#cpshuf","#cpsave","#cpgive"].forEach(s=>$(s).disabled=!n);}
+    list();sets();names();wsBtns();["#cpprint","#cplink","#cpsort","#cpshuf","#cpsave","#cpgive","#cpclear"].forEach(s=>$(s).disabled=!n);}
   const isOpen=()=>document.body.classList.contains("cartopen");
   function open(){panel();$("#cpkeep").classList.remove("nudge");$("#cpkl").textContent="เก็บตะกร้านี้";document.body.classList.add("cartopen");try{SL.lock("cart");}catch(_){}snd("drawer");}
   function close(){if(!isOpen())return;document.body.classList.remove("cartopen");try{SL.unlock("cart");}catch(_){}}
-  function sync(){const n=cart.ids.length;$("#cartn").textContent=n;document.body.classList.toggle("hascart",n>0);mark();if(isOpen())panel();}
+  function sync(){const n=cart.ids.length;$("#cartn").textContent=n;document.body.classList.toggle("hascart",n>0||J(KS,[]).length>0);mark();if(isOpen())panel();}
   /* ---- drag a question sideways: mouse or finger (never the Pencil). Forked from drug-webapp dkGesture: one drag at a
      time, ended by pointerup/cancel/lostpointercapture, blur, or the element leaving the DOM. ---- */
   let D=null,EAT=0;const BTN="button,a,input,textarea,select,label,canvas,.v3d,.cph,.badge,.mink";
@@ -3129,20 +3161,22 @@ const CART=(()=>{
   function settle(el){el.style.transform="";el.style.opacity="";if(!rm())el.animate([{opacity:0,transform:"scale(.97)"},{opacity:1,transform:"none"}],{duration:260,easing:"ease-out"});}
   function boot(){
     document.body.insertAdjacentHTML("beforeend",`
-<button id="carttab" aria-label="เปิดตะกร้าแบบฝึกหัด">ตะกร้า <b id="cartn">0</b></button>
+<button id="carttab" aria-label="เปิดตะกร้าแบบฝึกหัด">ตะกร้า<b id="cartn">0</b></button>
 <div class="ctoast" id="ctoast" role="status"><span id="ctmsg"></span><button id="ctact" hidden></button></div>
 <div class="cartwrap" id="cartwrap"><aside class="cartpanel" role="dialog" aria-label="ตะกร้าแบบฝึกหัด">
-  <div class="cphead"><h3>ตะกร้าแบบฝึกหัด</h3><span class="n" id="cphn">0 ข้อ</span><button class="cpx" id="cpx" aria-label="ปิด">✕</button></div>
+  <div class="cphead"><i class="cprb"></i><h3>ตะกร้าแบบฝึกหัด</h3><span class="n" id="cphn">0 ข้อ</span><button class="cpx" id="cpx" aria-label="ปิด">✕</button></div>
   <div class="cpscroll">
-    <div><p class="cplab">หัวข้อชีต</p><input class="cptitle" id="cptitle" autocomplete="off"></div>
-    <div class="cptools">
-      <div><p class="cplab">ลำดับ</p><span class="seg"><button id="cpsort">ง่าย → ยาก</button><button id="cpshuf">สุ่ม</button></span></div>
-      <div><p class="cplab">ที่ทดใต้ข้อ</p><span class="seg" id="cpws"><button data-v="0">ไม่มี</button><button data-v="22">S</button><button data-v="38">M</button><button data-v="60">L</button></span></div>
+    <div class="cpsec">
+      <label class="cpfield"><span>หัวข้อชีต</span><input class="cptitle" id="cptitle" autocomplete="off"></label>
+      <div class="cpopt"><p class="cplab">ที่ทดใต้แต่ละข้อ</p><span class="seg" id="cpws"><button data-v="0">ไม่มี</button><button data-v="22">น้อย</button><button data-v="38">กลาง</button><button data-v="60">มาก</button></span></div>
     </div>
-    <ol class="cplist" id="cplist"></ol>
+    <div class="cpsec">
+      <div class="cplh"><p class="cplab">โจทย์ในชีต</p><button class="cpmini" id="cpsort" title="เรียงจากง่ายไปยาก">ง่าย → ยาก</button><button class="cpmini" id="cpshuf" title="สลับลำดับแบบสุ่ม">สุ่มลำดับ</button><button class="cpmini quiet" id="cpclear">ล้าง</button></div>
+      <ol class="cplist" id="cplist"></ol>
+    </div>
     <div class="cpkeep" id="cpkeep"><p class="cplab" id="cpkl">เก็บตะกร้านี้</p>
-      <div class="row2"><input id="cpname" placeholder="ชื่อชุด หรือ ชื่อนักเรียน" list="cpnames" autocomplete="off"><datalist id="cpnames"></datalist></div>
-      <div class="row2"><button class="cpbtn" id="cpsave">บันทึกเป็นชุด</button><button class="cpbtn" id="cpgive">ให้นักเรียนคนนี้</button><button class="cpbtn quiet" id="cpclear">ล้างตะกร้า</button></div>
+      <div class="row2"><input id="cpname" placeholder="ชื่อชุด หรือ ชื่อนักเรียน" list="cpnames" autocomplete="off"><datalist id="cpnames"></datalist>
+        <button class="cpbtn" id="cpsave" title="เก็บเป็นชุดไว้เปิดใช้ทีหลัง">บันทึกชุด</button><button class="cpbtn" id="cpgive" title="จำว่าให้ข้อพวกนี้กับนักเรียนคนนี้แล้ว">ให้นักเรียนแล้ว</button></div>
       <div class="cpsets" id="cpsets"></div>
     </div>
   </div>
@@ -3182,13 +3216,13 @@ const CART=(()=>{
       try{if(navigator.share&&matchMedia("(pointer:coarse)").matches){await navigator.share({title:title(),url:u});return;}}catch(_){return;}
       try{await navigator.clipboard.writeText(u);toast("คัดลอกลิงก์แล้ว — ส่งให้นักเรียนได้เลย");}catch(_){prompt("คัดลอกลิงก์นี้",u);}};
     const nm=()=>{const n=$("#cpname").value.trim();if(!n){toast("ใส่ชื่อก่อน",{warn:true});$("#cpname").focus();}return n;};
-    $("#cpsave").onclick=()=>{const n=nm();if(!n||!cart.ids.length)return;const S=J(KS,[]).filter(x=>x.n!==n);S.unshift({n,t:title(),ids:[...cart.ids],w:ws,d:Date.now()});W(KS,S);sets();names();toast(`บันทึกชุด “${n}” แล้ว`);};
+    $("#cpsave").onclick=()=>{const n=nm();if(!n||!cart.ids.length)return;const S=J(KS,[]).filter(x=>x.n!==n);S.unshift({n,t:title(),ids:[...cart.ids],w:ws,d:Date.now()});W(KS,S);sync();toast(`บันทึกชุด “${n}” แล้ว`);};
     $("#cpgive").onclick=()=>{const n=nm();if(!n||!cart.ids.length)return;const g=given();g[n]=[...new Set([...(g[n]||[]),...cart.ids])];W(KG,g);list();names();toast(`บันทึกว่าให้ ${n} แล้ว · ${cart.ids.length} ข้อ`);};
     $("#cpclear").onclick=()=>{if(!cart.ids.length)return;const old={t:cart.t,ids:[...cart.ids]};cart={t:"",ids:[]};save();close();
       toast(`ล้างตะกร้าแล้ว (${old.ids.length} ข้อ)`,{act:"ย้อนกลับ",fn:()=>{cart=old;save();}});};
     $("#cpsets").onclick=e=>{const S=J(KS,[]),o=e.target.dataset.open,d=e.target.dataset.del;
       if(o!=null){const s=S[+o];if(!s)return;cart={t:s.t||"",ids:s.ids.filter(id=>BY.has(id))};if(s.w!=null){ws=s.w;ls.set(KW,String(ws));}save();$("#cpname").value=s.n;toast(`เปิดชุด “${s.n}” แล้ว`);}
-      if(d!=null){const s=S[+d];if(!s||!confirm(`ลบชุด “${s.n}”?`))return;S.splice(+d,1);W(KS,S);sets();names();}};
+      if(d!=null){const s=S[+d];if(!s||!confirm(`ลบชุด “${s.n}”?`))return;S.splice(+d,1);W(KS,S);sync();}};
     addEventListener("keydown",e=>{if((e.key!=="c"&&e.key!=="C")||e.metaKey||e.ctrlKey||e.altKey||e.target.closest("input,textarea,select,[contenteditable]")||isOpen())return;
       let q=null;if($("#modal").classList.contains("show"))q=filtered[mIdx];
       else if(view==="poster"&&document.body.classList.contains("inapp"))q=filtered[pIdx];
