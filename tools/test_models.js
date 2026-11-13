@@ -66,6 +66,19 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
   await shot("models.png");
   await ev(`document.querySelector('#mtabs button[data-i="0"]').click()`); await sleep(1500);
   check("บท 4 tab shows the VSEPR 3D model inside the panel", await ev(`!!document.querySelector("iframe.vsf")&&document.querySelector("iframe.vsf").src.includes("vsepr.html?embed=1")`));
+  // บท 9 rate: box reacts faster when hot; one-collision view passes / bounces by energy
+  await cdp("Page.navigate", { url: MURL + "?ch=09" }); for (let i = 0; i < 40 && !(await ev(`!!window.__rate`)); i++) await sleep(250);
+  check("?ch=09 opens the rate model", await ev(`document.querySelector("#mtabs button.on").textContent.includes("บท 9")`));
+  await ev(`__rate.setT(250)`); await sleep(3000); const cold = await ev(`__rate.evs.length`);
+  await ev(`__rate.setT(700)`); await sleep(3000); const hot = await ev(`__rate.evs.length`);
+  check("hotter box -> more reactions per 3 s", hot > cold, [cold, hot]);
+  await sleep(1500); await shot("rate-box.png");
+  await ev(`document.querySelector('#rsw button[data-v="one"]').click()`); await sleep(500);
+  await ev(`__one.fire(0.95)`); await sleep(4500);
+  check("strong shot: over the hump, AB forms", await ev(`__one.st==="done"&&__one.s===1`), await ev(`[__one.st,__one.s]`));
+  await shot("rate-one.png");
+  await ev(`__one.reset()`); await sleep(300); await ev(`__one.fire(0.35)`); await sleep(5000);
+  check("weak shot: turns back, no reaction", await ev(`__one.st==="done"&&__one.s===0`), await ev(`[__one.st,__one.s]`));
   // the drawer inside the bank
   await go(URL0);
   await ev(`document.querySelector("#motab").click()`); await sleep(1200);

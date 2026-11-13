@@ -53,6 +53,10 @@ body.embed .page{padding:4px 2px 20px}body.embed h1,body.embed .sub{display:none
 .soon{padding:30px;text-align:center;font-weight:700;color:var(--mut)}
 .vsf{display:block;width:100%;height:80vh;border:4px solid var(--ink);box-shadow:8px 8px 0 var(--sh);background:var(--paper)}
 body.embed .vsf{height:calc(100vh - 78px)}
+.subsw{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.subsw button{border:3px solid var(--ink);background:var(--card);font:800 .92rem Anuphan;padding:7px 14px;cursor:pointer;box-shadow:3px 3px 0 var(--sh)}
+.subsw button.on{background:var(--red);color:#fff}.subsw button:active{transform:translate(3px,3px);box-shadow:none}
+.box canvas{display:block;width:100%;height:auto}
 </style></head><body>
 <div class="page">
 <h1>โมเดลสอนเคมี</h1><p class="sub">ลาก กด ดูของจริงขยับ · เลือกบทด้านล่าง</p>
@@ -61,14 +65,185 @@ body.embed .vsf{height:calc(100vh - 78px)}
 </div>
 <script>
 const QS=new URLSearchParams(location.search);if(QS.get("embed"))document.body.classList.add("embed");
-const MODELS=[{ch:"04",t:"บท 4 · รูปร่างโมเลกุล 3D",build:vseprModel},{ch:"08",t:"บท 8 · กฎของแก๊ส",build:gasModel}];   // more chapters plug in here, in chapter order
+const MODELS=[{ch:"04",t:"บท 4 · รูปร่างโมเลกุล 3D",build:vseprModel},{ch:"08",t:"บท 8 · กฎของแก๊ส",build:gasModel},{ch:"09",t:"บท 9 · อัตราการเกิดปฏิกิริยา",build:rateModel}];   // more chapters plug in here, in chapter order
 /* ch04 · the VSEPR 3D model (its own page, vsepr.html) lives in this panel now (his call 2026-11-14: one side panel, "โมเดล") */
 function vseprModel(root){root.innerHTML=`<iframe class="vsf" src="vsepr.html?embed=1" title="รูปร่างโมเลกุล 3D"></iframe>`;}
 const ROOTEL=document.getElementById("mroot");
 function show(i){document.querySelectorAll("#mtabs button").forEach((b,j)=>b.classList.toggle("on",j===i));ROOTEL.innerHTML="";MODELS[i].build(ROOTEL);}
 document.getElementById("mtabs").innerHTML=MODELS.map((m,i)=>`<button data-i="${i}">${m.t}</button>`).join("")+`<button disabled>บทอื่น · กำลังสร้าง</button>`;
 document.getElementById("mtabs").onclick=e=>{const b=e.target.closest("button[data-i]");if(b)show(+b.dataset.i);};
-const want=MODELS.findIndex(m=>m.ch===QS.get("ch"));show(want<0?MODELS.findIndex(m=>m.ch==="08"):want);   // a chapter with no model yet opens the gas model
+
+/* ================= ch09 · reaction rate (his picks 2026-11-14: samples 9A + 9B, "make it look better, animation better") =================
+   Two views behind one sub-switch:
+   1 · many-collision box: A + B -> AB only when a collision's energy (reduced mass, along the line of centres) clears Ea.
+       Shaded spheres, short motion trails, a spark burst + snap-together when a pair reacts, a faint tick when a hit falls short.
+       Side: live counts graph, and the kinetic-energy distribution with the Ea line (catalyst slides it left).
+   2 · one collision + energy diagram: pull A back on a slingshot and let go. The ball on the diagram climbs the hump with real
+       energy bookkeeping (it slows as it climbs, turns back where U = E). Over the top: A and B snap into AB. */
+function rateModel(root){
+  root.innerHTML=`<div class="subsw" id="rsw"><button data-v="box" class="on">💥 ชนกันหลายโมเลกุล</button><button data-v="one">🎯 ยิงชนทีละคู่ + แผนภาพพลังงาน</button></div><div id="rbody"></div>`;
+  const body=root.querySelector("#rbody"),sw=root.querySelector("#rsw");
+  const go=v=>{sw.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.v===v));body.innerHTML="";const host=document.createElement("div");body.appendChild(host);(v==="box"?rateBox:rateOne)(host);};   // a fresh host per view: the old view's loop sees it detached and stops
+  sw.onclick=e=>{const b=e.target.closest("button");if(b)go(b.dataset.v);};go("box");}
+
+/* shared drawing bits */
+function sphere(c,x,y,r,col,dark,alpha=1){c.globalAlpha=alpha;const g=c.createRadialGradient(x-r*.35,y-r*.4,r*.1,x,y,r);g.addColorStop(0,"#ffffff");g.addColorStop(.28,col);g.addColorStop(1,dark);
+  c.fillStyle=g;c.beginPath();c.arc(x,y,r,0,7);c.fill();c.lineWidth=1.4;c.strokeStyle="#141414";c.stroke();c.globalAlpha=1;}
+const COLS={A:["#3d63e0","#13277a"],B:["#ef5a3f","#7d1a0c"]};
+function fitCanvas(cv,W,H){const d=Math.min(2,devicePixelRatio||1);cv.width=W*d;cv.height=H*d;const c=cv.getContext("2d");c.scale(d,d);
+  c.pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];};return c;}
+
+/* ---------- 1 · many-collision box ---------- */
+function rateBox(root){
+  root.innerHTML=`<div class="gas">
+   <div class="stage"><canvas width="760" height="540"></canvas><div class="law">A + B → AB (เกิดเมื่อชนแรงพอ ≥ Ea)</div></div>
+   <div class="side">
+    <div class="box"><h3>ปรับเงื่อนไข <small>ปัจจัยที่มีผลต่ออัตรา</small></h3>
+     <div class="sl free"><b>T</b><input type="range" data-k="T" min="200" max="700" value="350"><output data-o="T"></output><div class="st">🔥 อุณหภูมิสูง → ชนแรงขึ้น + บ่อยขึ้น</div></div>
+     <div class="sl free"><b>C</b><input type="range" data-k="n" min="8" max="40" value="22"><output data-o="n"></output><div class="st">🧪 ความเข้มข้นมาก → ชนบ่อยขึ้น (กด ↺ เพื่อเริ่มด้วยค่านี้)</div></div>
+     <div class="row2" style="margin-top:6px"><button class="btn" data-k="cat">⚗️ ตัวเร่ง: ปิด</button><button class="btn" data-k="go">↺ เริ่มใหม่</button><button class="btn" data-k="pause">⏸</button></div></div>
+    <div class="box"><canvas width="400" height="170" data-g="n"></canvas></div>
+    <div class="box"><canvas width="400" height="170" data-g="e"></canvas></div>
+    <div class="tiles" style="grid-template-columns:repeat(3,1fr)"><div data-r="A"></div><div data-r="AB"></div><div data-r="rate" class="resp"></div></div>
+   </div></div>`;
+  const [cv,gn,ge]=root.querySelectorAll("canvas"),c=fitCanvas(cv,760,540),n=fitCanvas(gn,400,170),e=fitCanvas(ge,400,170),W=760,H=540,B={x0:24,y0:24,x1:736,y1:516},R=8.5;
+  let T=350,N0=22,cat=false,eaF=1,paused=false,ps=[],fx=[],hA=[],hP=[],evs=[],acc=0,KDE=null,EAP=0;
+  const vT=T=>95*Math.sqrt(T/300),EA=()=>(.55+.5*eaF)*vT(300)**2;   // collision energy needed; the catalyst eases eaF 1 -> 0
+  const gauss=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+  const mk=(t)=>{const s=vT(T)/Math.SQRT2;return{t,x:B.x0+R+Math.random()*(B.x1-B.x0-2*R),y:B.y0+R+Math.random()*(B.y1-B.y0-2*R),vx:gauss()*s,vy:gauss()*s,m:1,r:R,pop:0,ang:Math.random()*7,spin:(Math.random()-.5)*3};};
+  function reset(){ps=[];for(let i=0;i<N0;i++){ps.push(mk("A"));ps.push(mk("B"));}hA=[N0];hP=[0];evs=[];fx=[];}reset();
+  const q=s=>root.querySelector(s);
+  q('[data-k="T"]').oninput=ev=>T=+ev.target.value;q('[data-k="n"]').oninput=ev=>{N0=+ev.target.value;};
+  q('[data-k="cat"]').onclick=ev=>{cat=!cat;ev.currentTarget.textContent="⚗️ ตัวเร่ง: "+(cat?"เปิด":"ปิด");ev.currentTarget.classList.toggle("on",cat);};
+  q('[data-k="go"]').onclick=reset;q('[data-k="pause"]').onclick=ev=>{paused=!paused;ev.currentTarget.textContent=paused?"▶":"⏸";};
+  function step(dt){eaF+=((cat?0:1)-eaF)*Math.min(1,dt*3);
+    for(const p of ps){p.x+=p.vx*dt;p.y+=p.vy*dt;p.ang+=p.spin*dt;p.pop=Math.max(0,p.pop-dt*2.5);}
+    const now=performance.now();
+    for(let i=0;i<ps.length;i++){const a=ps[i];if(a.dead)continue;for(let j=i+1;j<ps.length;j++){const b=ps[j];if(b.dead)continue;
+      const dx=b.x-a.x,dy=b.y-a.y,rr=a.r+b.r,d2=dx*dx+dy*dy;if(d2>rr*rr||d2===0)continue;const d=Math.sqrt(d2),nx=dx/d,ny=dy/d,rv=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;
+      if(rv<0){const mu=a.m*b.m/(a.m+b.m),E=.5*mu*rv*rv,pair=(a.t==="A"&&b.t==="B")||(a.t==="B"&&b.t==="A");
+        if(pair&&E>=EA()){/* react: one AB at the contact point, momentum kept, it pops in */const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
+          a.vx=(a.vx+b.vx)/2;a.vy=(a.vy+b.vy)/2;a.x=mx;a.y=my;a.t="AB";a.m=2;a.r=R*1.55;a.pop=1;a.ang=Math.atan2(dy,dx);b.dead=true;evs.push(now);
+          fx.push({k:"burst",x:mx,y:my,t:0,sp:Array.from({length:9},(_,i)=>({a:i/9*Math.PI*2+Math.random()*.4,v:90+Math.random()*90}))});continue;}
+        if(pair&&E>=EA()*.35)fx.push({k:"miss",x:a.x+nx*a.r,y:a.y+ny*a.r,t:0});
+        const J=2*mu*rv;a.vx+=J/a.m*nx;a.vy+=J/a.m*ny;b.vx-=J/b.m*nx;b.vy-=J/b.m*ny;}
+      const ov=(rr-d)/2;a.x-=nx*ov;a.y-=ny*ov;b.x+=nx*ov;b.y+=ny*ov;}}
+    ps=ps.filter(p=>!p.dead);
+    for(const p of ps){if(p.x<B.x0+p.r){p.x=B.x0+p.r;p.vx=Math.abs(p.vx);}if(p.x>B.x1-p.r){p.x=B.x1-p.r;p.vx=-Math.abs(p.vx);}if(p.y<B.y0+p.r){p.y=B.y0+p.r;p.vy=Math.abs(p.vy);}if(p.y>B.y1-p.r){p.y=B.y1-p.r;p.vy=-Math.abs(p.vy);}}
+    if(ps.length){let ke=0;for(const p of ps)ke+=p.m*(p.vx*p.vx+p.vy*p.vy);ke/=ps.length;const f=Math.sqrt(1+(vT(T)**2/ke-1)*Math.min(1,dt*4));for(const p of ps){p.vx*=f;p.vy*=f;}}
+    fx.forEach(f=>f.t+=dt);fx=fx.filter(f=>f.t<(f.k==="burst"?.7:.3));evs=evs.filter(t=>now-t<3000);
+    acc+=dt;if(acc>.2){acc=0;hA.push(ps.filter(p=>p.t==="A").length);hP.push(ps.filter(p=>p.t==="AB").length);if(hA.length>200){hA.shift();hP.shift();}}}
+  function draw(){
+    // short trails: fade the last frame instead of clearing it
+    c.fillStyle="rgba(255,253,247,.42)";c.fillRect(0,0,W,H);
+    const warm=(T-350)/350;c.strokeStyle=warm>0?`rgba(228,65,43,${Math.min(.5,warm)})`:`rgba(31,63,191,${Math.min(.4,-warm*1.5)})`;c.lineWidth=18;c.strokeRect(B.x0-9,B.y0-9,B.x1-B.x0+18,B.y1-B.y0+18);
+    c.strokeStyle="#141414";c.lineWidth=5;c.strokeRect(B.x0,B.y0,B.x1-B.x0,B.y1-B.y0);
+    for(const p of ps){const s=1+.35*Math.sin(Math.min(1,p.pop)*Math.PI)*p.pop;
+      if(p.t==="AB"){const dx=Math.cos(p.ang)*R*.75*s,dy=Math.sin(p.ang)*R*.75*s;c.strokeStyle="#141414";c.lineWidth=3;c.beginPath();c.moveTo(p.x-dx,p.y-dy);c.lineTo(p.x+dx,p.y+dy);c.stroke();
+        sphere(c,p.x-dx,p.y-dy,R*.95*s,...COLS.A);sphere(c,p.x+dx,p.y+dy,R*.95*s,...COLS.B);}
+      else sphere(c,p.x,p.y,R,...COLS[p.t]);}
+    for(const f of fx){if(f.k==="burst"){const k=f.t/.7;c.strokeStyle=`rgba(242,183,5,${1-k})`;c.lineWidth=5*(1-k)+1;c.beginPath();c.arc(f.x,f.y,10+k*46,0,7);c.stroke();
+        for(const s of f.sp){const r=s.v*f.t;c.fillStyle=`rgba(242,183,5,${1-k})`;c.beginPath();c.arc(f.x+Math.cos(s.a)*r,f.y+Math.sin(s.a)*r,3*(1-k)+1,0,7);c.fill();}}
+      else{const k=f.t/.3;c.strokeStyle=`rgba(107,100,87,${.55*(1-k)})`;c.lineWidth=2;c.beginPath();c.arc(f.x,f.y,4+k*12,0,7);c.stroke();}}
+    // counts graph
+    const nA=hA[hA.length-1],nP=hP[hP.length-1];panelGraph(n,[{d:hA,col:"#1f3fbf",l:"A (และ B)"},{d:hP,col:"#2f8f4e",l:"AB"}],Math.max(8,N0)*1.05,"จำนวนอนุภาคเทียบเวลา");
+    // energy distribution with Ea
+    const vmax=vT(700)*2.3,Emax=.5*vmax*vmax,NP=60,bw=Emax*.05,d=Array(NP+1).fill(0);
+    for(const p of ps){if(p.t==="AB")continue;const E=.5*(p.vx*p.vx+p.vy*p.vy);for(let i=0;i<=NP;i++){const u=(Emax*i/NP-E)/bw;if(u>-3&&u<3)d[i]+=Math.exp(-u*u/2);}}
+    if(!KDE)KDE=d;else for(let i=0;i<=NP;i++)KDE[i]+=(d[i]-KDE[i])*.08;
+    const free=ps.filter(p=>p.t!=="AB"),over=free.filter(p=>.5*(p.vx*p.vx+p.vy*p.vy)>=EA()).length;EAP+=((free.length?over/free.length*100:0)-EAP)*.06;
+    energyGraph(e,KDE,Emax,EA(),EAP,cat);
+    const rd=(k,v,l)=>{const t=q(`[data-r="${k}"]`);t.innerHTML=`${v}<small>${l}</small>`;};rd("A",nA,"A เหลือ");rd("AB",nP,"AB เกิดแล้ว");rd("rate",(evs.length/3).toFixed(1),"เกิด / วินาที");
+    q('[data-o="T"]').textContent=T+" K";q('[data-o="n"]').textContent=N0+" คู่";}
+  let last=performance.now();(function frame(t){if(!root.isConnected)return;const dt=Math.min(.033,(t-last)/1000);last=t;if(!paused){step(dt/2);step(dt/2);}draw();requestAnimationFrame(frame);})(last);
+  window.__rate={get ps(){return ps},get evs(){return evs},get EAP(){return EAP},setT:v=>T=v};}
+function panelGraph(c,series,ymax,title){const W=400,H=170;c.clearRect(0,0,W,H);const x0=34,x1=W-10,y0=26,y1=H-22;
+  c.fillStyle="#141414";c.font="800 12px Anuphan";c.textAlign="left";c.fillText(title,8,15);
+  c.strokeStyle="rgba(20,20,20,.12)";c.lineWidth=1;for(let k=1;k<=3;k++){const y=y1-(y1-y0)*k/4;c.beginPath();c.moveTo(x0,y);c.lineTo(x1,y);c.stroke();}
+  c.strokeStyle="#141414";c.lineWidth=2;c.beginPath();c.moveTo(x0,y0-4);c.lineTo(x0,y1);c.lineTo(x1,y1);c.stroke();
+  series.forEach((s,k)=>{c.beginPath();s.d.forEach((v,i)=>{const X=x0+i/199*(x1-x0),Y=y1-Math.min(1.05,v/ymax)*(y1-y0);i?c.lineTo(X,Y):c.moveTo(X,Y);});c.lineWidth=3;c.strokeStyle=s.col;c.lineJoin="round";c.stroke();});
+  c.fillStyle="#6b6457";c.font="600 10px Anuphan";c.textAlign="center";c.fillText("เวลา →",(x0+x1)/2,H-6);
+  // two legends side by side
+  c.textAlign="right";c.font="800 11px Anuphan";c.fillStyle=series[0].col;c.fillText("● "+series[0].l,x1-60,15);c.fillStyle=series[1].col;c.fillText("● "+series[1].l,x1,15);}
+function energyGraph(c,K,Emax,Ea,pct,cat){const W=400,H=170;c.clearRect(0,0,W,H);const x0=14,x1=W-10,y0=44,y1=H-22,NP=K.length-1,mx=Math.max(1,...K)*1.15,X=E=>x0+E/Emax*(x1-x0),Y=v=>y1-v/mx*(y1-y0);
+  c.fillStyle="#141414";c.font="800 12px Anuphan";c.textAlign="left";c.fillText("พลังงานจลน์ของอนุภาค",8,15);
+  const xe=X(Ea);c.beginPath();c.moveTo(xe,y1);for(let i=0;i<=NP;i++){const E=Emax*i/NP;if(E>=Ea)c.lineTo(X(E),Y(K[i]));}c.lineTo(x1,y1);c.closePath();c.fillStyle="rgba(228,65,43,.35)";c.fill();
+  c.beginPath();c.moveTo(x0,y1);for(let i=0;i<=NP;i++)c.lineTo(X(Emax*i/NP),Y(K[i]));c.lineTo(x1,y1);c.fillStyle="rgba(31,63,191,.12)";c.fill();
+  c.beginPath();for(let i=0;i<=NP;i++){const x=X(Emax*i/NP),y=Y(K[i]);i?c.lineTo(x,y):c.moveTo(x,y);}c.strokeStyle="#141414";c.lineWidth=3;c.stroke();
+  c.strokeStyle="#141414";c.lineWidth=2;c.beginPath();c.moveTo(x0,y1);c.lineTo(x1,y1);c.stroke();
+  c.strokeStyle=cat?"#2f8f4e":"#141414";c.lineWidth=3;c.beginPath();c.moveTo(xe,y0-6);c.lineTo(xe,y1);c.stroke();
+  c.fillStyle=cat?"#2f8f4e":"#141414";c.fillRect(xe-18,y0-20,36,16);c.fillStyle="#f2b705";c.font="800 11px JetBrains Mono";c.textAlign="center";c.fillText("Ea",xe,y0-8);
+  c.fillStyle="#e4412b";c.font="800 12px Anuphan";c.textAlign="right";c.fillText("ถึง Ea "+Math.round(pct)+"%",x1,15);
+  c.fillStyle="#6b6457";c.font="600 10px Anuphan";c.textAlign="center";c.fillText("พลังงาน →  (ลายแดง = มีพลังงานพอเกิดปฏิกิริยา)",(x0+x1)/2,H-6);}
+
+/* ---------- 2 · one collision + energy diagram ---------- */
+function rateOne(root){
+  root.innerHTML=`<div class="stage"><canvas width="1100" height="430"></canvas><div class="law" id="r1msg">ลาก A ไปทางซ้าย (ยิ่งดึงยิ่งแรง) แล้วปล่อย</div></div>
+   <div class="row2" style="margin-top:12px;max-width:640px"><button class="btn" data-k="cat">⚗️ ตัวเร่ง: ปิด</button><button class="btn" data-k="exo">🔥 คายความร้อน</button><button class="btn" data-k="again">↺ ยิงใหม่</button></div>`;
+  const cv=root.querySelector("canvas"),c=fitCanvas(cv,1100,430),W=1100,H=430,q=s=>root.querySelector(s),msg=s=>q("#r1msg").textContent=s;
+  const TY=230,AX0=230,BX0=470,RA=30;
+  let cat=false,exo=true,ea=.62,dh=-.25,st="aim",ax=AX0,bx=BX0,av=0,bv=0,pull=0,E=0,s=0,sv=0,dir=1,drag=false,sq=0,prodA=0,sparks=[],t=0;
+  const EA0=.62,EAc=.34;
+  const U=x=>{const a=Math.sin(Math.PI*Math.min(1,Math.max(0,x)))**2;return x<.5?ea*a:dh+(ea-dh)*a;};   // reaction-coordinate profile (fractions of the diagram height)
+  q('[data-k="cat"]').onclick=e=>{cat=!cat;e.currentTarget.textContent="⚗️ ตัวเร่ง: "+(cat?"เปิด":"ปิด");e.currentTarget.classList.toggle("on",cat);};
+  q('[data-k="exo"]').onclick=e=>{exo=!exo;e.currentTarget.textContent=exo?"🔥 คายความร้อน":"❄️ ดูดความร้อน";};
+  const reset=()=>{st="aim";ax=AX0;bx=BX0;av=bv=0;s=0;sv=0;E=0;pull=0;sq=0;prodA=0;sparks=[];msg("ลาก A ไปทางซ้าย (ยิ่งดึงยิ่งแรง) แล้วปล่อย");};
+  q('[data-k="again"]').onclick=reset;
+  cv.onpointerdown=e=>{const[x,y]=c.pt(e);if(st!=="aim"){if(st==="done"){reset();}else return;}if(Math.hypot(x-ax,y-TY)<RA+20){drag=true;cv.setPointerCapture(e.pointerId);}};
+  cv.onpointermove=e=>{const[x,y]=c.pt(e);cv.style.cursor=st==="aim"&&Math.hypot(x-ax,y-TY)<RA+20?"grab":"default";if(!drag)return;ax=Math.max(70,Math.min(AX0,x));pull=(AX0-ax)/(AX0-70);E=pull*pull*.95;};
+  cv.onpointerup=()=>{if(!drag)return;drag=false;if(pull<.04){ax=AX0;return;}st="fly";av=260+pull*700;msg("");};
+  function step(dt){t+=dt;ea+=((cat?EAc:EA0)-ea)*Math.min(1,dt*4);dh+=((exo?-.25:.2)-dh)*Math.min(1,dt*4);
+    if(st==="aim"&&!drag){ax+=(AX0-ax)*Math.min(1,dt*12);}   // the slingshot snaps back if you let go without pulling
+    if(st==="fly"){ax+=av*dt;if(ax>=bx-2*RA){ax=bx-2*RA;st="climb";s=0;sv=0;dir=1;}}
+    if(st==="climb"){/* energy bookkeeping on the diagram: speed along the path ~ sqrt(E - U) */const room=E-U(s);
+      if(dir>0&&room<=.004&&s<.5){dir=-1;}
+      s+=dir*(.12+1.7*Math.sqrt(Math.max(0,room)))*dt;sq=Math.min(1,s/.5);
+      if(s>=1){s=1;st="done";prodA=1;msg(`✅ พลังงานพอข้าม Ea → เกิด AB ${exo?"และปล่อยพลังงานออกมา":"(ต้องได้พลังงานเพิ่ม: ดูดความร้อน)"}`);
+        sparks=Array.from({length:exo?16:0},(_,i)=>({a:i/16*Math.PI*2,v:120+Math.random()*120,t:0}));av=40+Math.sqrt(Math.max(0,E-dh))*260;}
+      if(s<=0&&dir<0){s=0;st="back";sq=0;av=-(60+Math.sqrt(E)*420);msg("❌ พลังงานไม่ถึง Ea → เด้งกลับ ไม่เกิดปฏิกิริยา · ดึงแรงขึ้น หรือเปิดตัวเร่ง");}}
+    if(st==="back"){ax+=av*dt;av*=Math.pow(.25,dt);if(ax<70){ax=70;av=Math.abs(av)*.4;}if(Math.abs(av)<8)st="done";}
+    if(st==="done"&&prodA){prodA=Math.min(1,prodA+dt);if((ax+bx)/2<450){ax+=av*dt*.6;bx+=av*dt*.6;}av*=Math.pow(.3,dt);}   // AB drifts on, but stays in the scene
+    sparks.forEach(p=>p.t+=dt);sparks=sparks.filter(p=>p.t<.8);}
+  function draw(){c.clearRect(0,0,W,H);const ink="#141414";
+    // left: the scene
+    c.fillStyle="#f6f1e6";c.fillRect(20,40,560,370);c.strokeStyle=ink;c.lineWidth=4;c.strokeRect(20,40,560,370);
+    c.strokeStyle="rgba(20,20,20,.25)";c.lineWidth=2;c.setLineDash([6,6]);c.beginPath();c.moveTo(40,TY+RA+8);c.lineTo(560,TY+RA+8);c.stroke();c.setLineDash([]);
+    // slingshot posts + band
+    c.fillStyle="#6b4a2b";c.fillRect(AX0-6,TY-70,12,22);c.fillRect(AX0-6,TY+48,12,22);c.strokeStyle="#6b4a2b";c.lineWidth=3;
+    if(st==="aim"){c.beginPath();c.moveTo(AX0,TY-50);c.lineTo(ax-RA*.6,TY-6);c.moveTo(AX0,TY+50);c.lineTo(ax-RA*.6,TY+6);c.stroke();}
+    if(drag){c.fillStyle="#e4412b";c.font="800 14px Anuphan";c.textAlign="center";c.fillText("แรง "+Math.round(pull*100)+"%",ax,TY-RA-16);}
+    const squash=1-.22*sq;
+    if(st==="done"&&prodA&&s>=1){const cx=(ax+bx)/2+RA*.2,p=prodA,gap=RA*(.95-.25*p);c.strokeStyle=ink;c.lineWidth=5;c.beginPath();c.moveTo(cx-gap,TY);c.lineTo(cx+gap,TY);c.stroke();
+      sphere(c,cx-gap,TY,RA,...COLS.A);sphere(c,cx+gap,TY,RA,...COLS.B);lab("AB",cx,TY-RA-12);}
+    else{c.save();c.translate(ax,TY);c.scale(squash,1/squash);sphere(c,0,0,RA,...COLS.A);c.restore();c.save();c.translate(bx,TY);c.scale(squash,1/squash);sphere(c,0,0,RA,...COLS.B);c.restore();
+      lab("A",ax,TY+5,"#fff");lab("B",bx,TY+5,"#fff");}
+    for(const p of sparks){const r=p.v*p.t,k=p.t/.8;c.fillStyle=`rgba(242,183,5,${1-k})`;c.beginPath();c.arc((ax+bx)/2+Math.cos(p.a)*r,TY+Math.sin(p.a)*r,5*(1-k)+1,0,7);c.fill();}
+    if(st==="aim"&&!drag){c.fillStyle=ink;c.font="700 13px Anuphan";c.textAlign="center";c.fillText("← ลาก A แล้วปล่อย",ax,TY+RA+34);}
+    // right: energy diagram
+    const X0=620,X1=1080,Y0=60,Y1=380,yE=v=>Y1-50-v*(Y1-Y0-90),xP=x=>X0+40+x*(X1-X0-70);
+    c.fillStyle="#fffdf7";c.fillRect(X0,40,X1-X0,370);c.strokeStyle=ink;c.lineWidth=4;c.strokeRect(X0,40,X1-X0,370);
+    c.lineWidth=2.5;c.beginPath();c.moveTo(X0+24,Y0);c.lineTo(X0+24,Y1);c.lineTo(X1-14,Y1);c.stroke();
+    c.save();c.translate(X0+14,(Y0+Y1)/2);c.rotate(-Math.PI/2);c.fillStyle="#6b6457";c.font="700 12px Anuphan";c.textAlign="center";c.fillText("พลังงาน",0,0);c.restore();
+    c.fillStyle="#6b6457";c.font="700 12px Anuphan";c.textAlign="center";c.fillText("การดำเนินไปของปฏิกิริยา →",(X0+X1)/2,Y1+20);
+    // filled hump
+    c.beginPath();c.moveTo(xP(0),Y1);for(let i=0;i<=100;i++){const x=i/100;c.lineTo(xP(x),yE(U(x)));}c.lineTo(xP(1),Y1);c.closePath();
+    const g=c.createLinearGradient(0,yE(ea),0,Y1);g.addColorStop(0,"rgba(228,65,43,.28)");g.addColorStop(1,"rgba(242,183,5,.05)");c.fillStyle=g;c.fill();
+    if(cat){c.setLineDash([6,5]);c.strokeStyle="#9b9384";c.lineWidth=2;c.beginPath();for(let i=0;i<=100;i++){const x=i/100,a=Math.sin(Math.PI*x)**2,v=x<.5?EA0*a:dh+(EA0-dh)*a;i?c.lineTo(xP(x),yE(v)):c.moveTo(xP(x),yE(v));}c.stroke();c.setLineDash([]);
+      c.fillStyle="#9b9384";c.font="700 11px Anuphan";c.fillText("ไม่มีตัวเร่ง",xP(.5),yE(EA0)-8);}
+    c.strokeStyle=ink;c.lineWidth=4;c.lineJoin="round";c.beginPath();for(let i=0;i<=100;i++){const x=i/100;i?c.lineTo(xP(x),yE(U(x))):c.moveTo(xP(x),yE(U(x)));}c.stroke();
+    // Ea and dH arrows
+    const arrow=(x,ya,yb,col,label,side)=>{c.strokeStyle=col;c.fillStyle=col;c.lineWidth=2.5;c.beginPath();c.moveTo(x,ya);c.lineTo(x,yb);c.stroke();const d=yb<ya?-1:1;c.beginPath();c.moveTo(x,yb);c.lineTo(x-6,yb-d*10);c.lineTo(x+6,yb-d*10);c.closePath();c.fill();
+      c.font="800 14px JetBrains Mono";c.textAlign=side;c.fillText(label,x+(side==="left"?8:-8),(ya+yb)/2+5);};
+    c.setLineDash([3,4]);c.strokeStyle="rgba(20,20,20,.35)";c.lineWidth=1.5;c.beginPath();c.moveTo(xP(0),yE(0));c.lineTo(xP(.6),yE(0));c.moveTo(xP(.75),yE(dh));c.lineTo(xP(1),yE(dh));c.stroke();c.setLineDash([]);
+    arrow(xP(.5),yE(0),yE(ea),"#e4412b","Ea","left");arrow(xP(.8),yE(0),yE(dh),"#1f3fbf","ΔH","right");
+    c.fillStyle=ink;c.font="800 13px Anuphan";c.textAlign="center";c.fillText("A + B",xP(.03),yE(0)-12);c.fillText("AB",xP(.97),yE(dh)-34);
+    // the energy you gave it + the ball
+    if(st!=="aim"||drag){c.strokeStyle="#1f3fbf";c.setLineDash([3,5]);c.lineWidth=2.5;c.beginPath();c.moveTo(xP(0),yE(E));c.lineTo(xP(1),yE(E));c.stroke();c.setLineDash([]);
+      c.fillStyle="#1f3fbf";c.font="800 12px Anuphan";c.textAlign="right";c.fillText("พลังงานที่ชน",xP(1),yE(E)-6);}
+    const bxp=xP(s),byp=yE(U(s))-13;c.fillStyle="rgba(20,20,20,.18)";c.beginPath();c.ellipse(bxp+4,yE(U(s))+2,11,4,0,0,7);c.fill();sphere(c,bxp,byp,12,st==="done"&&prodA?"#3fbf6a":"#f2c94c",st==="done"&&prodA?"#1d6b37":"#9a7300");}
+  function lab(t,x,y,col="#141414"){c.fillStyle=col;c.font="800 18px Anuphan";c.textAlign="center";c.fillText(t,x,y);}
+  let last=performance.now();(function frame(tt){if(!root.isConnected)return;const dt=Math.min(.033,(tt-last)/1000);last=tt;step(dt);draw();requestAnimationFrame(frame);})(last);
+  window.__one={get st(){return st},get s(){return s},fire:p=>{pull=p;E=p*p*.95;ax=AX0-p*(AX0-70);st="fly";av=260+p*700;},reset};}
 
 /* ================= ch08 · gas laws: piston chamber =================
    Model: ideal gas, PV = nRT with R = 0.0821 L·atm/(mol·K). The dots are hard spheres that bounce off each other and the walls
@@ -230,4 +405,5 @@ function gasModel(root){
   setDots();ps.forEach(p=>Object.assign(p,spawn(false)));ui();requestAnimationFrame(frame);
   window.__gas={S,get ps(){return ps},get eap(){return EAP},vrms,geo:{CX0,CX1,CB,yOf,RAD}};   // read-only hook for tools/test_models.js
 }
+const want=MODELS.findIndex(m=>m.ch===QS.get("ch"));show(want<0?MODELS.findIndex(m=>m.ch==="08"):want);   // a chapter with no model yet opens the gas model   /* last: every model's helpers (consts) exist before the first one is built */
 </script></body></html>
