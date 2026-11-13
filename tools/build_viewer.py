@@ -885,6 +885,7 @@ code{background:#efe6d2;padding:1px 5px;font-size:.92em}
 .card{position:relative;background:var(--card);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);padding:18px 20px 16px 32px;margin-bottom:22px;overflow:hidden}
 .card.anim{animation:cardIn .5s cubic-bezier(.2,1.1,.4,1) both;animation-delay:calc(var(--i,0)*50ms)}
 @keyframes cardIn{from{opacity:0;transform:translateY(20px)}}
+.spr .card.anim,.spr .poster.enter,.spr .poster.inR,.spr .poster.inL,.spr .sheet.inR,.spr .sheet.inL{animation:none}   /* SP springs these instead */
 .card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:10px;background:var(--red)}
 .card.lv-medium:before{background:var(--yel)}.card.lv-easy:before{background:var(--blue)}
 .card .cnum{position:absolute;right:14px;top:0;font-size:3.6rem;font-weight:800;color:transparent;-webkit-text-stroke:2px #e1d8c4;line-height:1;pointer-events:none}
@@ -1235,7 +1236,7 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .trk.show{visibility:visible;opacity:1;scale:1;transition:scale .5s cubic-bezier(.34,1.6,.64,1) .5s,opacity .2s .5s,visibility 0s}
 /* the reading card replaces the Mw table in the info area while a trend is on */
 .pdtrc{display:none;flex:1;min-width:0;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:8px 12px;font:600 .86rem "Anuphan",sans-serif;line-height:1.5}
-.pdg.trend .pdtrc{display:block}.pdg.trend .pdbrk{display:none}
+
 .pdtrc.swap{animation:tcard .45s cubic-bezier(.2,.8,.2,1)}
 @keyframes tcard{0%{opacity:0;translate:0 8px}}
 .pdtrc h4{margin:0 0 4px;font-size:1rem}.pdtrc p{margin:2px 0}.pdtrc .d{font-size:.95rem}.pdtrc .m{color:var(--mut);font-size:.8rem}.pdtrc .tw{color:var(--red);font-size:.82rem}
@@ -1764,6 +1765,56 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 const DATA = __DATA__;
 const DIFF_TH={easy:"ง่าย",medium:"ปานกลาง",hard:"ยาก"};
 const $=s=>document.querySelector(s);
+
+/* ================= SPRING MOTION (his pick 2026-11-13: sample "1+") =================
+   A real damped spring (stiffness/damping like react-spring's "wobbly" 180/12) sampled into Web Animations keyframes, so
+   things overshoot a touch and settle. Secondary motion on top of every main action: the shadow lands ~50ms after the
+   object, a card's parts settle at different times (overlapping action), a card pulls back a hair before it leaves
+   (anticipation). transform / opacity / box-shadow only. prefers-reduced-motion = all of it off. */
+const SP=(()=>{
+  const RM=matchMedia("(prefers-reduced-motion: reduce)");
+  function sim(k,c){const xs=[];let x=0,v=0,t=0;const dt=1/120;
+    while(t<3){const a=-k*(x-1)-c*v;v+=a*dt;x+=v*dt;t+=dt;if(Math.round(t*120)%2==0)xs.push(x);if(t>.3&&Math.abs(v)<.02&&Math.abs(x-1)<.002)break;}xs.push(1);return xs;}
+  const P={wobbly:sim(180,12),gentle:sim(120,14),stiff:sim(260,20)};
+  const on=()=>!RM.matches;
+  function run(el,fn,o={}){if(!on()||!el||!el.animate)return null;const xs=P[o.p||"wobbly"];
+    return el.animate(xs.map(fn),{duration:xs.length*1000/60,delay:o.delay||0,easing:"linear",fill:"backwards"});}
+  // the element's own box-shadow grows in from nothing, a beat after the element moves (and overshoots with it)
+  function shadow(el,delay=50){if(!on()||!el)return;const v=getComputedStyle(el).boxShadow;if(!v||v==="none"||/\),/.test(v))return;
+    run(el,x=>({boxShadow:v.replace(/(-?[\d.]+)px/g,(m,n)=>(n*x).toFixed(2)+"px")}),{delay,p:"gentle"});}
+  const pop=(el,a=.08,o)=>run(el,x=>({transform:`scale(${1-a+a*x})`}),o);
+  function press(el){if(!el||!el.isConnected)return;pop(el,.08);shadow(el,40);}
+  // one choice marked: it pops, its shadow lands late, the other lines give a small sympathetic sway
+  function mark(li){pop(li,.06);shadow(li,50);const all=[...li.parentElement.children],i0=all.indexOf(li);
+    all.forEach((o,i)=>{if(o!==li)run(o,x=>({transform:`translateY(${(1-x)*(i<i0?-3:3)}px)`}),{delay:40+Math.abs(i-i0)*35,p:"gentle"});});}
+  // a solution opening: drops in and unfolds, its card shadow lands late, the correct line slides into place
+  function reveal(w,btn,ok){if(btn)pop(btn,.07);if(!w)return;
+    run(w,x=>({transform:`translateY(${(1-x)*-18}px) scaleY(${.86+.14*x})`,transformOrigin:"50% 0",opacity:Math.min(1,x*1.7)}),{delay:30});
+    const box=w.querySelector(".solbox,.bigans")||w.firstElementChild;if(box)shadow(box,110);
+    if(ok)run(ok,x=>({transform:`translateX(${(1-x)*14}px)`}),{delay:150});}
+  // a card leaving: a small pull the other way first (anticipation), then out
+  function exit(el,dir,dur=190){if(!on()||!el)return null;el.getAnimations().forEach(a=>a.cancel());
+    return el.animate([{transform:"none",opacity:1},{transform:`translateX(${-dir*12}px) rotate(${-dir*.6}deg)`,opacity:1,offset:.32},{transform:`translateX(${dir*90}%) rotate(${dir*7}deg)`,opacity:0}],{duration:dur,easing:"cubic-bezier(.5,0,.75,0)",fill:"forwards"});}
+  // a card arriving from the side (dir +1 = from the right) or from below (dir 0); its parts follow at different times
+  function enter(el,dir,parts){if(!on()||!el)return;el.getAnimations().forEach(a=>a.cancel());
+    if(dir)run(el,x=>({transform:`translateX(${(1-x)*dir*90}px) rotate(${(1-x)*dir*4}deg)`,opacity:Math.min(1,x*2)}));
+    else run(el,x=>({transform:`translateY(${(1-x)*36}px) rotate(${(1-x)*1.5}deg)`,opacity:Math.min(1,x*2)}));
+    shadow(el,80);
+    [...(parts||[])].slice(0,16).forEach((k,i)=>run(k,x=>({transform:dir?`translateX(${(1-x)*dir*42}px)`:`translateY(${(1-x)*18}px)`,opacity:Math.min(1,x*2)}),{delay:70+i*45,p:"gentle"}));}
+  // a list of things appearing together (cards, rows, drawer buttons): each one springs in a step after the last
+  function stagger(els,o={}){if(!on())return;[...els].slice(0,o.max||14).forEach((e,i)=>{
+    run(e,x=>({transform:`translate(${(1-x)*(o.x||0)}px,${(1-x)*(o.y==null?22:o.y)}px)`,opacity:Math.min(1,x*2)}),{delay:(o.delay||0)+i*(o.step||45),p:o.p||"gentle"});
+    if(o.shadow!==false)shadow(e,(o.delay||0)+i*(o.step||45)+60);});}
+  // a periodic-table tile tapped: crouch, hop, land with a squash; the shadow stretches away while it's up
+  function jump(el){if(!on()||!el)return;el.animate([{transform:"none"},{transform:"scale(1.08,.9)",offset:.14},{transform:"translateY(-26%) scale(.95,1.06)",offset:.45},{transform:"scale(1.06,.94)",offset:.78},{transform:"none"}],{duration:560,easing:"ease-in-out"});}
+  // the parts of a poster / modal card, in reading order
+  const parts=c=>c.querySelectorAll(":scope>.phead,:scope>.pmeta,:scope>.body>*,:scope>.solbtn,:scope>.foot,#mtop,#mbody>*,.mctrl");
+  if(on())document.documentElement.classList.add("spr");
+  return{on,run,pop,press,mark,reveal,exit,enter,stagger,jump,shadow,parts};
+})();
+// every button / board tile gets the press spring (things with their own motion are skipped)
+document.addEventListener("click",e=>{const b=e.target.closest("button,#board .tile,.chip,[role=button]");
+  if(!b||b.closest("#pdg,#pdkeys")||b.matches(".solbtn,#mreveal"))return;SP.press(b);},true);
 // chapter keys "10".."14" are integer-like, so JS object order puts them BEFORE "01".."09" -- sort explicitly
 const CHS=Object.entries(DATA.chapters).sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
 const ST=DATA.subtopics||{};   // chem sub-topics per chapter ("07": [{id,th}]); empty -> stats slide + topic filter off
@@ -2223,6 +2274,7 @@ function renderPoster(R){
 function fillPoster(anim){
   const q=filtered[pIdx];if(!q)return;dwell(q);
   $("#deck").innerHTML=posterHtml(q,pIdx,anim);tex($("#deck"));
+  if(anim&&SP.on()){const c=$("#deck .poster");SP.enter(c,anim==="inR"?1:anim==="inL"?-1:0,SP.parts(c));}
   $("#ppos").textContent=`${pIdx+1} / ${filtered.length}`;
   $("#pscrub").value=pIdx+1;
 }
@@ -2230,7 +2282,7 @@ let pBusy=false;
 function pstep(d){
   if(view!=="poster"||!filtered.length||pBusy) return;
   const p=$("#deck .poster");pBusy=true;
-  if(p) p.classList.add(d>0?"outL":"outR");
+  if(p){if(SP.on())SP.exit(p,d>0?-1:1,180);else p.classList.add(d>0?"outL":"outR");}
   SFX.play("flip",d);
   setTimeout(()=>{pIdx=(pIdx+d+filtered.length)%filtered.length;fillPoster(d>0?"inR":"inL");pBusy=false;},180);
 }
@@ -2248,7 +2300,7 @@ function renderCards(R){
     if(!PAPER&&q.groupKey!==lastG){lastG=q.groupKey;html+=chapH(q);}
     html+=cardHtml(q,i);
   });
-  R.innerHTML=html;
+  R.innerHTML=html;SP.stagger(R.querySelectorAll(".card.anim"),{y:26,step:55,max:12});
 }
 /* ---- LIST (accordion) ---- */
 function renderList(R){
@@ -2297,7 +2349,7 @@ const SL=(()=>{const held=new Set();let y=0;
   return{lock,unlock,held:()=>[...held]};})();
 // a finger dragged on a dimmed backdrop itself: nothing there scrolls, so don't let it bounce the pinned page
 ["#modal","#pdscrim"].forEach(s=>$(s).addEventListener("touchmove",e=>{if(e.target===e.currentTarget&&e.cancelable)e.preventDefault();},{passive:false}));
-function openModal(i){mIdx=i;fillModal();$("#modal").classList.add("show");STRIP.place();SL.lock("modal");INK.open();SFX.play(isEx(filtered[i])?"exOpen":"present");}
+function openModal(i){mIdx=i;fillModal();$("#modal").classList.add("show");SP.stagger(SP.parts($("#modal .sheet")),{delay:120,step:40,shadow:false});STRIP.place();SL.lock("modal");INK.open();SFX.play(isEx(filtered[i])?"exOpen":"present");}
 function closeModal(){if(!$("#modal").classList.contains("show"))return;STRIP.close(1);$("#modal").classList.remove("show");SL.unlock("modal");INK.close();SFX.play("dismiss");
   dwell(view==="poster"&&document.body.classList.contains("inapp")?filtered[pIdx]:null);}
 function fillModal(anim){
@@ -2310,6 +2362,7 @@ function fillModal(anim){
   $("#msol").innerHTML=revWrap(q);tex($("#msol"));
   $("#mtop .b-id")?.insertAdjacentHTML("beforeend",`<span class="mpos">· ${mIdx+1}/${filtered.length}</span>`);
   const sh=$("#modal .sheet");sh.classList.remove("lv-easy","lv-medium","lv-hard");if(q.diff)sh.classList.add("lv-"+q.diff);sh.classList.toggle("ex",isEx(q));sh.classList.remove("inR","inL","outL","outR");sh.style.animation="none";void sh.offsetWidth;if(anim)sh.classList.add(anim);sh.style.animation="";
+  if(SP.on()){sh.getAnimations().forEach(a=>a.cancel());if(anim)SP.enter(sh,anim==="inR"?1:-1,SP.parts(sh));}
   if(window.prepShot)prepShot(150);
   INK.refresh();
   // fetch the neighbours' figures now so ◀ / ▶ show them (and can save them) without waiting
@@ -2318,7 +2371,7 @@ function fillModal(anim){
 // ← / → and a finger swipe: the card slides out the way it was pushed and the next one comes in from the other side
 let mBusy=false;
 function step(d){if(mBusy||!filtered.length)return;mBusy=true;SFX.play("flip",d);usedNav();
-  $("#modal .sheet").classList.add(d>0?"outL":"outR");
+  if(SP.on())SP.exit($("#modal .sheet"),d>0?-1:1,165);else $("#modal .sheet").classList.add(d>0?"outL":"outR");
   setTimeout(()=>{mIdx=(mIdx+d+filtered.length)%filtered.length;fillModal(d>0?"inR":"inL");mBusy=false;},170);}
 function usedNav(){if(document.body.classList.contains("swiped"))return;ls.set("cqb_swiped","1");$("#mhint")?.classList.add("gone");
   setTimeout(()=>document.body.classList.add("swiped"),650);}
@@ -2505,6 +2558,7 @@ function solToggle(e){
     SFX.play(open?"reveal":"conceal");if(open)seen(qAt(b));
     b.textContent = open ? "ซ่อน"+b.dataset.name.replace("⚠ ","")+" ↑" : b.dataset.label;
     const bd=b.parentElement.querySelector(":scope>.body");if(bd)bd.classList.toggle("rv",open);   // correct choice green while open
+    if(open)SP.reveal(w,b,bd&&bd.querySelector("li.okopt"));else SP.pop(b,.06);
   }
   return true;
 }
@@ -2512,7 +2566,7 @@ function solToggle(e){
 function markChoice(e){const li=e.target.closest(".body li");if(!li)return false;
   const on=!li.classList.contains("mk");
   li.closest(".body").querySelectorAll("li.mk").forEach(x=>x.classList.remove("mk"));
-  if(on){li.classList.add("mk");seen(qAt(li));}SFX.play(on?"mark":"unmark",[...li.parentElement.children].indexOf(li));return true;}
+  if(on){li.classList.add("mk");seen(qAt(li));SP.mark(li);}SFX.play(on?"mark":"unmark",[...li.parentElement.children].indexOf(li));return true;}
 $("#root").addEventListener("click",e=>{
   if(solToggle(e)) return;
   if(e.target.closest("#pprev")){pstep(-1);return;}
@@ -2537,7 +2591,7 @@ $("#mbody").addEventListener("click",e=>{if(markChoice(e)&&window.prepShot)prepS
 
 $("#mx").onclick=closeModal;
 $("#modal").onclick=e=>{if(e.target.id==="modal")closeModal();};
-$("#mreveal").onclick=()=>{const w=$("#msol .solwrap");if(!w)return;const open=w.classList.toggle("show");$("#mreveal").setAttribute("aria-expanded",open);$("#mbody").classList.toggle("rv",open);
+$("#mreveal").onclick=()=>{const w=$("#msol .solwrap");if(!w)return;const open=w.classList.toggle("show");if(open)SP.reveal(w,$("#mreveal"),$("#mbody li.okopt"));else SP.pop($("#mreveal"),.06);$("#mreveal").setAttribute("aria-expanded",open);$("#mbody").classList.toggle("rv",open);
   SFX.play(open?"reveal":"conceal");if(open)seen(filtered[mIdx]);};
 
 /* ---- keyboard ---- */
@@ -2609,7 +2663,7 @@ const PD=(()=>{
     ELS.forEach(e=>{const[r,c]=e.f!==null?[e.p==6?9:10,3+e.f]:[e.p,e.g];
       h+=`<div class="pde k-${e.cat}" data-z="${e.z}" data-w="${r+c-2}"${e.g&&(e.g<3||e.g>12)?` data-g="${e.g}"`:""} style="grid-row:${r};grid-column:${c}"><div class="pf"><i>${e.z}</i><b>${e.s}</b><s>${fm(e)}</s></div><em class="pb">${e.z}</em></div>`;});
     h+=`<div class="pdph" style="grid-row:6;grid-column:3">57–71</div><div class="pdph" style="grid-row:7;grid-column:3">89–103</div><div style="grid-row:8;grid-column:1;height:10px"></div>`;
-    h+=`<div class="pdinfo"><div class="pdbig" id="pdbig" tabindex="0" title="แตะเพื่อพลิกดูการจัดเรียงอิเล็กตรอน"><div class="bf"></div></div><div class="pdbrk" id="pdbrk"></div><div class="pdtrc" id="pdtrc"></div></div><div class="pdcfg" id="pdcfg"></div>`;
+    h+=`<div class="pdinfo"><div class="pdbig" id="pdbig" tabindex="0" title="แตะเพื่อพลิกดูการจัดเรียงอิเล็กตรอน"><div class="bf"></div></div><div class="pdbrk" id="pdbrk"></div></div><div class="pdcfg" id="pdcfg"></div>`;
     G.innerHTML=h;
     $("#pdkeys").innerHTML=["(",")","[","]","·"].map(k=>`<button class="kp" data-k="${k}">${k}</button>`).join("")+`<span class="sep"></span>`+[..."1234567890"].map(k=>`<button data-k="${k}">${k}</button>`).join("")+`<span class="sep"></span><button class="kx" data-k="bk" title="ลบตัวสุดท้าย">⌫</button><button class="kx" data-k="clr">ล้าง</button><span class="tip">คลิกซ้าย = เพิ่มธาตุ · คลิกขวา = ลดทีละ 1</span>`;
     $("#pdtr").insertAdjacentHTML("beforeend",TRS.map(t=>`<button data-t="${t.k}">${t.ic} ${t.l}</button>`).join(""));
@@ -2702,10 +2756,7 @@ const PD=(()=>{
   const soft=p=>rmp(p*.5);   // his pick: the lighter sample-5 heat colours (cream -> yellow -> orange) on the tiles
   let trOn=-1,trArT=0;
   const restart=(el,c)=>{el.classList.remove(c);void el.offsetWidth;el.classList.add(c);};
-  function trCard(e,anim){if(trOn<0)return;const t=TRS[trOn],x=e?tval(t,e.z):null,c=$("#pdtrc");
-    c.innerHTML=`<h4>${t.ic} ${t.full}</h4><p class="d">${t.dir}</p><p class="m">${t.why}</p>${t.exw?`<p class="tw">★ ${t.exw}</p>`:""}${e&&x==null&&t.nil?`<p class="tw">${e.s}: ${t.nil}</p>`:""}${t.note?`<p class="m">${t.note}</p>`:""}`
-      +(t.k?`<div class="lg">${tf(t,t.lo)}<span style="background:linear-gradient(90deg,${[0,.25,.5,.75,1].map(soft).join(",")})"></span>${tf(t,t.hi)} ${t.u}</div>`:"");
-    if(anim)restart(c,"swap");}
+  function trCard(){}   /* the trend reading card was removed 2026-11-13 (his call): the big tile + arrows + graph carry it */
   function trBig(e){const s=$("#pdbig .bf s");if(s&&e&&trOn>=0){const t=TRS[trOn],x=tval(t,e.z);s.textContent=x==null?"—":tf(t,x)+(t.u?" "+t.u:"");}}
   // padding around the table makes room for the arrows on the sides they use; both heads aim at one corner
   const side=t=>({top:!!t.h&&!(t.v>0),bot:!!t.h&&t.v>0,right:!!t.v&&t.h>0,left:!!t.v&&!(t.h>0)});
@@ -2764,7 +2815,7 @@ const PD=(()=>{
   function trHover(e){if(trOn<0||!e)return;G.querySelectorAll(".pde.thl").forEach(x=>x.classList.remove("thl"));G.querySelector(`.pde[data-z="${e.z}"]`)?.classList.add("thl");
     big(e);trBig(e);trCard(e);trGraphHL(e.z);}
   const isOpen=()=>document.body.classList.contains("pdopen");
-  function open(){SL.lock("pd");if(TD.isOpen())TD.close();if(!built)build();else if(memOn)setMem(false,1);refreshQ();document.body.classList.add("pdopen");SFX.play("drawer","pd");if(trOn>=0)setTimeout(()=>{trArrows();trGraph(last&&last.z);},650);}
+  function open(){SL.lock("pd");if(TD.isOpen())TD.close();if(!built)build();else if(memOn)setMem(false,1);refreshQ();document.body.classList.add("pdopen");SFX.play("drawer","pd");SP.stagger([...document.querySelectorAll("#pd .pdh>*,#pdtr>*")],{x:-24,y:0,delay:260,step:30,max:20,shadow:false});if(trOn>=0)setTimeout(()=>{trArrows();trGraph(last&&last.z);},650);}
   function close(){if(!isOpen())return;document.body.classList.remove("pdopen");SL.unlock("pd");SFX.play("undrawer");}
   // Mw on: a tap adds the element to the formula. Mw off: a tap only shows it in the big tile.
   let mwOn=ls.get("cqb_mw2","0")==="1";   // off by default; new key so the old saved "on" does not stick
@@ -2809,7 +2860,7 @@ const PD=(()=>{
       else{t.classList.remove("up");t.classList.add("dn");if(shown===el.z)big(null,1);SFX.play("memUnflip",el.p);}
       colCheck(t);
       return;}
-    if(mwOn)addSym(el.s);SFX.play(mwOn?"add":"element",el.z);big(el);flash(el.z);if(trOn>=0)trHover(el);});
+    if(mwOn)addSym(el.s);SFX.play(mwOn?"add":"element",el.z);big(el);flash(el.z);SP.jump(t);SP.pop($("#pdbig"),.06);if(trOn>=0)trHover(el);});
   G.addEventListener("keydown",e=>{if(e.target.id==="pdbig"&&(e.key==="Enter"||e.key===" ")){e.preventDefault();return flipBig();}const t=e.target.closest(".pde");if(t&&(e.key==="Enter"||e.key===" ")){e.preventDefault();t.click();}});
   G.addEventListener("contextmenu",e=>{const t=e.target.closest(".pde");if(!t||!mwOn||memOn)return;e.preventDefault();const el=BY[t.dataset.z];big(el);
     if(decSym(el.s)){flash(el.z);SFX.play("remove");}else SFX.play("bad");});
@@ -3088,7 +3139,7 @@ const TD=(()=>{
   const isOpen=()=>document.body.classList.contains("tdopen");
   function open(){SL.lock("td");if(PD.isOpen())PD.close();if(!built)build();
     const was=fxFor;fxRender();if(was!==fxFor)$("#td").scrollTop=0;
-    document.body.classList.add("tdopen");fxFit();SFX.play("drawer","td");}
+    document.body.classList.add("tdopen");fxFit();SFX.play("drawer","td");SP.stagger($("#td").querySelectorAll(":scope>*"),{x:-24,y:0,delay:260,step:40,max:10,shadow:false});}
   function close(){if(!isOpen())return;document.body.classList.remove("tdopen");SL.unlock("td");SFX.play("undrawer");}
   $("#tdtabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;SFX.play("tab",[...b.parentElement.children].indexOf(b));
     $("#tdtabs").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
