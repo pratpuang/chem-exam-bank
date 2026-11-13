@@ -2725,7 +2725,7 @@ const PD=(()=>{
         H.classList.toggle("rev",t.h<0);H.firstChild.style.background=grad(t.h>0?"90deg":"270deg");H.lastChild.textContent=`${t.l} ${t.ha} ${t.h>0?"→":"←"}`;}
       if(t.v){let a,b;if(t.v<0){a=both?cy+38:gT;b=r7;}else{a=gT;b=both?cy-38:r7;}
         Object.assign(V.style,{top:a+"px",height:b-a+"px",left:(t.h?cx:gl-42)-18+"px",width:"36px",transformOrigin:t.v>0?"50% 0":"50% 100%"});
-        V.classList.toggle("rev",t.v<0);V.firstChild.style.background=grad(t.v>0?"180deg":"0deg");V.lastChild.textContent=`${t.l} ${t.va}`;   // no arrow glyph: vertical-rl turns it sideways; the arrow itself shows the way}
+        V.classList.toggle("rev",t.v<0);V.firstChild.style.background=grad(t.v>0?"180deg":"0deg");V.lastChild.textContent=`${t.l} ${t.va}`;/* no arrow glyph: vertical-rl turns it sideways */}
       if(both){Object.assign(K.style,{left:cx+"px",top:cy+"px"});K.innerHTML=`${t.pk}<small>${t.pkl}</small>`;}
       H.classList.toggle("show",!!t.h);V.classList.toggle("show",!!t.v);K.classList.toggle("show",!!both);};
     if(regrow)trArT=setTimeout(go,620);else go();}   // regrow: fold in, wait for the drawer + padding to settle, then grow from the tails
