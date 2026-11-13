@@ -625,29 +625,27 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
    textbook arrows whose two heads meet at one corner, exception ribbons inside the tile, a full-width graph of value vs Z).
    Every change animates: tiles recolour in a diagonal wave (--td), spheres grow/shrink, values roll in, arrows grow from the
    tail, the graph unfolds and draws its line. Turning it off runs the same in reverse. */
-#pd{transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s,width .55s cubic-bezier(.2,.8,.2,1)}
-body.pdopen #pd{transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s,width .55s cubic-bezier(.2,.8,.2,1)}
-#pd.trw{width:min(1440px,98vw)}
+#pd{width:min(1440px,98vw)}   /* always the wide drawer: trend on/off no longer changes the width (animating it re-laid-out every tile per frame = lag) */
 .pdtr{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-4px 0 12px}
 .pdtr>em{font:800 .85rem "Anuphan",sans-serif;font-style:normal;margin-right:4px}
 .pdtr button{border:2px solid var(--ink);background:var(--card);color:var(--ink);font:700 .82rem "Anuphan",sans-serif;padding:4px 10px;cursor:pointer;box-shadow:2px 2px 0 var(--sh);transition:background-color .25s,color .25s,transform .12s,box-shadow .12s}
 .pdtr button:hover{background:var(--yel);color:#141414}
 .pdtr button.on{background:var(--blue);color:#fff}
 .pdtr button:active{transform:translate(2px,2px);box-shadow:none}
-.pdw{position:relative;transition:padding .55s cubic-bezier(.2,.8,.2,1)}
-.pf{transition:background-color .5s cubic-bezier(.2,.7,.2,1) var(--td,0ms),color .35s var(--td,0ms)}
+.pdw{position:relative}
+.pde{contain:layout style}.pdgph,.pdtrc{contain:layout paint style}   /* a tile/graph change never invalidates the rest of the drawer */
+.pf{transition:background-color .45s cubic-bezier(.2,.7,.2,1) var(--td,0ms),color .3s var(--td,0ms)}
 .pdg.trend .pde .pf{background-color:var(--tc,var(--kb));color:#141414}
 .pdg.trend .pde.tnil .pf{background:repeating-linear-gradient(135deg,var(--paper) 0 5px,rgba(var(--pbi),.13) 5px 7px);color:var(--mut)}
 .pdg.trend .pde s{font-weight:800;opacity:1}
-.pdg.tsw .pde s{animation:tsw .45s cubic-bezier(.2,.8,.2,1) var(--td,0ms) both}
-@keyframes tsw{0%{opacity:0;translate:0 45%}}
 /* atomic size: a shaded sphere whose DIAMETER is proportional to the radius (H 31 pm ... Cs 244 pm). The ::before always
    exists inside the drawer (invisible, width 0) so it can grow in and shrink out instead of popping */
-.pdg .pde .pf::before{content:"";position:absolute;left:50%;top:53%;width:calc(var(--u)*var(--sz,0));aspect-ratio:1;translate:-50% -50%;border-radius:50%;pointer-events:none;opacity:0;
+.pdg .pde .pf::before{content:"";position:absolute;left:50%;top:53%;width:calc(var(--u)*.94);aspect-ratio:1;margin:calc(var(--u)*-.47) 0 0 calc(var(--u)*-.47);scale:var(--ss,0);border-radius:50%;pointer-events:none;opacity:0;
   background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.9) 0 6%,var(--kb) 38%,var(--kb2,#555) 100%);border:1.5px solid #141414;box-shadow:2px 2px 0 rgba(20,20,20,.35);
-  transition:width .6s cubic-bezier(.34,1.45,.64,1) var(--td,0ms),opacity .3s var(--td,0ms)}
+  transition:scale .6s cubic-bezier(.34,1.45,.64,1) var(--td,0ms),opacity .3s var(--td,0ms)}
 .pdg.tsize .pde .pf{background-color:var(--card);color:var(--ink)}
 .pdg.tsize .pde .pf::before{opacity:1}
+.pdg.trend .pde .pf::before{will-change:scale,opacity}   /* spheres scale on the GPU instead of repainting their gradient every frame */
 .pdg .k-alk{--kb2:#8f1f10}.pdg .k-ae{--kb2:#a3530c}.pdg .k-nm{--kb2:#9a7300}.pdg .k-hal{--kb2:#0d1f6b}.pdg .k-md{--kb2:#5466a8}
 .pdg .k-tm .pf::before{--kb:#d6cdb9;--kb2:#857a63}.pdg .k-pt .pf::before{--kb:#bdb39e;--kb2:#6e6551}.pdg .k-ln .pf::before,.pdg .k-an .pf::before{--kb2:#a3594a}
 .pdg.tsize .pde.tnil .pf::before{opacity:0}
@@ -659,20 +657,19 @@ body.pdopen #pd{transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility
 .pdg.trend .pde.tex .pf i{visibility:hidden}
 .pdg.trend .pde.tex::after{content:attr(data-x);position:absolute;left:2px;right:2px;top:2px;z-index:6;background:var(--red);color:#fff;text-align:center;
   font:800 calc(var(--u)*.145) "Anuphan",sans-serif;line-height:1.35;white-space:nowrap;overflow:hidden;pointer-events:none;transform-origin:50% 0;
-  animation:texin .45s cubic-bezier(.34,1.5,.64,1) calc(var(--td,0ms) + 350ms) both}
-@keyframes texin{0%{scale:1 0;opacity:0}}
+}
 .pdg.trend .pde.thl .pf{outline:4px solid var(--blue);outline-offset:-4px}
 /* arrows: two chunky gradient arrows (light = low, deep red = high) on the sides of the table, BOTH heads aimed at the same
    corner, where a round badge names the extreme. They grow out of their tails and fold back in */
 .tra,.trk{position:absolute;z-index:4;pointer-events:none;visibility:hidden;opacity:0}
-.tra{filter:drop-shadow(3px 3px 0 var(--sh));transition:opacity .3s,transform .6s cubic-bezier(.34,1.25,.64,1),visibility 0s .6s}
+.tra{will-change:transform;transition:opacity .3s,transform .6s cubic-bezier(.34,1.25,.64,1),visibility 0s .6s}
 .tra.h{transform:scaleX(0)}.tra.v{transform:scaleY(0)}
 .tra.show{visibility:visible;opacity:1;transform:none;transition:opacity .25s,transform .6s cubic-bezier(.34,1.25,.64,1),visibility 0s}
-.tra .sh{position:absolute;inset:0}
-.tra.h .sh{clip-path:polygon(0 28%,calc(100% - 30px) 28%,calc(100% - 30px) 0,100% 50%,calc(100% - 30px) 100%,calc(100% - 30px) 72%,0 72%)}
-.tra.h.rev .sh{clip-path:polygon(100% 28%,30px 28%,30px 0,0 50%,30px 100%,30px 72%,100% 72%)}
-.tra.v .sh{clip-path:polygon(28% 0,72% 0,72% calc(100% - 30px),100% calc(100% - 30px),50% 100%,0 calc(100% - 30px),28% calc(100% - 30px))}
-.tra.v.rev .sh{clip-path:polygon(28% 100%,72% 100%,72% 30px,100% 30px,50% 0,0 30px,28% 30px)}
+.tra .sh,.tra .sd{position:absolute;inset:0}.tra .sd{translate:3px 3px;background:var(--sh)}
+.tra.h .sh,.tra.h .sd{clip-path:polygon(0 28%,calc(100% - 30px) 28%,calc(100% - 30px) 0,100% 50%,calc(100% - 30px) 100%,calc(100% - 30px) 72%,0 72%)}
+.tra.h.rev .sh,.tra.h.rev .sd{clip-path:polygon(100% 28%,30px 28%,30px 0,0 50%,30px 100%,30px 72%,100% 72%)}
+.tra.v .sh,.tra.v .sd{clip-path:polygon(28% 0,72% 0,72% calc(100% - 30px),100% calc(100% - 30px),50% 100%,0 calc(100% - 30px),28% calc(100% - 30px))}
+.tra.v.rev .sh,.tra.v.rev .sd{clip-path:polygon(28% 100%,72% 100%,72% 30px,100% 30px,50% 0,0 30px,28% 30px)}
 .tra em{position:absolute;left:50%;top:50%;translate:-50% -50%;font:800 .9rem "Anuphan",sans-serif;font-style:normal;background:#141414;color:#f2b705;border:2px solid #141414;padding:2px 12px;white-space:nowrap;opacity:0;transition:opacity .25s}
 .tra.show em{opacity:1;transition:opacity .3s .45s}
 .tra.v em{writing-mode:vertical-rl;padding:12px 3px}
@@ -689,10 +686,9 @@ body.pdopen #pd{transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility
 .pdtrc .lg{display:flex;align-items:center;gap:8px;margin-top:6px;font:700 .75rem "JetBrains Mono",monospace}
 .pdtrc .lg span{flex:1;height:10px;border:2px solid var(--ink)}
 /* graph: its own full-width card under the table, drawn at real pixel size; unfolds open, the line draws itself */
-.pdgph{display:grid;grid-template-rows:0fr;opacity:0;margin-top:0;background:var(--card);border:0 solid var(--ink);padding:0 12px;box-shadow:none;
-  transition:grid-template-rows .55s cubic-bezier(.2,.8,.2,1),opacity .35s,margin-top .55s,padding .55s,border-width .2s,box-shadow .3s}
-.pdgph>div{min-height:0;overflow:hidden}
-.pdgph.show{grid-template-rows:1fr;opacity:1;margin-top:18px;padding:10px 12px 6px;border-width:3px;box-shadow:6px 6px 0 var(--sh)}
+.pdgph{display:none;margin-top:18px;background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);padding:10px 12px 6px}
+.pdgph.show{display:block;animation:gin .4s cubic-bezier(.2,.8,.2,1)}
+@keyframes gin{0%{opacity:0;translate:0 14px}}
 .pdgph h5{margin:0 0 4px;font:800 .95rem "Anuphan",sans-serif;display:flex;flex-wrap:wrap;gap:10px;align-items:baseline}
 .pdgph h5 small{font:600 .78rem "Anuphan",sans-serif;color:var(--mut)}
 .pdgph svg{display:block;overflow:visible}
@@ -706,7 +702,7 @@ body.pdopen #pd{transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility
 @keyframes gdot{0%{opacity:0}}
 .pdgph .cur{animation:gcur .3s cubic-bezier(.34,1.5,.64,1)}
 @keyframes gcur{0%{opacity:0;translate:0 4px}}
-@media (prefers-reduced-motion:reduce){.pf,.pdg .pde .pf::before,.tra,.trk,.pdgph,.pdw,#pd{transition-duration:.01ms!important}.pdg.tsw .pde s,.pdg.trend .pde.tex::after,.pdgph .draw *,.pdtrc.swap{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.pf,.pdg .pde .pf::before,.tra,.trk,#pd{transition-duration:.01ms!important}.pdg.tsw .pde s,.pdg.trend .pde.tex::after,.pdgph .draw *,.pdtrc.swap{animation:none!important}}
 .pde:focus-visible{outline:3px solid var(--ink);outline-offset:2px;z-index:3}
 .mem .pf,.mem .pb{backface-visibility:hidden;-webkit-backface-visibility:hidden;transition:transform .48s cubic-bezier(.2,.7,.2,1) var(--d,0ms)}
 /* the back recedes into the drawer: its own paper colour, a faint ink edge, Z at low contrast, so an opened tile's category colour pops */
@@ -1398,7 +1394,7 @@ body.sheetview .pspop .psgo{background:#f2b705;color:#141414;border:3px solid #1
 <aside id="pd" aria-label="ตารางธาตุ">
   <div class="pdh"><b>ตารางธาตุ</b><span class="pdq" id="pdq"></span><span class="pdhov" id="pdhov"></span><button class="pdmwt pdrst" id="pdrst" title="คว่ำทุกธาตุที่เปิดอยู่กลับทั้งหมด">↺ รีเซ็ต</button><button class="pdmwt pdmem" id="pdmem" aria-pressed="false" title="คว่ำทุกธาตุ เหลือแค่เลขอะตอม แล้วแตะเพื่อเปิดทีละตัว"><span>🃏 ท่องตารางธาตุ: ปิด</span><span>🃏 ท่องตารางธาตุ: เปิด</span></button><button class="pdmwt" id="pdmwt" title="เปิด/ปิดเครื่องคิด Mw">🧮 คิด Mw</button><button class="pdx" id="pdx" title="ปิด (Esc)">✕</button></div>
   <div class="pdtr" id="pdtr"><em>📈 เทรนด์</em><button data-t="-1">ปิด</button></div>
-  <div class="pdw"><div class="pdg" id="pdg"></div><div class="tra h" id="tra-h"><i class="sh"></i><em></em></div><div class="tra v" id="tra-v"><i class="sh"></i><em></em></div><div class="trk" id="tra-k"></div></div>
+  <div class="pdw"><div class="pdg" id="pdg"></div><div class="tra h" id="tra-h"><i class="sd"></i><i class="sh"></i><em></em></div><div class="tra v" id="tra-v"><i class="sd"></i><i class="sh"></i><em></em></div><div class="trk" id="tra-k"></div></div>
   <div class="pdgph" id="pdgph"></div>
   <div class="pdcalc"><input id="pdin" spellcheck="false" autocomplete="off" placeholder="พิมพ์สูตร เช่น Al2(SO4)3 หรือแตะธาตุ">
     <div class="pdmw"><small id="pdfd"></small><span id="pdmw">Mw = —</span></div>
@@ -2262,6 +2258,7 @@ const PD=(()=>{
     $("#pdtr").addEventListener("click",ev=>{const b=ev.target.closest("button");if(!b)return;const k=+b.dataset.t;setTrend(k===trOn?-1:k);SFX.play(trOn>=0?"on":"off");});
     $("#pdgph").addEventListener("mouseover",ev=>{const c=ev.target.closest("circle[data-z]");if(c)trHover(BY[c.dataset.z]);});
     addEventListener("resize",()=>{if(trOn>=0&&isOpen()){trArrows();trGraph(last&&last.z);}});
+    G.querySelectorAll(".pde").forEach(t=>t.style.setProperty("--td",(t.dataset.w*12)+"ms"));   // trend recolour: diagonal wave from H
     big(BY[1]);update();built=true;trPaint();}
   // electron configuration: fill subshells in Madelung order (n+l, then n), then overwrite the real NIST ground states that break it.
   // Z >= 104 are theoretical predictions (all of them match Madelung). Shells = electrons summed per n (the Thai ม.ปลาย 2, 8, 14, 2).
@@ -2355,7 +2352,7 @@ const PD=(()=>{
   // padding around the table makes room for the arrows on the sides they use; both heads aim at one corner
   const side=t=>({top:!!t.h&&!(t.v>0),bot:!!t.h&&t.v>0,right:!!t.v&&t.h>0,left:!!t.v&&!(t.h>0)});
   function trPad(){const w=$("#pd .pdw");if(trOn<0){w.style.padding="";return;}const s=side(TRS[trOn]);
-    w.style.padding=`${s.top?72:14}px ${s.right?78:14}px ${s.bot?72:14}px ${s.left?78:14}px`;}
+    w.style.padding="72px 78px";}   /* same room on every side for every trend: switching never re-lays-out the table */
   function trArrows(regrow){const H=$("#tra-h"),V=$("#tra-v"),K=$("#tra-k");clearTimeout(trArT);
     if(trOn<0||regrow){[H,V,K].forEach(x=>x.classList.remove("show"));if(trOn<0)return;}
     const go=()=>{const w=$("#pd .pdw"),t=TRS[trOn],s=side(t),wr=w.getBoundingClientRect(),gr=G.getBoundingClientRect(),
@@ -2364,13 +2361,13 @@ const PD=(()=>{
       const cx=s.right?gR+42:gl-42,cy=s.top?gT-38:gB+38,grad=dir=>`linear-gradient(${dir},${[0,.33,.66,1].map(rmp).join(",")})`;
       if(t.h){let a,b;if(t.h>0){a=gl;b=both?cx-38:gR;}else{a=both?cx+38:gl;b=gR;}
         Object.assign(H.style,{left:a+"px",width:b-a+"px",top:(both?cy:gT-38)-18+"px",height:"36px",transformOrigin:t.h>0?"0 50%":"100% 50%"});
-        H.classList.toggle("rev",t.h<0);H.firstChild.style.background=grad(t.h>0?"90deg":"270deg");H.lastChild.textContent=`${t.l} ${t.ha} ${t.h>0?"→":"←"}`;}
+        H.classList.toggle("rev",t.h<0);H.querySelector(".sh").style.background=grad(t.h>0?"90deg":"270deg");H.lastChild.textContent=`${t.l} ${t.ha} ${t.h>0?"→":"←"}`;}
       if(t.v){let a,b;if(t.v<0){a=both?cy+38:gT;b=r7;}else{a=gT;b=both?cy-38:r7;}
         Object.assign(V.style,{top:a+"px",height:b-a+"px",left:(t.h?cx:gl-42)-18+"px",width:"36px",transformOrigin:t.v>0?"50% 0":"50% 100%"});
-        V.classList.toggle("rev",t.v<0);V.firstChild.style.background=grad(t.v>0?"180deg":"0deg");V.lastChild.textContent=`${t.l} ${t.va}`;/* no arrow glyph: vertical-rl turns it sideways */}
+        V.classList.toggle("rev",t.v<0);V.querySelector(".sh").style.background=grad(t.v>0?"180deg":"0deg");V.lastChild.textContent=`${t.l} ${t.va}`;/* no arrow glyph: vertical-rl turns it sideways */}
       if(both){Object.assign(K.style,{left:cx+"px",top:cy+"px"});K.innerHTML=`${t.pk}<small>${t.pkl}</small>`;}
       H.classList.toggle("show",!!t.h);V.classList.toggle("show",!!t.v);K.classList.toggle("show",!!both);};
-    if(regrow)trArT=setTimeout(go,620);else go();}   // regrow: fold in, wait for the drawer + padding to settle, then grow from the tails
+    if(regrow)trArT=setTimeout(go,780);else go();}   // regrow: fold in, wait for the drawer + padding to settle, then grow from the tails
   function trGraph(hz,anim){const box=$("#pdgph");if(trOn<0){box.classList.remove("show");return;}box.classList.add("show");const t=TRS[trOn];
     const W=Math.max(320,($("#pd .pdw").clientWidth||900)-30),H=250,L=54,R=14,T=34,B=30,X=z=>L+(z-1)/85*(W-L-R),Y=x=>T+(1-tn(t,x))*(H-T-B);
     const span=t.hi-t.lo,st=[.1,.2,.5,1,2,5,10,20,50,100,200,500,1000].find(s=>span/s<=5)||1000,ticks=[];for(let v=Math.ceil(t.lo/st)*st;v<=t.hi+1e-9;v+=st)ticks.push(+v.toFixed(2));
@@ -2378,35 +2375,36 @@ const PD=(()=>{
     for(let p=1;p<=6;p++){const x1=X(PB[p-1]+.5),x2=X(PB[p]+.5);s+=`<rect x="${x1}" y="${T-10}" width="${Math.max(0,x2-x1)}" height="${H-T-B+10}" fill="${p%2?"rgba(var(--pbi),.05)":"none"}"/><text class="pl" x="${(x1+x2)/2}" y="${H-9}" text-anchor="middle">คาบ ${p}</text>`;}
     ticks.forEach(v=>{s+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(var(--pbi),.15)" stroke-dasharray="3 4"/><text class="ax" x="${L-7}" y="${Y(v)+4}" text-anchor="end">${t.k==2||t.k==5?v.toFixed(1):v}</text>`;});
     s+=`<text class="ax" x="${L-7}" y="${T-18}" text-anchor="end">${t.u}</text><line x1="${L}" x2="${L}" y1="${T-10}" y2="${H-B}" stroke="var(--ink)" stroke-width="2"/><line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--ink)" stroke-width="2"/>`;
-    const hv=hz?tval(t,hz):null;if(hv!=null)s+=`<line x1="${X(hz)}" x2="${X(hz)}" y1="${T-10}" y2="${H-B}" stroke="var(--blue)" stroke-width="2" stroke-dasharray="4 3"/>`;
     let d="",pv=0;for(let z=1;z<=86;z++){const x=tval(t,z);if(x==null){pv=0;continue;}d+=`${pv?"L":"M"}${X(z).toFixed(1)},${Y(x).toFixed(1)}`;pv=1;}
     s+=`<path class="ln" pathLength="1" d="${d}" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
     const LBL=new Set([1,2,10,18,36,54,86,3,11,19,37,55]);   // only the landmarks get names; the rest stay dots (no pile-ups)
     for(let z=1;z<=86;z++){const x=tval(t,z);if(x==null)continue;const e=BY[z],cur=z==hz,ex=t.ex[z];
-      const fill=cur?"var(--blue)":e.cat=="ng"?"var(--ink)":e.cat=="alk"?"var(--red)":e.cat=="hal"?"#1f3fbf":e.cat=="ae"?"#f28c28":"var(--card)";
-      s+=`<circle data-z="${z}" style="--i:${z}" cx="${X(z)}" cy="${Y(x)}" r="${cur?7:4}" fill="${fill}" stroke="${ex?"var(--red)":"var(--ink)"}" stroke-width="${ex?2.5:1.5}"/>`;
-      if(LBL.has(z)&&!cur){const up=tn(t,x)<.86;s+=`<text class="lb" style="--i:${z}" x="${X(z)}" y="${up?Y(x)-10:Y(x)+19}" text-anchor="middle">${e.s}</text>`;}}
-    if(hv!=null){const e=BY[hz],lbl=`${e.s} ${tf(t,hv)}${t.u?" "+t.u:""}`,wd=lbl.length*7.4+16,cx=Math.min(W-R-wd/2,Math.max(L+wd/2,X(hz)));   // the pointed-at element: one pill above the plot, never on top of the dots
-      s+=`<g class="cur"><rect x="${cx-wd/2}" y="${T-30}" width="${wd}" height="20" fill="var(--blue)" stroke="var(--ink)" stroke-width="2"/><text x="${cx}" y="${T-15.5}" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="800" font-size="12">${lbl}</text></g>`;}
+      const fill=e.cat=="ng"?"var(--ink)":e.cat=="alk"?"var(--red)":e.cat=="hal"?"#1f3fbf":e.cat=="ae"?"#f28c28":"var(--card)";
+      s+=`<circle data-z="${z}" style="--i:${z}" cx="${X(z)}" cy="${Y(x)}" r="4" fill="${fill}" stroke="${ex?"var(--red)":"var(--ink)"}" stroke-width="${ex?2.5:1.5}"/>`;
+      if(LBL.has(z)){const up=tn(t,x)<.86;s+=`<text class="lb" style="--i:${z}" x="${X(z)}" y="${up?Y(x)-10:Y(x)+19}" text-anchor="middle">${e.s}</text>`;}}
+    s+=`<g id="ghl"></g>`;GG={t,X,Y,T,H,B,L,R,W};
     const cs=getComputedStyle(G);s=s.replace(/var\((--[a-z]+)\)/g,(m,v)=>cs.getPropertyValue(v).trim()||m);   // SVG presentation attributes can't read CSS variables
-    box.innerHTML=`<div><h5>${t.ic} ${t.full} เทียบเลขอะตอม <small>Z 1–86 · ชี้จุดหรือธาตุเพื่อดูค่า · ขอบแดง = ข้อยกเว้น</small></h5>${s}</svg></div>`;}
+    box.innerHTML=`<div><h5>${t.ic} ${t.full} เทียบเลขอะตอม <small>Z 1–86 · ชี้จุดหรือธาตุเพื่อดูค่า · ขอบแดง = ข้อยกเว้น</small></h5>${s}</svg></div>`;trGraphHL(hz);}
+  let GG=null;
+  function trGraphHL(hz){const g=$("#ghl");if(!g||!GG)return;const{t,X,Y,T,H,B,L,R,W}=GG,hv=hz?tval(t,hz):null;if(hv==null){g.innerHTML="";return;}
+    const e=BY[hz],lbl=`${e.s} ${tf(t,hv)}${t.u?" "+t.u:""}`,wd=lbl.length*7.4+16,cx=Math.min(W-R-wd/2,Math.max(L+wd/2,X(hz))),cs=getComputedStyle(G),bl=cs.getPropertyValue("--blue").trim(),ik=cs.getPropertyValue("--ink").trim();
+    g.innerHTML=`<line x1="${X(hz)}" x2="${X(hz)}" y1="${T-10}" y2="${H-B}" stroke="${bl}" stroke-width="2" stroke-dasharray="4 3"/><circle cx="${X(hz)}" cy="${Y(hv)}" r="7" fill="${bl}" stroke="${ik}" stroke-width="2" pointer-events="none"/>`
+      +`<rect x="${cx-wd/2}" y="${T-30}" width="${wd}" height="20" fill="${bl}" stroke="${ik}" stroke-width="2"/><text x="${cx}" y="${T-15.5}" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="800" font-size="12">${lbl}</text>`;}
   function trPaint(){const was=G.classList.contains("trend");
-    G.classList.toggle("trend",trOn>=0);G.classList.toggle("tsize",trOn===0);$("#pd").classList.toggle("trw",trOn>=0);
+    G.classList.toggle("trend",trOn>=0);G.classList.toggle("tsize",trOn===0);
     $("#pdtr").querySelectorAll("button").forEach(b=>b.classList.toggle("on",+b.dataset.t===trOn));
-    G.querySelectorAll(".pde").forEach(tile=>{const e=BY[tile.dataset.z],s=tile.querySelector(".pf s");tile.style.setProperty("--td",(tile.dataset.w*16)+"ms");   // diagonal wave from H
-      tile.classList.remove("tex","tnil","thl");tile.removeAttribute("data-x");
-      if(trOn<0){tile.style.removeProperty("--tc");tile.style.removeProperty("--sz");s.textContent=fm(e);return;}
+    G.querySelectorAll(".pde").forEach(tile=>{const e=BY[tile.dataset.z],s=tile.querySelector(".pf s");      tile.classList.remove("tex","tnil","thl");tile.removeAttribute("data-x");
+      if(trOn<0){tile.style.removeProperty("--tc");tile.style.removeProperty("--ss");s.textContent=fm(e);return;}
       const t=TRS[trOn],x=tval(t,e.z);s.textContent=tf(t,x);if(x==null)tile.classList.add("tnil");
-      if(trOn===0){tile.style.setProperty("--sz",x==null?0:(.94*x/t.hi).toFixed(3));tile.style.removeProperty("--tc");}
-      else{tile.style.removeProperty("--sz");if(x==null)tile.style.removeProperty("--tc");else tile.style.setProperty("--tc",soft(tn(t,x)));}
+      if(trOn===0){tile.style.setProperty("--ss",x==null?0:(x/t.hi).toFixed(3));tile.style.removeProperty("--tc");}
+      else{tile.style.removeProperty("--ss");if(x==null)tile.style.removeProperty("--tc");else tile.style.setProperty("--tc",soft(tn(t,x)));}
       if(t.ex[e.z]){tile.classList.add("tex");tile.dataset.x=t.ex[e.z];}});
-    if(was||trOn>=0)restart(G,"tsw");
     if(last){big(last);if(trOn>=0){trBig(last);G.querySelector(`.pde[data-z="${last.z}"]`).classList.add("thl");}}
     trCard(last,true);trPad();trArrows(true);
-    if(trOn>=0)setTimeout(()=>trGraph(last&&last.z,true),was?0:450);else trGraph();}
+    if(trOn>=0)setTimeout(()=>trGraph(last&&last.z,true),900);else trGraph();   /* after the tile wave (~750ms): never two heavy jobs in one frame */}
   function setTrend(k){if(k>=0&&memOn)setMem(false,1);trOn=k;trPaint();}
   function trHover(e){if(trOn<0||!e)return;G.querySelectorAll(".pde.thl").forEach(x=>x.classList.remove("thl"));G.querySelector(`.pde[data-z="${e.z}"]`)?.classList.add("thl");
-    big(e);trBig(e);trCard(e);trGraph(e.z);}
+    big(e);trBig(e);trCard(e);trGraphHL(e.z);}
   const isOpen=()=>document.body.classList.contains("pdopen");
   function open(){SL.lock("pd");if(TD.isOpen())TD.close();if(!built)build();else if(memOn)setMem(false,1);refreshQ();document.body.classList.add("pdopen");SFX.play("drawer","pd");if(trOn>=0)setTimeout(()=>{trArrows();trGraph(last&&last.z);},650);}
   function close(){if(!isOpen())return;document.body.classList.remove("pdopen");SL.unlock("pd");SFX.play("undrawer");}

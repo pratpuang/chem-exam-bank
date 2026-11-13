@@ -33,8 +33,8 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
   check("IE: F tile shows 1681", await ev(`document.querySelector('.pde[data-z="9"] .pf s').textContent`) === "1681");
   check("IE: exception tags on B,O,Al,S", await ev(`[...document.querySelectorAll(".pde.tex")].map(t=>t.dataset.z).join()`) === "5,8,13,16");
   check("IE: both arrows shown", await ev(`document.querySelectorAll(".tra.show").length`) === 2);
-  check("IE: graph drawn with 86 points", await ev(`document.querySelectorAll("#pdgph circle").length`) === 86);
-  check("IE: drawer widened", await ev(`document.querySelector("#pd").classList.contains("trw")`));
+  check("IE: graph drawn with 86 points", await ev(`document.querySelectorAll("#pdgph circle[data-z]").length`) === 86);
+  check("IE: table padded for arrows", await ev(`document.querySelector("#pd .pdw").style.padding==="72px 78px"`));
   // hover a tile -> big tile shows value
   const c = await ev(`(()=>{const r=document.querySelector('.pde[data-z="11"]').getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2}})()`);
   await cdp("Input.dispatchMouseEvent", { type: "mouseMoved", x: c.x, y: c.y }); await sleep(300);
@@ -42,16 +42,23 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
   await shot("trend-ie.png");
   await ev(`document.querySelector("#pdgph").scrollIntoView({block:"center"})`); await sleep(300); await shot("trend-graph.png"); await ev(`document.querySelector("#pd").scrollTop=0`);
   await btn(0);
-  check("size: spheres sized (Cs > H)", await ev(`parseFloat(document.querySelector('.pde[data-z="55"]').style.getPropertyValue("--sz"))>parseFloat(document.querySelector('.pde[data-z="1"]').style.getPropertyValue("--sz"))`));
+  check("size: spheres sized (Cs > H)", await ev(`parseFloat(document.querySelector('.pde[data-z="55"]').style.getPropertyValue("--ss"))>parseFloat(document.querySelector('.pde[data-z="1"]').style.getPropertyValue("--ss"))`));
   await shot("trend-size.png");
   await btn(3); await shot("trend-ea.png");
   // memorize mode turns trend off; mass labels come back
   await ev(`document.querySelector("#pdmem").click()`); await sleep(1500);
-  check("ท่อง on -> trend off", await ev(`!document.querySelector("#pdg").classList.contains("trend")&&!document.querySelector("#pd").classList.contains("trw")`));
+  check("ท่อง on -> trend off", await ev(`!document.querySelector("#pdg").classList.contains("trend")`));
   await ev(`document.querySelector("#pdmem").click()`); await sleep(1500);
   check("trend off: Na shows mass again", await ev(`document.querySelector('.pde[data-z="11"] .pf s').textContent`) === "22.99");
   await btn(2); await btn(-1);
   check("off button clears", await ev(`!document.querySelector("#pdgph").classList.contains("show")&&!document.querySelector(".tra.show")`));
+  // smoothness: frame gaps while switching trends, CPU throttled 4x (roughly an iPad)
+  // smoothness (warm, 1x CPU, headless software rendering = pessimistic): switching trends must keep frames flowing
+  const fr = await ev(`(async()=>{const gaps=[];let t0=performance.now(),run=true;const loop=t=>{gaps.push(t-t0);t0=t;if(run)requestAnimationFrame(loop)};requestAnimationFrame(loop);
+    for(const k of [1,0,2,3,1]){document.querySelector('#pdtr button[data-t="'+k+'"]').click();await new Promise(r=>setTimeout(r,1300));}
+    run=false;gaps.sort((a,b)=>b-a);return {fps:Math.round(gaps.length/6.5),worst:gaps.slice(0,4).map(Math.round)}})()`);
+  console.log("  frames while switching:", JSON.stringify(fr));
+  check("switching trends stays smooth (headless software render: >=30 fps avg, no frame > 300ms)", fr.fps >= 30 && fr.worst[0] < 300, fr);
   check("no JS errors", errs.length === 0, errs);
   console.log(ok + " ok, " + bad + " bad"); ws.close(); ch.kill(); process.exit(bad ? 1 : 0);
 })();
