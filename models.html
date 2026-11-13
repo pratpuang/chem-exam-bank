@@ -162,7 +162,7 @@ function gasModel(root){
     c.lineWidth=3;c.beginPath();c.moveTo(CX0-22,yOf(0));c.lineTo(CX0-22,yOf(VMAX));c.stroke();
     // chamber walls (open at the top: the piston is the lid) + inlet + valve
     c.lineWidth=6;c.beginPath();c.moveTo(CX0-3,CT);c.lineTo(CX0-3,CB+3);c.lineTo(CX1+3,CB+3);c.lineTo(CX1+3,CT);c.stroke();
-    c.fillStyle="#fffdf7";c.lineWidth=3;rr(CX1+3,CB-36,34,16);c.fillStyle=ink;c.font="700 11px Anuphan";c.textAlign="left";c.fillText("ทางเติมแก๊ส",CX1+42,CB-24);
+    c.fillStyle="#fffdf7";c.lineWidth=3;rr(CX1+3,CB-36,34,16);c.fillStyle=ink;c.font="700 11px Anuphan";c.textAlign="center";c.fillText("↑ เติมแก๊ส",CX1+24,CB-4);
     // dots
     for(const p of ps){const s=Math.hypot(p.vx,p.vy);c.globalAlpha=.35+.65*p.born;c.fillStyle=col(s);c.beginPath();c.arc(p.x,p.y,RAD,0,7);c.fill();c.lineWidth=1.3;c.strokeStyle=ink;c.stroke();}c.globalAlpha=1;
     for(const f of puffs){c.strokeStyle=`rgba(20,20,20,${1-f.t/.6})`;c.lineWidth=2;c.beginPath();c.arc(f.x,f.y-f.t*60,RAD+f.t*14,0,7);c.stroke();}
@@ -180,11 +180,25 @@ function gasModel(root){
     const a=Math.PI*.75+Math.min(1,S.P/pmax)*Math.PI*1.5;c.strokeStyle="#e4412b";c.lineWidth=4;c.beginPath();c.moveTo(gx,gy);c.lineTo(gx+Math.cos(a)*(gr-14),gy+Math.sin(a)*(gr-14));c.stroke();
     c.fillStyle=ink;c.beginPath();c.arc(gx,gy,6,0,7);c.fill();c.fillStyle="#141414";c.fillRect(gx-52,gy+gr+8,104,26);c.fillStyle="#f2b705";c.font="800 15px JetBrains Mono";c.fillText(S.P.toFixed(2)+" atm",gx,gy+gr+26);c.fillStyle=ink;
     const hps=hitsLog.reduce((s,h)=>s+h[1],0);c.font="700 12px Anuphan";c.fillText("ชนผนัง "+hps+" ครั้ง/วินาที",gx,gy+gr+52);
-    // speed histogram
-    const bx=555,by=340,bw=170,bh=110,NB=12,vmax=vrms(S.T)*2.6,bins=Array(NB).fill(0);for(const p of ps){const k=Math.min(NB-1,Math.floor(Math.hypot(p.vx,p.vy)/vmax*NB));bins[k]++;}
-    const mx=Math.max(4,...bins);c.lineWidth=2.5;c.strokeStyle=ink;c.fillStyle="#fffdf7";rr(bx,by,bw,bh);
-    bins.forEach((n,k)=>{const h=n/mx*(bh-16);c.fillStyle=col((k+.5)/NB*vmax);c.fillRect(bx+4+k*(bw-8)/NB,by+bh-4-h,(bw-8)/NB-2,h);});
-    c.fillStyle=ink;c.font="700 11px Anuphan";c.textAlign="center";c.fillText("การกระจายความเร็วอนุภาค",bx+bw/2,by+bh+16);c.fillText("ช้า ← → เร็ว",bx+bw/2,by+bh+30);}
+    // speed distribution: FIXED speed axis (heat it and the hump visibly slides right and flattens), bars averaged over time
+    // so 40 dots don't flicker, a fixed-feeling y scale that eases instead of jumping, and the theory curve on top
+    // (2D Maxwell-Boltzmann / Rayleigh: f(v) = v/s^2 * exp(-v^2/2s^2), s = vrms/sqrt2) that the bars settle onto.
+    const bx=556,by=318,bw=194,bh=132,NB=14,VX=vrms(500)*2.4,dv=VX/NB,N=Math.max(1,ps.length),sg=vrms(S.T)/Math.SQRT2;
+    const raw=Array(NB).fill(0);for(const p of ps){const k=Math.min(NB-1,Math.floor(Math.hypot(p.vx,p.vy)/dv));raw[k]++;}
+    if(!HS||HS.length!==NB)HS=raw.slice();else for(let k=0;k<NB;k++)HS[k]+=(raw[k]-HS[k])*.04;
+    const fr=v=>v/(sg*sg)*Math.exp(-v*v/(2*sg*sg)),peak=N*dv*fr(sg);YS+=(peak*1.35-YS)*.05;if(!(YS>0))YS=peak*1.35;
+    const px0=bx+12,px1=bx+bw-8,py0=by+10,py1=by+bh-22,X=v=>px0+v/VX*(px1-px0),Yv=n=>py1-Math.min(1.05,n/YS)*(py1-py0);
+    c.lineWidth=3;c.strokeStyle=ink;c.fillStyle="#fffdf7";rr(bx,by,bw,bh);
+    for(let k=0;k<NB;k++){const x=X(k*dv)+1,w=X(dv)-px0-2,y=Yv(HS[k]);if(py1-y<.5)continue;c.fillStyle=col((k+.5)*dv);c.fillRect(x,y,w,py1-y);c.lineWidth=1;c.strokeStyle="rgba(20,20,20,.55)";c.strokeRect(x,y,w,py1-y);}
+    c.beginPath();for(let i=0;i<=60;i++){const v=VX*i/60,y=Yv(N*dv*fr(v));i?c.lineTo(X(v),y):c.moveTo(X(v),y);}c.lineWidth=2.5;c.strokeStyle=ink;c.setLineDash([5,4]);c.stroke();c.setLineDash([]);
+    const vm=sg*Math.sqrt(Math.PI/2);c.strokeStyle="#e4412b";c.lineWidth=2;c.beginPath();c.moveTo(X(vm),py0);c.lineTo(X(vm),py1);c.stroke();
+    {const lx=Math.min(px1-16,X(vm));c.fillStyle="#e4412b";c.fillRect(lx-17,by-13,34,15);c.fillStyle="#fff";c.font="800 10px Anuphan";c.textAlign="center";c.fillText("เฉลี่ย",lx,by-2);}   /* label above the box, never on the bars */
+    c.lineWidth=2.5;c.strokeStyle=ink;c.beginPath();c.moveTo(px0,py0-4);c.lineTo(px0,py1);c.lineTo(px1,py1);c.stroke();
+    c.fillStyle=ink;c.font="700 10px Anuphan";c.textAlign="center";c.fillText("ช้า",px0+10,py1+13);c.fillText("เร็ว",px1-10,py1+13);c.fillText("ความเร็ว →",(px0+px1)/2,py1+13);
+    c.textAlign="left";c.fillText("จำนวน ↑",bx,by-6);c.textAlign="center";
+    c.font="800 12px Anuphan";c.fillText("การกระจายความเร็ว (T = "+Math.round(S.T)+" K)",bx+bw/2,by+bh+18);
+    c.font="600 10px Anuphan";c.fillStyle="#6b6457";c.fillText("แท่ง = จุดในกล่อง · เส้นประ = ทฤษฎี",bx+bw/2,by+bh+32);}
+  let HS=null,YS=0;
   let last=performance.now();
   function frame(t){if(!root.isConnected)return;const dt=Math.min(.033,(t-last)/1000);last=t;if(!S.paused){const n=2;for(let i=0;i<n;i++)physics(dt/n);}draw();requestAnimationFrame(frame);}
   setDots();ps.forEach(p=>Object.assign(p,spawn(false)));ui();requestAnimationFrame(frame);
