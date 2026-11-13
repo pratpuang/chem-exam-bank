@@ -869,6 +869,13 @@ body.tdopen #pdscrim,body.tmopen #pdscrim{opacity:1;pointer-events:auto}
 body.vsopen #vs{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
 body.vsopen #pdscrim{opacity:1;pointer-events:auto}
 #vsf{flex:1;width:100%;border:0;background:var(--paper);min-height:0}
+/* โมเดล drawer (2026-11-13): teaching models, models.html in an iframe, opened at the chapter of the question on screen */
+#motab{background:var(--yel);color:#141414;border:3px solid var(--ink);border-left:0;writing-mode:vertical-rl;padding:14px 8px;font:800 .9rem "Anuphan",sans-serif;box-shadow:4px 4px 0 var(--sh);cursor:pointer;transition:transform .2s}
+#motab:hover{transform:translateX(4px)}
+#mo{position:fixed;left:0;top:0;bottom:0;z-index:73;width:min(1500px,97vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--yel);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s;padding:14px 18px 18px;display:flex;flex-direction:column}
+body.moopen #mo{transform:none;visibility:visible;transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s}
+body.moopen #pdscrim{opacity:1;pointer-events:auto}
+#mof{flex:1;width:100%;border:0;background:var(--paper);min-height:0}
 #tmtab.run{background:var(--red);font-family:"JetBrains Mono",monospace}
 #tm{position:fixed;left:0;top:0;bottom:0;z-index:72;width:min(560px,94vw);background:var(--paper);border-right:4px solid var(--ink);box-shadow:10px 0 0 var(--blue);transform:translateX(calc(-100% - 20px));visibility:hidden;transition:transform .55s cubic-bezier(.34,1.35,.64,1),visibility 0s .55s;padding:14px 18px 24px;overflow:auto}
 body.tmopen #tm{transform:none;visibility:visible;transition:transform .55s cubic-bezier(.34,1.35,.64,1),visibility 0s}
@@ -1369,11 +1376,15 @@ body.sheetview .pspop .psgo{background:#f2b705;color:#141414;border:3px solid #1
 <nav id="stabs"><button id="pdtab" title="ตารางธาตุ + คำนวณ Mw">ตารางธาตุ</button>
 <button id="tdtab" title="ค่าคงที่ · แปลงหน่วย · ไอออน · สูตร">เครื่องมือ</button>
 <button id="tmtab" title="จับเวลา">จับเวลา</button>
-<button id="vstab" title="รูปร่างโมเลกุล 3 มิติ (VSEPR)">โมเลกุล 3D</button></nav>
+<button id="vstab" title="รูปร่างโมเลกุล 3 มิติ (VSEPR)">โมเลกุล 3D</button><button id="motab" title="โมเดลสอน: ลาก กด ดูของจริงขยับ">โมเดล</button></nav>
 <aside id="td" aria-label="เครื่องมือ">
   <div class="pdh"><b>🧰 เครื่องมือ</b><span class="pdhov">ค่าคงที่ · แปลงหน่วย · ไอออน · สูตร</span><button class="pdx" id="tdx" title="ปิด (Esc)">✕</button></div>
   <div class="tdtabs" id="tdtabs"><button data-t="fx" id="fxtabb" class="on">สูตร</button><button data-t="k">ค่าคงที่</button><button data-t="cv">แปลงหน่วย</button><button data-t="io">ไอออน</button></div>
   <div class="tdpane on" id="td-fx"></div><div class="tdpane" id="td-k"></div><div class="tdpane" id="td-cv"></div><div class="tdpane" id="td-io"></div>
+</aside>
+<aside id="mo" aria-label="โมเดลสอน">
+  <div class="pdh"><b>🧪 โมเดลสอน</b><span class="pdhov">ลาก กด ดูของจริงขยับ · เปิดที่บทของข้อที่อยู่บนจอ</span><button class="pdx" id="mox" title="ปิด (Esc)">✕</button></div>
+  <iframe id="mof" title="โมเดลสอน"></iframe>
 </aside>
 <aside id="vs" aria-label="รูปร่างโมเลกุล">
   <div class="pdh"><b>รูปร่างโมเลกุล 3D</b><span class="pdhov">VSEPR · เพิ่ม/ลดพันธะและอิเล็กตรอนคู่โดดเดี่ยว · ลากหมุนได้</span><button class="pdx" id="vsx" title="ปิด (Esc)">✕</button></div>
@@ -2245,6 +2256,7 @@ document.addEventListener("keydown",e=>{
   if(PD.isOpen()){if(e.key==="Escape")PD.close();return;}   // drawer open: keys stay inside it
   if(TD.isOpen()){if(e.key==="Escape")TD.close();return;}
   if(VS.isOpen()){if(e.key==="Escape")VS.close();return;}
+  if(MO.isOpen()){if(e.key==="Escape")MO.close();return;}
   if(TM.isOpen()&&!typing){if(e.key==="Escape"){TM.close();return;}if(e.key===" "){e.preventDefault();TM.toggle();return;}}
   if($("#modal").classList.contains("show")){
     if(e.key==="Escape"){if(STRIP.isOpen())STRIP.close();else closeModal();}
@@ -2791,6 +2803,18 @@ const TD=(()=>{
   return{open,close,isOpen};
 })();
 
+/* ================= โมเดล (teaching models drawer): models.html?embed=1&ch=NN in an iframe ================= */
+const MO=(()=>{
+  const isOpen=()=>document.body.classList.contains("moopen");let ch=null;
+  function open(){SL.lock("mo");if(PD.isOpen())PD.close();if(TD.isOpen())TD.close();if(VS.isOpen())VS.close();
+    const q=PD.curQ(),want=q&&q.ch?q.ch:"08";   // the chapter on screen; the page falls back to its first model if that chapter has none yet
+    if(want!==ch){ch=want;$("#mof").src="models.html?embed=1&ch="+ch;}
+    document.body.classList.add("moopen");SFX.play("drawer","mo");}
+  function close(){if(!isOpen())return;document.body.classList.remove("moopen");SL.unlock("mo");SFX.play("undrawer");}
+  $("#motab").onclick=()=>isOpen()?close():open();$("#mox").onclick=close;$("#pdscrim").addEventListener("click",close);
+  $("#mof").addEventListener("load",()=>{try{$("#mof").contentWindow.addEventListener("keydown",e=>{if(e.key==="Escape")close();});}catch(_){}});
+  return{open,close,isOpen};
+})();
 /* ================= VSEPR 3D (left drawer, vsepr.html in an iframe, loaded on first open) ================= */
 const VS=(()=>{
   const isOpen=()=>document.body.classList.contains("vsopen");

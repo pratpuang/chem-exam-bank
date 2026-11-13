@@ -8,8 +8,10 @@ const OUT = process.argv[2] || os.tmpdir();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  ✓", n); } else { bad++; console.log("  ✗", n, x === undefined ? "" : JSON.stringify(x)); } };
 (async () => {
+  for (const d of fs.readdirSync(os.tmpdir())) if (d.startsWith("cart-")) try { fs.rmSync(path.join(os.tmpdir(), d), { recursive: true, force: true }); } catch (_) {}   // sweep leftovers from earlier runs
   const prof = fs.mkdtempSync(path.join(os.tmpdir(), "cart-"));
   const ch = spawn(CH, ["--headless=new", "--mute-audio", "--remote-debugging-port=9333", "--user-data-dir=" + prof, "--window-size=1200,900", "about:blank"]);
+  process.on("exit",()=>{try{ch.kill();fs.rmSync(prof,{recursive:true,force:true,maxRetries:8,retryDelay:150});}catch(_){}});   // never leave Chrome profiles in Temp (they filled C: once)
   let ws; for (let i = 0; i < 40; i++) { try { const l = await (await fetch("http://127.0.0.1:9333/json")).json(); const p = l.find(x => x.type === "page"); if (p) { ws = new WebSocket(p.webSocketDebuggerUrl); break; } } catch (_) {} await sleep(250); }
   await new Promise(r => ws.onopen = r); let id = 0; const pend = {};
   ws.onmessage = m => { const d = JSON.parse(m.data); if (d.id && pend[d.id]) { pend[d.id](d); delete pend[d.id]; } };

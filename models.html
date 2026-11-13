@@ -1,0 +1,193 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>โมเดลสอนเคมี</title>
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;600;700;800&family=JetBrains+Mono:wght@600;800&display=swap" rel="stylesheet">
+<style>
+/* Teaching models (2026-11-13). First model: ch08 gas laws, a PhET-style piston chamber picked by Prat from 5 samples.
+   One self-contained page, embedded by index.html's "โมเดล" drawer as models.html?embed=1&ch=NN. */
+:root{--sh:#141414;--paper:#efe9dc;--card:#fffdf7;--ink:#141414;--red:#e4412b;--blue:#1f3fbf;--yel:#f2b705;--mut:#6b6457;--ok:#2f8f4e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Anuphan,sans-serif}
+.page{max-width:1320px;margin:auto;padding:24px 20px 40px}
+h1{margin:0 0 4px;font-size:1.7rem}.sub{margin:0 0 16px;color:var(--mut);font-weight:600}
+body.embed .page{padding:4px 2px 20px}body.embed h1,body.embed .sub{display:none}
+.mtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.mtabs button{border:3px solid var(--ink);background:var(--card);font:800 .9rem Anuphan;padding:6px 14px;box-shadow:3px 3px 0 var(--sh);cursor:pointer}
+.mtabs button.on{background:var(--ink);color:var(--yel)}.mtabs button:disabled{opacity:.4;cursor:default;box-shadow:none}
+.gas{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:18px;align-items:start}
+@media (max-width:980px){.gas{grid-template-columns:1fr}}
+.stage{background:var(--card);border:4px solid var(--ink);box-shadow:8px 8px 0 var(--sh);position:relative}
+.stage canvas{display:block;width:100%;height:auto;touch-action:none;cursor:default}
+.stage .law{position:absolute;left:12px;top:10px;background:var(--ink);color:var(--yel);font:800 .9rem Anuphan;padding:4px 10px;pointer-events:none;transition:opacity .25s}
+.side{display:flex;flex-direction:column;gap:12px}
+.box{background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:10px 12px}
+.box h3{margin:0 0 8px;font-size:.95rem;display:flex;justify-content:space-between;align-items:baseline}
+.box h3 small{font-weight:600;color:var(--mut);font-size:.75rem}
+.locks{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.locks button{border:3px solid var(--ink);background:var(--card);font:800 .82rem Anuphan;padding:8px 4px;cursor:pointer;box-shadow:3px 3px 0 var(--sh);line-height:1.25}
+.locks button span{display:block;font-size:1.25rem}
+.locks button.on{background:var(--blue);color:#fff}
+.locks button:active{transform:translate(3px,3px);box-shadow:none}
+.sl{display:grid;grid-template-columns:28px 1fr 92px;align-items:center;gap:8px;padding:6px 0;border-top:2px dashed #d9d2c1}
+.sl:first-of-type{border-top:0}
+.sl b{font:800 1.15rem "JetBrains Mono";text-align:center}
+.sl input{width:100%;accent-color:var(--red)}
+.sl output{font:800 .95rem "JetBrains Mono";text-align:right}
+.sl .st{grid-column:2/4;font:700 .74rem Anuphan;margin-top:-4px}
+.sl.lock{opacity:.55}.sl.lock .st{color:var(--blue)}
+.sl.resp input{accent-color:var(--mut)}.sl.resp .st{color:var(--red)}
+.sl.free .st{color:var(--ok)}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tiles div{background:var(--ink);color:var(--yel);padding:7px 4px 5px;text-align:center;font:800 1.08rem "JetBrains Mono";position:relative;transition:background-color .3s}
+.tiles div small{display:block;color:#ccc;font:600 .68rem Anuphan}
+.tiles div.lock{background:var(--blue);color:#fff}.tiles div.resp{background:var(--red);color:#fff}
+.tiles div i{position:absolute;right:4px;top:2px;font-style:normal;font-size:.7rem}
+.eq{font:700 .98rem "JetBrains Mono";line-height:1.9;text-align:center}
+.eq .l{color:var(--blue)}.eq .r{color:var(--red)}
+.eq small{display:block;font:600 .74rem Anuphan;color:var(--mut);line-height:1.3}
+.row2{display:flex;gap:8px}
+.btn{border:3px solid var(--ink);background:var(--card);font:800 .85rem Anuphan;padding:6px 12px;cursor:pointer;box-shadow:3px 3px 0 var(--sh);flex:1}
+.btn:active{transform:translate(3px,3px);box-shadow:none}
+.leg{display:flex;gap:10px;font:600 .74rem Anuphan;color:var(--mut);align-items:center;flex-wrap:wrap}
+.leg i{display:inline-block;width:11px;height:11px;border-radius:50%;border:1.5px solid var(--ink);vertical-align:-1px;margin-right:3px}
+.soon{padding:30px;text-align:center;font-weight:700;color:var(--mut)}
+</style></head><body>
+<div class="page">
+<h1>โมเดลสอนเคมี</h1><p class="sub">ลาก กด ดูของจริงขยับ · เลือกบทด้านล่าง</p>
+<div class="mtabs" id="mtabs"></div>
+<div id="mroot"></div>
+</div>
+<script>
+const QS=new URLSearchParams(location.search);if(QS.get("embed"))document.body.classList.add("embed");
+const MODELS=[{ch:"08",t:"บท 8 · กฎของแก๊ส",build:gasModel}];   // more chapters plug in here
+const ROOTEL=document.getElementById("mroot");
+function show(i){document.querySelectorAll("#mtabs button").forEach((b,j)=>b.classList.toggle("on",j===i));ROOTEL.innerHTML="";MODELS[i].build(ROOTEL);}
+document.getElementById("mtabs").innerHTML=MODELS.map((m,i)=>`<button data-i="${i}">${m.t}</button>`).join("")+`<button disabled>บทอื่น · กำลังสร้าง</button>`;
+document.getElementById("mtabs").onclick=e=>{const b=e.target.closest("button[data-i]");if(b)show(+b.dataset.i);};
+const want=MODELS.findIndex(m=>m.ch===QS.get("ch"));show(want<0?0:want);
+
+/* ================= ch08 · gas laws: piston chamber =================
+   Model: ideal gas, PV = nRT with R = 0.0821 L·atm/(mol·K). The dots are hard spheres that bounce off each other and the walls
+   (equal masses, elastic), so their speeds spread into a real distribution. A gentle thermostat keeps their mean kinetic energy
+   matched to T, so a fast piston push can't pump energy in forever (the old sample's bug: dots kept speeding up and turning red).
+   One quantity is held (V, T or P). You change the free ones; the dependent one moves by itself:
+     hold V -> change T, n  -> P responds      hold T -> change V, n -> P responds      hold P -> change T, n -> V responds */
+function gasModel(root){
+  const R=0.0821,DPM=200,VMAX=10,VMIN=1;   // 200 dots per mol: 0.20 mol = 40 dots
+  root.innerHTML=`<div class="gas">
+   <div class="stage"><canvas id="gc" width="760" height="560"></canvas><div class="law" id="glaw"></div></div>
+   <div class="side">
+    <div class="box"><h3>1 · ล็อกค่าไหนไว้ <small>ค่าที่ล็อก = สีน้ำเงิน</small></h3>
+     <div class="locks" id="glocks"><button data-v="V"><span>📌</span>ปริมาตรคงที่</button><button data-v="T"><span>🛁</span>อุณหภูมิคงที่</button><button data-v="P"><span>⚖️</span>ความดันคงที่</button></div></div>
+    <div class="box"><h3>2 · ปรับสิ่งที่ปรับได้ <small>สีแดง = เปลี่ยนตามเอง</small></h3>
+     <div class="sl" data-k="V"><b>V</b><input type="range" min="${VMIN}" max="${VMAX}" step="0.05"><output></output><div class="st"></div></div>
+     <div class="sl" data-k="T"><b>T</b><input type="range" min="100" max="700" step="1"><output></output><div class="st"></div></div>
+     <div class="sl" data-k="n"><b>n</b><input type="range" min="0.05" max="0.5" step="0.01"><output></output><div class="st"></div></div></div>
+    <div class="box"><div class="tiles" id="gtiles"></div></div>
+    <div class="box eq" id="geq"></div>
+    <div class="row2"><button class="btn" id="greset">↺ เริ่มใหม่</button><button class="btn" id="gpause">⏸ หยุด</button></div>
+    <div class="leg"><span><i style="background:#1f3fbf"></i>ช้า</span><span><i style="background:#9a5a8a"></i>กลาง</span><span><i style="background:#e4412b"></i>เร็ว</span><span>· ลากลูกสูบได้ตอนล็อกอุณหภูมิ</span></div>
+   </div></div>`;
+  const cv=root.querySelector("#gc"),c=cv.getContext("2d"),W=760,H=560,DPR=Math.min(2,devicePixelRatio||1);cv.width=W*DPR;cv.height=H*DPR;c.scale(DPR,DPR);
+  // chamber geometry (canvas px)
+  const CX0=150,CX1=470,CB=470,CT=70,HMAX=CB-CT-20,yOf=v=>CB-v/VMAX*HMAX,RAD=5.5;
+  const S={hold:"T",V:5,T:300,n:.2,P:0,Pheld:0,last:"V",vDisp:5,vVel:0,paused:false,stop:false};
+  S.P=S.n*R*S.T/S.V;S.Pheld=S.P;
+  let ps=[];const vrms=T=>95*Math.sqrt(T/300);
+  const gauss=()=>{let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);};
+  function spawn(fromInlet){const yp=yOf(S.vDisp),s=vrms(S.T)/Math.SQRT2;
+    if(fromInlet)return{x:CX1-RAD-2,y:CB-28,vx:-(vrms(S.T)*(1+Math.random()*.4)),vy:(Math.random()-.5)*40,born:0};
+    return{x:CX0+RAD+Math.random()*(CX1-CX0-2*RAD),y:yp+RAD+Math.random()*(CB-yp-2*RAD),vx:gauss()*s,vy:gauss()*s,born:1};}
+  function setDots(){const want=Math.round(S.n*DPM);
+    while(ps.length<want)ps.push(spawn(ps.length>0));   // new gas comes in through the inlet on the right wall
+    if(ps.length>want){/* gas leaves through the valve at the top right: drop the dots nearest it */ps.sort((a,b)=>Math.hypot(a.x-CX1,a.y-yOf(S.vDisp))-Math.hypot(b.x-CX1,b.y-yOf(S.vDisp)));const gone=ps.splice(0,ps.length-want);puffs.push(...gone.map(p=>({x:p.x,y:p.y,t:0})));}}
+  let puffs=[],hitsLog=[],flash={V:0,T:0,n:0};
+  // ---- state logic ----
+  const role=k=>k===S.hold?"lock":(S.hold==="T"&&k==="P")||(S.hold==="V"&&k==="P")||(S.hold==="P"&&k==="V")?"resp":"free";
+  function solve(){const{hold}=S;
+    if(hold==="V"||hold==="T"){S.P=S.n*R*S.T/S.V;}
+    else{let v=S.n*R*S.T/S.Pheld;S.stop=v>VMAX||v<VMIN;S.V=Math.max(VMIN,Math.min(VMAX,v));S.P=S.n*R*S.T/S.V;}}   // piston hits a stop: P has to change after all
+  const LAW={V:{T:"กฎของเกย์-ลูสแซก · V คงที่: P ∝ T",n:"V, T คงที่: P ∝ n"},T:{V:"กฎของบอยล์ · T คงที่: P ∝ 1/V",n:"V, T คงที่: P ∝ n"},P:{T:"กฎของชาร์ลส์ · P คงที่: V ∝ T",n:"กฎของอาโวกาโดร · P, T คงที่: V ∝ n"}};
+  function ui(){root.querySelectorAll("#glocks button").forEach(b=>b.classList.toggle("on",b.dataset.v===S.hold));
+    root.querySelectorAll(".sl").forEach(d=>{const k=d.dataset.k,r=role(k),inp=d.querySelector("input");d.className="sl "+r;inp.disabled=r!=="free";
+      if(document.activeElement!==inp)inp.value=S[k];d.querySelector("output").textContent=k==="V"?S.V.toFixed(2)+" L":k==="T"?Math.round(S.T)+" K":S.n.toFixed(2)+" mol";
+      d.querySelector(".st").textContent=r==="lock"?"🔒 ล็อกไว้":r==="resp"?"⟳ เปลี่ยนตามเอง":k==="V"?"✋ ปรับได้ (หรือลากลูกสูบ)":k==="T"?"✋ ปรับได้ (🔥/❄️ ใต้กล่อง)":"✋ ปรับได้ (เติม/ปล่อยแก๊ส)";});
+    const tl=k=>{const r=role(k);return`<div class="${r==="free"?"":r}"><i>${r==="lock"?"🔒":r==="resp"?"⟳":""}</i>${k==="P"?S.P.toFixed(2):k==="V"?S.V.toFixed(2):k==="T"?Math.round(S.T):S.n.toFixed(2)}<small>${k} (${k==="P"?"atm":k==="V"?"L":k==="T"?"K":"mol"})</small></div>`;};
+    root.querySelector("#gtiles").innerHTML=["P","V","T","n"].map(tl).join("");
+    const cl=k=>role(k)==="lock"?"l":role(k)==="resp"?"r":"";
+    root.querySelector("#geq").innerHTML=`<span class="${cl("P")}">P</span> × <span class="${cl("V")}">V</span> = <span class="${cl("n")}">n</span> × R × <span class="${cl("T")}">T</span><br>`
+      +`(<span class="${cl("P")}">${S.P.toFixed(2)}</span>)(<span class="${cl("V")}">${S.V.toFixed(2)}</span>) = (<span class="${cl("n")}">${S.n.toFixed(2)}</span>)(0.0821)(<span class="${cl("T")}">${Math.round(S.T)}</span>)<br>`
+      +`${(S.P*S.V).toFixed(3)} = ${(S.n*R*S.T).toFixed(3)}<small>${S.stop?"⚠ ลูกสูบชนจุดหยุด ปริมาตรไปต่อไม่ได้ → ความดันจึงเปลี่ยนแทน":"ซ้ายเท่ากับขวาเสมอ ไม่ว่าจะปรับอะไร"}</small>`;
+    root.querySelector("#glaw").textContent=(LAW[S.hold]||{})[S.last]||"";}
+  root.querySelector("#glocks").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.hold=b.dataset.v;S.Pheld=S.P;S.last=S.hold==="T"?"V":"T";solve();ui();};
+  root.querySelectorAll(".sl input").forEach(inp=>inp.oninput=()=>{const k=inp.closest(".sl").dataset.k;S[k]=+inp.value;S.last=k;flash[k]=1;solve();if(k==="n")setDots();ui();});
+  root.querySelector("#greset").onclick=()=>{Object.assign(S,{hold:"T",V:5,T:300,n:.2,last:"V",vDisp:5,vVel:0,stop:false});S.P=S.n*R*S.T/S.V;S.Pheld=S.P;ps=[];setDots();ps.forEach(p=>Object.assign(p,spawn(false)));ui();};
+  root.querySelector("#gpause").onclick=e=>{S.paused=!S.paused;e.target.textContent=S.paused?"▶ เล่นต่อ":"⏸ หยุด";};
+  // drag the piston handle (only while T is held, the one case where V is yours to set)
+  let drag=false;const pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];};
+  cv.onpointermove=e=>{const[x,y]=pt(e),yp=yOf(S.vDisp),near=x>CX0-10&&x<CX1+70&&Math.abs(y-(yp-30))<40;cv.style.cursor=role("V")==="free"&&(near||drag)?"ns-resize":"default";
+    if(!drag)return;S.V=Math.max(VMIN,Math.min(VMAX,(CB-(y+20))/HMAX*VMAX));S.last="V";flash.V=1;solve();ui();};
+  cv.onpointerdown=e=>{const[x,y]=pt(e),yp=yOf(S.vDisp);if(role("V")==="free"&&x>CX0-10&&x<CX1+70&&Math.abs(y-(yp-30))<40){drag=true;cv.setPointerCapture(e.pointerId);}};
+  cv.onpointerup=()=>drag=false;
+  // ---- physics ----
+  function physics(dt){
+    // piston: a spring toward the target volume (it overshoots a hair and settles)
+    S.vVel+=((S.V-S.vDisp)*180-S.vVel*20)*dt;S.vDisp+=S.vVel*dt;const yp=yOf(S.vDisp);let hits=0;
+    for(const p of ps){p.x+=p.vx*dt;p.y+=p.vy*dt;p.born=Math.min(1,p.born+dt*3);}
+    // dot-dot elastic collisions (equal masses: swap the normal components)
+    for(let i=0;i<ps.length;i++)for(let j=i+1;j<ps.length;j++){const a=ps[i],b=ps[j],dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy;if(d2>4*RAD*RAD||d2===0)continue;
+      const d=Math.sqrt(d2),nx=dx/d,ny=dy/d,rv=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;const ov=(2*RAD-d)/2;a.x-=nx*ov;a.y-=ny*ov;b.x+=nx*ov;b.y+=ny*ov;
+      if(rv<0){a.vx+=rv*nx;a.vy+=rv*ny;b.vx-=rv*nx;b.vy-=rv*ny;}}
+    for(const p of ps){   /* walls LAST: the collision push-apart below can no longer shove a dot through a wall or the piston */
+      if(p.x<CX0+RAD){p.x=CX0+RAD;p.vx=Math.abs(p.vx);hits++;}if(p.x>CX1-RAD){p.x=CX1-RAD;p.vx=-Math.abs(p.vx);hits++;}
+      if(p.y>CB-RAD){p.y=CB-RAD;p.vy=-Math.abs(p.vy);hits++;}
+      if(p.y<yp+RAD){p.y=yp+RAD;p.vy=Math.abs(p.vy)+Math.max(0,-S.vVel/VMAX*HMAX)*.5;hits++;}}   // the piston carries dots with it; no teleporting
+    // thermostat: nudge the mean kinetic energy toward the one T asks for
+    if(ps.length){let ke=0;for(const p of ps)ke+=p.vx*p.vx+p.vy*p.vy;ke/=ps.length;const tgt=vrms(S.T)**2,f=Math.sqrt(1+(tgt/ke-1)*Math.min(1,dt*4));for(const p of ps){p.vx*=f;p.vy*=f;}}
+    const now=performance.now();hitsLog.push([now,hits]);while(hitsLog.length&&now-hitsLog[0][0]>1000)hitsLog.shift();
+    puffs.forEach(f=>f.t+=dt);puffs=puffs.filter(f=>f.t<.6);for(const k in flash)flash[k]=Math.max(0,flash[k]-dt*1.5);}
+  // ---- drawing ----
+  const col=s=>{const t=Math.max(0,Math.min(1,(s/vrms(S.T)-.45)/1.3));return`rgb(${31+197*t|0},${63+2*t|0},${191-148*t|0})`;};
+  function rr(x,y,w,h){c.fillRect(x,y,w,h);c.strokeRect(x,y,w,h);}
+  function draw(){c.clearRect(0,0,W,H);c.lineJoin="round";const yp=yOf(S.vDisp),ink="#141414";
+    // water bath while T is held
+    if(S.hold==="T"){c.fillStyle="rgba(31,63,191,.10)";c.fillRect(CX0-36,CT+40,CX1-CX0+72,CB-CT-10);c.strokeStyle="rgba(31,63,191,.5)";c.lineWidth=2;c.setLineDash([6,6]);c.strokeRect(CX0-36,CT+40,CX1-CX0+72,CB-CT-10);c.setLineDash([]);
+      c.fillStyle="#1f3fbf";c.font="800 13px Anuphan";c.textAlign="left";c.fillText(`🛁 อ่างน้ำคุมอุณหภูมิ ${Math.round(S.T)} K`,CX0-30,CB+24+38);}
+    // heater / cooler plate (shows the T you set; pulses when you just changed it)
+    const ht=(S.T-300)/400,hx0=CX0,hx1=CX1,hy=CB+12;c.lineWidth=3;c.strokeStyle=ink;c.fillStyle=ht>.02?`rgba(228,65,43,${.15+Math.min(.75,ht)})`:ht<-.02?`rgba(31,63,191,${.15+Math.min(.6,-ht*1.4)})`:"#e8e1d2";rr(hx0,hy,hx1-hx0,26);
+    c.font="800 13px Anuphan";c.textAlign="center";c.fillStyle=Math.abs(ht)>.35?"#fff":ink;c.fillText(ht>.02?"🔥 แผ่นให้ความร้อน":ht<-.02?"❄️ แผ่นทำความเย็น":"แผ่นความร้อน (ปกติ)",(hx0+hx1)/2,hy+18);
+    if(flash.T>0){c.strokeStyle=`rgba(228,65,43,${flash.T})`;c.lineWidth=5;c.strokeRect(hx0-4,hy-4,hx1-hx0+8,34);}
+    // volume ruler
+    c.fillStyle=ink;c.strokeStyle=ink;c.font="700 11px JetBrains Mono";c.textAlign="right";
+    for(let v=0;v<=VMAX;v++){const y=yOf(v);c.lineWidth=v%5?1.5:3;c.beginPath();c.moveTo(CX0-22,y);c.lineTo(CX0-(v%5?30:36),y);c.stroke();if(v%2==0)c.fillText(v+" L",CX0-40,y+4);}
+    c.lineWidth=3;c.beginPath();c.moveTo(CX0-22,yOf(0));c.lineTo(CX0-22,yOf(VMAX));c.stroke();
+    // chamber walls (open at the top: the piston is the lid) + inlet + valve
+    c.lineWidth=6;c.beginPath();c.moveTo(CX0-3,CT);c.lineTo(CX0-3,CB+3);c.lineTo(CX1+3,CB+3);c.lineTo(CX1+3,CT);c.stroke();
+    c.fillStyle="#fffdf7";c.lineWidth=3;rr(CX1+3,CB-36,34,16);c.fillStyle=ink;c.font="700 11px Anuphan";c.textAlign="left";c.fillText("ทางเติมแก๊ส",CX1+42,CB-24);
+    // dots
+    for(const p of ps){const s=Math.hypot(p.vx,p.vy);c.globalAlpha=.35+.65*p.born;c.fillStyle=col(s);c.beginPath();c.arc(p.x,p.y,RAD,0,7);c.fill();c.lineWidth=1.3;c.strokeStyle=ink;c.stroke();}c.globalAlpha=1;
+    for(const f of puffs){c.strokeStyle=`rgba(20,20,20,${1-f.t/.6})`;c.lineWidth=2;c.beginPath();c.arc(f.x,f.y-f.t*60,RAD+f.t*14,0,7);c.stroke();}
+    // piston + rod + handle
+    c.fillStyle="#2a2a2a";c.strokeStyle=ink;c.lineWidth=3;rr(CX0,yp-16,CX1-CX0,16);c.fillStyle="#cfc6b3";rr((CX0+CX1)/2-8,yp-64,16,48);
+    const free=role("V")==="free";c.fillStyle=free?"#e4412b":"#9b9384";rr((CX0+CX1)/2-46,yp-80,92,20);c.fillStyle="#fff";c.font="800 12px Anuphan";c.textAlign="center";c.fillText(free?"ลาก ↕":"",(CX0+CX1)/2,yp-65);
+    if(S.hold==="V"){/* pins through both walls: the piston can't move */c.fillStyle="#1f3fbf";[CX0-24,CX1-6].forEach(x=>{rr(x,yp-12,30,8);});c.fillStyle="#1f3fbf";c.font="800 13px Anuphan";c.textAlign="left";c.fillText("📌 ลูกสูบถูกตรึง",CX1+44,yp-4);}
+    if(S.hold==="P"){/* a fixed weight rides on the piston = constant pressure */c.fillStyle="#1f3fbf";rr((CX0+CX1)/2-60,yp-128,120,44);c.fillStyle="#fff";c.font="800 13px Anuphan";c.textAlign="center";c.fillText("⚖️ ถ่วง "+S.Pheld.toFixed(2)+" atm",(CX0+CX1)/2,yp-101);}
+    if(S.stop){c.fillStyle="#e4412b";c.font="800 13px Anuphan";c.textAlign="left";c.fillText("⚠ ชนจุดหยุด",CX1+44,yp+18);}
+    // pressure gauge on a pipe
+    const gx=640,gy=150,gr=70,pmax=Math.max(2,Math.ceil(S.P/2)*2+2);const py=Math.max(yp+14,CT+60);c.lineWidth=6;c.strokeStyle=ink;c.beginPath();c.moveTo(CX1+3,py);c.lineTo(gx-gr-22,py);c.lineTo(gx-gr-22,gy);c.lineTo(gx-gr,gy);c.stroke();   /* pipe enters the gauge from the side, clear of its labels */
+    c.fillStyle="#fffdf7";c.lineWidth=4;c.beginPath();c.arc(gx,gy,gr,0,7);c.fill();c.stroke();
+    for(let i=0;i<=10;i++){const a=Math.PI*.75+i/10*Math.PI*1.5,l=i%5?10:16;c.lineWidth=i%5?2:3;c.beginPath();c.moveTo(gx+Math.cos(a)*(gr-5),gy+Math.sin(a)*(gr-5));c.lineTo(gx+Math.cos(a)*(gr-5-l),gy+Math.sin(a)*(gr-5-l));c.stroke();
+      if(i%5==0){c.font="700 11px JetBrains Mono";c.textAlign="center";c.fillStyle=ink;c.fillText((pmax*i/10).toFixed(0),gx+Math.cos(a)*(gr-30),gy+Math.sin(a)*(gr-30)+4);}}
+    const a=Math.PI*.75+Math.min(1,S.P/pmax)*Math.PI*1.5;c.strokeStyle="#e4412b";c.lineWidth=4;c.beginPath();c.moveTo(gx,gy);c.lineTo(gx+Math.cos(a)*(gr-14),gy+Math.sin(a)*(gr-14));c.stroke();
+    c.fillStyle=ink;c.beginPath();c.arc(gx,gy,6,0,7);c.fill();c.fillStyle="#141414";c.fillRect(gx-52,gy+gr+8,104,26);c.fillStyle="#f2b705";c.font="800 15px JetBrains Mono";c.fillText(S.P.toFixed(2)+" atm",gx,gy+gr+26);c.fillStyle=ink;
+    const hps=hitsLog.reduce((s,h)=>s+h[1],0);c.font="700 12px Anuphan";c.fillText("ชนผนัง "+hps+" ครั้ง/วินาที",gx,gy+gr+52);
+    // speed histogram
+    const bx=555,by=340,bw=170,bh=110,NB=12,vmax=vrms(S.T)*2.6,bins=Array(NB).fill(0);for(const p of ps){const k=Math.min(NB-1,Math.floor(Math.hypot(p.vx,p.vy)/vmax*NB));bins[k]++;}
+    const mx=Math.max(4,...bins);c.lineWidth=2.5;c.strokeStyle=ink;c.fillStyle="#fffdf7";rr(bx,by,bw,bh);
+    bins.forEach((n,k)=>{const h=n/mx*(bh-16);c.fillStyle=col((k+.5)/NB*vmax);c.fillRect(bx+4+k*(bw-8)/NB,by+bh-4-h,(bw-8)/NB-2,h);});
+    c.fillStyle=ink;c.font="700 11px Anuphan";c.textAlign="center";c.fillText("การกระจายความเร็วอนุภาค",bx+bw/2,by+bh+16);c.fillText("ช้า ← → เร็ว",bx+bw/2,by+bh+30);}
+  let last=performance.now();
+  function frame(t){if(!root.isConnected)return;const dt=Math.min(.033,(t-last)/1000);last=t;if(!S.paused){const n=2;for(let i=0;i<n;i++)physics(dt/n);}draw();requestAnimationFrame(frame);}
+  setDots();ps.forEach(p=>Object.assign(p,spawn(false)));ui();requestAnimationFrame(frame);
+  window.__gas={S,get ps(){return ps},vrms,geo:{CX0,CX1,CB,yOf,RAD}};   // read-only hook for tools/test_models.js
+}
+</script></body></html>
