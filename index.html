@@ -2099,6 +2099,7 @@ $("#mreveal").onclick=()=>{const w=$("#msol .solwrap");if(!w)return;const open=w
   SFX.play(open?"reveal":"conceal");if(open)seen(filtered[mIdx]);};
 
 /* ---- keyboard ---- */
+const MXY=[-1,-1];document.addEventListener("mousemove",e=>{MXY[0]=e.clientX;MXY[1]=e.clientY;},{passive:true});
 document.addEventListener("keydown",e=>{
   if(e.target.classList&&e.target.classList.contains("vol"))return;   // arrows on the volume slider adjust volume only
   const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)&&e.target.type!=="range";
@@ -2110,7 +2111,7 @@ document.addEventListener("keydown",e=>{
   if($("#modal").classList.contains("show")){
     if(e.key==="Escape"){if(STRIP.isOpen())STRIP.close();else closeModal();}
     if(e.key==="ArrowLeft")step(-1);if(e.key==="ArrowRight")step(1);
-    if(e.key==="Enter"&&!e.target.closest("button")){e.preventDefault();$("#mreveal").click();}
+    if(e.key==="Enter"&&!/^(INPUT|TEXTAREA)$/.test(e.target.tagName)){e.preventDefault();$("#mreveal").click();}   // even with a ←/→ button still focused from a mouse click
     if((e.key==="p"||e.key==="P")&&!e.ctrlKey&&!e.metaKey&&!e.altKey)INK.toggle();
     return;
   }
@@ -2123,6 +2124,9 @@ document.addEventListener("keydown",e=>{
     if(e.key==="ArrowRight"){e.preventDefault();pstep(1);}
     else if(e.key==="ArrowLeft"){e.preventDefault();pstep(-1);}
     else if(e.key==="Enter"){const b=$("#deck .solbtn");if(b){e.preventDefault();b.click();}}
+  }else if(e.key==="Enter"){   // cards / list / two-pane: Enter opens the เฉลย of the question under the mouse
+    let el=document.elementFromPoint(MXY[0],MXY[1]);while(el&&el!==document.body&&!(el.querySelectorAll&&el.querySelectorAll(".solbtn").length===1))el=el.parentElement;
+    const b=el&&el!==document.body&&el.querySelector(".solbtn");if(b){e.preventDefault();b.click();}
   }
 });
 
