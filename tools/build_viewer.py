@@ -1178,61 +1178,91 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .pdrst::after{content:"";position:absolute;inset:-5px -2px}   /* hit area >= 44px without a taller button */
 .pde{touch-action:manipulation}
 /* ---------- trend mode (2026-11-13, his picks: heat map in the soft sample-5 colours + atomic size as spheres,
-   textbook arrows beside the table, red exception tags, a full-width graph of value vs Z under the table) ---------- */
+   textbook arrows whose two heads meet at one corner, exception ribbons inside the tile, a full-width graph of value vs Z).
+   Every change animates: tiles recolour in a diagonal wave (--td), spheres grow/shrink, values roll in, arrows grow from the
+   tail, the graph unfolds and draws its line. Turning it off runs the same in reverse. */
+#pd{transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s .6s,width .55s cubic-bezier(.2,.8,.2,1)}
+body.pdopen #pd{transition:transform .6s cubic-bezier(.34,1.35,.64,1),visibility 0s,width .55s cubic-bezier(.2,.8,.2,1)}
 #pd.trw{width:min(1440px,98vw)}
 .pdtr{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-4px 0 12px}
 .pdtr>em{font:800 .85rem "Anuphan",sans-serif;font-style:normal;margin-right:4px}
-.pdtr button{border:2px solid var(--ink);background:var(--card);color:var(--ink);font:700 .82rem "Anuphan",sans-serif;padding:4px 10px;cursor:pointer;box-shadow:2px 2px 0 var(--sh)}
+.pdtr button{border:2px solid var(--ink);background:var(--card);color:var(--ink);font:700 .82rem "Anuphan",sans-serif;padding:4px 10px;cursor:pointer;box-shadow:2px 2px 0 var(--sh);transition:background-color .25s,color .25s,transform .12s,box-shadow .12s}
 .pdtr button:hover{background:var(--yel);color:#141414}
 .pdtr button.on{background:var(--blue);color:#fff}
 .pdtr button:active{transform:translate(2px,2px);box-shadow:none}
-.pdw{position:relative}
-.pdw.tron{padding:56px 14px 14px 66px}
-.pdg.trend .pde .pf{background:var(--tc,var(--kb));color:#141414;transition:background .45s,color .3s}
+.pdw{position:relative;transition:padding .55s cubic-bezier(.2,.8,.2,1)}
+.pf{transition:background-color .5s cubic-bezier(.2,.7,.2,1) var(--td,0ms),color .35s var(--td,0ms)}
+.pdg.trend .pde .pf{background-color:var(--tc,var(--kb));color:#141414}
 .pdg.trend .pde.tnil .pf{background:repeating-linear-gradient(135deg,var(--paper) 0 5px,rgba(var(--pbi),.13) 5px 7px);color:var(--mut)}
 .pdg.trend .pde s{font-weight:800;opacity:1}
-/* atomic size: white tile, a shaded sphere whose DIAMETER is proportional to the radius (H 31 pm ... Cs 244 pm) */
-.pdg.tsize .pde .pf{background:var(--card);color:var(--ink)}
-.pdg.tsize .pde .pf::before{content:"";position:absolute;left:50%;top:53%;width:calc(var(--u)*var(--sz,0));aspect-ratio:1;translate:-50% -50%;border-radius:50%;
-  background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.9) 0 6%,var(--kb) 38%,var(--kb2,#555) 100%);border:1.5px solid #141414;box-shadow:2px 2px 0 rgba(20,20,20,.35);transition:width .55s cubic-bezier(.34,1.4,.64,1)}
-.pdg.tsize .k-alk{--kb2:#8f1f10}.pdg.tsize .k-ae{--kb2:#a3530c}.pdg.tsize .k-nm{--kb2:#9a7300}.pdg.tsize .k-hal{--kb2:#0d1f6b}.pdg.tsize .k-md{--kb2:#5466a8}
-.pdg.tsize .k-tm .pf::before{--kb:#d6cdb9;--kb2:#857a63}.pdg.tsize .k-pt .pf::before{--kb:#bdb39e;--kb2:#6e6551}.pdg.tsize .k-ln .pf::before,.pdg.tsize .k-an .pf::before{--kb2:#a3594a}
-.pdg.tsize .pde.tnil .pf::before{display:none}
-.pdg.tsize .pde i,.pdg.tsize .pde b,.pdg.tsize .pde s{position:relative;z-index:1}
+.pdg.tsw .pde s{animation:tsw .45s cubic-bezier(.2,.8,.2,1) var(--td,0ms) both}
+@keyframes tsw{0%{opacity:0;translate:0 45%}}
+/* atomic size: a shaded sphere whose DIAMETER is proportional to the radius (H 31 pm ... Cs 244 pm). The ::before always
+   exists inside the drawer (invisible, width 0) so it can grow in and shrink out instead of popping */
+.pdg .pde .pf::before{content:"";position:absolute;left:50%;top:53%;width:calc(var(--u)*var(--sz,0));aspect-ratio:1;translate:-50% -50%;border-radius:50%;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.9) 0 6%,var(--kb) 38%,var(--kb2,#555) 100%);border:1.5px solid #141414;box-shadow:2px 2px 0 rgba(20,20,20,.35);
+  transition:width .6s cubic-bezier(.34,1.45,.64,1) var(--td,0ms),opacity .3s var(--td,0ms)}
+.pdg.tsize .pde .pf{background-color:var(--card);color:var(--ink)}
+.pdg.tsize .pde .pf::before{opacity:1}
+.pdg .k-alk{--kb2:#8f1f10}.pdg .k-ae{--kb2:#a3530c}.pdg .k-nm{--kb2:#9a7300}.pdg .k-hal{--kb2:#0d1f6b}.pdg .k-md{--kb2:#5466a8}
+.pdg .k-tm .pf::before{--kb:#d6cdb9;--kb2:#857a63}.pdg .k-pt .pf::before{--kb:#bdb39e;--kb2:#6e6551}.pdg .k-ln .pf::before,.pdg .k-an .pf::before{--kb2:#a3594a}
+.pdg.tsize .pde.tnil .pf::before{opacity:0}
+.pdg .pde .pf i,.pdg .pde .pf b,.pdg .pde .pf s{position:relative;z-index:1}
 .pdg.tsize .pde b{text-shadow:0 0 3px var(--card),0 0 3px var(--card),0 0 2px var(--card)}
 .pdg.tsize .pde s{background:var(--card);padding:0 2px}
-.pdg.trend .pde.tex .pf{outline:3px solid var(--red);outline-offset:-3px}
-.pdg.trend .pde.tex::after{content:attr(data-x);position:absolute;left:50%;top:calc(var(--u)*-.16);translate:-50% 0;z-index:6;background:var(--red);color:#fff;border:2px solid #141414;
-  font:800 calc(var(--u)*.16) "Anuphan",sans-serif;padding:1px 5px;white-space:nowrap;pointer-events:none;animation:tbob 1.6s ease-in-out infinite}
-@keyframes tbob{50%{translate:-50% -3px}}
+/* exceptions: a red ribbon INSIDE the tile's top edge (in place of Z), so nothing spills onto the neighbours */
+.pdg.trend .pde.tex .pf{box-shadow:inset 0 0 0 3px var(--red)}
+.pdg.trend .pde.tex .pf i{visibility:hidden}
+.pdg.trend .pde.tex::after{content:attr(data-x);position:absolute;left:2px;right:2px;top:2px;z-index:6;background:var(--red);color:#fff;text-align:center;
+  font:800 calc(var(--u)*.145) "Anuphan",sans-serif;line-height:1.35;white-space:nowrap;overflow:hidden;pointer-events:none;transform-origin:50% 0;
+  animation:texin .45s cubic-bezier(.34,1.5,.64,1) calc(var(--td,0ms) + 350ms) both}
+@keyframes texin{0%{scale:1 0;opacity:0}}
 .pdg.trend .pde.thl .pf{outline:4px solid var(--blue);outline-offset:-4px}
-/* arrows: chunky Bauhaus arrows in the heat colours (light = low, deep red = high), an ink label riding on the shaft */
-.tra{position:absolute;z-index:4;pointer-events:none;display:none;filter:drop-shadow(3px 3px 0 var(--sh))}
-.tron .tra.show{display:block}
+/* arrows: two chunky gradient arrows (light = low, deep red = high) on the sides of the table, BOTH heads aimed at the same
+   corner, where a round badge names the extreme. They grow out of their tails and fold back in */
+.tra,.trk{position:absolute;z-index:4;pointer-events:none;visibility:hidden;opacity:0}
+.tra{filter:drop-shadow(3px 3px 0 var(--sh));transition:opacity .3s,transform .6s cubic-bezier(.34,1.25,.64,1),visibility 0s .6s}
+.tra.h{transform:scaleX(0)}.tra.v{transform:scaleY(0)}
+.tra.show{visibility:visible;opacity:1;transform:none;transition:opacity .25s,transform .6s cubic-bezier(.34,1.25,.64,1),visibility 0s}
 .tra .sh{position:absolute;inset:0}
 .tra.h .sh{clip-path:polygon(0 28%,calc(100% - 30px) 28%,calc(100% - 30px) 0,100% 50%,calc(100% - 30px) 100%,calc(100% - 30px) 72%,0 72%)}
 .tra.h.rev .sh{clip-path:polygon(100% 28%,30px 28%,30px 0,0 50%,30px 100%,30px 72%,100% 72%)}
 .tra.v .sh{clip-path:polygon(28% 0,72% 0,72% calc(100% - 30px),100% calc(100% - 30px),50% 100%,0 calc(100% - 30px),28% calc(100% - 30px))}
 .tra.v.rev .sh{clip-path:polygon(28% 100%,72% 100%,72% 30px,100% 30px,50% 0,0 30px,28% 30px)}
-.tra em{position:absolute;font:800 .9rem "Anuphan",sans-serif;font-style:normal;background:#141414;color:#f2b705;border:2px solid #141414;padding:2px 12px;white-space:nowrap}
-.tra.h em{left:50%;top:50%;translate:-50% -50%}
-.tra.v em{left:50%;top:50%;translate:-50% -50%;writing-mode:vertical-rl;padding:12px 3px}
+.tra em{position:absolute;left:50%;top:50%;translate:-50% -50%;font:800 .9rem "Anuphan",sans-serif;font-style:normal;background:#141414;color:#f2b705;border:2px solid #141414;padding:2px 12px;white-space:nowrap;opacity:0;transition:opacity .25s}
+.tra.show em{opacity:1;transition:opacity .3s .45s}
+.tra.v em{writing-mode:vertical-rl;padding:12px 3px}
+.trk{width:68px;height:68px;margin:-34px 0 0 -34px;border-radius:50%;background:#7a1f12;color:#f2b705;border:3px solid #141414;box-shadow:3px 3px 0 var(--sh);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;font:800 1.15rem "Anuphan",sans-serif;line-height:1.05;text-align:center;scale:0;transition:scale .4s cubic-bezier(.34,1.6,.64,1),opacity .2s,visibility 0s .4s}
+.trk small{font-size:.68rem;color:#fff}
+.trk.show{visibility:visible;opacity:1;scale:1;transition:scale .5s cubic-bezier(.34,1.6,.64,1) .5s,opacity .2s .5s,visibility 0s}
 /* the reading card replaces the Mw table in the info area while a trend is on */
-.pdtrc{display:none;flex:1;min-width:0;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:8px 12px;font:600 .86rem "Anuphan",sans-serif;line-height:1.45}
+.pdtrc{display:none;flex:1;min-width:0;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:8px 12px;font:600 .86rem "Anuphan",sans-serif;line-height:1.5}
 .pdg.trend .pdtrc{display:block}.pdg.trend .pdbrk{display:none}
-.pdtrc h4{margin:0 0 3px;font-size:1rem}.pdtrc p{margin:2px 0}.pdtrc .tw{color:var(--red)}
+.pdtrc.swap{animation:tcard .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes tcard{0%{opacity:0;translate:0 8px}}
+.pdtrc h4{margin:0 0 4px;font-size:1rem}.pdtrc p{margin:2px 0}.pdtrc .d{font-size:.95rem}.pdtrc .m{color:var(--mut);font-size:.8rem}.pdtrc .tw{color:var(--red);font-size:.82rem}
 .pdtrc .lg{display:flex;align-items:center;gap:8px;margin-top:6px;font:700 .75rem "JetBrains Mono",monospace}
-.pdtrc .lg span{flex:1;height:12px;border:2px solid var(--ink)}
-/* graph: its own full-width card under the table, drawn at real pixel size (no stretched text) */
-.pdgph{display:none;margin-top:16px;background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);padding:10px 12px 6px}
-.pdgph.show{display:block}
+.pdtrc .lg span{flex:1;height:10px;border:2px solid var(--ink)}
+/* graph: its own full-width card under the table, drawn at real pixel size; unfolds open, the line draws itself */
+.pdgph{display:grid;grid-template-rows:0fr;opacity:0;margin-top:0;background:var(--card);border:0 solid var(--ink);padding:0 12px;box-shadow:none;
+  transition:grid-template-rows .55s cubic-bezier(.2,.8,.2,1),opacity .35s,margin-top .55s,padding .55s,border-width .2s,box-shadow .3s}
+.pdgph>div{min-height:0;overflow:hidden}
+.pdgph.show{grid-template-rows:1fr;opacity:1;margin-top:18px;padding:10px 12px 6px;border-width:3px;box-shadow:6px 6px 0 var(--sh)}
 .pdgph h5{margin:0 0 4px;font:800 .95rem "Anuphan",sans-serif;display:flex;flex-wrap:wrap;gap:10px;align-items:baseline}
 .pdgph h5 small{font:600 .78rem "Anuphan",sans-serif;color:var(--mut)}
 .pdgph svg{display:block;overflow:visible}
 .pdgph .ax{font:600 11px "JetBrains Mono",monospace;fill:var(--mut)}
 .pdgph .pl{font:700 11px "Anuphan",sans-serif;fill:var(--mut)}
 .pdgph .lb{font:800 11px "JetBrains Mono",monospace;fill:var(--ink)}
-.pdgph circle{cursor:pointer}
+.pdgph circle{cursor:pointer;transition:r .2s}
+.pdgph .draw path.ln{stroke-dasharray:1;stroke-dashoffset:1;animation:gdraw 1.1s cubic-bezier(.4,0,.2,1) .15s forwards}
+@keyframes gdraw{to{stroke-dashoffset:0}}
+.pdgph .draw circle,.pdgph .draw text.lb{animation:gdot .35s ease-out both;animation-delay:calc(var(--i)*11ms + 250ms)}
+@keyframes gdot{0%{opacity:0}}
+.pdgph .cur{animation:gcur .3s cubic-bezier(.34,1.5,.64,1)}
+@keyframes gcur{0%{opacity:0;translate:0 4px}}
+@media (prefers-reduced-motion:reduce){.pf,.pdg .pde .pf::before,.tra,.trk,.pdgph,.pdw,#pd{transition-duration:.01ms!important}.pdg.tsw .pde s,.pdg.trend .pde.tex::after,.pdgph .draw *,.pdtrc.swap{animation:none!important}}
 .pde:focus-visible{outline:3px solid var(--ink);outline-offset:2px;z-index:3}
 .mem .pf,.mem .pb{backface-visibility:hidden;-webkit-backface-visibility:hidden;transition:transform .48s cubic-bezier(.2,.7,.2,1) var(--d,0ms)}
 /* the back recedes into the drawer: its own paper colour, a faint ink edge, Z at low contrast, so an opened tile's category colour pops */
@@ -1727,7 +1757,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 <aside id="pd" aria-label="ตารางธาตุ">
   <div class="pdh"><b>ตารางธาตุ</b><span class="pdq" id="pdq"></span><span class="pdhov" id="pdhov"></span><button class="pdmwt pdrst" id="pdrst" title="คว่ำทุกธาตุที่เปิดอยู่กลับทั้งหมด">↺ รีเซ็ต</button><button class="pdmwt pdmem" id="pdmem" aria-pressed="false" title="คว่ำทุกธาตุ เหลือแค่เลขอะตอม แล้วแตะเพื่อเปิดทีละตัว"><span>🃏 ท่องตารางธาตุ: ปิด</span><span>🃏 ท่องตารางธาตุ: เปิด</span></button><button class="pdmwt" id="pdmwt" title="เปิด/ปิดเครื่องคิด Mw">🧮 คิด Mw</button><button class="pdx" id="pdx" title="ปิด (Esc)">✕</button></div>
   <div class="pdtr" id="pdtr"><em>📈 เทรนด์</em><button data-t="-1">ปิด</button></div>
-  <div class="pdw"><div class="pdg" id="pdg"></div><div class="tra h" id="tra-h"><i class="sh"></i><em></em></div><div class="tra v" id="tra-v"><i class="sh"></i><em></em></div></div>
+  <div class="pdw"><div class="pdg" id="pdg"></div><div class="tra h" id="tra-h"><i class="sh"></i><em></em></div><div class="tra v" id="tra-v"><i class="sh"></i><em></em></div><div class="trk" id="tra-k"></div></div>
   <div class="pdgph" id="pdgph"></div>
   <div class="pdcalc"><input id="pdin" spellcheck="false" autocomplete="off" placeholder="พิมพ์สูตร เช่น Al2(SO4)3 หรือแตะธาตุ">
     <div class="pdmw"><small id="pdfd"></small><span id="pdmw">Mw = —</span></div>
@@ -2656,16 +2686,16 @@ const PD=(()=>{
      from the mendeleev 1.3.0 data set; noble gases have no radius/EN/EA here, EA <= 0 (Be, N, Mg, Mn, Zn, Cd, Hg, noble gases) is blank */
   const TD_=[[31,1312,2.2,73,-259,null],[null,2372,null,null,null,null],[128,520,0.98,60,180,0.53],[96,900,1.57,null,1287,1.85],[84,801,2.04,27,2077,2.34],[73,1086,2.55,122,3550,2.2],[71,1402,3.04,null,-210,null],[66,1314,3.44,141,-219,null],[57,1681,3.98,328,-220,null],[null,2081,null,null,-249,null],[166,496,0.93,53,98,0.97],[141,738,1.31,null,650,1.74],[121,578,1.61,42,660,2.7],[111,787,1.9,134,1414,2.33],[107,1012,2.19,72,44,1.82],[105,1000,2.58,200,95,2.07],[102,1251,3.16,349,-102,null],[null,1521,null,null,-189,null],[203,419,0.82,48,64,0.89],[176,590,1.0,2,842,1.54],[170,633,1.36,18,1541,2.99],[160,659,1.54,8,1670,4.51],[153,651,1.63,51,1910,6.0],[139,653,1.66,64,1907,7.15],[150,717,1.55,null,1246,7.3],[142,762,1.83,15,1538,7.87],[138,760,1.88,64,1495,8.86],[124,737,1.91,112,1455,8.9],[132,745,1.9,119,1085,8.96],[122,906,1.65,null,420,7.13],[122,579,1.81,41,30,5.91],[120,762,2.01,119,938,5.32],[119,944,2.18,78,817,5.75],[120,941,2.55,195,180,4.81],[120,1140,2.96,325,-7,3.1],[null,1351,null,null,-157,null],[220,403,0.82,47,39,1.53],[195,549,0.95,5,777,2.64],[190,600,1.22,30,1522,4.47],[175,640,1.33,41,1854,6.52],[164,652,1.6,89,2477,8.57],[154,684,2.16,72,2622,10.2],[147,687,2.1,53,2157,11.0],[146,710,2.2,101,2333,12.1],[142,720,2.28,110,1963,12.4],[139,804,2.2,54,1555,12.0],[145,731,1.93,126,962,10.5],[144,868,1.69,null,321,8.69],[142,558,1.78,29,157,7.31],[139,709,1.96,107,13,7.29],[139,831,2.05,101,631,6.68],[138,869,2.1,190,450,6.23],[139,1008,2.66,295,114,4.93],[null,1170,null,null,-112,0.01],[244,376,0.79,46,28,1.87],[215,503,0.89,14,727,3.62],[207,538,1.1,45,920,6.15],[204,534,1.12,63,799,6.77],[203,528,1.13,93,931,6.77],[201,533,1.14,185,1016,7.01],[199,539,null,null,1042,7.26],[198,545,1.17,null,1072,7.52],[198,547,null,83,822,5.24],[196,593,1.2,null,1313,7.9],[194,566,null,112,1359,8.23],[192,573,1.22,34,1412,8.55],[192,581,1.23,null,1472,8.8],[189,589,1.24,null,1529,9.07],[190,597,1.25,99,1545,9.32],[187,603,null,null,824,6.9],[187,524,1.0,33,1663,9.84],[175,659,1.3,1,2233,13.3],[170,728,1.5,31,3017,16.4],[162,759,1.7,79,3414,19.3],[151,756,1.9,14,3185,20.8],[144,814,2.2,106,3033,22.59],[141,865,2.2,151,2446,22.56],[136,864,2.2,205,1768,21.5],[136,890,2.4,223,1064,19.3],[132,1007,1.9,null,-39,13.53],[145,589,1.8,36,304,11.8],[146,716,1.8,34,327,11.3],[148,703,1.9,91,271,9.79],[140,812,2.0,183,254,9.2],[150,899,2.2,270,302,7.0],[null,1037,null,null,-71,0.01]];
   const TRS=[
-   {ic:"📏",l:"ขนาดอะตอม",u:"pm",full:"ขนาดอะตอม (รัศมีโคเวเลนต์)",h:-1,v:1,ha:"ใหญ่ขึ้น",va:"ใหญ่ขึ้น",dir:"ซ้าย→ขวา <b>เล็กลง</b> · บน→ล่าง <b>ใหญ่ขึ้น</b>",
-    why:"คาบเดียวกัน: โปรตอนเพิ่มแต่จำนวนชั้นเท่าเดิม → นิวเคลียสดึงแน่นขึ้น · หมู่เดียวกัน: ชั้นพลังงานเพิ่ม",ex:{31:"Ga ≈ Al"},exw:"Ga เกือบเท่า Al: มี 3d¹⁰ คั่นกลาง กำบังนิวเคลียสได้ไม่ดี",nil:"แก๊สมีตระกูลไม่นำมาเทียบ (วัดคนละแบบ)",note:"วงกลม: เส้นผ่านศูนย์กลางเทียบตามรัศมีจริง"},
-   {ic:"⚡",l:"IE₁",u:"kJ/mol",full:"พลังงานไอออไนเซชันลำดับที่ 1",h:1,v:-1,ha:"เพิ่มขึ้น",va:"เพิ่มขึ้น",dir:"ซ้าย→ขวา <b>เพิ่ม</b> · บน→ล่าง <b>ลด</b>",
+   {ic:"📏",l:"ขนาดอะตอม",u:"pm",full:"ขนาดอะตอม (รัศมีโคเวเลนต์)",h:-1,v:1,ha:"ใหญ่ขึ้น",va:"ใหญ่ขึ้น",pk:"Cs",pkl:"ใหญ่สุด",dir:"ซ้าย→ขวา <b>เล็กลง</b> · บน→ล่าง <b>ใหญ่ขึ้น</b>",
+    why:"คาบเดียวกัน: โปรตอนเพิ่มแต่จำนวนชั้นเท่าเดิม → ดึงแน่นขึ้น · หมู่เดียวกัน: ชั้นพลังงานเพิ่ม",ex:{31:"Ga ≈ Al"},exw:"Ga ≈ Al: มี 3d¹⁰ คั่นกลาง กำบังนิวเคลียสได้ไม่ดี",nil:"แก๊สมีตระกูลไม่นำมาเทียบ (วัดคนละแบบ)",note:"วงกลม: เส้นผ่านศูนย์กลางเทียบตามรัศมีจริง"},
+   {ic:"⚡",l:"IE₁",u:"kJ/mol",full:"พลังงานไอออไนเซชันลำดับที่ 1",h:1,v:-1,ha:"เพิ่มขึ้น",va:"เพิ่มขึ้น",pk:"He",pkl:"สูงสุด",dir:"ซ้าย→ขวา <b>เพิ่ม</b> · บน→ล่าง <b>ลด</b>",
     why:"อะตอมเล็ก อิเล็กตรอนอยู่ใกล้นิวเคลียส → ดึงออกยาก",ex:{5:"B < Be",8:"O < N",13:"Al < Mg",16:"S < P"},exw:"Be, Mg: s เต็ม · N, P: p ครึ่งเต็ม → เสถียร ดึงออกยากกว่าตัวถัดไป"},
-   {ic:"🧲",l:"EN",u:"",full:"อิเล็กโทรเนกาติวิตี (Pauling)",h:1,v:-1,ha:"เพิ่มขึ้น",va:"เพิ่มขึ้น",dir:"ซ้าย→ขวา <b>เพิ่ม</b> · บน→ล่าง <b>ลด</b>",
+   {ic:"🧲",l:"EN",u:"",full:"อิเล็กโทรเนกาติวิตี (Pauling)",h:1,v:-1,ha:"เพิ่มขึ้น",va:"เพิ่มขึ้น",pk:"F",pkl:"สูงสุด",dir:"ซ้าย→ขวา <b>เพิ่ม</b> · บน→ล่าง <b>ลด</b>",
     why:"อะตอมเล็ก นิวเคลียสดึงอิเล็กตรอนคู่ร่วมพันธะได้แรง",ex:{9:"สูงสุด",55:"ต่ำสุด"},nil:"แก๊สมีตระกูลไม่มีค่า EN"},
-   {ic:"🎯",l:"EA",u:"kJ/mol",full:"สัมพรรคภาพอิเล็กตรอน (พลังงานที่คายออก)",h:1,v:-1,ha:"เพิ่มขึ้น",va:"เพิ่มขึ้น (ยกเว้นคาบ 2)",dir:"แนวโน้มหลวม ๆ: ซ้าย→ขวา <b>เพิ่ม</b> · หมู่ 17 สูงสุด",
+   {ic:"🎯",l:"EA",u:"kJ/mol",full:"สัมพรรคภาพอิเล็กตรอน (พลังงานที่คายออก)",h:1,v:-1,ha:"เพิ่มขึ้น",va:"เพิ่มขึ้น (ยกเว้นคาบ 2)",pk:"Cl",pkl:"สูงสุด",dir:"แนวโน้มหลวม ๆ: ซ้าย→ขวา <b>เพิ่ม</b> · หมู่ 17 สูงสุด",
     why:"อะตอมที่ขาดอีกนิดจะครบออกเตต รับอิเล็กตรอนแล้วคายพลังงานมาก",ex:{17:"Cl > F",4:"≈ 0",7:"≈ 0",12:"≈ 0"},exw:"F เล็กมาก อิเล็กตรอนแน่นผลักกัน → Cl คายมากกว่า · Be, Mg (s เต็ม), N (p ครึ่งเต็ม) แทบไม่รับ",nil:"≈ 0 / ไม่รับอิเล็กตรอน"},
    {ic:"🔥",l:"จุดหลอมเหลว",u:"°C",full:"จุดหลอมเหลว",h:0,v:0,dir:"ไม่มีแนวโน้มเดียว · สูงสุด<b>กลางคาบ</b> (C, W)",
-    why:"โครงผลึกร่างตาข่าย/พันธะโลหะแรง → สูง · โมเลกุลเล็ก/แก๊ส → ต่ำ",ex:{6:"ระเหิด ~3550",74:"โลหะสูงสุด"},nil:"ไม่มีข้อมูล"},
+    why:"โครงผลึกร่างตาข่าย/พันธะโลหะแรง → สูง · โมเลกุลเล็ก/แก๊ส → ต่ำ",ex:{6:"ระเหิด",74:"โลหะสูงสุด"},exw:"C ไม่หลอมที่ 1 atm แต่ระเหิด ~3550 °C",nil:"ไม่มีข้อมูล"},
    {ic:"⚖️",l:"ความหนาแน่น",u:"g/cm³",full:"ความหนาแน่น (ของแข็ง/ของเหลว)",h:0,v:1,va:"เพิ่มขึ้น",dir:"บน→ล่าง <b>เพิ่ม</b> · สูงสุดกลางคาบ 6 (Os)",
     why:"มวลเพิ่มเร็วกว่าขนาด · โลหะแทรนซิชันอัดแน่น",ex:{76:"สูงสุด"},nil:"แก๊ส (ไม่เทียบ)"}];
   TRS.forEach((t,k)=>{t.k=k;const xs=TD_.map(r=>r[k]).filter(x=>x!=null);t.lo=Math.min(...xs);t.hi=Math.max(...xs);});
@@ -2673,47 +2703,65 @@ const PD=(()=>{
   const RMP=[[255,253,247],[242,183,5],[228,65,43],[122,31,18]];
   const rmp=p=>{p=Math.max(0,Math.min(1,p))*3;const i=Math.min(2,Math.floor(p)),f=p-i,a=RMP[i],b=RMP[i+1];return`rgb(${a.map((x,j)=>Math.round(x+(b[j]-x)*f))})`;};
   const soft=p=>rmp(p*.5);   // his pick: the lighter sample-5 heat colours (cream -> yellow -> orange) on the tiles
-  let trOn=-1;
-  function trCard(e){const t=TRS[trOn],x=e?tval(t,e.z):null;
-    $("#pdtrc").innerHTML=`<h4>${t.ic} ${t.full}</h4><p>${t.dir}</p><p>${t.why}</p>${t.exw?`<p class="tw">★ ${t.exw}</p>`:""}${e&&x==null&&t.nil?`<p class="tw">${e.s}: ${t.nil}</p>`:""}${t.note?`<p style="color:var(--mut)">${t.note}</p>`:""}`
-      +(t.k?`<div class="lg">${tf(t,t.lo)}<span style="background:linear-gradient(90deg,${[0,.25,.5,.75,1].map(soft).join(",")})"></span>${tf(t,t.hi)} ${t.u}</div>`:"");}
+  let trOn=-1,trArT=0;
+  const restart=(el,c)=>{el.classList.remove(c);void el.offsetWidth;el.classList.add(c);};
+  function trCard(e,anim){if(trOn<0)return;const t=TRS[trOn],x=e?tval(t,e.z):null,c=$("#pdtrc");
+    c.innerHTML=`<h4>${t.ic} ${t.full}</h4><p class="d">${t.dir}</p><p class="m">${t.why}</p>${t.exw?`<p class="tw">★ ${t.exw}</p>`:""}${e&&x==null&&t.nil?`<p class="tw">${e.s}: ${t.nil}</p>`:""}${t.note?`<p class="m">${t.note}</p>`:""}`
+      +(t.k?`<div class="lg">${tf(t,t.lo)}<span style="background:linear-gradient(90deg,${[0,.25,.5,.75,1].map(soft).join(",")})"></span>${tf(t,t.hi)} ${t.u}</div>`:"");
+    if(anim)restart(c,"swap");}
   function trBig(e){const s=$("#pdbig .bf s");if(s&&e&&trOn>=0){const t=TRS[trOn],x=tval(t,e.z);s.textContent=x==null?"—":tf(t,x)+(t.u?" "+t.u:"");}}
-  function trArrows(){const w=$("#pd .pdw"),H=$("#tra-h"),V=$("#tra-v");if(trOn<0){H.classList.remove("show");V.classList.remove("show");return;}
-    const t=TRS[trOn],wr=w.getBoundingClientRect(),gr=G.getBoundingClientRect(),c1=G.querySelector('.pde[data-z="1"]').getBoundingClientRect(),c7=G.querySelector('.pde[data-z="87"]').getBoundingClientRect();
-    const grad=dir=>`linear-gradient(${dir},${[0,.33,.66,1].map(rmp).join(",")})`,ox=w.scrollLeft-wr.left,oy=w.scrollTop-wr.top;
-    H.classList.toggle("show",!!t.h);V.classList.toggle("show",!!t.v);
-    if(t.h){Object.assign(H.style,{left:gr.left+ox+"px",width:gr.width+"px",top:c1.top+oy-48+"px",height:"36px"});H.classList.toggle("rev",t.h<0);
-      H.firstChild.style.background=grad(t.h>0?"90deg":"270deg");H.lastChild.textContent=t.l+" "+t.ha+" "+(t.h>0?"→":"←");}
-    if(t.v){Object.assign(V.style,{left:gr.left+ox-56+"px",width:"36px",top:c1.top+oy+"px",height:c7.bottom-c1.top+"px"});V.classList.toggle("rev",t.v<0);
-      V.firstChild.style.background=grad(t.v>0?"180deg":"0deg");V.lastChild.textContent=t.l+" "+t.va+" "+(t.v>0?"↓":"↑");}}
-  function trGraph(hz){const box=$("#pdgph");if(trOn<0){box.classList.remove("show");box.innerHTML="";return;}box.classList.add("show");const t=TRS[trOn];
-    const W=Math.max(320,box.clientWidth-24),H=250,L=54,R=14,T=28,B=30,X=z=>L+(z-1)/85*(W-L-R),Y=x=>T+(1-tn(t,x))*(H-T-B);
+  // padding around the table makes room for the arrows on the sides they use; both heads aim at one corner
+  const side=t=>({top:!!t.h&&!(t.v>0),bot:!!t.h&&t.v>0,right:!!t.v&&t.h>0,left:!!t.v&&!(t.h>0)});
+  function trPad(){const w=$("#pd .pdw");if(trOn<0){w.style.padding="";return;}const s=side(TRS[trOn]);
+    w.style.padding=`${s.top?72:14}px ${s.right?78:14}px ${s.bot?72:14}px ${s.left?78:14}px`;}
+  function trArrows(regrow){const H=$("#tra-h"),V=$("#tra-v"),K=$("#tra-k");clearTimeout(trArT);
+    if(trOn<0||regrow){[H,V,K].forEach(x=>x.classList.remove("show"));if(trOn<0)return;}
+    const go=()=>{const w=$("#pd .pdw"),t=TRS[trOn],s=side(t),wr=w.getBoundingClientRect(),gr=G.getBoundingClientRect(),
+      c1=G.querySelector('.pde[data-z="1"]').getBoundingClientRect(),c7=G.querySelector('.pde[data-z="87"]').getBoundingClientRect(),ox=w.scrollLeft-wr.left,oy=w.scrollTop-wr.top;
+      const gl=gr.left+ox,gR=gr.right+ox,gT=c1.top+oy,r7=c7.bottom+oy,gB=gr.bottom+oy,both=t.h&&t.v;
+      const cx=s.right?gR+42:gl-42,cy=s.top?gT-38:gB+38,grad=dir=>`linear-gradient(${dir},${[0,.33,.66,1].map(rmp).join(",")})`;
+      if(t.h){let a,b;if(t.h>0){a=gl;b=both?cx-38:gR;}else{a=both?cx+38:gl;b=gR;}
+        Object.assign(H.style,{left:a+"px",width:b-a+"px",top:(both?cy:gT-38)-18+"px",height:"36px",transformOrigin:t.h>0?"0 50%":"100% 50%"});
+        H.classList.toggle("rev",t.h<0);H.firstChild.style.background=grad(t.h>0?"90deg":"270deg");H.lastChild.textContent=`${t.l} ${t.ha} ${t.h>0?"→":"←"}`;}
+      if(t.v){let a,b;if(t.v<0){a=both?cy+38:gT;b=r7;}else{a=gT;b=both?cy-38:r7;}
+        Object.assign(V.style,{top:a+"px",height:b-a+"px",left:(t.h?cx:gl-42)-18+"px",width:"36px",transformOrigin:t.v>0?"50% 0":"50% 100%"});
+        V.classList.toggle("rev",t.v<0);V.firstChild.style.background=grad(t.v>0?"180deg":"0deg");V.lastChild.textContent=`${t.l} ${t.va}`;   // no arrow glyph: vertical-rl turns it sideways; the arrow itself shows the way}
+      if(both){Object.assign(K.style,{left:cx+"px",top:cy+"px"});K.innerHTML=`${t.pk}<small>${t.pkl}</small>`;}
+      H.classList.toggle("show",!!t.h);V.classList.toggle("show",!!t.v);K.classList.toggle("show",!!both);};
+    if(regrow)trArT=setTimeout(go,620);else go();}   // regrow: fold in, wait for the drawer + padding to settle, then grow from the tails
+  function trGraph(hz,anim){const box=$("#pdgph");if(trOn<0){box.classList.remove("show");return;}box.classList.add("show");const t=TRS[trOn];
+    const W=Math.max(320,($("#pd .pdw").clientWidth||900)-30),H=250,L=54,R=14,T=34,B=30,X=z=>L+(z-1)/85*(W-L-R),Y=x=>T+(1-tn(t,x))*(H-T-B);
     const span=t.hi-t.lo,st=[.1,.2,.5,1,2,5,10,20,50,100,200,500,1000].find(s=>span/s<=5)||1000,ticks=[];for(let v=Math.ceil(t.lo/st)*st;v<=t.hi+1e-9;v+=st)ticks.push(+v.toFixed(2));
-    const PB=[0,2,10,18,36,54,86];let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`;
+    const PB=[0,2,10,18,36,54,86];let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"${anim?' class="draw"':""}>`;
     for(let p=1;p<=6;p++){const x1=X(PB[p-1]+.5),x2=X(PB[p]+.5);s+=`<rect x="${x1}" y="${T-10}" width="${Math.max(0,x2-x1)}" height="${H-T-B+10}" fill="${p%2?"rgba(var(--pbi),.05)":"none"}"/><text class="pl" x="${(x1+x2)/2}" y="${H-9}" text-anchor="middle">คาบ ${p}</text>`;}
     ticks.forEach(v=>{s+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(var(--pbi),.15)" stroke-dasharray="3 4"/><text class="ax" x="${L-7}" y="${Y(v)+4}" text-anchor="end">${t.k==2||t.k==5?v.toFixed(1):v}</text>`;});
-    s+=`<text class="ax" x="${L-7}" y="${T-14}" text-anchor="end">${t.u}</text><line x1="${L}" x2="${L}" y1="${T-10}" y2="${H-B}" stroke="var(--ink)" stroke-width="2"/><line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--ink)" stroke-width="2"/>`;
-    if(hz&&tval(t,hz)!=null)s+=`<line x1="${X(hz)}" x2="${X(hz)}" y1="${T-10}" y2="${H-B}" stroke="var(--blue)" stroke-width="2" stroke-dasharray="4 3"/>`;
+    s+=`<text class="ax" x="${L-7}" y="${T-18}" text-anchor="end">${t.u}</text><line x1="${L}" x2="${L}" y1="${T-10}" y2="${H-B}" stroke="var(--ink)" stroke-width="2"/><line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--ink)" stroke-width="2"/>`;
+    const hv=hz?tval(t,hz):null;if(hv!=null)s+=`<line x1="${X(hz)}" x2="${X(hz)}" y1="${T-10}" y2="${H-B}" stroke="var(--blue)" stroke-width="2" stroke-dasharray="4 3"/>`;
     let d="",pv=0;for(let z=1;z<=86;z++){const x=tval(t,z);if(x==null){pv=0;continue;}d+=`${pv?"L":"M"}${X(z).toFixed(1)},${Y(x).toFixed(1)}`;pv=1;}
-    s+=`<path d="${d}" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
-    const LBL=new Set([2,10,18,36,54,86,3,11,19,37,55,1,9,17,6,74,76,80]);
+    s+=`<path class="ln" pathLength="1" d="${d}" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const LBL=new Set([1,2,10,18,36,54,86,3,11,19,37,55]);   // only the landmarks get names; the rest stay dots (no pile-ups)
     for(let z=1;z<=86;z++){const x=tval(t,z);if(x==null)continue;const e=BY[z],cur=z==hz,ex=t.ex[z];
       const fill=cur?"var(--blue)":e.cat=="ng"?"var(--ink)":e.cat=="alk"?"var(--red)":e.cat=="hal"?"#1f3fbf":e.cat=="ae"?"#f28c28":"var(--card)";
-      s+=`<circle data-z="${z}" cx="${X(z)}" cy="${Y(x)}" r="${cur?7:4}" fill="${fill}" stroke="${ex?"var(--red)":"var(--ink)"}" stroke-width="${ex?2.5:1.5}"/>`;
-      if(cur||LBL.has(z)||ex){const up=tn(t,x)<.86;s+=`<text class="lb" x="${X(z)}" y="${up?Y(x)-10:Y(x)+19}" text-anchor="middle"${cur?' style="fill:var(--blue);font-size:13px"':""}>${e.s}${cur?" "+tf(t,x):""}</text>`;}}
+      s+=`<circle data-z="${z}" style="--i:${z}" cx="${X(z)}" cy="${Y(x)}" r="${cur?7:4}" fill="${fill}" stroke="${ex?"var(--red)":"var(--ink)"}" stroke-width="${ex?2.5:1.5}"/>`;
+      if(LBL.has(z)&&!cur){const up=tn(t,x)<.86;s+=`<text class="lb" style="--i:${z}" x="${X(z)}" y="${up?Y(x)-10:Y(x)+19}" text-anchor="middle">${e.s}</text>`;}}
+    if(hv!=null){const e=BY[hz],lbl=`${e.s} ${tf(t,hv)}${t.u?" "+t.u:""}`,wd=lbl.length*7.4+16,cx=Math.min(W-R-wd/2,Math.max(L+wd/2,X(hz)));   // the pointed-at element: one pill above the plot, never on top of the dots
+      s+=`<g class="cur"><rect x="${cx-wd/2}" y="${T-30}" width="${wd}" height="20" fill="var(--blue)" stroke="var(--ink)" stroke-width="2"/><text x="${cx}" y="${T-15.5}" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-weight="800" font-size="12">${lbl}</text></g>`;}
     const cs=getComputedStyle(G);s=s.replace(/var\((--[a-z]+)\)/g,(m,v)=>cs.getPropertyValue(v).trim()||m);   // SVG presentation attributes can't read CSS variables
-    box.innerHTML=`<h5>${t.ic} ${t.full} เทียบเลขอะตอม <small>Z 1–86 · ชี้จุดหรือธาตุเพื่อดูค่า · ขอบแดง = ข้อยกเว้น</small></h5>`+s+`</svg>`;}
-  function trPaint(){G.classList.toggle("trend",trOn>=0);G.classList.toggle("tsize",trOn===0);$("#pd").classList.toggle("trw",trOn>=0);$("#pd .pdw").classList.toggle("tron",trOn>=0);
+    box.innerHTML=`<div><h5>${t.ic} ${t.full} เทียบเลขอะตอม <small>Z 1–86 · ชี้จุดหรือธาตุเพื่อดูค่า · ขอบแดง = ข้อยกเว้น</small></h5>${s}</svg></div>`;}
+  function trPaint(){const was=G.classList.contains("trend");
+    G.classList.toggle("trend",trOn>=0);G.classList.toggle("tsize",trOn===0);$("#pd").classList.toggle("trw",trOn>=0);
     $("#pdtr").querySelectorAll("button").forEach(b=>b.classList.toggle("on",+b.dataset.t===trOn));
-    G.querySelectorAll(".pde").forEach(tile=>{const e=BY[tile.dataset.z],s=tile.querySelector(".pf s");tile.classList.remove("tex","tnil","thl");tile.removeAttribute("data-x");
+    G.querySelectorAll(".pde").forEach(tile=>{const e=BY[tile.dataset.z],s=tile.querySelector(".pf s");tile.style.setProperty("--td",(tile.dataset.w*16)+"ms");   // diagonal wave from H
+      tile.classList.remove("tex","tnil","thl");tile.removeAttribute("data-x");
       if(trOn<0){tile.style.removeProperty("--tc");tile.style.removeProperty("--sz");s.textContent=fm(e);return;}
       const t=TRS[trOn],x=tval(t,e.z);s.textContent=tf(t,x);if(x==null)tile.classList.add("tnil");
       if(trOn===0){tile.style.setProperty("--sz",x==null?0:(.94*x/t.hi).toFixed(3));tile.style.removeProperty("--tc");}
       else{tile.style.removeProperty("--sz");if(x==null)tile.style.removeProperty("--tc");else tile.style.setProperty("--tc",soft(tn(t,x)));}
       if(t.ex[e.z]){tile.classList.add("tex");tile.dataset.x=t.ex[e.z];}});
+    if(was||trOn>=0)restart(G,"tsw");
     if(last){big(last);if(trOn>=0){trBig(last);G.querySelector(`.pde[data-z="${last.z}"]`).classList.add("thl");}}
-    if(trOn>=0)trCard(last);
-    setTimeout(()=>{trArrows();trGraph(last&&last.z);},trOn>=0?620:0);}   // after the drawer finishes widening
+    trCard(last,true);trPad();trArrows(true);
+    if(trOn>=0)setTimeout(()=>trGraph(last&&last.z,true),was?0:450);else trGraph();}
   function setTrend(k){if(k>=0&&memOn)setMem(false,1);trOn=k;trPaint();}
   function trHover(e){if(trOn<0||!e)return;G.querySelectorAll(".pde.thl").forEach(x=>x.classList.remove("thl"));G.querySelector(`.pde[data-z="${e.z}"]`)?.classList.add("thl");
     big(e);trBig(e);trCard(e);trGraph(e.z);}

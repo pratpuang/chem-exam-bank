@@ -26,7 +26,7 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
 
   await go(URL0);
   await ev(`PD.open()`); await sleep(900);
-  const btn = async k => { await ev(`document.querySelector('#pdtr button[data-t="${k}"]').click()`); await sleep(900); };
+  const btn = async k => { await ev(`document.querySelector('#pdtr button[data-t="${k}"]').click()`); await sleep(1800); };
   check("trend row has off + 6 trends", await ev(`document.querySelectorAll("#pdtr button").length`) === 7);
   await btn(1);
   check("IE: tiles heat-coloured", await ev(`getComputedStyle(document.querySelector('.pde[data-z="9"] .pf')).backgroundColor`) !== await ev(`getComputedStyle(document.querySelector('.pde[data-z="3"] .pf')).backgroundColor`));
