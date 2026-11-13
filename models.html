@@ -184,20 +184,25 @@ function gasModel(root){
     // so 40 dots don't flicker, a fixed-feeling y scale that eases instead of jumping, and the theory curve on top
     // (2D Maxwell-Boltzmann / Rayleigh: f(v) = v/s^2 * exp(-v^2/2s^2), s = vrms/sqrt2) that the bars settle onto.
     const bx=556,by=318,bw=194,bh=132,NB=14,VX=vrms(500)*2.4,dv=VX/NB,N=Math.max(1,ps.length),sg=vrms(S.T)/Math.SQRT2;
-    const raw=Array(NB).fill(0);for(const p of ps){const k=Math.min(NB-1,Math.floor(Math.hypot(p.vx,p.vy)/dv));raw[k]++;}
-    if(!HS||HS.length!==NB)HS=raw.slice();else for(let k=0;k<NB;k++)HS[k]+=(raw[k]-HS[k])*.04;
+    // the dots' own distribution as a SMOOTH LINE (his ask): each dot adds a small gaussian bump (kernel density), averaged
+    // over time so it glides instead of jittering; filled underneath in the slow -> fast colours
+    const NP=72,bwK=VX*.06,dens=Array(NP+1).fill(0);for(const p of ps){const v=Math.hypot(p.vx,p.vy);for(let i=0;i<=NP;i++){const u=(VX*i/NP-v)/bwK;if(u>-3&&u<3)dens[i]+=Math.exp(-u*u/2);}}
+    for(let i=0;i<=NP;i++)dens[i]*=dv/(bwK*Math.sqrt(2*Math.PI));   // same units as the theory curve (dots per bin width)
+    if(!HS||HS.length!==NP+1)HS=dens.slice();else for(let i=0;i<=NP;i++)HS[i]+=(dens[i]-HS[i])*.06;
     const fr=v=>v/(sg*sg)*Math.exp(-v*v/(2*sg*sg)),peak=N*dv*fr(sg);YS+=(peak*1.35-YS)*.05;if(!(YS>0))YS=peak*1.35;
     const px0=bx+12,px1=bx+bw-8,py0=by+10,py1=by+bh-22,X=v=>px0+v/VX*(px1-px0),Yv=n=>py1-Math.min(1.05,n/YS)*(py1-py0);
     c.lineWidth=3;c.strokeStyle=ink;c.fillStyle="#fffdf7";rr(bx,by,bw,bh);
-    for(let k=0;k<NB;k++){const x=X(k*dv)+1,w=X(dv)-px0-2,y=Yv(HS[k]);if(py1-y<.5)continue;c.fillStyle=col((k+.5)*dv);c.fillRect(x,y,w,py1-y);c.lineWidth=1;c.strokeStyle="rgba(20,20,20,.55)";c.strokeRect(x,y,w,py1-y);}
-    c.beginPath();for(let i=0;i<=60;i++){const v=VX*i/60,y=Yv(N*dv*fr(v));i?c.lineTo(X(v),y):c.moveTo(X(v),y);}c.lineWidth=2.5;c.strokeStyle=ink;c.setLineDash([5,4]);c.stroke();c.setLineDash([]);
+    const kg=c.createLinearGradient(px0,0,px1,0);[0,.25,.5,.75,1].forEach(t=>kg.addColorStop(t,col(t*VX)));
+    c.beginPath();c.moveTo(X(0),py1);for(let i=0;i<=NP;i++)c.lineTo(X(VX*i/NP),Yv(HS[i]));c.lineTo(X(VX),py1);c.closePath();c.globalAlpha=.45;c.fillStyle=kg;c.fill();c.globalAlpha=1;
+    c.beginPath();for(let i=0;i<=NP;i++){const x=X(VX*i/NP),y=Yv(HS[i]);i?c.lineTo(x,y):c.moveTo(x,y);}c.lineWidth=3.2;c.strokeStyle=ink;c.lineJoin="round";c.stroke();
+    c.beginPath();for(let i=0;i<=60;i++){const v=VX*i/60,y=Yv(N*dv*fr(v));i?c.lineTo(X(v),y):c.moveTo(X(v),y);}c.lineWidth=2;c.strokeStyle="#6b6457";c.setLineDash([5,4]);c.stroke();c.setLineDash([]);
     const vm=sg*Math.sqrt(Math.PI/2);c.strokeStyle="#e4412b";c.lineWidth=2;c.beginPath();c.moveTo(X(vm),py0);c.lineTo(X(vm),py1);c.stroke();
     {const lx=Math.min(px1-16,X(vm));c.fillStyle="#e4412b";c.fillRect(lx-17,by-13,34,15);c.fillStyle="#fff";c.font="800 10px Anuphan";c.textAlign="center";c.fillText("เฉลี่ย",lx,by-2);}   /* label above the box, never on the bars */
     c.lineWidth=2.5;c.strokeStyle=ink;c.beginPath();c.moveTo(px0,py0-4);c.lineTo(px0,py1);c.lineTo(px1,py1);c.stroke();
     c.fillStyle=ink;c.font="700 10px Anuphan";c.textAlign="center";c.fillText("ช้า",px0+10,py1+13);c.fillText("เร็ว",px1-10,py1+13);c.fillText("ความเร็ว →",(px0+px1)/2,py1+13);
     c.textAlign="left";c.fillText("จำนวน ↑",bx,by-6);c.textAlign="center";
     c.font="800 12px Anuphan";c.fillText("การกระจายความเร็ว (T = "+Math.round(S.T)+" K)",bx+bw/2,by+bh+18);
-    c.font="600 10px Anuphan";c.fillStyle="#6b6457";c.fillText("แท่ง = จุดในกล่อง · เส้นประ = ทฤษฎี",bx+bw/2,by+bh+32);}
+    c.font="600 10px Anuphan";c.fillStyle="#6b6457";c.fillText("เส้นทึบ = จุดในกล่อง · เส้นประ = ทฤษฎี",bx+bw/2,by+bh+32);}
   let HS=null,YS=0;
   let last=performance.now();
   function frame(t){if(!root.isConnected)return;const dt=Math.min(.033,(t-last)/1000);last=t;if(!S.paused){const n=2;for(let i=0;i<n;i++)physics(dt/n);}draw();requestAnimationFrame(frame);}
