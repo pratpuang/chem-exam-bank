@@ -1735,7 +1735,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 <nav id="stabs"><button id="pdtab" title="ตารางธาตุ + คำนวณ Mw">ตารางธาตุ</button>
 <button id="tdtab" title="ค่าคงที่ · แปลงหน่วย · ไอออน · สูตร">เครื่องมือ</button>
 <button id="tmtab" title="จับเวลา">จับเวลา</button>
-<button id="vstab" title="รูปร่างโมเลกุล 3 มิติ (VSEPR)">โมเลกุล 3D</button><button id="motab" title="โมเดลสอน: ลาก กด ดูของจริงขยับ">โมเดล</button></nav>
+<button id="motab" title="โมเดลสอน: รูปร่างโมเลกุล 3D · กฎของแก๊ส · ลาก กด ดูของจริงขยับ">โมเดล</button></nav>
 <aside id="td" aria-label="เครื่องมือ">
   <div class="pdh"><b>🧰 เครื่องมือ</b><span class="pdhov">ค่าคงที่ · แปลงหน่วย · ไอออน · สูตร</span><button class="pdx" id="tdx" title="ปิด (Esc)">✕</button></div>
   <div class="tdtabs" id="tdtabs"><button data-t="fx" id="fxtabb" class="on">สูตร</button><button data-t="k">ค่าคงที่</button><button data-t="cv">แปลงหน่วย</button><button data-t="io">ไอออน</button></div>
@@ -1745,10 +1745,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
   <div class="pdh"><b>🧪 โมเดลสอน</b><span class="pdhov">ลาก กด ดูของจริงขยับ · เปิดที่บทของข้อที่อยู่บนจอ</span><button class="pdx" id="mox" title="ปิด (Esc)">✕</button></div>
   <iframe id="mof" title="โมเดลสอน"></iframe>
 </aside>
-<aside id="vs" aria-label="รูปร่างโมเลกุล">
-  <div class="pdh"><b>รูปร่างโมเลกุล 3D</b><span class="pdhov">VSEPR · เพิ่ม/ลดพันธะและอิเล็กตรอนคู่โดดเดี่ยว · ลากหมุนได้</span><button class="pdx" id="vsx" title="ปิด (Esc)">✕</button></div>
-  <iframe id="vsf" title="รูปร่างโมเลกุล 3D"></iframe>
-</aside>
+<!-- the VSEPR 3D drawer moved into the โมเดล drawer (models.html, บท 4 tab) 2026-11-14 -->
 <div id="tmmini" aria-label="นาฬิกาจับเวลา"><div class="tmmd" id="tmmd" title="เปิดแผงจับเวลา">05:00</div><div class="tmmb"><i id="tmmbar"></i></div>
   <div class="tmmc"><button class="go" id="tmmgo">▶</button><button id="tmmreset" title="รีเซ็ต">↺</button><button id="tmmx" title="ซ่อน">✕</button></div></div>
 <aside id="tm" aria-label="จับเวลา">
@@ -3164,28 +3161,17 @@ const TD=(()=>{
 /* ================= โมเดล (teaching models drawer): models.html?embed=1&ch=NN in an iframe ================= */
 const MO=(()=>{
   const isOpen=()=>document.body.classList.contains("moopen");let ch=null;
-  function open(){SL.lock("mo");if(PD.isOpen())PD.close();if(TD.isOpen())TD.close();if(VS.isOpen())VS.close();
-    const q=PD.curQ(),want=q&&q.ch?q.ch:"08";   // the chapter on screen; the page falls back to its first model if that chapter has none yet
+  function open(force){SL.lock("mo");if(PD.isOpen())PD.close();if(TD.isOpen())TD.close();
+    const q=PD.curQ(),want=typeof force==="string"?force:q&&q.ch?q.ch:"08";   // the chapter on screen; the page falls back to its first model if that chapter has none yet
     if(want!==ch){ch=want;$("#mof").src="models.html?embed=1&ch="+ch;}
     document.body.classList.add("moopen");SFX.play("drawer","mo");}
   function close(){if(!isOpen())return;document.body.classList.remove("moopen");SL.unlock("mo");SFX.play("undrawer");}
-  $("#motab").onclick=()=>isOpen()?close():open();$("#mox").onclick=close;$("#pdscrim").addEventListener("click",close);
+  $("#motab").onclick=()=>isOpen()?close():open();   // (a click event is not a chapter: open() only honours a string)$("#mox").onclick=close;$("#pdscrim").addEventListener("click",close);
   $("#mof").addEventListener("load",()=>{try{$("#mof").contentWindow.addEventListener("keydown",e=>{if(e.key==="Escape")close();});}catch(_){}});
   return{open,close,isOpen};
 })();
-/* ================= VSEPR 3D (left drawer, vsepr.html in an iframe, loaded on first open) ================= */
-const VS=(()=>{
-  const isOpen=()=>document.body.classList.contains("vsopen");
-  function open(){SL.lock("vs");if(PD.isOpen())PD.close();if(TD.isOpen())TD.close();
-    const f=$("#vsf");if(!f.src)f.src="vsepr.html?embed=1";
-    document.body.classList.add("vsopen");SFX.play("drawer","vs");}
-  function close(){if(!isOpen())return;document.body.classList.remove("vsopen");SL.unlock("vs");SFX.play("undrawer");}
-  $("#vstab").onclick=()=>isOpen()?close():open();$("#vsx").onclick=close;
-  $("#pdscrim").addEventListener("click",close);
-  // Esc pressed inside the 3D view closes the drawer too
-  $("#vsf").addEventListener("load",()=>{try{$("#vsf").contentWindow.addEventListener("keydown",e=>{if(e.key==="Escape")close();});}catch(_){}});
-  return{open,close,isOpen};
-})();
+/* VSEPR 3D now lives inside the โมเดล drawer (บท 4 tab). VS stays as a stub so older callers keep working. */
+const VS={open:()=>MO.open("04"),close(){},isOpen:()=>false};
 
 /* ================= SIMPLE TIMER (right panel) ================= */
 const TM=(()=>{

@@ -47,9 +47,12 @@ body.embed .page{padding:4px 2px 20px}body.embed h1,body.embed .sub{display:none
 .row2{display:flex;gap:8px}
 .btn{border:3px solid var(--ink);background:var(--card);font:800 .85rem Anuphan;padding:6px 12px;cursor:pointer;box-shadow:3px 3px 0 var(--sh);flex:1}
 .btn:active{transform:translate(3px,3px);box-shadow:none}
+.btn.on{background:var(--red);color:#fff}
 .leg{display:flex;gap:10px;font:600 .74rem Anuphan;color:var(--mut);align-items:center;flex-wrap:wrap}
 .leg i{display:inline-block;width:11px;height:11px;border-radius:50%;border:1.5px solid var(--ink);vertical-align:-1px;margin-right:3px}
 .soon{padding:30px;text-align:center;font-weight:700;color:var(--mut)}
+.vsf{display:block;width:100%;height:80vh;border:4px solid var(--ink);box-shadow:8px 8px 0 var(--sh);background:var(--paper)}
+body.embed .vsf{height:calc(100vh - 78px)}
 </style></head><body>
 <div class="page">
 <h1>โมเดลสอนเคมี</h1><p class="sub">ลาก กด ดูของจริงขยับ · เลือกบทด้านล่าง</p>
@@ -58,12 +61,14 @@ body.embed .page{padding:4px 2px 20px}body.embed h1,body.embed .sub{display:none
 </div>
 <script>
 const QS=new URLSearchParams(location.search);if(QS.get("embed"))document.body.classList.add("embed");
-const MODELS=[{ch:"08",t:"บท 8 · กฎของแก๊ส",build:gasModel}];   // more chapters plug in here
+const MODELS=[{ch:"04",t:"บท 4 · รูปร่างโมเลกุล 3D",build:vseprModel},{ch:"08",t:"บท 8 · กฎของแก๊ส",build:gasModel}];   // more chapters plug in here, in chapter order
+/* ch04 · the VSEPR 3D model (its own page, vsepr.html) lives in this panel now (his call 2026-11-14: one side panel, "โมเดล") */
+function vseprModel(root){root.innerHTML=`<iframe class="vsf" src="vsepr.html?embed=1" title="รูปร่างโมเลกุล 3D"></iframe>`;}
 const ROOTEL=document.getElementById("mroot");
 function show(i){document.querySelectorAll("#mtabs button").forEach((b,j)=>b.classList.toggle("on",j===i));ROOTEL.innerHTML="";MODELS[i].build(ROOTEL);}
 document.getElementById("mtabs").innerHTML=MODELS.map((m,i)=>`<button data-i="${i}">${m.t}</button>`).join("")+`<button disabled>บทอื่น · กำลังสร้าง</button>`;
 document.getElementById("mtabs").onclick=e=>{const b=e.target.closest("button[data-i]");if(b)show(+b.dataset.i);};
-const want=MODELS.findIndex(m=>m.ch===QS.get("ch"));show(want<0?0:want);
+const want=MODELS.findIndex(m=>m.ch===QS.get("ch"));show(want<0?MODELS.findIndex(m=>m.ch==="08"):want);   // a chapter with no model yet opens the gas model
 
 /* ================= ch08 · gas laws: piston chamber =================
    Model: ideal gas, PV = nRT with R = 0.0821 L·atm/(mol·K). The dots are hard spheres that bounce off each other and the walls
@@ -84,7 +89,7 @@ function gasModel(root){
      <div class="sl" data-k="n"><b>n</b><input type="range" min="0.05" max="0.5" step="0.01"><output></output><div class="st"></div></div></div>
     <div class="box"><div class="tiles" id="gtiles"></div></div>
     <div class="box eq" id="geq"></div>
-    <div class="row2"><button class="btn" id="greset">↺ เริ่มใหม่</button><button class="btn" id="gpause">⏸ หยุด</button></div>
+    <div class="row2"><button class="btn" id="greset">↺ เริ่มใหม่</button><button class="btn" id="gpause">⏸ หยุด</button><button class="btn" id="gea" aria-pressed="false">เส้น Ea: ปิด</button></div>
     <div class="leg"><span><i style="background:#1f3fbf"></i>ช้า</span><span><i style="background:#9a5a8a"></i>กลาง</span><span><i style="background:#e4412b"></i>เร็ว</span><span>· ลากลูกสูบได้ตอนล็อกอุณหภูมิ</span></div>
    </div></div>`;
   const cv=root.querySelector("#gc"),c=cv.getContext("2d"),W=760,H=560,DPR=Math.min(2,devicePixelRatio||1);cv.width=W*DPR;cv.height=H*DPR;c.scale(DPR,DPR);
@@ -121,6 +126,7 @@ function gasModel(root){
   root.querySelector("#glocks").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.hold=b.dataset.v;S.Pheld=S.P;S.last=S.hold==="T"?"V":"T";solve();ui();};
   root.querySelectorAll(".sl input").forEach(inp=>inp.oninput=()=>{const k=inp.closest(".sl").dataset.k;S[k]=+inp.value;S.last=k;flash[k]=1;solve();if(k==="n")setDots();ui();});
   root.querySelector("#greset").onclick=()=>{Object.assign(S,{hold:"T",V:5,T:300,n:.2,last:"V",vDisp:5,vVel:0,stop:false});S.P=S.n*R*S.T/S.V;S.Pheld=S.P;ps=[];setDots();ps.forEach(p=>Object.assign(p,spawn(false)));ui();};
+  root.querySelector("#gea").onclick=e=>{EAON=!EAON;e.currentTarget.textContent="เส้น Ea: "+(EAON?"เปิด":"ปิด");e.currentTarget.setAttribute("aria-pressed",EAON);e.currentTarget.classList.toggle("on",EAON);};
   root.querySelector("#gpause").onclick=e=>{S.paused=!S.paused;e.target.textContent=S.paused?"▶ เล่นต่อ":"⏸ หยุด";};
   // drag the piston handle (only while T is held, the one case where V is yours to set)
   let drag=false;const pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];};
@@ -201,6 +207,7 @@ function gasModel(root){
     c.beginPath();for(let i=0;i<=NP;i++){const x=X(VX*i/NP),y=Yv(HS[i]);i?c.lineTo(x,y):c.moveTo(x,y);}c.lineWidth=3.2;c.strokeStyle=ink;c.lineJoin="round";c.stroke();
     c.beginPath();for(let i=0;i<=60;i++){const v=VX*i/60,y=Yv(N*dv*fr(v));i?c.lineTo(X(v),y):c.moveTo(X(v),y);}c.lineWidth=2;c.strokeStyle="#6b6457";c.setLineDash([5,4]);c.stroke();c.setLineDash([]);
     // Ea (his ask): the threshold for a reaction. Dots faster than it have enough energy; the shaded tail is them. Drag it.
+    if(EAON){
     const vEa=vEaF*VX,xe=X(vEa);EAG={x:xe,y0:py0,y1:py1,px0,px1};
     c.beginPath();c.moveTo(xe,py1);for(let i=0;i<=NP;i++){const v=VX*i/NP;if(v>=vEa)c.lineTo(X(v),Yv(HS[i]));}c.lineTo(X(VX),py1);c.closePath();
     c.save();c.clip();c.strokeStyle="rgba(228,65,43,.85)";c.lineWidth=2;for(let k=-200;k<300;k+=7){c.beginPath();c.moveTo(xe+k,py1);c.lineTo(xe+k+80,py0-60);c.stroke();}c.restore();
@@ -209,14 +216,15 @@ function gasModel(root){
     c.fillStyle="#141414";c.fillRect(xe-16,py1-2-16,32,16);c.fillStyle="#f2b705";c.font="800 11px JetBrains Mono";c.textAlign="center";c.fillText("Ea",xe,py1-6);
     c.fillStyle="#e4412b";c.font="800 12px Anuphan";c.textAlign="right";c.fillText("เกิน Ea "+Math.round(EAP)+"%",px1-2,py0+12);
     c.font="600 9px Anuphan";c.fillStyle="#6b6457";c.fillText("⇆ ลากเส้น Ea ได้",px1-2,py0+24);
+    }else EAG=null;   // Ea off: no line, no shading, nothing to drag
     const vm=sg*Math.sqrt(Math.PI/2);c.strokeStyle="#e4412b";c.lineWidth=2;c.beginPath();c.moveTo(X(vm),py0);c.lineTo(X(vm),py1);c.stroke();
     {const lx=Math.min(px1-16,X(vm));c.fillStyle="#e4412b";c.fillRect(lx-17,by-13,34,15);c.fillStyle="#fff";c.font="800 10px Anuphan";c.textAlign="center";c.fillText("เฉลี่ย",lx,by-2);}   /* label above the box, never on the bars */
     c.lineWidth=2.5;c.strokeStyle=ink;c.beginPath();c.moveTo(px0,py0-4);c.lineTo(px0,py1);c.lineTo(px1,py1);c.stroke();
     c.fillStyle=ink;c.font="700 10px Anuphan";c.textAlign="center";c.fillText("ช้า",px0+10,py1+13);c.fillText("เร็ว",px1-10,py1+13);c.fillText("ความเร็ว →",(px0+px1)/2,py1+13);
     c.textAlign="left";c.fillText("จำนวน ↑",bx,by-6);c.textAlign="center";
     c.font="800 12px Anuphan";c.fillText("การกระจายความเร็ว (T = "+Math.round(S.T)+" K)",bx+bw/2,by+bh+18);
-    c.font="600 10px Anuphan";c.fillStyle="#6b6457";c.fillText("ทึบ = ในกล่อง · ประ = ทฤษฎี · ลายแดง = ถึง Ea",bx+bw/2,by+bh+32);}
-  let HS=null,YS=0,EAG=null,vEaF=.42,EAP=0;
+    c.font="600 10px Anuphan";c.fillStyle="#6b6457";c.fillText("ทึบ = ในกล่อง · ประ = ทฤษฎี"+(EAON?" · ลายแดง = ถึง Ea":""),bx+bw/2,by+bh+32);}
+  let HS=null,YS=0,EAG=null,vEaF=.42,EAP=0,EAON=false;
   let last=performance.now();
   function frame(t){if(!root.isConnected)return;const dt=Math.min(.033,(t-last)/1000);last=t;if(!S.paused){const n=2;for(let i=0;i<n;i++)physics(dt/n);}draw();requestAnimationFrame(frame);}
   setDots();ps.forEach(p=>Object.assign(p,spawn(false)));ui();requestAnimationFrame(frame);

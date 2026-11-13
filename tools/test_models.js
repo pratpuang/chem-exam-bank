@@ -57,14 +57,19 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
   check("n 0.10 -> 20 dots (gas let out)", await g(`G.ps.length`) === 20);
   await ev(`document.querySelector("#greset").click()`); await sleep(1200);
   // Ea: heating puts more of the dots past the line
+  check("Ea line starts OFF", await ev(`document.querySelector("#gea").textContent.includes("ปิด")`));
+  await ev(`document.querySelector("#gea").click()`);
   await lock("V"); await set("T", 300); await sleep(3500); const e1 = await g(`G.eap`);
   await set("T", 650); await sleep(3500); const e2 = await g(`G.eap`);
   check("Ea: hotter gas -> bigger share past Ea", e2 > e1 + 10, [e1, e2]);
   await set("T", 300); await lock("T"); await sleep(1500);
   await shot("models.png");
+  await ev(`document.querySelector('#mtabs button[data-i="0"]').click()`); await sleep(1500);
+  check("บท 4 tab shows the VSEPR 3D model inside the panel", await ev(`!!document.querySelector("iframe.vsf")&&document.querySelector("iframe.vsf").src.includes("vsepr.html?embed=1")`));
   // the drawer inside the bank
   await go(URL0);
   await ev(`document.querySelector("#motab").click()`); await sleep(1200);
+  check("old โมเลกุล 3D tab is gone (merged)", await ev(`!document.querySelector("#vstab")&&!document.querySelector("#vs")`));
   check("โมเดล tab opens the drawer with models.html", await ev(`document.body.classList.contains("moopen")&&document.querySelector("#mof").src.includes("models.html?embed=1&ch=")`));
   await shot("models-drawer.png");
   check("no JS errors", errs.length === 0, errs);
