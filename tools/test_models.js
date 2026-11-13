@@ -56,6 +56,11 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
   await set("n", 0.1); await sleep(300);
   check("n 0.10 -> 20 dots (gas let out)", await g(`G.ps.length`) === 20);
   await ev(`document.querySelector("#greset").click()`); await sleep(1200);
+  // Ea: heating puts more of the dots past the line
+  await lock("V"); await set("T", 300); await sleep(3500); const e1 = await g(`G.eap`);
+  await set("T", 650); await sleep(3500); const e2 = await g(`G.eap`);
+  check("Ea: hotter gas -> bigger share past Ea", e2 > e1 + 10, [e1, e2]);
+  await set("T", 300); await lock("T"); await sleep(1500);
   await shot("models.png");
   // the drawer inside the bank
   await go(URL0);

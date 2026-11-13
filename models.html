@@ -124,9 +124,13 @@ function gasModel(root){
   root.querySelector("#gpause").onclick=e=>{S.paused=!S.paused;e.target.textContent=S.paused?"▶ เล่นต่อ":"⏸ หยุด";};
   // drag the piston handle (only while T is held, the one case where V is yours to set)
   let drag=false;const pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];};
-  cv.onpointermove=e=>{const[x,y]=pt(e),yp=yOf(S.vDisp),near=x>CX0-10&&x<CX1+70&&Math.abs(y-(yp-30))<40;cv.style.cursor=role("V")==="free"&&(near||drag)?"ns-resize":"default";
+  let eaDrag=false;const nearEa=(x,y)=>EAG&&Math.abs(x-EAG.x)<14&&y>EAG.y0-16&&y<EAG.y1;
+  cv.addEventListener("pointerdown",e=>{const[x,y]=pt(e);if(nearEa(x,y)){eaDrag=true;cv.setPointerCapture(e.pointerId);e.stopImmediatePropagation();}},true);
+  cv.addEventListener("pointermove",e=>{const[x,y]=pt(e);if(eaDrag){vEaF=Math.max(.15,Math.min(.95,(x-EAG.px0)/(EAG.px1-EAG.px0)));}else if(nearEa(x,y))cv.style.cursor="ew-resize";});
+  cv.addEventListener("pointerup",()=>eaDrag=false);
+  cv.onpointermove=e=>{if(eaDrag)return;const[x,y]=pt(e),yp=yOf(S.vDisp),near=x>CX0-10&&x<CX1+70&&Math.abs(y-(yp-30))<40;cv.style.cursor=role("V")==="free"&&(near||drag)?"ns-resize":"default";
     if(!drag)return;S.V=Math.max(VMIN,Math.min(VMAX,(CB-(y+20))/HMAX*VMAX));S.last="V";flash.V=1;solve();ui();};
-  cv.onpointerdown=e=>{const[x,y]=pt(e),yp=yOf(S.vDisp);if(role("V")==="free"&&x>CX0-10&&x<CX1+70&&Math.abs(y-(yp-30))<40){drag=true;cv.setPointerCapture(e.pointerId);}};
+  cv.onpointerdown=e=>{if(eaDrag)return;const[x,y]=pt(e),yp=yOf(S.vDisp);if(role("V")==="free"&&x>CX0-10&&x<CX1+70&&Math.abs(y-(yp-30))<40){drag=true;cv.setPointerCapture(e.pointerId);}};
   cv.onpointerup=()=>drag=false;
   // ---- physics ----
   function physics(dt){
@@ -196,17 +200,26 @@ function gasModel(root){
     c.beginPath();c.moveTo(X(0),py1);for(let i=0;i<=NP;i++)c.lineTo(X(VX*i/NP),Yv(HS[i]));c.lineTo(X(VX),py1);c.closePath();c.globalAlpha=.45;c.fillStyle=kg;c.fill();c.globalAlpha=1;
     c.beginPath();for(let i=0;i<=NP;i++){const x=X(VX*i/NP),y=Yv(HS[i]);i?c.lineTo(x,y):c.moveTo(x,y);}c.lineWidth=3.2;c.strokeStyle=ink;c.lineJoin="round";c.stroke();
     c.beginPath();for(let i=0;i<=60;i++){const v=VX*i/60,y=Yv(N*dv*fr(v));i?c.lineTo(X(v),y):c.moveTo(X(v),y);}c.lineWidth=2;c.strokeStyle="#6b6457";c.setLineDash([5,4]);c.stroke();c.setLineDash([]);
+    // Ea (his ask): the threshold for a reaction. Dots faster than it have enough energy; the shaded tail is them. Drag it.
+    const vEa=vEaF*VX,xe=X(vEa);EAG={x:xe,y0:py0,y1:py1,px0,px1};
+    c.beginPath();c.moveTo(xe,py1);for(let i=0;i<=NP;i++){const v=VX*i/NP;if(v>=vEa)c.lineTo(X(v),Yv(HS[i]));}c.lineTo(X(VX),py1);c.closePath();
+    c.save();c.clip();c.strokeStyle="rgba(228,65,43,.85)";c.lineWidth=2;for(let k=-200;k<300;k+=7){c.beginPath();c.moveTo(xe+k,py1);c.lineTo(xe+k+80,py0-60);c.stroke();}c.restore();
+    const over=ps.filter(p=>Math.hypot(p.vx,p.vy)>=vEa).length;EAP+=(over/N*100-EAP)*.05;
+    c.strokeStyle="#141414";c.lineWidth=3;c.beginPath();c.moveTo(xe,py0-2);c.lineTo(xe,py1);c.stroke();
+    c.fillStyle="#141414";c.fillRect(xe-16,py1-2-16,32,16);c.fillStyle="#f2b705";c.font="800 11px JetBrains Mono";c.textAlign="center";c.fillText("Ea",xe,py1-6);
+    c.fillStyle="#e4412b";c.font="800 12px Anuphan";c.textAlign="right";c.fillText("เกิน Ea "+Math.round(EAP)+"%",px1-2,py0+12);
+    c.font="600 9px Anuphan";c.fillStyle="#6b6457";c.fillText("⇆ ลากเส้น Ea ได้",px1-2,py0+24);
     const vm=sg*Math.sqrt(Math.PI/2);c.strokeStyle="#e4412b";c.lineWidth=2;c.beginPath();c.moveTo(X(vm),py0);c.lineTo(X(vm),py1);c.stroke();
     {const lx=Math.min(px1-16,X(vm));c.fillStyle="#e4412b";c.fillRect(lx-17,by-13,34,15);c.fillStyle="#fff";c.font="800 10px Anuphan";c.textAlign="center";c.fillText("เฉลี่ย",lx,by-2);}   /* label above the box, never on the bars */
     c.lineWidth=2.5;c.strokeStyle=ink;c.beginPath();c.moveTo(px0,py0-4);c.lineTo(px0,py1);c.lineTo(px1,py1);c.stroke();
     c.fillStyle=ink;c.font="700 10px Anuphan";c.textAlign="center";c.fillText("ช้า",px0+10,py1+13);c.fillText("เร็ว",px1-10,py1+13);c.fillText("ความเร็ว →",(px0+px1)/2,py1+13);
     c.textAlign="left";c.fillText("จำนวน ↑",bx,by-6);c.textAlign="center";
     c.font="800 12px Anuphan";c.fillText("การกระจายความเร็ว (T = "+Math.round(S.T)+" K)",bx+bw/2,by+bh+18);
-    c.font="600 10px Anuphan";c.fillStyle="#6b6457";c.fillText("เส้นทึบ = จุดในกล่อง · เส้นประ = ทฤษฎี",bx+bw/2,by+bh+32);}
-  let HS=null,YS=0;
+    c.font="600 10px Anuphan";c.fillStyle="#6b6457";c.fillText("ทึบ = ในกล่อง · ประ = ทฤษฎี · ลายแดง = ถึง Ea",bx+bw/2,by+bh+32);}
+  let HS=null,YS=0,EAG=null,vEaF=.42,EAP=0;
   let last=performance.now();
   function frame(t){if(!root.isConnected)return;const dt=Math.min(.033,(t-last)/1000);last=t;if(!S.paused){const n=2;for(let i=0;i<n;i++)physics(dt/n);}draw();requestAnimationFrame(frame);}
   setDots();ps.forEach(p=>Object.assign(p,spawn(false)));ui();requestAnimationFrame(frame);
-  window.__gas={S,get ps(){return ps},vrms,geo:{CX0,CX1,CB,yOf,RAD}};   // read-only hook for tools/test_models.js
+  window.__gas={S,get ps(){return ps},get eap(){return EAP},vrms,geo:{CX0,CX1,CB,yOf,RAD}};   // read-only hook for tools/test_models.js
 }
 </script></body></html>
