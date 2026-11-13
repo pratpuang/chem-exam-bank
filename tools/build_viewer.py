@@ -1177,6 +1177,62 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 #pdmem{margin-left:0;display:inline-grid}#pdmem>span{grid-area:1/1}#pdmem:not(.on)>span+span,#pdmem.on>span:first-child{visibility:hidden}   /* both labels share one cell: ปิด/เปิด never resizes it */
 .pdrst::after{content:"";position:absolute;inset:-5px -2px}   /* hit area >= 44px without a taller button */
 .pde{touch-action:manipulation}
+/* ---------- trend mode (2026-11-13, his picks: heat map in the soft sample-5 colours + atomic size as spheres,
+   textbook arrows beside the table, red exception tags, a full-width graph of value vs Z under the table) ---------- */
+#pd.trw{width:min(1440px,98vw)}
+.pdtr{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-4px 0 12px}
+.pdtr>em{font:800 .85rem "Anuphan",sans-serif;font-style:normal;margin-right:4px}
+.pdtr button{border:2px solid var(--ink);background:var(--card);color:var(--ink);font:700 .82rem "Anuphan",sans-serif;padding:4px 10px;cursor:pointer;box-shadow:2px 2px 0 var(--sh)}
+.pdtr button:hover{background:var(--yel);color:#141414}
+.pdtr button.on{background:var(--blue);color:#fff}
+.pdtr button:active{transform:translate(2px,2px);box-shadow:none}
+.pdw{position:relative}
+.pdw.tron{padding:56px 14px 14px 66px}
+.pdg.trend .pde .pf{background:var(--tc,var(--kb));color:#141414;transition:background .45s,color .3s}
+.pdg.trend .pde.tnil .pf{background:repeating-linear-gradient(135deg,var(--paper) 0 5px,rgba(var(--pbi),.13) 5px 7px);color:var(--mut)}
+.pdg.trend .pde s{font-weight:800;opacity:1}
+/* atomic size: white tile, a shaded sphere whose DIAMETER is proportional to the radius (H 31 pm ... Cs 244 pm) */
+.pdg.tsize .pde .pf{background:var(--card);color:var(--ink)}
+.pdg.tsize .pde .pf::before{content:"";position:absolute;left:50%;top:53%;width:calc(var(--u)*var(--sz,0));aspect-ratio:1;translate:-50% -50%;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.9) 0 6%,var(--kb) 38%,var(--kb2,#555) 100%);border:1.5px solid #141414;box-shadow:2px 2px 0 rgba(20,20,20,.35);transition:width .55s cubic-bezier(.34,1.4,.64,1)}
+.pdg.tsize .k-alk{--kb2:#8f1f10}.pdg.tsize .k-ae{--kb2:#a3530c}.pdg.tsize .k-nm{--kb2:#9a7300}.pdg.tsize .k-hal{--kb2:#0d1f6b}.pdg.tsize .k-md{--kb2:#5466a8}
+.pdg.tsize .k-tm .pf::before{--kb:#d6cdb9;--kb2:#857a63}.pdg.tsize .k-pt .pf::before{--kb:#bdb39e;--kb2:#6e6551}.pdg.tsize .k-ln .pf::before,.pdg.tsize .k-an .pf::before{--kb2:#a3594a}
+.pdg.tsize .pde.tnil .pf::before{display:none}
+.pdg.tsize .pde i,.pdg.tsize .pde b,.pdg.tsize .pde s{position:relative;z-index:1}
+.pdg.tsize .pde b{text-shadow:0 0 3px var(--card),0 0 3px var(--card),0 0 2px var(--card)}
+.pdg.tsize .pde s{background:var(--card);padding:0 2px}
+.pdg.trend .pde.tex .pf{outline:3px solid var(--red);outline-offset:-3px}
+.pdg.trend .pde.tex::after{content:attr(data-x);position:absolute;left:50%;top:calc(var(--u)*-.16);translate:-50% 0;z-index:6;background:var(--red);color:#fff;border:2px solid #141414;
+  font:800 calc(var(--u)*.16) "Anuphan",sans-serif;padding:1px 5px;white-space:nowrap;pointer-events:none;animation:tbob 1.6s ease-in-out infinite}
+@keyframes tbob{50%{translate:-50% -3px}}
+.pdg.trend .pde.thl .pf{outline:4px solid var(--blue);outline-offset:-4px}
+/* arrows: chunky Bauhaus arrows in the heat colours (light = low, deep red = high), an ink label riding on the shaft */
+.tra{position:absolute;z-index:4;pointer-events:none;display:none;filter:drop-shadow(3px 3px 0 var(--sh))}
+.tron .tra.show{display:block}
+.tra .sh{position:absolute;inset:0}
+.tra.h .sh{clip-path:polygon(0 28%,calc(100% - 30px) 28%,calc(100% - 30px) 0,100% 50%,calc(100% - 30px) 100%,calc(100% - 30px) 72%,0 72%)}
+.tra.h.rev .sh{clip-path:polygon(100% 28%,30px 28%,30px 0,0 50%,30px 100%,30px 72%,100% 72%)}
+.tra.v .sh{clip-path:polygon(28% 0,72% 0,72% calc(100% - 30px),100% calc(100% - 30px),50% 100%,0 calc(100% - 30px),28% calc(100% - 30px))}
+.tra.v.rev .sh{clip-path:polygon(28% 100%,72% 100%,72% 30px,100% 30px,50% 0,0 30px,28% 30px)}
+.tra em{position:absolute;font:800 .9rem "Anuphan",sans-serif;font-style:normal;background:#141414;color:#f2b705;border:2px solid #141414;padding:2px 12px;white-space:nowrap}
+.tra.h em{left:50%;top:50%;translate:-50% -50%}
+.tra.v em{left:50%;top:50%;translate:-50% -50%;writing-mode:vertical-rl;padding:12px 3px}
+/* the reading card replaces the Mw table in the info area while a trend is on */
+.pdtrc{display:none;flex:1;min-width:0;background:var(--card);border:3px solid var(--ink);box-shadow:5px 5px 0 var(--sh);padding:8px 12px;font:600 .86rem "Anuphan",sans-serif;line-height:1.45}
+.pdg.trend .pdtrc{display:block}.pdg.trend .pdbrk{display:none}
+.pdtrc h4{margin:0 0 3px;font-size:1rem}.pdtrc p{margin:2px 0}.pdtrc .tw{color:var(--red)}
+.pdtrc .lg{display:flex;align-items:center;gap:8px;margin-top:6px;font:700 .75rem "JetBrains Mono",monospace}
+.pdtrc .lg span{flex:1;height:12px;border:2px solid var(--ink)}
+/* graph: its own full-width card under the table, drawn at real pixel size (no stretched text) */
+.pdgph{display:none;margin-top:16px;background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--sh);padding:10px 12px 6px}
+.pdgph.show{display:block}
+.pdgph h5{margin:0 0 4px;font:800 .95rem "Anuphan",sans-serif;display:flex;flex-wrap:wrap;gap:10px;align-items:baseline}
+.pdgph h5 small{font:600 .78rem "Anuphan",sans-serif;color:var(--mut)}
+.pdgph svg{display:block;overflow:visible}
+.pdgph .ax{font:600 11px "JetBrains Mono",monospace;fill:var(--mut)}
+.pdgph .pl{font:700 11px "Anuphan",sans-serif;fill:var(--mut)}
+.pdgph .lb{font:800 11px "JetBrains Mono",monospace;fill:var(--ink)}
+.pdgph circle{cursor:pointer}
 .pde:focus-visible{outline:3px solid var(--ink);outline-offset:2px;z-index:3}
 .mem .pf,.mem .pb{backface-visibility:hidden;-webkit-backface-visibility:hidden;transition:transform .48s cubic-bezier(.2,.7,.2,1) var(--d,0ms)}
 /* the back recedes into the drawer: its own paper colour, a faint ink edge, Z at low contrast, so an opened tile's category colour pops */
@@ -1670,7 +1726,9 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
 <div id="pp" role="dialog" aria-modal="true" aria-labelledby="ppt"><div class="ppbox"><div class="pphd"><span class="sn" aria-hidden="true">📝</span><h2 id="ppt">ข้อสอบทั้งฉบับ<small id="pps"></small></h2><button class="ppx" id="ppx" title="ปิด (Esc)" aria-label="ปิดรายการข้อสอบทั้งฉบับ">✕</button></div><div class="ppin" id="ppin"></div></div></div>
 <aside id="pd" aria-label="ตารางธาตุ">
   <div class="pdh"><b>ตารางธาตุ</b><span class="pdq" id="pdq"></span><span class="pdhov" id="pdhov"></span><button class="pdmwt pdrst" id="pdrst" title="คว่ำทุกธาตุที่เปิดอยู่กลับทั้งหมด">↺ รีเซ็ต</button><button class="pdmwt pdmem" id="pdmem" aria-pressed="false" title="คว่ำทุกธาตุ เหลือแค่เลขอะตอม แล้วแตะเพื่อเปิดทีละตัว"><span>🃏 ท่องตารางธาตุ: ปิด</span><span>🃏 ท่องตารางธาตุ: เปิด</span></button><button class="pdmwt" id="pdmwt" title="เปิด/ปิดเครื่องคิด Mw">🧮 คิด Mw</button><button class="pdx" id="pdx" title="ปิด (Esc)">✕</button></div>
-  <div class="pdw"><div class="pdg" id="pdg"></div></div>
+  <div class="pdtr" id="pdtr"><em>📈 เทรนด์</em><button data-t="-1">ปิด</button></div>
+  <div class="pdw"><div class="pdg" id="pdg"></div><div class="tra h" id="tra-h"><i class="sh"></i><em></em></div><div class="tra v" id="tra-v"><i class="sh"></i><em></em></div></div>
+  <div class="pdgph" id="pdgph"></div>
   <div class="pdcalc"><input id="pdin" spellcheck="false" autocomplete="off" placeholder="พิมพ์สูตร เช่น Al2(SO4)3 หรือแตะธาตุ">
     <div class="pdmw"><small id="pdfd"></small><span id="pdmw">Mw = —</span></div>
     <div class="pdkeys" id="pdkeys"></div></div>
@@ -2525,10 +2583,14 @@ const PD=(()=>{
     ELS.forEach(e=>{const[r,c]=e.f!==null?[e.p==6?9:10,3+e.f]:[e.p,e.g];
       h+=`<div class="pde k-${e.cat}" data-z="${e.z}" data-w="${r+c-2}"${e.g&&(e.g<3||e.g>12)?` data-g="${e.g}"`:""} style="grid-row:${r};grid-column:${c}"><div class="pf"><i>${e.z}</i><b>${e.s}</b><s>${fm(e)}</s></div><em class="pb">${e.z}</em></div>`;});
     h+=`<div class="pdph" style="grid-row:6;grid-column:3">57–71</div><div class="pdph" style="grid-row:7;grid-column:3">89–103</div><div style="grid-row:8;grid-column:1;height:10px"></div>`;
-    h+=`<div class="pdinfo"><div class="pdbig" id="pdbig" tabindex="0" title="แตะเพื่อพลิกดูการจัดเรียงอิเล็กตรอน"><div class="bf"></div></div><div class="pdbrk" id="pdbrk"></div></div><div class="pdcfg" id="pdcfg"></div>`;
+    h+=`<div class="pdinfo"><div class="pdbig" id="pdbig" tabindex="0" title="แตะเพื่อพลิกดูการจัดเรียงอิเล็กตรอน"><div class="bf"></div></div><div class="pdbrk" id="pdbrk"></div><div class="pdtrc" id="pdtrc"></div></div><div class="pdcfg" id="pdcfg"></div>`;
     G.innerHTML=h;
     $("#pdkeys").innerHTML=["(",")","[","]","·"].map(k=>`<button class="kp" data-k="${k}">${k}</button>`).join("")+`<span class="sep"></span>`+[..."1234567890"].map(k=>`<button data-k="${k}">${k}</button>`).join("")+`<span class="sep"></span><button class="kx" data-k="bk" title="ลบตัวสุดท้าย">⌫</button><button class="kx" data-k="clr">ล้าง</button><span class="tip">คลิกซ้าย = เพิ่มธาตุ · คลิกขวา = ลดทีละ 1</span>`;
-    big(BY[1]);update();built=true;}
+    $("#pdtr").insertAdjacentHTML("beforeend",TRS.map(t=>`<button data-t="${t.k}">${t.ic} ${t.l}</button>`).join(""));
+    $("#pdtr").addEventListener("click",ev=>{const b=ev.target.closest("button");if(!b)return;const k=+b.dataset.t;setTrend(k===trOn?-1:k);SFX.play(trOn>=0?"on":"off");});
+    $("#pdgph").addEventListener("mouseover",ev=>{const c=ev.target.closest("circle[data-z]");if(c)trHover(BY[c.dataset.z]);});
+    addEventListener("resize",()=>{if(trOn>=0&&isOpen()){trArrows();trGraph(last&&last.z);}});
+    big(BY[1]);update();built=true;trPaint();}
   // electron configuration: fill subshells in Madelung order (n+l, then n), then overwrite the real NIST ground states that break it.
   // Z >= 104 are theoretical predictions (all of them match Madelung). Shells = electrons summed per n (the Thai ม.ปลาย 2, 8, 14, 2).
   const SUB=[];for(let n=1;n<=7;n++)for(let l=0;l<Math.min(n,4);l++)SUB.push([n,l]);SUB.sort((a,b)=>a[0]+a[1]-b[0]-b[1]||a[0]-b[0]);
@@ -2590,8 +2652,73 @@ const PD=(()=>{
     $("#pdq").innerHTML=out.length?"ในโจทย์: "+out.map(f=>`<button data-f="${f}">${fHTML(f)}</button>`).join(""):"";
     const zs=new Set();out.forEach(f=>Object.keys(parseF(f)).forEach(k=>zs.add(SYM[k].z)));
     zs.forEach(z=>{const t=G.querySelector(`.pde[data-z="${z}"]`);if(t)t.classList.add("inq");});}
+  /* ---- trend mode: per Z 1..86 [covalent radius pm (Cordero), IE1 kJ/mol (NIST), EN Pauling, EA kJ/mol released, mp °C, density g/cm3]
+     from the mendeleev 1.3.0 data set; noble gases have no radius/EN/EA here, EA <= 0 (Be, N, Mg, Mn, Zn, Cd, Hg, noble gases) is blank */
+  const TD_=[[31,1312,2.2,73,-259,null],[null,2372,null,null,null,null],[128,520,0.98,60,180,0.53],[96,900,1.57,null,1287,1.85],[84,801,2.04,27,2077,2.34],[73,1086,2.55,122,3550,2.2],[71,1402,3.04,null,-210,null],[66,1314,3.44,141,-219,null],[57,1681,3.98,328,-220,null],[null,2081,null,null,-249,null],[166,496,0.93,53,98,0.97],[141,738,1.31,null,650,1.74],[121,578,1.61,42,660,2.7],[111,787,1.9,134,1414,2.33],[107,1012,2.19,72,44,1.82],[105,1000,2.58,200,95,2.07],[102,1251,3.16,349,-102,null],[null,1521,null,null,-189,null],[203,419,0.82,48,64,0.89],[176,590,1.0,2,842,1.54],[170,633,1.36,18,1541,2.99],[160,659,1.54,8,1670,4.51],[153,651,1.63,51,1910,6.0],[139,653,1.66,64,1907,7.15],[150,717,1.55,null,1246,7.3],[142,762,1.83,15,1538,7.87],[138,760,1.88,64,1495,8.86],[124,737,1.91,112,1455,8.9],[132,745,1.9,119,1085,8.96],[122,906,1.65,null,420,7.13],[122,579,1.81,41,30,5.91],[120,762,2.01,119,938,5.32],[119,944,2.18,78,817,5.75],[120,941,2.55,195,180,4.81],[120,1140,2.96,325,-7,3.1],[null,1351,null,null,-157,null],[220,403,0.82,47,39,1.53],[195,549,0.95,5,777,2.64],[190,600,1.22,30,1522,4.47],[175,640,1.33,41,1854,6.52],[164,652,1.6,89,2477,8.57],[154,684,2.16,72,2622,10.2],[147,687,2.1,53,2157,11.0],[146,710,2.2,101,2333,12.1],[142,720,2.28,110,1963,12.4],[139,804,2.2,54,1555,12.0],[145,731,1.93,126,962,10.5],[144,868,1.69,null,321,8.69],[142,558,1.78,29,157,7.31],[139,709,1.96,107,13,7.29],[139,831,2.05,101,631,6.68],[138,869,2.1,190,450,6.23],[139,1008,2.66,295,114,4.93],[null,1170,null,null,-112,0.01],[244,376,0.79,46,28,1.87],[215,503,0.89,14,727,3.62],[207,538,1.1,45,920,6.15],[204,534,1.12,63,799,6.77],[203,528,1.13,93,931,6.77],[201,533,1.14,185,1016,7.01],[199,539,null,null,1042,7.26],[198,545,1.17,null,1072,7.52],[198,547,null,83,822,5.24],[196,593,1.2,null,1313,7.9],[194,566,null,112,1359,8.23],[192,573,1.22,34,1412,8.55],[192,581,1.23,null,1472,8.8],[189,589,1.24,null,1529,9.07],[190,597,1.25,99,1545,9.32],[187,603,null,null,824,6.9],[187,524,1.0,33,1663,9.84],[175,659,1.3,1,2233,13.3],[170,728,1.5,31,3017,16.4],[162,759,1.7,79,3414,19.3],[151,756,1.9,14,3185,20.8],[144,814,2.2,106,3033,22.59],[141,865,2.2,151,2446,22.56],[136,864,2.2,205,1768,21.5],[136,890,2.4,223,1064,19.3],[132,1007,1.9,null,-39,13.53],[145,589,1.8,36,304,11.8],[146,716,1.8,34,327,11.3],[148,703,1.9,91,271,9.79],[140,812,2.0,183,254,9.2],[150,899,2.2,270,302,7.0],[null,1037,null,null,-71,0.01]];
+  const TRS=[
+   {ic:"📏",l:"ขนาดอะตอม",u:"pm",full:"ขนาดอะตอม (รัศมีโคเวเลนต์)",h:-1,v:1,ha:"ใหญ่ขึ้น",va:"ใหญ่ขึ้น",dir:"ซ้าย→ขวา <b>เล็กลง</b> · บน→ล่าง <b>ใหญ่ขึ้น</b>",
+    why:"คาบเดียวกัน: โปรตอนเพิ่มแต่จำนวนชั้นเท่าเดิม → นิวเคลียสดึงแน่นขึ้น · หมู่เดียวกัน: ชั้นพลังงานเพิ่ม",ex:{31:"Ga ≈ Al"},exw:"Ga เกือบเท่า Al: มี 3d¹⁰ คั่นกลาง กำบังนิวเคลียสได้ไม่ดี",nil:"แก๊สมีตระกูลไม่นำมาเทียบ (วัดคนละแบบ)",note:"วงกลม: เส้นผ่านศูนย์กลางเทียบตามรัศมีจริง"},
+   {ic:"⚡",l:"IE₁",u:"kJ/mol",full:"พลังงานไอออไนเซชันลำดับที่ 1",h:1,v:-1,ha:"เพิ่มขึ้น",va:"เพิ่มขึ้น",dir:"ซ้าย→ขวา <b>เพิ่ม</b> · บน→ล่าง <b>ลด</b>",
+    why:"อะตอมเล็ก อิเล็กตรอนอยู่ใกล้นิวเคลียส → ดึงออกยาก",ex:{5:"B < Be",8:"O < N",13:"Al < Mg",16:"S < P"},exw:"Be, Mg: s เต็ม · N, P: p ครึ่งเต็ม → เสถียร ดึงออกยากกว่าตัวถัดไป"},
+   {ic:"🧲",l:"EN",u:"",full:"อิเล็กโทรเนกาติวิตี (Pauling)",h:1,v:-1,ha:"เพิ่มขึ้น",va:"เพิ่มขึ้น",dir:"ซ้าย→ขวา <b>เพิ่ม</b> · บน→ล่าง <b>ลด</b>",
+    why:"อะตอมเล็ก นิวเคลียสดึงอิเล็กตรอนคู่ร่วมพันธะได้แรง",ex:{9:"สูงสุด",55:"ต่ำสุด"},nil:"แก๊สมีตระกูลไม่มีค่า EN"},
+   {ic:"🎯",l:"EA",u:"kJ/mol",full:"สัมพรรคภาพอิเล็กตรอน (พลังงานที่คายออก)",h:1,v:-1,ha:"เพิ่มขึ้น",va:"เพิ่มขึ้น (ยกเว้นคาบ 2)",dir:"แนวโน้มหลวม ๆ: ซ้าย→ขวา <b>เพิ่ม</b> · หมู่ 17 สูงสุด",
+    why:"อะตอมที่ขาดอีกนิดจะครบออกเตต รับอิเล็กตรอนแล้วคายพลังงานมาก",ex:{17:"Cl > F",4:"≈ 0",7:"≈ 0",12:"≈ 0"},exw:"F เล็กมาก อิเล็กตรอนแน่นผลักกัน → Cl คายมากกว่า · Be, Mg (s เต็ม), N (p ครึ่งเต็ม) แทบไม่รับ",nil:"≈ 0 / ไม่รับอิเล็กตรอน"},
+   {ic:"🔥",l:"จุดหลอมเหลว",u:"°C",full:"จุดหลอมเหลว",h:0,v:0,dir:"ไม่มีแนวโน้มเดียว · สูงสุด<b>กลางคาบ</b> (C, W)",
+    why:"โครงผลึกร่างตาข่าย/พันธะโลหะแรง → สูง · โมเลกุลเล็ก/แก๊ส → ต่ำ",ex:{6:"ระเหิด ~3550",74:"โลหะสูงสุด"},nil:"ไม่มีข้อมูล"},
+   {ic:"⚖️",l:"ความหนาแน่น",u:"g/cm³",full:"ความหนาแน่น (ของแข็ง/ของเหลว)",h:0,v:1,va:"เพิ่มขึ้น",dir:"บน→ล่าง <b>เพิ่ม</b> · สูงสุดกลางคาบ 6 (Os)",
+    why:"มวลเพิ่มเร็วกว่าขนาด · โลหะแทรนซิชันอัดแน่น",ex:{76:"สูงสุด"},nil:"แก๊ส (ไม่เทียบ)"}];
+  TRS.forEach((t,k)=>{t.k=k;const xs=TD_.map(r=>r[k]).filter(x=>x!=null);t.lo=Math.min(...xs);t.hi=Math.max(...xs);});
+  const tval=(t,z)=>z<=86?TD_[z-1][t.k]:null,tn=(t,x)=>(x-t.lo)/(t.hi-t.lo),tf=(t,x)=>x==null?"—":t.k==2||t.k==5?x.toFixed(2):String(Math.round(x));
+  const RMP=[[255,253,247],[242,183,5],[228,65,43],[122,31,18]];
+  const rmp=p=>{p=Math.max(0,Math.min(1,p))*3;const i=Math.min(2,Math.floor(p)),f=p-i,a=RMP[i],b=RMP[i+1];return`rgb(${a.map((x,j)=>Math.round(x+(b[j]-x)*f))})`;};
+  const soft=p=>rmp(p*.5);   // his pick: the lighter sample-5 heat colours (cream -> yellow -> orange) on the tiles
+  let trOn=-1;
+  function trCard(e){const t=TRS[trOn],x=e?tval(t,e.z):null;
+    $("#pdtrc").innerHTML=`<h4>${t.ic} ${t.full}</h4><p>${t.dir}</p><p>${t.why}</p>${t.exw?`<p class="tw">★ ${t.exw}</p>`:""}${e&&x==null&&t.nil?`<p class="tw">${e.s}: ${t.nil}</p>`:""}${t.note?`<p style="color:var(--mut)">${t.note}</p>`:""}`
+      +(t.k?`<div class="lg">${tf(t,t.lo)}<span style="background:linear-gradient(90deg,${[0,.25,.5,.75,1].map(soft).join(",")})"></span>${tf(t,t.hi)} ${t.u}</div>`:"");}
+  function trBig(e){const s=$("#pdbig .bf s");if(s&&e&&trOn>=0){const t=TRS[trOn],x=tval(t,e.z);s.textContent=x==null?"—":tf(t,x)+(t.u?" "+t.u:"");}}
+  function trArrows(){const w=$("#pd .pdw"),H=$("#tra-h"),V=$("#tra-v");if(trOn<0){H.classList.remove("show");V.classList.remove("show");return;}
+    const t=TRS[trOn],wr=w.getBoundingClientRect(),gr=G.getBoundingClientRect(),c1=G.querySelector('.pde[data-z="1"]').getBoundingClientRect(),c7=G.querySelector('.pde[data-z="87"]').getBoundingClientRect();
+    const grad=dir=>`linear-gradient(${dir},${[0,.33,.66,1].map(rmp).join(",")})`,ox=w.scrollLeft-wr.left,oy=w.scrollTop-wr.top;
+    H.classList.toggle("show",!!t.h);V.classList.toggle("show",!!t.v);
+    if(t.h){Object.assign(H.style,{left:gr.left+ox+"px",width:gr.width+"px",top:c1.top+oy-48+"px",height:"36px"});H.classList.toggle("rev",t.h<0);
+      H.firstChild.style.background=grad(t.h>0?"90deg":"270deg");H.lastChild.textContent=t.l+" "+t.ha+" "+(t.h>0?"→":"←");}
+    if(t.v){Object.assign(V.style,{left:gr.left+ox-56+"px",width:"36px",top:c1.top+oy+"px",height:c7.bottom-c1.top+"px"});V.classList.toggle("rev",t.v<0);
+      V.firstChild.style.background=grad(t.v>0?"180deg":"0deg");V.lastChild.textContent=t.l+" "+t.va+" "+(t.v>0?"↓":"↑");}}
+  function trGraph(hz){const box=$("#pdgph");if(trOn<0){box.classList.remove("show");box.innerHTML="";return;}box.classList.add("show");const t=TRS[trOn];
+    const W=Math.max(320,box.clientWidth-24),H=250,L=54,R=14,T=28,B=30,X=z=>L+(z-1)/85*(W-L-R),Y=x=>T+(1-tn(t,x))*(H-T-B);
+    const span=t.hi-t.lo,st=[.1,.2,.5,1,2,5,10,20,50,100,200,500,1000].find(s=>span/s<=5)||1000,ticks=[];for(let v=Math.ceil(t.lo/st)*st;v<=t.hi+1e-9;v+=st)ticks.push(+v.toFixed(2));
+    const PB=[0,2,10,18,36,54,86];let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">`;
+    for(let p=1;p<=6;p++){const x1=X(PB[p-1]+.5),x2=X(PB[p]+.5);s+=`<rect x="${x1}" y="${T-10}" width="${Math.max(0,x2-x1)}" height="${H-T-B+10}" fill="${p%2?"rgba(var(--pbi),.05)":"none"}"/><text class="pl" x="${(x1+x2)/2}" y="${H-9}" text-anchor="middle">คาบ ${p}</text>`;}
+    ticks.forEach(v=>{s+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="rgba(var(--pbi),.15)" stroke-dasharray="3 4"/><text class="ax" x="${L-7}" y="${Y(v)+4}" text-anchor="end">${t.k==2||t.k==5?v.toFixed(1):v}</text>`;});
+    s+=`<text class="ax" x="${L-7}" y="${T-14}" text-anchor="end">${t.u}</text><line x1="${L}" x2="${L}" y1="${T-10}" y2="${H-B}" stroke="var(--ink)" stroke-width="2"/><line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="var(--ink)" stroke-width="2"/>`;
+    if(hz&&tval(t,hz)!=null)s+=`<line x1="${X(hz)}" x2="${X(hz)}" y1="${T-10}" y2="${H-B}" stroke="var(--blue)" stroke-width="2" stroke-dasharray="4 3"/>`;
+    let d="",pv=0;for(let z=1;z<=86;z++){const x=tval(t,z);if(x==null){pv=0;continue;}d+=`${pv?"L":"M"}${X(z).toFixed(1)},${Y(x).toFixed(1)}`;pv=1;}
+    s+=`<path d="${d}" fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const LBL=new Set([2,10,18,36,54,86,3,11,19,37,55,1,9,17,6,74,76,80]);
+    for(let z=1;z<=86;z++){const x=tval(t,z);if(x==null)continue;const e=BY[z],cur=z==hz,ex=t.ex[z];
+      const fill=cur?"var(--blue)":e.cat=="ng"?"var(--ink)":e.cat=="alk"?"var(--red)":e.cat=="hal"?"#1f3fbf":e.cat=="ae"?"#f28c28":"var(--card)";
+      s+=`<circle data-z="${z}" cx="${X(z)}" cy="${Y(x)}" r="${cur?7:4}" fill="${fill}" stroke="${ex?"var(--red)":"var(--ink)"}" stroke-width="${ex?2.5:1.5}"/>`;
+      if(cur||LBL.has(z)||ex){const up=tn(t,x)<.86;s+=`<text class="lb" x="${X(z)}" y="${up?Y(x)-10:Y(x)+19}" text-anchor="middle"${cur?' style="fill:var(--blue);font-size:13px"':""}>${e.s}${cur?" "+tf(t,x):""}</text>`;}}
+    const cs=getComputedStyle(G);s=s.replace(/var\((--[a-z]+)\)/g,(m,v)=>cs.getPropertyValue(v).trim()||m);   // SVG presentation attributes can't read CSS variables
+    box.innerHTML=`<h5>${t.ic} ${t.full} เทียบเลขอะตอม <small>Z 1–86 · ชี้จุดหรือธาตุเพื่อดูค่า · ขอบแดง = ข้อยกเว้น</small></h5>`+s+`</svg>`;}
+  function trPaint(){G.classList.toggle("trend",trOn>=0);G.classList.toggle("tsize",trOn===0);$("#pd").classList.toggle("trw",trOn>=0);$("#pd .pdw").classList.toggle("tron",trOn>=0);
+    $("#pdtr").querySelectorAll("button").forEach(b=>b.classList.toggle("on",+b.dataset.t===trOn));
+    G.querySelectorAll(".pde").forEach(tile=>{const e=BY[tile.dataset.z],s=tile.querySelector(".pf s");tile.classList.remove("tex","tnil","thl");tile.removeAttribute("data-x");
+      if(trOn<0){tile.style.removeProperty("--tc");tile.style.removeProperty("--sz");s.textContent=fm(e);return;}
+      const t=TRS[trOn],x=tval(t,e.z);s.textContent=tf(t,x);if(x==null)tile.classList.add("tnil");
+      if(trOn===0){tile.style.setProperty("--sz",x==null?0:(.94*x/t.hi).toFixed(3));tile.style.removeProperty("--tc");}
+      else{tile.style.removeProperty("--sz");if(x==null)tile.style.removeProperty("--tc");else tile.style.setProperty("--tc",soft(tn(t,x)));}
+      if(t.ex[e.z]){tile.classList.add("tex");tile.dataset.x=t.ex[e.z];}});
+    if(last){big(last);if(trOn>=0){trBig(last);G.querySelector(`.pde[data-z="${last.z}"]`).classList.add("thl");}}
+    if(trOn>=0)trCard(last);
+    setTimeout(()=>{trArrows();trGraph(last&&last.z);},trOn>=0?620:0);}   // after the drawer finishes widening
+  function setTrend(k){if(k>=0&&memOn)setMem(false,1);trOn=k;trPaint();}
+  function trHover(e){if(trOn<0||!e)return;G.querySelectorAll(".pde.thl").forEach(x=>x.classList.remove("thl"));G.querySelector(`.pde[data-z="${e.z}"]`)?.classList.add("thl");
+    big(e);trBig(e);trCard(e);trGraph(e.z);}
   const isOpen=()=>document.body.classList.contains("pdopen");
-  function open(){SL.lock("pd");if(TD.isOpen())TD.close();if(!built)build();else if(memOn)setMem(false,1);refreshQ();document.body.classList.add("pdopen");SFX.play("drawer","pd");}
+  function open(){SL.lock("pd");if(TD.isOpen())TD.close();if(!built)build();else if(memOn)setMem(false,1);refreshQ();document.body.classList.add("pdopen");SFX.play("drawer","pd");if(trOn>=0)setTimeout(()=>{trArrows();trGraph(last&&last.z);},650);}
   function close(){if(!isOpen())return;document.body.classList.remove("pdopen");SL.unlock("pd");SFX.play("undrawer");}
   // Mw on: a tap adds the element to the formula. Mw off: a tap only shows it in the big tile.
   let mwOn=ls.get("cqb_mw2","0")==="1";   // off by default; new key so the old saved "on" does not stick
@@ -2614,7 +2741,7 @@ const PD=(()=>{
     if(!on){if(quiet)G.classList.remove("mem");else memT=setTimeout(()=>G.classList.remove("mem"),1500);}   // drop the backs once the wave is over
     if(quiet){void G.offsetWidth;G.classList.remove("still");}
     big(on?null:last,!quiet);}
-  $("#pdmem").onclick=()=>{setMem(!memOn);SFX.play(memOn?"memOn":"memOff");};
+  $("#pdmem").onclick=()=>{if(!memOn&&trOn>=0)setTrend(-1);setMem(!memOn);SFX.play(memOn?"memOn":"memOff");};
   $("#pdrst").onclick=()=>{const up=[...G.querySelectorAll(".pde:not(.dn)")],d0=Math.min(...up.map(ripple));   // only open tiles turn; the wave starts at the first of them
     up.forEach(t=>{t.style.setProperty("--d",ripple(t)-d0+"ms");t.classList.remove("up");t.classList.add("dn");});celClear();big(null,1);SFX.play("memReset");};
   // หมู่ครบ: only the main-group columns (1, 2, 13-18) carry data-g; the d-block (3-12) and the La/Ac f-rows never celebrate.
@@ -2636,11 +2763,11 @@ const PD=(()=>{
       else{t.classList.remove("up");t.classList.add("dn");if(shown===el.z)big(null,1);SFX.play("memUnflip",el.p);}
       colCheck(t);
       return;}
-    if(mwOn)addSym(el.s);SFX.play(mwOn?"add":"element",el.z);big(el);flash(el.z);});
+    if(mwOn)addSym(el.s);SFX.play(mwOn?"add":"element",el.z);big(el);flash(el.z);if(trOn>=0)trHover(el);});
   G.addEventListener("keydown",e=>{if(e.target.id==="pdbig"&&(e.key==="Enter"||e.key===" ")){e.preventDefault();return flipBig();}const t=e.target.closest(".pde");if(t&&(e.key==="Enter"||e.key===" ")){e.preventDefault();t.click();}});
   G.addEventListener("contextmenu",e=>{const t=e.target.closest(".pde");if(!t||!mwOn||memOn)return;e.preventDefault();const el=BY[t.dataset.z];big(el);
     if(decSym(el.s)){flash(el.z);SFX.play("remove");}else SFX.play("bad");});
-  G.addEventListener("mouseover",e=>{const t=e.target.closest(".pde");if(t){const el=BY[t.dataset.z];$("#pdhov").textContent=t.classList.contains("dn")?`Z ${el.z} · ?`:`${el.s} · ${el.n} · Z ${el.z} · ${fm(el)}`;}});
+  G.addEventListener("mouseover",e=>{const t=e.target.closest(".pde");if(t){const el=BY[t.dataset.z];$("#pdhov").textContent=t.classList.contains("dn")?`Z ${el.z} · ?`:`${el.s} · ${el.n} · Z ${el.z} · ${fm(el)}`;if(trOn>=0&&last!==el)trHover(el);}});
   inp.addEventListener("input",update);
   $("#pdkeys").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.k;SFX.play("key",k);
     if(k=="bk")put(inp.value.slice(0,-1));else if(k=="clr")put("");else put(inp.value+k);});
