@@ -576,6 +576,12 @@ body.pdopen #pdscrim{opacity:1;pointer-events:auto}
 .pdg.bk .pdcfg{visibility:visible;transform:perspective(calc(var(--u)*16)) rotateY(0deg);transition:transform .5s cubic-bezier(.2,.7,.2,1),visibility 0s}
 .pdcfg>b{background:var(--ink);color:var(--paper);font:800 calc(var(--u)*.27) "JetBrains Mono",monospace;padding:2px 6px}
 .pdcfg>b i{font-style:normal;font-weight:600;opacity:.7;margin-left:.5em}
+.pdcfg>b{display:flex;align-items:center;gap:.4em}
+/* order switch: subshells grouped by shell n (default) or in fill/energy order (aufbau). Remembered in localStorage cqb_eord */
+.pdord{margin-left:auto;display:flex;border:2px solid var(--paper);font:700 calc(var(--u)*.2) "Anuphan",sans-serif;white-space:nowrap}
+.pdord span{padding:0 .5em;color:var(--paper);opacity:.75}.pdord span.on{background:var(--yel);color:#141414;opacity:1}
+.pdcfg.eo .g:nth-child(even){background:none}.pdcfg.eo .g.od{background:rgba(var(--pbi),.08)}
+.pdcfg.eo .g>strong{font-size:calc(var(--u)*.3);color:var(--mut)}
 .pdcfg sup{font-size:.68em;line-height:0}
 /* one group per shell n: its subshells, a └─┬─┘ bracket, then the shell's electron count. Groups wrap whole, never split */
 .pdcfg .cg{display:flex;flex-wrap:wrap;gap:calc(var(--u)*.1) calc(var(--u)*.14);padding:calc(var(--u)*.1) calc(var(--u)*.12) calc(var(--u)*.06)}
@@ -2336,13 +2342,20 @@ const PD=(()=>{
     return{t,g:g.filter(Boolean),note};}
   // big tile: an element, or (e null) the memorize-mode neutral card that gives nothing away; fx = the flip-in reveal.
   // A different element (or the "?" card) always lands front-up, snapped without the turn.
-  let shown=0;
+  let shown=0,eOrd=ls.get("cqb_eord","0")==="1";
   const big=(e,fx)=>{const b=$("#pdbig"),cf=$("#pdcfg"),z=e?e.z:0;
     if(z!==shown&&G.classList.contains("bk")){G.classList.add("bstill");G.classList.remove("bk");void cf.offsetWidth;G.classList.remove("bstill");}
     b.classList.toggle("nil",!e);shown=z;
     if(e){last=e;b.firstChild.innerHTML=`<i>${e.z}</i>${e.s}<u>${e.n}</u><s>${fm(e)}</s>`;const c=cfg(e.z),su=([s,k])=>`<span>${s}<sup>${k}</sup></span>`;
-      cf.innerHTML=`<b>${e.s}<i>Z ${e.z}</i></b><div class="cg">${c.g.map(g=>`<span class="g"><span>${g.map(su).join(" ")}</span><i></i><strong>${g.reduce((a,x)=>a+x[1],0)}</strong></span>`).join("")}</div>`
-        +`<p><em>เขียนตามลำดับการบรรจุ:</em>${c.t.map(su).join(" ")}</p>${c.note?`<small>${c.note.replace("★","<i>★</i>")}</small>`:""}`;}
+      // eOrd: main row = subshells in energy (fill) order, each with the running electron total under it (adds up to Z);
+      // tint marks shell n, so the 4s-before-3d interleave is visible. The line underneath then shows the by-shell order instead.
+      const sw=`<span class="pdord" title="สลับการเรียงซับเชลล์"><span class="${eOrd?"":"on"}">ตามชั้น n</span><span class="${eOrd?"on":""}">ตามพลังงาน</span></span>`;
+      let run=0;const byN=c.g.flat();
+      cf.classList.toggle("eo",eOrd);
+      cf.innerHTML=`<b>${e.s}<i>Z ${e.z}</i>${sw}</b><div class="cg">${eOrd
+          ?c.t.map(x=>(run+=x[1],`<span class="g${x[2]%2?" od":""}" title="ชั้น n = ${x[2]} · สะสม ${run} e⁻"><span>${su(x)}</span><i></i><strong>${run}</strong></span>`)).join("")
+          :c.g.map(g=>`<span class="g"><span>${g.map(su).join(" ")}</span><i></i><strong>${g.reduce((a,x)=>a+x[1],0)}</strong></span>`).join("")}</div>`
+        +`<p><em>${eOrd?"เรียงตามชั้น n:":"เขียนตามลำดับการบรรจุ:"}</em>${(eOrd?byN:c.t).map(su).join(" ")}</p>${c.note?`<small>${c.note.replace("★","<i>★</i>")}</small>`:""}`;}
     else{b.firstChild.innerHTML=`<i>&nbsp;</i>?<u>แตะธาตุเพื่อเปิด</u><s>&nbsp;</s>`;cf.innerHTML="";}
     if(fx){b.classList.remove("pdrev");void b.offsetWidth;b.classList.add("pdrev");}};
   function flipBig(){if(!shown)return;G.classList.toggle("bk");SFX.play("bigFlip",G.classList.contains("bk"));}
@@ -2505,7 +2518,7 @@ const PD=(()=>{
       return`<i class="c${i%3} s${i/3|0}" style="--x:${(Math.cos(a)*.55).toFixed(2)};--y:${(Math.sin(a)*r).toFixed(2)};--r:${(Math.random()*360-180)|0}deg;--dl:${60+i*18}ms"></i>`;}).join("");
     G.appendChild(fx);celT[g]=setTimeout(()=>{fx.remove();ts.forEach(x=>x.classList.remove("cel"));},1700);SFX.play("memCol",ts.length);}
   G.addEventListener("animationend",e=>{if(e.animationName==="pdlu")e.target.classList.remove("up");});
-  G.addEventListener("click",e=>{if(e.target.closest(".pdbig,.pdcfg"))return flipBig();const t=e.target.closest(".pde");if(!t)return;const el=BY[t.dataset.z];
+  G.addEventListener("click",e=>{if(e.target.closest(".pdord")){eOrd=!eOrd;ls.set("cqb_eord",eOrd?"1":"0");big(last);return;}if(e.target.closest(".pdbig,.pdcfg"))return flipBig();const t=e.target.closest(".pde");if(!t)return;const el=BY[t.dataset.z];
     if(memOn){if(Date.now()-(t._ft||0)<350)return;t._ft=Date.now();t.style.setProperty("--d","0ms");   // a fast double-tap is one turn, not open-then-shut
       if(t.classList.contains("dn")){t.classList.replace("dn","up");big(el,1);SFX.play("memFlip",el.p);}
       else{t.classList.remove("up");t.classList.add("dn");if(shown===el.z)big(null,1);SFX.play("memUnflip",el.p);}

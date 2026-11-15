@@ -61,6 +61,20 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
     run=false;gaps.sort((a,b)=>b-a);return {fps:Math.round(gaps.length/6.5),worst:gaps.slice(0,4).map(Math.round)}})()`);
   console.log("  frames while switching:", JSON.stringify(fr));
   check("switching trends stays smooth (headless software render: >=30 fps avg, no frame > 300ms)", fr.fps >= 30 && fr.worst[0] < 300, fr);
+  // config card: shell-n vs energy (aufbau) order switch (2026-11-15)
+  await ev(`localStorage.removeItem("cqb_eord");document.querySelector('.pde[data-z="26"]').click()`); await sleep(500);
+  await ev(`document.querySelector("#pdbig").click()`); await sleep(800);
+  const row = () => ev(`[...document.querySelectorAll("#pdcfg .cg .g>span")].map(x=>x.textContent).join(" | ")`);
+  check("Fe default = by shell n", (await row()) === "1s2 | 2s2 2p6 | 3s2 3p6 3d6 | 4s2", await row());
+  await ev(`document.querySelector(".pdord").click()`); await sleep(400);
+  check("Fe energy order: 4s before 3d", (await row()) === "1s2 | 2s2 | 2p6 | 3s2 | 3p6 | 4s2 | 3d6", await row());
+  check("energy order: running total ends at Z", await ev(`[...document.querySelectorAll("#pdcfg .g>strong")].pop().textContent`) === "26");
+  check("toggle did not flip the card back", await ev(`document.querySelector(".pdg").classList.contains("bk")`));
+  await ev(`document.querySelector('.pde[data-z="29"]').click()`); await sleep(500); await ev(`document.querySelector("#pdbig").click()`); await sleep(800);
+  check("Cu keeps energy order (remembered) + exception 4s1", (await row()).includes("4s1 | 3d10"), await row());
+  await shot("cfg-energy.png");
+  await ev(`document.querySelector(".pdord").click()`); await sleep(300);
+  check("toggle back to shell n", (await row()).endsWith("3s2 3p6 3d10 | 4s1"), await row());
   check("no JS errors", errs.length === 0, errs);
   console.log(ok + " ok, " + bad + " bad"); ws.close(); ch.kill(); process.exit(bad ? 1 : 0);
 })();
