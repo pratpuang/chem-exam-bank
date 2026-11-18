@@ -1658,9 +1658,18 @@ addEventListener('keydown', e => {
 /* =============================== helpers =============================== */
 const $ = s => document.querySelector(s);
 // 👁 hide-money (Prat 2026-11-18, for screen-sharing): masks EVERY ฿ amount, fixed width so nothing leaks the size; remembered per device
-let hideMoney = false; try{ hideMoney = localStorage.getItem('teach-hidemoney') === '1'; }catch{}
+let hidePref = false; try{ hidePref = localStorage.getItem('teach-hidemoney') === '1'; }catch{}
+let hideMoney = hidePref, autoSes = null;
+// during a class (10 min before start → end) money starts HIDDEN (Prat 2026-11-18: he screen-shares while teaching).
+// Once per class: show it mid-class and it stays shown; after the class it goes back to the saved choice.
+function classNow(){ try{ const n = new Date(), d = isoD(n), m = n.getHours()*60 + n.getMinutes();
+  return (DB?.sessions || []).find(x => x.date === d && x.status !== 'cancel' && m >= mins(x.time) - 10 && m < mins(x.time) + x.h*60)?.id || null; }catch{ return null; } }
+function classCheck(){ const c = classNow();
+  if (c && c !== autoSes){ autoSes = c; if (!hideMoney){ hideMoney = true; return true; } }
+  else if (!c && autoSes){ autoSes = null; if (hideMoney !== hidePref){ hideMoney = hidePref; return true; } }
+  return false; }
 const cash = n => hideMoney ? '฿•••••' : '฿' + Math.round(n).toLocaleString('en-US');
-function toggleMoney(){ hideMoney = !hideMoney; try{ localStorage.setItem('teach-hidemoney', hideMoney ? '1' : '0'); }catch{}
+function toggleMoney(){ hideMoney = !hideMoney; if (!autoSes){ hidePref = hideMoney; try{ localStorage.setItem('teach-hidemoney', hideMoney ? '1' : '0'); }catch{} }
   paintEye(); ['#income','#sLeft','#sOwe','#sAll'].forEach(q => $(q) && ($(q)._v = 0)); renderAll(); }
 function paintEye(){ const e = $('#mhide'); if (!e) return; e.innerHTML = hideMoney ? '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.9 8.4 2 12 2 12s3.6 7 10 7c1.9 0 3.6-.6 5-1.5"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>' : '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'; e.classList.toggle('on', hideMoney);
   e.title = hideMoney ? 'แสดงตัวเลขเงิน' : 'ซ่อนตัวเลขเงิน (ตอนแชร์จอ)'; e.setAttribute('aria-pressed', hideMoney); }
@@ -2556,7 +2565,7 @@ function tk(s, o = {}){
     <span class="stub">${stampOf(s, o.pv)}</span>
   </div>`;
 }
-function renderAll(){ paintEye(); histMark(); renderMoney(); renderSchedule(); if (openD === 'cal') renderCal(); if (openD === 'stu') renderStudents(); if (openD === 'kit'){ writeKit(); } }
+function renderAll(){ classCheck(); paintEye(); histMark(); renderMoney(); renderSchedule(); if (openD === 'cal') renderCal(); if (openD === 'stu') renderStudents(); if (openD === 'kit'){ writeKit(); } }
 function markDone(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.status = 'done'; save(); renderAll(); wrapUp(id); }
 let wu = null;
 function undone(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.status = 'plan'; s.paid = false; save(); renderAll(); toast(`${st(s.who)?.name} · กลับเป็นนัดไว้`, true); }
@@ -3924,6 +3933,7 @@ function tick(){
   if (m !== lastMin){ lastMin = m; if (idle()) renderSchedule(); }
 }
 tick(); setInterval(tick, 30000);
+setInterval(() => { if (classCheck()){ ['#income','#sLeft','#sOwe','#sAll'].forEach(q => $(q) && ($(q)._v = 0)); renderAll(); } }, 20000);
 if (document.documentElement.classList.contains('authed')){ const uid = loadCache(); if (uid) user = {id: uid}; }
 renderMoney(); renderSchedule();
 const QP = new URLSearchParams(location.search);
