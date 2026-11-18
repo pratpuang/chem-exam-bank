@@ -3391,13 +3391,8 @@ function statBody(ch){
    subject on the board (chem board = chem + applied, bio board = bio), exercises never. A row opens that paper in
    printed order (q.pno, the ข้อ number from its Source line). PAPER = the paper open in the app, null = none. ---- */
 let PAPER=null;
-/* original scans live only on Prat's PC (source/ is gitignored, public repo). file:// opens them directly; the live site
-   asks tools/pdf_server.py on 127.0.0.1:8765 and gets the swipe only if it answers, so any other device sees nothing. */
-let PDFOK=location.protocol==="file:"&&!!DATA.pdfs,PDFBASE="source/";
-if(!PDFOK&&DATA.pdfs&&Object.keys(DATA.pdfs).length&&matchMedia("(pointer:fine)").matches){
-  const ac=new AbortController();setTimeout(()=>ac.abort(),20000);
-  fetch("http://127.0.0.1:8765/ping",{signal:ac.signal,cache:"no-store",targetAddressSpace:"loopback"}).then(r=>r.json()).then(j=>{if(!j||!j.ok)return;
-    PDFOK=true;PDFBASE="http://127.0.0.1:8765/";if(typeof PP!=="undefined"&&PP.isOpen())PP.refresh();}).catch(()=>{});}
+/* original scans ship with the site (source/, published 2026-11-18, Prat's call) -> every device, file:// or live, opens them. */
+const PDFOK=!!DATA.pdfs&&Object.keys(DATA.pdfs).length>0,PDFBASE="source/";
 const PVER={mar:"มี.ค.",jul:"ก.ค.",oct:"ต.ค."},VORD=v=>+v||["mar","jul","oct"].indexOf(v)+1;
 function paperLabel(e,y,v){const l=(DATA.exams[e]||{label:e}).label;
   return e==="ijso"?(v?`${l} ครั้งที่ ${v} · ${y}`:`${l} · ${y}`):`${l} ${y}${v?" · "+(PVER[v]||v):""}`;}
@@ -3416,7 +3411,7 @@ const PP=(()=>{const el=$("#pp");let pushed=false,back=null;
     $("#ppin").innerHTML=fam.map(e=>{const x=DATA.exams[e]||{label:e,color:"#64748b"},R=L.filter(p=>p.e===e);
       return `<section class="ppsec" style="--c:${x.color}"><h3 class="pph"><i></i>${x.label}<small>${R.length} ฉบับ</small></h3><div class="ppg">${R.map(p=>{
         const sub=p.v?(p.e==="ijso"?"ครั้งที่ "+p.v:PVER[p.v]||p.v):"";
-        return `<button class="ppc" data-go="paper" data-p="${p.k}" aria-label="${paperLabel(p.e,p.y,p.v)} · ${p.n} ข้อ"><span class="pn">${x.label}${sub?` <em>${sub}</em>`:""}</span><span class="py">${p.y}</span>${p.s?`<span class="psol${p.s>=p.n?" full":""}">${p.s>=p.n?"✓ เฉลยครบ":`เฉลย ${p.s}/${p.n}`}</span>`:""}<span class="pc">${p.n} ข้อ${PDFOK&&DATA.pdfs[p.k]?`<span class="pdfh">↑ PDF</span>`:""}</span></button>`;}).join("")}</div></section>`;}).join("");}
+        return `<button class="ppc" data-go="paper" data-p="${p.k}" aria-label="${paperLabel(p.e,p.y,p.v)} · ${p.n} ข้อ"><span class="pn">${x.label}${sub?` <em>${sub}</em>`:""}</span><span class="py">${p.y}</span>${p.s?`<span class="psol${p.s>=p.n?" full":""}">${p.s>=p.n?"✓ เฉลยครบ":`เฉลย ${p.s}/${p.n}`}</span>`:""}<span class="pc">${p.n} ข้อ${PDFOK&&DATA.pdfs[p.k]?`<span class="pdfh">กดค้าง ↑ PDF</span>`:""}</span></button>`;}).join("")}</div></section>`;}).join("");}
   function open(opener){if(isOpen())return;back=opener;body();el.classList.add("show");el.firstElementChild.scrollTop=0;SL.lock("pp");
     if(!pushed){history.pushState({pp:1},"");pushed=true;}SFX.play("statOpen");$("#ppx").focus({preventScroll:true});}
   function shut(quiet){if(!isOpen())return;el.classList.remove("show");SL.unlock("pp");if(!quiet)SFX.play("statClose");
@@ -3428,8 +3423,8 @@ const PP=(()=>{const el=$("#pp");let pushed=false,back=null;
     if(!el.contains(ae)){e.preventDefault();(e.shiftKey?z:a).focus();}
     else if(e.shiftKey&&ae===a){e.preventDefault();z.focus();}else if(!e.shiftKey&&ae===z){e.preventDefault();a.focus();}}
   /* swipe a card UP to open its original scan (source/): the card follows, past 60px it arms (hint lights up), release
-     opens the PDF in a new tab and the click that follows is swallowed. Mouse/pen: just drag up. Touch: a flick still
-     scrolls the sheet, so hold ~250ms first (the card lifts), then swipe up. */
+     opens the PDF in a new tab and the click that follows is swallowed. Mouse, pen and touch alike: hold ~250ms first
+     (the card lifts), then swipe up; moving before the hold is a scroll/click, never a PDF. */
   let dg=null,eat=false,hold=null;
   const pdfCard=t=>{const c=t.closest&&t.closest(".ppc");return PDFOK&&c&&DATA.pdfs[c.dataset.p]?c:null;};
   function dgMove(y){const d=Math.max(0,dg.y-y);dg.c.style.transform=`translateY(${-Math.min(d,90)}px)`;dg.c.classList.toggle("ready",d>=60);}
@@ -3437,10 +3432,12 @@ const PP=(()=>{const el=$("#pp");let pushed=false,back=null;
   function dgStop(ok){clearTimeout(hold);if(!dg)return;const{c,on}=dg,go=ok&&on&&c.classList.contains("ready");dg=null;
     c.classList.remove("drag","ready","lift");c.style.transform="";if(!on)return;eat=true;setTimeout(()=>eat=false,350);
     if(go){SFX.play("statOpen");window.open(PDFBASE+DATA.pdfs[c.dataset.p].split("/").map(encodeURIComponent).join("/"),"_blank");}}
+  // mouse/pen too: HOLD ~250ms first (card lifts), THEN drag up -- a plain drag/flick never opens it (Prat 2026-11-18)
   el.addEventListener("pointerdown",e=>{if(e.pointerType==="touch"||e.button>0)return;const c=pdfCard(e.target);if(!c)return;
-    dg={c,y:e.clientY,x:e.clientX,id:e.pointerId,on:false};});
+    dg={c,y:e.clientY,x:e.clientX,id:e.pointerId,on:false};clearTimeout(hold);
+    hold=setTimeout(()=>{if(!dg||dg.t)return;dgArm();dg.c.classList.add("lift");try{dg.c.setPointerCapture(dg.id);}catch(_){}},250);});
   el.addEventListener("pointermove",e=>{if(!dg||dg.t||e.pointerId!==dg.id)return;
-    if(!dg.on){const dy=dg.y-e.clientY;if(dy<8||Math.abs(e.clientX-dg.x)>dy)return;dgArm();try{dg.c.setPointerCapture(e.pointerId);}catch(_){}}
+    if(!dg.on){if(Math.hypot(e.clientX-dg.x,e.clientY-dg.y)>8){clearTimeout(hold);dg=null;}return;}   // moved before the hold: not a PDF gesture
     dgMove(e.clientY);});
   el.addEventListener("pointerup",e=>{if(dg&&!dg.t&&e.pointerId===dg.id)dgStop(true);});
   el.addEventListener("pointercancel",e=>{if(dg&&!dg.t&&e.pointerId===dg.id)dgStop(false);});
