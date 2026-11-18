@@ -527,6 +527,9 @@ main{padding-top:30px}
 .sh .no{font:800 .85rem "JetBrains Mono";color:var(--paper);background:var(--red);padding:3px 7px}
 .sh h2{margin:0;font-size:2.1rem;font-weight:800;line-height:1.1;letter-spacing:-.01em}
 .sh .rule{flex:1;height:3px;background:var(--ink);min-width:30px}
+.mhide{font-size:1.25rem;line-height:1;width:44px;height:40px;border:3px solid var(--ink);background:var(--card);box-shadow:3px 3px 0 var(--sh);cursor:pointer;padding:0}
+.mhide.on{background:var(--ink)}
+.mhide:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--sh)}
 .lab{font:700 .7rem "JetBrains Mono";letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
 .money{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);background:var(--card);border:3px solid var(--ink);box-shadow:7px 7px 0 var(--sh);margin-bottom:22px;animation:enter .6s both}
 .owes{position:relative;z-index:1;background:var(--card);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--dash);margin:0 0 22px}
@@ -1480,7 +1483,7 @@ button:focus-visible,a:focus-visible{outline:3px solid var(--blue);outline-offse
 
 <main>
   <section class="sec" id="money">
-    <header class="sh"><span class="no">01</span><h2 id="mtitle">รายได้เดือนนี้</h2><span class="rule"></span></header>
+    <header class="sh"><span class="no">01</span><h2 id="mtitle">รายได้เดือนนี้</h2><span class="rule"></span><button class="mhide" id="mhide" onclick="toggleMoney()" aria-pressed="false" title="ซ่อนตัวเลขเงิน (ตอนแชร์จอ)">👁</button></header>
     <div class="money">
       <div class="mhero">
         <div class="mwhen" id="mwhen"></div>
@@ -1654,7 +1657,13 @@ addEventListener('keydown', e => {
 
 /* =============================== helpers =============================== */
 const $ = s => document.querySelector(s);
-const cash = n => '฿' + Math.round(n).toLocaleString('en-US');
+// 👁 hide-money (Prat 2026-11-18, for screen-sharing): masks EVERY ฿ amount, fixed width so nothing leaks the size; remembered per device
+let hideMoney = false; try{ hideMoney = localStorage.getItem('teach-hidemoney') === '1'; }catch{}
+const cash = n => hideMoney ? '฿•••••' : '฿' + Math.round(n).toLocaleString('en-US');
+function toggleMoney(){ hideMoney = !hideMoney; try{ localStorage.setItem('teach-hidemoney', hideMoney ? '1' : '0'); }catch{}
+  paintEye(); ['#income','#sLeft','#sOwe','#sAll'].forEach(q => $(q) && ($(q)._v = 0)); renderAll(); }
+function paintEye(){ const e = $('#mhide'); if (!e) return; e.textContent = hideMoney ? '🙈' : '👁'; e.classList.toggle('on', hideMoney);
+  e.title = hideMoney ? 'แสดงตัวเลขเงิน' : 'ซ่อนตัวเลขเงิน (ตอนแชร์จอ)'; e.setAttribute('aria-pressed', hideMoney); }
 const subjL = x => x === 'bio' ? 'ชีวะ' : x === 'other' ? 'อื่นๆ' : 'เคมี';
 const st = id => DB.students.find(s => s.id === id) || (DB.archived || []).find(s => s.id === id);
 // colour: 0–11 = the palette; ≥ CUSTOM = any colour you picked on the wheel, stored as CUSTOM + 0xRRGGBB in the same int column
@@ -2547,7 +2556,7 @@ function tk(s, o = {}){
     <span class="stub">${stampOf(s, o.pv)}</span>
   </div>`;
 }
-function renderAll(){ histMark(); renderMoney(); renderSchedule(); if (openD === 'cal') renderCal(); if (openD === 'stu') renderStudents(); if (openD === 'kit'){ writeKit(); } }
+function renderAll(){ paintEye(); histMark(); renderMoney(); renderSchedule(); if (openD === 'cal') renderCal(); if (openD === 'stu') renderStudents(); if (openD === 'kit'){ writeKit(); } }
 function markDone(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.status = 'done'; save(); renderAll(); wrapUp(id); }
 let wu = null;
 function undone(id){ snap(); const s = DB.sessions.find(x => x.id === id); s.status = 'plan'; s.paid = false; save(); renderAll(); toast(`${st(s.who)?.name} · กลับเป็นนัดไว้`, true); }
