@@ -1729,6 +1729,7 @@ body.dark[data-subj=bio]{--paper:#151a13;--card:#1f261c;--ink:#e4e8d4;--mut:#98a
   <i class="sep"></i>
   <button data-t="hl" title="ไฮไลต์" aria-label="ไฮไลต์"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4l5 5-8 8H7v-5z"/><path d="M7 17l-3 3h5"/><path d="M13 21h7"/></svg></button>
   <button data-t="er" title="ยางลบ (ลบทั้งเส้น)" aria-label="ยางลบ"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 20l-4-4L14 6l6 6-8 8z"/><path d="M9 11l6 6"/><path d="M12 20h8"/></svg></button>
+  <button data-t="lz" title="เลเซอร์ (หายเองหลังยกปากกา)" aria-label="เลเซอร์"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20c3-1 4-4 7-6s5-1 6-4"/><circle cx="18.5" cy="7.5" r="2.5" fill="currentColor"/></svg></button>
   <i class="sep"></i>
   <button id="inkundo" title="ย้อนกลับ" aria-label="ย้อนกลับ"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
   <button id="inkclr" title="ล้างหมึกข้อนี้" aria-label="ล้างหมึกข้อนี้"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M10 12l5 5M15 12l-5 5"/></svg></button>
@@ -1966,6 +1967,7 @@ const SFX=(()=>{let ctx=null,master=null,verb=null,nbuf=null,on=ls.get("cqb_sfx"
     penOff:()=>{thock({f:vary(260),vol:.1});noise(.01,{freq:2800,q:3,vol:.05,delay:.028});thock({f:vary(190),vol:.06,delay:.03});},   // cap clicks back on
     tool:t=>{if(t==="hl"){noise(.07,{freq:1300,sweep:1.6,q:.9,vol:.15,attack:.015});thock({f:170,vol:.09});}   // fat felt swipe
       else if(t==="er"){tone(vary(240),.07,{vol:.15,slide:.7,lp:900});noise(.03,{type:"lowpass",freq:700,vol:.08});}   // rubber thup
+      else if(t==="lz"){tone(vary(1500),.09,{vol:.06,slide:1.6,slideT:.07,type:"sine",attack:.004});}   // laser click-on blip
       else{const k=+t||0;noise(.018,{freq:vary(1900+k*300,.05),q:1.5,vol:.12});thock({f:vary(200+k*30),vol:.11,nf:2200});}},   // marker tap, per colour
     undo:()=>{tone(vary(880),.09,{vol:.07,slide:.55,slideT:.08,type:"triangle",lp:2000,attack:.002});thock({f:180,vol:.06,delay:.085});},   // tape rewind blip
     clear:()=>{noise(.2,{freq:1800,sweep:.5,q:.9,vol:.09,attack:.04,wet:.1});noise(.18,{freq:900,sweep:.6,q:.7,vol:.05,attack:.05,delay:.05});thock({f:140,vol:.08,delay:.2});},   // eraser across paper
@@ -2458,7 +2460,19 @@ const INK=(()=>{
       xH.globalCompositeOperation=document.body.classList.contains("dark")?"screen":"multiply";
       xH.drawImage(o,0,0);xH.restore();}
     if(m&2){xP.clearRect(0,0,s.cvP.width,s.cvP.height);xP.lineWidth=3.2;xP.lineCap=xP.lineJoin="round";
-      a.forEach(t=>{if(t.t==="p"){xP.strokeStyle=C[t.c]||C[0];path(s,xP,t.p);xP.stroke();}});}}
+      a.forEach(t=>{if(t.t==="p"){xP.strokeStyle=C[t.c]||C[0];path(s,xP,t.p);xP.stroke();}});
+      // laser: never stored; a red glow with a white core, drawn over the ink, the whole burst fading as one
+      const L=LZ.filter(l=>l.s===s).map(l=>l.p);if(cur&&cur.t==="l"&&cur.s===s&&cur.p)L.push(cur.p.concat(tail(cur)));
+      const al=lzA();if(L.length&&al>0){xP.save();xP.globalAlpha=al;xP.lineCap=xP.lineJoin="round";
+        xP.strokeStyle=C[1];xP.shadowColor=C[1];xP.shadowBlur=14;xP.lineWidth=6;L.forEach(p=>{path(s,xP,p);xP.stroke();});
+        xP.shadowBlur=0;xP.strokeStyle="#fff";xP.lineWidth=2;L.forEach(p=>{path(s,xP,p);xP.stroke();});xP.restore();}}}
+  // laser burst (tldraw-style): every stroke since the pen last rested stays lit while you keep drawing; 0.7 s after
+  // the last lift the whole burst fades over 0.5 s, slow then fast (ease-in), so it reads as switching off, not dimming
+  let LZ=[],lzT=0,lzRaf=0;const LZ_WAIT=700,LZ_FADE=500;
+  function lzA(){if(cur&&cur.t==="l")return 1;const g=performance.now()-lzT-LZ_WAIT;if(g<=0)return 1;const u=g/LZ_FADE;return u>=1?0:1-u*u;}
+  function lzTick(){lzRaf=0;if(!LZ.length)return;if(!(cur&&cur.t==="l")&&lzA()<=0){LZ=[];frame(2);return;}
+    frame(2);lzRaf=requestAnimationFrame(lzTick);}
+  function lzOff(){LZ=[];if(lzRaf){cancelAnimationFrame(lzRaf);lzRaf=0;}}
   function frame(m,s){(s?[s]:SF).forEach(x=>x.dirty|=m);
     if(!raf)raf=requestAnimationFrame(()=>{raf=0;SF.forEach(x=>{const d=x.dirty;x.dirty=0;if(d)draw(x,d);});});}
   // every pointer sample (coalesced: the pencil's full rate), in px relative to the surface's origin
@@ -2484,6 +2498,7 @@ const INK=(()=>{
   function finish(){const c=cur,s=c.s,k=s.k;cur=null;
     if(!c.p){if(c.chg)commit({[k]:list(s)},{[k]:c.before});return;}   // a whole erase gesture = one undo step
     c.p.push(...tail(c));
+    if(c.t==="l"){LZ.push({s,p:c.p});lzT=performance.now();if(!lzRaf)lzRaf=requestAnimationFrame(lzTick);return;}   // laser: no store, no undo
     commit({[k]:list(s).concat([{t:c.t,c:c.c,p:c.p}])},{[k]:list(s)});}
   const end=e=>{if(!cur||e.pointerId!==cur.id)return;if(e.type==="pointerup"&&cur.p)add(pts(e));finish();};
   SF.forEach(s=>{const cv=s.cvP;
@@ -2492,7 +2507,7 @@ const INK=(()=>{
       const sel=getSelection();if(sel&&sel.rangeCount)sel.removeAllRanges();
       try{cv.setPointerCapture(e.pointerId);}catch(_){}box=cv.getBoundingClientRect();
       if(tool==="er"){cur={s,id:e.pointerId,before:list(s)};erase(pts(e));return;}
-      cur={s,id:e.pointerId,t:tool==="hl"?"h":"p",c:col,p:[],f:[],k:null,tip:null};add(pts(e));});
+      cur={s,id:e.pointerId,t:tool==="hl"?"h":tool==="lz"?"l":"p",c:col,p:[],f:[],k:null,tip:null};add(pts(e));});
     cv.addEventListener("pointermove",e=>{if(cur&&e.pointerId===cur.id){const P=pts(e);cur.p?add(P):erase(P);}});
     ["pointerup","pointercancel","lostpointercapture"].forEach(ev=>cv.addEventListener(ev,end));
     // iPad: a quick second tap is a double-tap to Safari (select text / zoom / callout), and cancelling the pointer
@@ -2534,8 +2549,8 @@ const INK=(()=>{
   new MutationObserver(()=>{if(shown())frame(3);}).observe(document.body,{attributes:true,attributeFilter:["class","data-subj"]});
   if(window.ResizeObserver){const ro=new ResizeObserver(sizeAll);[SQ.wrap,body,SB.wrap].forEach(el=>ro.observe(el));}
   addEventListener("resize",()=>{lay();sizeAll();});
-  return{open(){load();setOn(false);sizeAll();},close(){cur=null;setOn(false);setSplit(false);},
-         refresh(){if(!shown())return;cur=null;load();sizeAll();},toggle(){setOn(!on);SFX.play(on?"penOn":"penOff");}};
+  return{open(){lzOff();load();setOn(false);sizeAll();},close(){cur=null;lzOff();setOn(false);setSplit(false);},
+         refresh(){if(!shown())return;cur=null;lzOff();load();sizeAll();},toggle(){setOn(!on);SFX.play(on?"penOn":"penOff");}};
 })();
 
 /* ---- view switch ---- */
