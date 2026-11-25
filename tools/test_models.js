@@ -27,7 +27,7 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
 
 
   const MURL = URL0.replace("index.html", "models.html");
-  await cdp("Page.navigate", { url: MURL }); for (let i = 0; i < 40 && !(await ev(`!!window.__gas`)); i++) await sleep(250); await sleep(300);
+  await cdp("Page.navigate", { url: MURL + "?ch=08" }); for (let i = 0; i < 40 && !(await ev(`!!window.__gas`)); i++) await sleep(250); await sleep(300);
   const g = e => ev(`(()=>{const G=window.__gas,S=G.S;return ${e}})()`);
   check("starts at 40 dots, P ~ 0.99 atm", await g(`G.ps.length===40&&Math.abs(S.P-0.985)<0.01`), await g(`[G.ps.length,S.P]`));
   const set = async (k, v) => { await ev(`(()=>{const i=document.querySelector('.sl[data-k="${k}"] input');i.value=${v};i.dispatchEvent(new Event("input"))})()`); };
@@ -85,6 +85,16 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
   check("old โมเลกุล 3D tab is gone (merged)", await ev(`!document.querySelector("#vstab")&&!document.querySelector("#vs")`));
   check("โมเดล tab opens the drawer with models.html", await ev(`document.body.classList.contains("moopen")&&document.querySelector("#mof").src.includes("models.html?embed=1&ch=")`));
   await shot("models-drawer.png");
+  check("drawer opens on the 3D molecule model (ch=04)", await ev(`document.querySelector("#mof").src.includes("ch=04")`));
+  await sleep(700);
+  const xb = await ev(`(()=>{const r=document.querySelector("#mox").getBoundingClientRect();return{x:r.x+r.width/2,y:r.y+r.height/2}})()`);
+  check("✕ is the top element", await ev(`document.elementFromPoint(${xb.x},${xb.y}).id==="mox"`));
+  for (const t of ["mousePressed", "mouseReleased"]) await cdp("Input.dispatchMouseEvent", { type: t, x: xb.x, y: xb.y, button: "left", clickCount: 1 });
+  await sleep(900);
+  check("real click on ✕ closes the drawer + unlocks", await ev(`!document.body.classList.contains("moopen")&&!MO.isOpen()`));
+  await ev(`document.querySelector("#motab").click()`); await sleep(900);
+  await ev(`document.querySelector("#pdscrim").click()`); await sleep(900);
+  check("scrim click closes it too", await ev(`!document.body.classList.contains("moopen")`));
   check("no JS errors", errs.length === 0, errs);
   console.log(ok + " ok, " + bad + " bad"); ws.close(); ch.kill(); process.exit(bad ? 1 : 0);
 })();

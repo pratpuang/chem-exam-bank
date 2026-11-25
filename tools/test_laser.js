@@ -38,6 +38,9 @@ let ok = 0, bad = 0; const check = (n, c, x) => { if (c) { ok++; console.log("  
   const r = await ev(`(()=>{const r=document.querySelector("#mbody").getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height}})()`);
   const y0 = r.y + Math.min(60, r.h / 2), x0 = r.x + 20;
   check("pen canvas is the top element over the question", await ev(`document.elementFromPoint(${x0},${y0}).id==="inkpen"`));
+  const sr = await ev(`(()=>{const r=document.querySelector("#modal .sheet").getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height}})()`);
+  for (const [nm, px, py] of [["left padding", sr.x + 12, sr.y + sr.h / 2], ["top-left corner", sr.x + 12, sr.y + 12], ["right edge", sr.x + sr.w - 30, sr.y + sr.h / 2], ["bottom-left", sr.x + 12, sr.y + sr.h - 12]])
+    check("pen reaches the whole card: " + nm, await ev(`document.elementFromPoint(${px},${py}).id==="inkpen"`), await ev(`document.elementFromPoint(${px},${py}).id||document.elementFromPoint(${px},${py}).className`));
   const red = () => ev(`(()=>{const c=document.querySelector("#inkpen"),d=c.getContext("2d").getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i]>40)n++;return n})()`);
   const drag = async (dx) => { await cdp("Input.dispatchMouseEvent", { type: "mousePressed", x: x0, y: y0, button: "left", clickCount: 1 });
     for (let i = 1; i <= 15; i++) { await cdp("Input.dispatchMouseEvent", { type: "mouseMoved", x: x0 + i * dx, y: y0 + Math.sin(i / 2) * 15, button: "left", buttons: 1 }); await sleep(16); }

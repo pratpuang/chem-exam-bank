@@ -416,7 +416,7 @@ html.scrlock{overscroll-behavior:none}
    floats in the modal's bottom padding, which is always reserved, so showing/hiding it never moves the question.
    While writing nothing in the modal is selectable: iPad double-tap otherwise grabs the nearest text (it took ✎). */
 .modal{flex-direction:column;padding-bottom:84px}
-.mink{position:relative}
+.mink{position:static}   /* ink layer spans the WHOLE card (2026-11-25): canvases sit on .sheet, toolbar + reveal bar stay above at z3 */
 .mink canvas{position:absolute;left:0;top:0;z-index:2;pointer-events:none}
 #inkhl,#bhl{mix-blend-mode:multiply}body.dark #inkhl,body.dark #bhl{mix-blend-mode:screen}
 #modal.inking #inkpen,#modal.inking #bpen{pointer-events:auto;touch-action:pan-x pan-y;cursor:crosshair}
@@ -2067,7 +2067,7 @@ const INK=(()=>{
   const qid=()=>{const q=filtered[mIdx];return q?q.id:"";};
   // the two surfaces share tools, store and one undo history per question; k = the surface's key in the store,
   // R rounds a stored coordinate (4 decimals of a fraction on the question, 0.1px on the board)
-  const SF=[["q","#mink","#inkhl","#inkpen",1e4],["b","#mboard","#bhl","#bpen",10]].map(([k,w,h,p,r])=>
+  const SF=[["q","#modal .sheet","#inkhl","#inkpen",1e4],["b","#mboard","#bhl","#bpen",10]].map(([k,w,h,p,r])=>
     ({k,wrap:$(w),cvH:$(h),cvP:$(p),xH:$(h).getContext("2d"),xP:$(p).getContext("2d"),R:v=>Math.round(v*r)/r,ox:0,oy:0,bw:1,bh:1,dirty:0}));
   const [SQ,SB]=SF;
   const list=s=>S[s.k][qid()]||[];
@@ -2076,7 +2076,8 @@ const INK=(()=>{
   function commit(after,before){const h=hist[qid()]=hist[qid()]||[];h.push(before);if(h.length>60)h.shift();
     for(const k in after)put(k,after[k]);save();frame(3);}
   // layout offsets, not getBoundingClientRect: the sheet's entry animation scales and rotates it
-  function size(s){if(!shown())return;const w=s.wrap.clientWidth,h=s.wrap.clientHeight,d=window.devicePixelRatio||1;
+  function size(s){if(!shown())return;if(s===SQ)[s.cvH,s.cvP].forEach(c=>c.style.height="0");   // collapse first so the old canvas never props scrollHeight up
+    const w=s.wrap.clientWidth,h=s===SQ?s.wrap.scrollHeight:s.wrap.clientHeight,d=window.devicePixelRatio||1;
     if(s===SQ){s.ox=body.offsetLeft;s.oy=body.offsetTop;s.bw=body.offsetWidth||1;s.bh=body.offsetHeight||1;}
     [s.cvH,s.cvP].forEach(c=>{c.style.width=w+"px";c.style.height=h+"px";c.width=Math.round(w*d);c.height=Math.round(h*d);c.getContext("2d").setTransform(d,0,0,d,0,0);});
     draw(s,3);}
@@ -2189,7 +2190,7 @@ const INK=(()=>{
     SR[z.P?"p":"l"]=+(lay((z.P?e.clientY:e.clientX)-z.a-14)/z.n).toFixed(4);});
   ["pointerup","pointercancel","lostpointercapture"].forEach(ev=>div.addEventListener(ev,e=>{if(e.pointerId!==drag)return;drag=null;ls.set(DK,JSON.stringify(SR));SFX.play("snap");}));
   new MutationObserver(()=>{if(shown())frame(3);}).observe(document.body,{attributes:true,attributeFilter:["class","data-subj"]});
-  if(window.ResizeObserver){const ro=new ResizeObserver(sizeAll);[SQ.wrap,body,SB.wrap].forEach(el=>ro.observe(el));}
+  if(window.ResizeObserver){const ro=new ResizeObserver(sizeAll);[SQ.wrap,$("#mink"),body,SB.wrap].forEach(el=>ro.observe(el));}
   addEventListener("resize",()=>{lay();sizeAll();});
   return{open(){lzOff();load();setOn(false);sizeAll();},close(){cur=null;lzOff();setOn(false);setSplit(false);},
          refresh(){if(!shown())return;cur=null;lzOff();load();sizeAll();},toggle(){setOn(!on);SFX.play(on?"penOn":"penOff");}};
@@ -2832,11 +2833,12 @@ const TD=(()=>{
 const MO=(()=>{
   const isOpen=()=>document.body.classList.contains("moopen");let ch=null;
   function open(force){SL.lock("mo");if(PD.isOpen())PD.close();if(TD.isOpen())TD.close();
-    const q=PD.curQ(),want=typeof force==="string"?force:q&&q.ch?q.ch:"08";   // the chapter on screen; the page falls back to its first model if that chapter has none yet
+    const q=PD.curQ(),want=typeof force==="string"?force:"04";   // his call 2026-11-25: always opens on the 3D molecule model (บท 4); tabs switch from there
     if(want!==ch){ch=want;$("#mof").src="models.html?embed=1&ch="+ch;}
     document.body.classList.add("moopen");SFX.play("drawer","mo");}
   function close(){if(!isOpen())return;document.body.classList.remove("moopen");SL.unlock("mo");SFX.play("undrawer");}
-  $("#motab").onclick=()=>isOpen()?close():open();   // (a click event is not a chapter: open() only honours a string)$("#mox").onclick=close;$("#pdscrim").addEventListener("click",close);
+  $("#motab").onclick=()=>isOpen()?close():open();   // (a click event is not a chapter: open() only honours a string)
+  $("#mox").onclick=close;$("#pdscrim").addEventListener("click",close);
   $("#mof").addEventListener("load",()=>{try{$("#mof").contentWindow.addEventListener("keydown",e=>{if(e.key==="Escape")close();});}catch(_){}});
   return{open,close,isOpen};
 })();

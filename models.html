@@ -405,5 +405,5 @@ function gasModel(root){
   setDots();ps.forEach(p=>Object.assign(p,spawn(false)));ui();requestAnimationFrame(frame);
   window.__gas={S,get ps(){return ps},get eap(){return EAP},vrms,geo:{CX0,CX1,CB,yOf,RAD}};   // read-only hook for tools/test_models.js
 }
-const want=MODELS.findIndex(m=>m.ch===QS.get("ch"));show(want<0?MODELS.findIndex(m=>m.ch==="08"):want);   // a chapter with no model yet opens the gas model   /* last: every model's helpers (consts) exist before the first one is built */
+const want=MODELS.findIndex(m=>m.ch===QS.get("ch"));show(want<0?Math.max(0,MODELS.findIndex(m=>m.ch==="04")):want);   // no/unknown chapter opens the 3D molecule model   /* last: every model's helpers (consts) exist before the first one is built */
 </script></body></html>
